@@ -942,7 +942,7 @@ function updateMultSuggest(){
   if(!s||!SECTEURS[s]){box.style.display='none';return;}
   const d=SECTEURS[s];
   box.style.display='block';
-  document.getElementById('ms_range').textContent=`${d.min}x – ${d.max}x   (médiane / median / وسيط : ${d.med}x)`;
+  document.getElementById('ms_range').textContent=`${d.min}x – ${d.max}x  (médiane / median : ${d.med}x)`;
   document.getElementById('ms_desc').textContent=d.desc[currentLang]||d.desc.fr;
 }
 
