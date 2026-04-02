@@ -3,7 +3,7 @@
 
 > A free, trilingual startup self-assessment tool using the Venture Capital (VC) valuation method — built for founders in Africa, the Middle East, and francophone markets preparing for fundraising.
 
-🌐 **Live demo:** [yacine-88.github.io/vc-valuation-tool](https://yacine-88.github.io/vc-valuation-tool/vc-valuation-tool.html)
+🌐 **Live demo:** (https://yacine-88.github.io/vc-valuation-tool/vc-valuation-tool.html)
 
 ---
 
