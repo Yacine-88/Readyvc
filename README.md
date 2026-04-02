@@ -108,7 +108,7 @@ CoCa                   = Exit Proceeds ÷ Investment
 ## Author
 
 **Yacine CHKHAR**
-LinkedIn: [linkedin.com/in/yacinechkhar](https://linkedin.com/in/yacinechkhar)
+LinkedIn: https://www.linkedin.com/in/yacine-chikhar-a53906103 
 
 ---
 
