@@ -6,7 +6,7 @@
 <title>VC Valuation Tool — Startup Self-Assessment</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=Amiri:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 :root{
@@ -21,7 +21,7 @@
   --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
   --shadow-lg:0 4px 24px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04);
   --font:'DM Sans',sans-serif;--font-serif:'DM Serif Display',serif;
-  --font-ar:'Amiri',serif;--font-mono:'JetBrains Mono',monospace;
+  '--font-mono:'JetBrains Mono',monospace;
 }
 [data-dark]{
   --bg:#141412;--surface:rgba(30,29,26,0.95);--surface2:#262521;--surface3:#302F2A;
@@ -38,9 +38,6 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh;transition:background .2s,color .2s;overflow-x:hidden}
-[dir=rtl]{font-family:var(--font-ar);font-size:15px}
-[dir=rtl] .note{border-left:none;border-right:3px solid var(--accent-border);border-radius:0 var(--radius) var(--radius) 0}
-[dir=rtl] .formula,.formula{direction:ltr;text-align:left;unicode-bidi:isolate}
 
 /* ── TOPBAR ── */
 .topbar{position:sticky;top:0;z-index:100;background:rgba(250,250,248,0.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;box-shadow:var(--shadow)}
@@ -79,7 +76,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .field input,.field select,.field textarea{width:100%;padding:9px 12px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-family:var(--font);transition:border .15s,box-shadow .15s;outline:none}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent-border);box-shadow:0 0 0 3px var(--accent-bg)}
 .field .hint{font-size:10px;color:var(--text3);margin-top:3px}
-[dir=rtl] .field input,[dir=rtl] .field select{text-align:right}
 
 /* Honesty warning */
 .honesty-box{background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:24px;display:flex;gap:12px;align-items:flex-start}
@@ -245,7 +241,6 @@ footer a{color:var(--accent);text-decoration:none}
     <div class="lang-pill">
       <button class="lang-btn" onclick="setLang('fr')">FR</button>
       <button class="lang-btn active" onclick="setLang('en')">EN</button>
-      <button class="lang-btn" onclick="setLang('ar')">ع</button>
     </div>
     <button class="theme-btn" onclick="toggleDark()" id="theme-icon">🌙</button>
   </div>
@@ -257,7 +252,7 @@ footer a{color:var(--accent);text-decoration:none}
 <div class="hero">
   <div class="hero-tag" id="hero_tag">Méthode Venture Capital</div>
   <h1 id="hero_h1">Valorisez votre startup<br>avant de lever</h1>
-  <p id="hero_p">Outil d'auto-évaluation gratuit · Calculs précis · FR / EN / عربي</p>
+  <p id="hero_p">Outil d'auto-évaluation gratuit · Calculs précis · FR / EN</p>
 </div>
 
 <!-- MAIN TABS -->
@@ -303,32 +298,6 @@ footer a{color:var(--accent);text-decoration:none}
         <div class="field"><label id="lb_secteur">Secteur *</label>
           <select id="ob_secteur" onchange="onSecteurChange()">
             <option value="" id="sect_ph">Sélectionner...</option>
-            <option value="saas">SaaS — Software as a Service</option>
-            <option value="fintech">Fintech — Finance & Paiements</option>
-            <option value="insurtech">Insurtech — Assurance digitale</option>
-            <option value="legaltech">Legaltech — Services juridiques</option>
-            <option value="proptech">Proptech — Immobilier digital</option>
-            <option value="ecommerce">E-commerce & Marketplace</option>
-            <option value="edtech">Edtech — Éducation & Formation</option>
-            <option value="healthtech">Healthtech — Santé digitale</option>
-            <option value="biotech">Biotech & Sciences de la vie</option>
-            <option value="agritech">Agritech — Agriculture & Food</option>
-            <option value="logistique">Logistique & Supply Chain</option>
-            <option value="transport">Mobilité & Transport (VTC, livraison)</option>
-            <option value="energie">Énergie & Cleantech</option>
-            <option value="construction">Contech — Construction & BTP</option>
-            <option value="cybersecurity">Cybersécurité</option>
-            <option value="ai">IA & Machine Learning</option>
-            <option value="blockchain">Blockchain & Web3</option>
-            <option value="gaming">Gaming & Esports</option>
-            <option value="media">Média, Contenus & Streaming</option>
-            <option value="adtech">Adtech & Marketing digital</option>
-            <option value="hrtech">HRtech — RH & Recrutement</option>
-            <option value="traveltech">Traveltech — Tourisme & Voyage</option>
-            <option value="hardware">Hardware & IoT</option>
-            <option value="telecom">Télécom & Connectivité</option>
-            <option value="govtech">Govtech — Services publics digitaux</option>
-            <option value="autre" id="sect_autre">Autre / Other</option>
           </select>
         </div>
         <div class="field"><label id="lb_bm">Modèle économique</label>
@@ -411,32 +380,6 @@ footer a{color:var(--accent);text-decoration:none}
       <div class="field"><label id="lb_sect_tool">Secteur d'activité</label>
         <select id="secteur_tool" onchange="updateMultSuggest()">
           <option value="" id="st_ph">Sélectionner pour voir les multiples recommandés...</option>
-          <option value="saas">SaaS — Software as a Service</option>
-          <option value="fintech">Fintech — Finance & Paiements</option>
-          <option value="insurtech">Insurtech — Assurance digitale</option>
-          <option value="legaltech">Legaltech — Services juridiques</option>
-          <option value="proptech">Proptech — Immobilier digital</option>
-          <option value="ecommerce">E-commerce & Marketplace</option>
-          <option value="edtech">Edtech — Éducation & Formation</option>
-          <option value="healthtech">Healthtech — Santé digitale</option>
-          <option value="biotech">Biotech & Sciences de la vie</option>
-          <option value="agritech">Agritech — Agriculture & Food</option>
-          <option value="logistique">Logistique & Supply Chain</option>
-          <option value="transport">Mobilité & Transport (VTC, livraison)</option>
-          <option value="energie">Énergie & Cleantech</option>
-          <option value="construction">Contech — Construction & BTP</option>
-          <option value="cybersecurity">Cybersécurité</option>
-          <option value="ai">IA & Machine Learning</option>
-          <option value="blockchain">Blockchain & Web3</option>
-          <option value="gaming">Gaming & Esports</option>
-          <option value="media">Média, Contenus & Streaming</option>
-          <option value="adtech">Adtech & Marketing digital</option>
-          <option value="hrtech">HRtech — RH & Recrutement</option>
-          <option value="traveltech">Traveltech — Tourisme & Voyage</option>
-          <option value="hardware">Hardware & IoT</option>
-          <option value="telecom">Télécom & Connectivité</option>
-          <option value="govtech">Govtech — Services publics digitaux</option>
-          <option value="autre" id="st_autre_tool">Autre / Other</option>
         </select>
       </div>
       <div id="mult_suggest_box" style="display:none" class="mult-suggest">
@@ -555,21 +498,7 @@ const PAYS={
     {g:'── North America ──', c:['United States (USA)','Canada','Mexico']},
     {g:'── Latin America ──', c:['Brazil','Colombia','Argentina','Chile','Peru','Uruguay']},
     {g:'── Asia & Pacific ──', c:['India','Singapore','Indonesia','Vietnam','Malaysia','Philippines','Thailand','Pakistan','Bangladesh','Sri Lanka','Australia','New Zealand','Japan','South Korea']},
-    {g:'── Other ──', c:['Other / Autre / أخرى']}
-  ],
-  ar:[
-    {g:'── شمال أفريقيا ──', c:['الجزائر','المغرب','تونس','ليبيا','موريتانيا']},
-    {g:'── غرب أفريقيا ──', c:['نيجيريا','غانا','السنغال','ساحل العاج','بنين','توغو','بوركينا فاسو','مالي','غينيا','سيراليون','ليبيريا','غامبيا','غينيا بيساو','الرأس الأخضر','النيجر']},
-    {g:'── شرق أفريقيا ──', c:['كينيا','إثيوبيا','رواندا','تنزانيا','أوغندا','موزمبيق','مدغشقر','زامبيا','زيمبابوي','ملاوي','جيبوتي','الصومال','إريتريا','بوروندي']},
-    {g:'── وسط أفريقيا ──', c:['الكاميرون','الكونغو الديمقراطية','الكونغو (برازافيل)','الغابون','تشاد','أنغولا','أفريقيا الوسطى','غينيا الاستوائية','ساو تومي وبرينسيبي']},
-    {g:'── جنوب أفريقيا ──', c:['جنوب أفريقيا','ناميبيا','بوتسوانا','زيمبابوي','إسواتيني','ليسوتو']},
-    {g:'── جزر أفريقية ──', c:['موريشيوس','سيشيل','جزر القمر','ريونيون (FR)','مايوت (FR)']},
-    {g:'── الشرق الأوسط والخليج ──', c:['مصر','الإمارات العربية المتحدة','المملكة العربية السعودية','قطر','الكويت','البحرين','عُمان','الأردن','لبنان','العراق','فلسطين','اليمن']},
-    {g:'── أوروبا ──', c:['فرنسا','المملكة المتحدة','ألمانيا','هولندا','بلجيكا','إسبانيا','البرتغال','إيطاليا','سويسرا','السويد','فنلندا','الدنمارك','النرويج','بولندا','لوكسمبورغ','أيرلندا']},
-    {g:'── أمريكا الشمالية ──', c:['الولايات المتحدة (USA)','كندا','المكسيك']},
-    {g:'── أمريكا اللاتينية ──', c:['البرازيل','كولومبيا','الأرجنتين','تشيلي','بيرو','أوروغواي']},
-    {g:'── آسيا والمحيط الهادئ ──', c:['الهند','سنغافورة','إندونيسيا','فيتنام','ماليزيا','الفلبين','تايلاند','باكستان','بنغلاديش','سريلانكا','أستراليا','نيوزيلندا','اليابان','كوريا الجنوبية']},
-    {g:'── أخرى ──', c:['أخرى / Other / Autre']}
+    {g:'── Other ──', c:['Other / Autre']}
   ]
 };
 
@@ -620,7 +549,7 @@ const SECTEURS={
 };
 
 const T={
-  fr:{dir:'ltr',heroTag:'Méthode Venture Capital',heroH1:'Valorisez votre startup<br>avant de lever',heroP:'Outil d\'auto-évaluation gratuit · Calculs précis · FR / EN / عربي',
+  fr:{heroTag:'Méthode Venture Capital',heroH1:'Valorisez votre startup<br>avant de lever',heroP:'Outil d\'auto-évaluation gratuit · Calculs précis · FR / EN',
     tabTool:'Outil de valorisation',tabGuide:'Guide méthodologique',
     honesty:'⚠️ Soyez honnête sur vos données. Des chiffres gonflés ou inexacts fausseront vos résultats et vous induiront en erreur face aux investisseurs. Cet outil est aussi bon que les données que vous lui donnez.',
     obProfile:'Votre profil founder',obStartup:'Votre startup',obTeam:'L\'équipe',
@@ -685,7 +614,7 @@ const T={
       {t:'Interpréter l\'IRR et le CoCa',p:'L\'IRR (Internal Rate of Return — Taux de Rendement Interne) mesure le rendement annualisé de l\'investisseur sur la durée de détention. Le CoCa (Cash-on-Cash Multiple — Multiple Cash sur Cash) mesure combien de fois il récupère sa mise initiale.',f:'IRR : taux annuel tel que NPV (Net Present Value / Valeur Actuelle Nette) = 0\nCoCa (Cash-on-Cash) = Proceeds (produits de cession) ÷ Investissement\nEx : 2 838 000 ÷ 500 000 = 5,7x',pills:['green:IRR ≥ 40% = excellent','amber:IRR 25–40% = acceptable','red:IRR < 25% = difficile','green:CoCa ≥ 5x = top','amber:CoCa 3–5x = bon','red:CoCa < 3x = difficile']}
     ]
   },
-  en:{dir:'ltr',heroTag:'Venture Capital Method',heroH1:'Value your startup<br>before you raise',heroP:'Free self-assessment tool · Precise calculations · FR / EN / عربي',
+  en:{heroTag:'Venture Capital Method',heroH1:'Value your startup<br>before you raise',heroP:'Free self-assessment tool · Precise calculations · FR / EN',
     tabTool:'Valuation tool',tabGuide:'Methodology guide',
     honesty:'⚠️ Be honest about your data. Inflated or inaccurate figures will skew your results and mislead you in front of investors. This tool is only as good as the data you put in.',
     obProfile:'Your founder profile',obStartup:'Your startup',obTeam:'The team',
@@ -749,86 +678,99 @@ const T={
       {t:'Dilution and final equity stake',p:'Each funding round dilutes ownership by 15%–20%. The effective stake at exit is lower than the initial stake. This is normal — the absolute value increases if the startup performs.',f:'Exit equity = Entry equity × (1 − Cumulative dilution)\nEx: 10% × (1 − 40%) = 6%'},
       {t:'Interpreting IRR and CoCa',p:'The IRR (Internal Rate of Return) measures the investor\'s annualized return over the holding period. The CoCa (Cash-on-Cash Multiple) measures how many times the investor gets their money back.',f:'IRR: annual rate where NPV (Net Present Value) = 0\nCoCa (Cash-on-Cash) = Proceeds ÷ Investment\nEx: 2,838,000 ÷ 500,000 = 5.7x',pills:['green:IRR ≥ 40% = excellent','amber:IRR 25–40% = acceptable','red:IRR < 25% = difficult','green:CoCa ≥ 5x = top','amber:CoCa 3–5x = good','red:CoCa < 3x = difficult']}
     ]
-  },
-  ar:{dir:'rtl',heroTag:'طريقة رأس المال المخاطر',heroH1:'قيّم شركتك الناشئة<br>قبل جولة التمويل',heroP:'أداة تقييم ذاتي مجانية · حسابات دقيقة · FR / EN / عربي',
-    tabTool:'أداة التقييم',tabGuide:'دليل المنهجية',
-    honesty:'⚠️ كن صادقاً في بياناتك. الأرقام المبالغ فيها أو غير الدقيقة ستشوه نتائجك وتضللك أمام المستثمرين. هذه الأداة بقدر جودة البيانات التي تدخلها.',
-    obProfile:'ملفك كمؤسس',obStartup:'شركتك الناشئة',obTeam:'الفريق',
-    lbPrenom:'الاسم الأول *',lbNom:'اللقب *',lbEmail:'البريد الإلكتروني *',lbLinkedin:'LinkedIn',lbPays:'البلد',lbVille:'المدينة',
-    lbStartup:'اسم الشركة الناشئة *',lbWebsite:'الموقع الإلكتروني',lbSecteur:'القطاع *',lbBm:'نموذج الأعمال',lbStade:'المرحلة',lbLevee:'جولة تمويل مخططة؟',
-    lbTeam:'حجم الفريق',lbPatents:'براءات الاختراع / IP',lbArr:'ARR الحالي ($)',
-    sectPh:'اختر...',sectAutre:'أخرى',
-    bmSub:'اشتراك (Subscription)',bmHw:'بيع أجهزة + خدمة',bmOther:'أخرى',
-    stIdea:'فكرة / ما قبل المنتج',stSeed:'Seed (أولى الإيرادات)',stA:'الجولة أ (Series A)',stB:'الجولة ب+ (Series B+)',
-    patNo:'لا توجد براءات',patPending:'قيد الإيداع',patNat:'براءة وطنية',patIntl:'براءة دولية',
-    levNo:'لا / استكشاف',lev3m:'خلال 3 أشهر',lev6m:'خلال 6 أشهر',levNow:'قيد التنفيذ',
-    paysOther:'أخرى / Other',
-    consent:'أوافق على استخدام هذه المعلومات لتحسين هذه الأداة وإرسال موارد للمؤسسين. لن يتم بيع أي بيانات أو مشاركتها مع أطراف ثالثة دون موافقة صريحة.',
-    obErr:'يرجى ملء الحقول الإلزامية (*) وقبول الشروط.',
-    obSubmit:'الوصول إلى الأداة ←',obSkip:'المتابعة بدون ملف شخصي',
-    step1:'1 · الشركة',step2:'2 · التوقعات',step3:'3 · المستثمر',step4:'4 · النتائج',
-    p1s1:'معلومات عامة',lbSname:'اسم الشركة الناشئة',lbCur:'العملة',lbSectTool:'القطاع',
-    stPh:'اختر لرؤية المضاعفات الموصى بها...',stAutreTool:'أخرى',
-    msLbl:'مضاعف EV/Revenue الموصى به — المصدر: أ. داموداران (NYU)',msApply:'تطبيق القيمة الوسيطة ←',
-    p1s2:'افتراضات الخروج (Exit)',lbExitYr:'سنة الخروج',hintExitYr:'السنة التي يبيع فيها المستثمر حصته',
-    lbRevExit:'الإيراد عند الخروج ($)',hintRevExit:'الإيراد المتوقع في سنة الخروج',
-    lbEvMult:'مضاعف EV/Revenue (قيمة المؤسسة / الإيراد) (x)',
-    lbReqRet:'العائد المطلوب (%)',hintReqRet:'معدل العائد السنوي المطلوب من المستثمر VC',
-    lbDebt:'الدين المالي عند الخروج ($)',lbCash:'النقد المتاح عند الخروج ($)',
-    p1Note:'معايير المضاعفات (أ. داموداران، NYU): SaaS 8–15x · Fintech 5–10x · التجارة الإلكترونية 1–3x · أفريقيا early-stage 3–6x',
-    btnNext:'التالي ←',btnBack:'رجوع →',
-    p2s1:'سيناريوهات التوقعات',scCentral:'السيناريو المركزي',scOpt:'متفائل',scPes:'متشائم',
-    p2Note:'أدخل الإيرادات السنوية لكل سيناريو. يحسب الأداة معدلات النمو تلقائياً.',
-    p3s1:'معاملات المستثمر',
-    lbEqEntry:'حصة الدخول / Equity stake at entry (%)',hintEqEntry:'نسبة رأس المال التي يحصل عليها المستثمر عند الدخول',
-    lbDil:'تأثير التخفيف المقدر / Dilution effect (%)',hintDil:'التخفيف التراكمي في الجولات القادمة (15–20% لكل جولة)',
-    lbInvest:'مبلغ الاستثمار / Investment amount ($)',
-    p3Note:'الصيغة: حصة الخروج = حصة الدخول × (1 − التخفيف التراكمي). مثال: 10% × (1 − 40%) = 6%',
-    lbEqEntryDisp:'الحصة عند الدخول',lbEqExitDisp:'الحصة عند الخروج (بعد التخفيف)',
-    btnCalc:'احسب النتائج ←',btnModify:'تعديل →',btnPdf:'⬇ تصدير PDF',btnClaude:'تحليل مع Claude ↗',
-    founderSaved:'تم حفظ الملف',
-    mPv:'التقييم اليوم (PV — القيمة الحالية)',mPvSub:'قيمة حقوق الملكية المخصومة',
-    mEv:'EV (قيمة المؤسسة) عند الخروج',mEvSub:'الإيراد × {m}x',
-    mEqExit:'قيمة حقوق الملكية عند الخروج',mEqExitSub:'EV − الدين + النقد',
-    mIrr:'IRR (معدل العائد الداخلي)',mIrrSub:'عتبة VC: 25%+',
-    mCoca:'CoCa (مضاعف النقد على النقد)',mCocaSub:'العائدات / الاستثمار',
-    mEqStake:'الحصة عند الخروج (بعد التخفيف)',mEqStakeSub:'حصة الملكية بعد التخفيف',
-    irrLabel:'IRR (معدل العائد الداخلي — Internal Rate of Return)',
-    irrThresh:'25% (عتبة VC)',irrTop:'50% (ممتاز)',
-    vGood:'IRR (معدل العائد الداخلي) {v}% — ممتاز. جذاب جداً للمستثمرين. أفضل الشركات تستهدف 50%+.',
-    vOk:'IRR (معدل العائد الداخلي) {v}% — مقبول (عتبة VC ≥ 25%). حسّن توقعاتك أو شروط الصفقة.',
-    vBad:'IRR (معدل العائد الداخلي) {v}% — أقل من عتبة VC (25%). راجع توقعات النمو أو مضاعف EV/Revenue.',
-    vNone:'أدخل مبلغ الاستثمار لحساب IRR (معدل العائد الداخلي).',
-    synthTitle:'ملخص · القطاع:',scCompare:'مقارنة السيناريوهات',projDetail:'التوقعات التفصيلية — السيناريو المركزي',
-    tYear:'السنة',tRev:'الإيراد',tGrowth:'النمو',tMult:'مضاعف EV/Rev.',tEv:'EV (قيمة المؤسسة)',tPv:'PV (القيمة الحالية)',
-    chartTitle:'تطور الإيرادات',
-    dCalc:'تفاصيل الحساب',dInv:'المستثمر',dProceed:'العائدات (عائدات الخروج)',dCoca:'CoCa (النقد على النقد)',
-    guideH2:'دليل التقييم — طريقة VC (رأس المال المخاطر)',
-    guideIntro:'يشرح هذا الدليل خطوة بخطوة كيفية تقدير قيمة شركتك الناشئة قبل جولة التمويل، باستخدام طريقة رأس المال المخاطر (VC Method) — المرجع المستخدم من قِبل المستثمرين المحترفين.',
-    guideTip:'<strong>مفتاح العرض:</strong> يبحث مستثمر VC (رأس المال المخاطر) عن عائد 10x–30x على الصندوق. 50% من استثماراته ستفشل — الناجحون يجب أن يعوضوا. برّر مضاعفات EV/Revenue (قيمة المؤسسة / الإيراد) بمقارنات قطاعية وأظهر كيف يحقق المستثمر هدف IRR (معدل العائد الداخلي) المستهدف.',
-    guideSteps:[
-      {t:'منطق طريقة VC (رأس المال المخاطر)',p:'يقيّم المستثمر VC (Venture Capitalist) شركتك بناءً على قيمتها المستقبلية عند <strong>الخروج (Exit)</strong> — بعد 5 إلى 10 سنوات — مُعادة إلى اليوم بمعدل الخصم.',f:'PV (القيمة الحالية) = قيمة حقوق الملكية عند الخروج ÷ (1 + معدل العائد المطلوب)^N سنوات',pills:['green:Seed','amber:الجولة أ','red:الجولة ب+']},
-      {t:'توقع إيراداتك حتى الخروج',p:'قدّر إيراداتك السنوية سنة بسنة. استند إلى ARR (الإيراد السنوي المتكرر) أو MRR (الإيراد الشهري المتكرر). جهّز دائماً 3 سيناريوهات: متشائم، مركزي، متفائل.',f:'معدلات النمو النموذجية: السنتان 1–2: 20–40% · السنتان 3–4: 40–60% · السنة 5+: 20–30%'},
-      {t:'حساب EV (قيمة المؤسسة — Enterprise Value)',p:'عند الخروج، تُحسب القيمة باستخدام مضاعف EV/Revenue (قيمة المؤسسة / الإيراد) حسب القطاع. تقترح الأداة تلقائياً النطاق المناسب.',f:'EV (قيمة المؤسسة) = إيراد الخروج × مضاعف EV/Revenue\nEquity Value (قيمة حقوق الملكية) = EV − الدين + النقد',pills:['blue:SaaS 8–15x','green:Fintech 5–10x','amber:التجارة الإلكترونية 1–3x','red:أفريقيا early-stage 3–8x']},
-      {t:'الخصم إلى PV (القيمة الحالية — Present Value)',p:'معدل العائد المطلوب (25%–50%+) يُعيد القيمة المستقبلية إلى قيمتها اليوم. هذه آلية الخصم — جوهر طريقة VC.',f:'PV (القيمة الحالية) = Equity Value الخروج ÷ (1 + المعدل)^N\nمثال: 23,700,000 ÷ (1.40)^5 = 4,386,000 $'},
-      {t:'التخفيف والحصة النهائية',p:'كل جولة تمويل تخفف الحصة بنسبة 15%–20%. الحصة الفعلية عند الخروج أقل من الحصة الأولية. هذا طبيعي — القيمة المطلقة ترتفع إذا أحسنت الشركة الأداء.',f:'حصة الخروج = حصة الدخول × (1 − التخفيف التراكمي)\nمثال: 10% × (1 − 40%) = 6%'},
-      {t:'تفسير IRR و CoCa',p:'IRR (معدل العائد الداخلي — Internal Rate of Return) يقيس العائد السنوي للمستثمر طوال فترة الاحتفاظ. CoCa (مضاعف النقد على النقد — Cash-on-Cash Multiple) يقيس كم مرة يستعيد المستثمر استثماره.',f:'IRR: المعدل السنوي حيث NPV (صافي القيمة الحالية) = 0\nCoCa = العائدات (Proceeds) ÷ الاستثمار\nمثال: 2,838,000 ÷ 500,000 = 5.7x',pills:['green:IRR ≥ 40% = ممتاز','amber:IRR 25–40% = مقبول','red:IRR < 25% = صعب','green:CoCa ≥ 5x = ممتاز','amber:CoCa 3–5x = جيد','red:CoCa < 3x = صعب']}
-    ]
   }
 };
 
 function t(){return T[currentLang];}
+
+const SECTEURS_LABELS={
+  fr:{
+    saas:'SaaS — Software as a Service',
+    fintech:'Fintech — Finance & Paiements',
+    insurtech:'Insurtech — Assurance digitale',
+    legaltech:'Legaltech — Services juridiques',
+    proptech:'Proptech — Immobilier digital',
+    ecommerce:'E-commerce & Marketplace',
+    edtech:'Edtech — Éducation & Formation',
+    healthtech:'Healthtech — Santé digitale',
+    biotech:'Biotech & Sciences de la vie',
+    agritech:'Agritech — Agriculture & Food',
+    logistique:'Logistique & Supply Chain',
+    transport:'Mobilité & Transport (VTC, livraison)',
+    energie:'Énergie & Cleantech',
+    construction:'Contech — Construction & BTP',
+    cybersecurity:'Cybersécurité',
+    ai:'IA & Machine Learning',
+    blockchain:'Blockchain & Web3',
+    gaming:'Gaming & Esports',
+    media:'Média, Contenus & Streaming',
+    adtech:'Adtech & Marketing digital',
+    hrtech:'HRtech — RH & Recrutement',
+    traveltech:'Traveltech — Tourisme & Voyage',
+    hardware:'Hardware & IoT',
+    telecom:'Télécom & Connectivité',
+    govtech:'Govtech — Services publics digitaux',
+    autre:'Autre / Other'
+  },
+  en:{
+    saas:'SaaS — Software as a Service',
+    fintech:'Fintech — Finance & Payments',
+    insurtech:'Insurtech — Digital Insurance',
+    legaltech:'Legaltech — Legal Services',
+    proptech:'Proptech — Digital Real Estate',
+    ecommerce:'E-commerce & Marketplace',
+    edtech:'Edtech — Education & Training',
+    healthtech:'Healthtech — Digital Health',
+    biotech:'Biotech & Life Sciences',
+    agritech:'Agritech — Agriculture & Food',
+    logistique:'Logistics & Supply Chain',
+    transport:'Mobility & Transport (ride-hailing, delivery)',
+    energie:'Energy & Cleantech',
+    construction:'Contech — Construction & Real Estate',
+    cybersecurity:'Cybersecurity',
+    ai:'AI & Machine Learning',
+    blockchain:'Blockchain & Web3',
+    gaming:'Gaming & Esports',
+    media:'Media, Content & Streaming',
+    adtech:'Adtech & Digital Marketing',
+    hrtech:'HRtech — HR & Recruitment',
+    traveltech:'Traveltech — Tourism & Travel',
+    hardware:'Hardware & IoT',
+    telecom:'Telecom & Connectivity',
+    govtech:'Govtech — Digital Public Services',
+    autre:'Other / Autre'
+  }
+};
+
+function renderSecteurs(){
+  const saved1=document.getElementById('ob_secteur').value;
+  const saved2=document.getElementById('secteur_tool').value;
+  const labels=SECTEURS_LABELS[currentLang];
+  [['ob_secteur',t().sectPh],['secteur_tool',t().stPh]].forEach(([id,ph])=>{
+    const sel=document.getElementById(id);
+    const savedVal=id==='ob_secteur'?saved1:saved2;
+    sel.innerHTML=`<option value="">${ph}</option>`;
+    Object.entries(labels).forEach(([val,label])=>{
+      const opt=document.createElement('option');
+      opt.value=val;opt.textContent=label;
+      sel.appendChild(opt);
+    });
+    if(savedVal)sel.value=savedVal;
+  });
+}
+
 const sym=c=>c==='DZD'?'دج':c==='EUR'?'€':'$';
 const fmt=(n,c)=>{const s=sym(c);if(Math.abs(n)>=1000000)return s+(n/1000000).toFixed(2)+'M';if(Math.abs(n)>=1000)return s+(n/1000).toFixed(1)+'K';return s+Math.round(n).toLocaleString()};
 const gv=id=>parseFloat(document.getElementById(id).value)||0;
 
 function setLang(lang){
   currentLang=lang;
-  document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',['fr','en','ar'][i]===lang));
-  document.getElementById('root').setAttribute('dir',t().dir);
+  document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',['fr','en'][i]===lang));
+  document.getElementById('root').setAttribute('dir','ltr');
   document.getElementById('root').setAttribute('lang',lang);
   applyTranslations();
   renderPays();
+  renderSecteurs();
   renderGuide();
   updateMultSuggest();
 }
@@ -895,6 +837,40 @@ function switchMainTab(name){
   document.getElementById('view-'+name).classList.add('active');
 }
 
+// ── AIRTABLE CONFIG ── Replace YOUR_TOKEN_HERE with your Personal Access Token
+const AIRTABLE_TOKEN = 'YOUR_TOKEN_HERE';
+const AIRTABLE_BASE  = 'app23rCRzsckcPuXo';
+const AIRTABLE_TABLE = 'tblIHM43Hfq2Btc7D';
+
+async function saveToAirtable(data){
+  if(!AIRTABLE_TOKEN||AIRTABLE_TOKEN==='pat3VO7UrR1Eoc5aJ') return;
+  try{
+    await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}`,{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+AIRTABLE_TOKEN,'Content-Type':'application/json'},
+      body:JSON.stringify({fields:{
+        'First Name': data.prenom,
+        'Last Name':  data.nom,
+        'Email':      data.email,
+        'LinkedIn':   data.linkedin||'',
+        'Website':    data.website||'',
+        'Country':    data.pays||'',
+        'City':       data.ville||'',
+        'Startup':    data.startup,
+        'Sector':     data.secteur,
+        'Business Model': data.bm||'',
+        'Stage':      data.stade||'',
+        'Team Size':  data.team?parseInt(data.team):null,
+        'ARR ($)':    data.arr?parseFloat(data.arr):null,
+        'Patents':    data.patents||'',
+        'Fundraising':data.levee||'',
+        'Language':   data.lang||'en',
+        'Date':       new Date().toISOString().split('T')[0]
+      }})
+    });
+  }catch(e){console.warn('Airtable save failed:',e);}
+}
+
 function submitOnboard(){
   const tx=t();
   const prenom=document.getElementById('ob_prenom').value.trim();
@@ -919,11 +895,14 @@ function submitOnboard(){
     arr:document.getElementById('ob_arr').value,
     date:new Date().toLocaleDateString('fr-FR'),lang:currentLang
   };
+  saveToAirtable(founderData);
   document.getElementById('startup_name').value=startup;
   document.getElementById('secteur_tool').value=secteur;
+  renderSecteurs();
   updateMultSuggest();
   showMain();
 }
+
 
 function skipOnboard(){founderData={};showMain();}
 
@@ -1122,9 +1101,9 @@ function exportPDF(){
   const tx=t();
   const name=document.getElementById('startup_name').value||founderData.startup||'startup';
   const ra=document.getElementById('results_area');
-  if(!ra||ra.innerHTML===''){alert(currentLang==='ar'?'احسب النتائج أولاً':currentLang==='en'?'Please calculate results first':'Calculez d\'abord les résultats (étape 4).');return;}
+  if(!ra||ra.innerHTML===''){alert(currentLang==='en'?'Please calculate results first':'Calculez d\'abord les résultats (étape 4).');return;}
   const fd=founderData;
-  const founderBlock=fd.prenom?`<div style="background:#f7f7f5;border-radius:8px;padding:12px 16px;font-size:11px;margin-bottom:18px;color:#555;line-height:1.7;${currentLang==='ar'?'direction:rtl;text-align:right':''}">
+  const founderBlock=fd.prenom?`<div style="background:#f7f7f5;border-radius:8px;padding:12px 16px;font-size:11px;margin-bottom:18px;color:#555;line-height:1.7;">
 <strong>Founder :</strong> ${fd.prenom} ${fd.nom} · ${fd.email||''}${fd.linkedin?' · '+fd.linkedin:''}${fd.website?' · <a href="'+fd.website+'" target="_blank">'+fd.website+'</a>':''}<br>
 <strong>Startup :</strong> ${fd.startup} · ${fd.secteur||'—'} · ${fd.stade||'—'} · ${fd.pays||''} ${fd.ville||''}<br>
 <strong>Team :</strong> ${fd.team||'—'} membres · IP/Brevets : ${fd.patents||'—'} · ARR actuel : ${fd.arr?'$'+parseInt(fd.arr).toLocaleString():'—'}<br>
