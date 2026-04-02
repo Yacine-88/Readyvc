@@ -215,6 +215,16 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 /* ── SCROLL OVERFLOW ── */
 .overflow-x{overflow-x:auto}
 
+/* ── ANALYSIS BOX ── */
+.analysis-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px;margin-top:16px}
+.analysis-points{display:flex;flex-direction:column;gap:14px;margin-bottom:20px}
+.analysis-point{display:flex;gap:12px;align-items:flex-start}
+.ap-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:6px}
+.ap-text{font-size:13px;color:var(--text2);line-height:1.7}
+.ap-text strong{color:var(--text);font-weight:600}
+.book-btn{display:block;text-align:center;background:var(--accent);color:#FFF;padding:12px 24px;border-radius:var(--radius);font-size:13px;font-weight:600;text-decoration:none;transition:opacity .15s;margin-top:4px}
+.book-btn:hover{opacity:.88}
+
 /* ── FOOTER ── */
 footer{text-align:center;padding:32px 24px;font-size:11px;color:var(--text3);border-top:1px solid var(--border);margin-top:40px}
 footer a{color:var(--accent);text-decoration:none}
@@ -441,7 +451,7 @@ footer a{color:var(--accent);text-decoration:none}
       <div class="btn-nav" style="flex-wrap:wrap;gap:10px">
         <button class="btn" id="btn_back4" onclick="goto(3)">← Modifier</button>
         <button class="btn sm" id="btn_pdf" onclick="exportPDF()">⬇ Exporter PDF</button>
-        <button class="btn accent" id="btn_claude" onclick="window.open('https://claude.ai','_blank')">Analyser avec Claude ↗</button>
+        <button class="btn accent" id="btn_claude" onclick="window.open('https://calendly.com/yacine-chikhar/30min','_blank')">📅 Book a session with an expert ↗</button>
       </div>
     </div>
 
@@ -584,7 +594,7 @@ const T={
     lbInvest:'Montant investi / Investment amount ($)',
     p3Note:'Formule : Participation exit = Participation entrée × (1 − Dilution cumulée). Ex : 10% × (1 − 40%) = 6%',
     lbEqEntryDisp:'Participation à l\'entrée',lbEqExitDisp:'Participation à l\'exit (après dilution)',
-    btnCalc:'Calculer les résultats →',btnModify:'← Modifier',btnPdf:'⬇ Exporter PDF',btnClaude:'Analyser avec Claude ↗',
+    btnCalc:'Calculer les résultats →',btnModify:'← Modifier',btnPdf:'⬇ Exporter PDF',btnClaude:'📅 Réserver une session avec un expert ↗',
     founderSaved:'Profil enregistré',
     mPv:'Valorisation aujourd\'hui (PV — Present Value)',mPvSub:'Equity Value actualisée',
     mEv:'EV (Enterprise Value) à l\'exit',mEvSub:'Revenu × {m}x',
@@ -649,7 +659,7 @@ const T={
     lbInvest:'Investment amount ($)',
     p3Note:'Formula: Exit equity = Entry equity × (1 − Cumulative dilution). Ex: 10% × (1 − 40%) = 6%',
     lbEqEntryDisp:'Equity at entry',lbEqExitDisp:'Equity at exit (post-dilution)',
-    btnCalc:'Calculate results →',btnModify:'← Edit',btnPdf:'⬇ Export PDF',btnClaude:'Analyze with Claude ↗',
+    btnCalc:'Calculate results →',btnModify:'← Edit',btnPdf:'⬇ Export PDF',btnClaude:'📅 Book a session with an expert ↗',
     founderSaved:'Profile saved',
     mPv:'Valuation today (PV — Present Value)',mPvSub:'Discounted Equity Value',
     mEv:'EV (Enterprise Value) at exit',mEvSub:'Revenue × {m}x',
@@ -1016,6 +1026,85 @@ function calcScenario(sc){
   return{ev,eqAtExit,eqToday,proceeds,coc,irr,revs,years,fy,eqX,df,invest};
 }
 
+function generateAnalysis({irr,coc,eqToday,fy,sectKey,evMult,eqX,stade,cur,tx,irrGood,irrOk,r,res}){
+  const lang=currentLang;
+  const isBad=irr!==null&&irr<25;
+  const isEarly=stade==='idea'||stade==='mvp'||stade==='seed';
+  const isAI=sectKey==='ai'||sectKey==='saas'||sectKey==='cybersecurity';
+  const isAfrica=founderData.pays&&['Algérie','Algeria','Maroc','Morocco','Tunisie','Tunisia','Sénégal','Senegal','Nigeria','Kenya','Côte d\'Ivoire','Ghana','Rwanda','Egypt','Égypte'].includes(founderData.pays);
+  const cocOk=coc!==null&&coc>=3;
+  const cocGood=coc!==null&&coc>=5;
+  const spread=res.optimiste.eqToday-res.pessimiste.eqToday;
+  const spreadPct=res.pessimiste.eqToday>0?(spread/res.pessimiste.eqToday*100).toFixed(0):null;
+
+  const points=[];
+
+  if(lang==='fr'){
+    // IRR analysis
+    if(irrGood) points.push(`<strong>IRR solide à ${irr.toFixed(1)}%</strong> — Votre modèle délivre un rendement supérieur au seuil VC standard (25%). Les meilleures firmes africaines et MENA ciblent 40–50% ; vous y êtes.`);
+    else if(irrOk) points.push(`<strong>IRR acceptable mais perfectible (${irr.toFixed(1)}%)</strong> — Vous dépassez le seuil minimum de 25%, mais la marge reste étroite. Un investisseur exigeant pourrait négocier à la baisse. Trois leviers : augmenter la croissance des revenus, réduire le délai d'exit, ou revoir le multiple sectoriel.`);
+    else if(isBad) points.push(`<strong>IRR insuffisant (${irr!==null?irr.toFixed(1):'—'}%)</strong> — En dessous du seuil VC de 25%, ce deal sera difficile à placer. Priorité : revoir vos projections de revenus à la hausse ou raccourcir l'horizon d'exit. Un multiple plus élevé peut aussi compenser si votre secteur le justifie.`);
+
+    // CoCa analysis
+    if(cocGood) points.push(`<strong>Cash-on-Cash (CoCa) de ${coc.toFixed(1)}x — excellent</strong> — L'investisseur multiplie sa mise par ${coc.toFixed(1)}. C'est dans la fourchette haute attendue par les fonds early-stage (objectif 5x+).`);
+    else if(cocOk) points.push(`<strong>Cash-on-Cash (CoCa) de ${coc.toFixed(1)}x — correct</strong> — Le multiple de remboursement est acceptable (seuil 3x). Pour convaincre un VC top-tier, visez 5x ou plus via une amélioration des projections ou une réduction de la dilution.`);
+    else if(coc!==null) points.push(`<strong>Cash-on-Cash (CoCa) de ${coc.toFixed(1)}x — faible</strong> — L'investisseur ne récupère pas assez par rapport au risque pris. Réduire la dilution ou augmenter les revenus projetés à l'exit sont les deux actions prioritaires.`);
+
+    // Sector analysis
+    if(isAI) points.push(`<strong>Secteur ${sectKey.toUpperCase()} — multiples premium</strong> — Votre secteur bénéficie des multiples les plus élevés du marché en 2024–2025. Un multiple de ${evMult}x est ${evMult>=10?'cohérent avec les benchmarks top-tier':'conservateur — vous pourriez défendre un multiple plus élevé si votre moat technologique est clair'}.`);
+    else if(sectKey) points.push(`<strong>Multiple EV/Revenue de ${evMult}x</strong> — ${evMult>=(SECTEURS[sectKey]?.med||5)?'Dans la moyenne haute de votre secteur. Justifiez-le avec des comparables concrets lors du pitch.':'En dessous de la médiane sectorielle ('+SECTEURS[sectKey]?.med+'x). Considérez de l\'augmenter si votre croissance le justifie.'}`);
+
+    // Stage analysis
+    if(isEarly) points.push(`<strong>Stade early-stage</strong> — À ce stade, les investisseurs accordent autant d'importance à l'équipe, au marché adressable et à la traction qu'aux chiffres de valorisation. Ces projections sont un outil de cadrage, pas une vérité absolue. Préparez aussi votre narrative et votre deck.`);
+
+    // Africa analysis
+    if(isAfrica) points.push(`<strong>Écosystème africain / MENA</strong> — Les valorisations en Afrique et au Maghreb restent décotées par rapport aux marchés matures (discount de 20–40% typique). Compensez par une croissance plus rapide, un TAM (Total Addressable Market) clairement articulé, et des comparables régionaux solides (M-Pesa, Jumia, Wave, Yassir).`);
+
+    // Scenario spread
+    if(spreadPct&&parseInt(spreadPct)>100) points.push(`<strong>Écart de scénarios élevé (${spreadPct}%)</strong> — L'écart entre votre scénario pessimiste et optimiste est important, ce qui signale une forte sensibilité aux hypothèses. Un investisseur va tester chaque chiffre. Soyez prêt à défendre vos taux de croissance avec des données terrain.`);
+
+    // Dilution
+    if(eqX<0.05) points.push(`<strong>Participation à l'exit faible (${(eqX*100).toFixed(1)}%)</strong> — Après dilution, la part de l'investisseur est réduite. Anticipez cet argument en montrant que la valeur absolue compense largement la dilution.`);
+
+    // Booking CTA
+    points.push(`<strong>Prochaine étape</strong> — Ces chiffres sont un point de départ. Pour affiner votre valorisation, préparer votre data room et maximiser vos chances face aux investisseurs, réservez une session de travail avec un expert.`);
+
+  } else {
+    // EN version
+    if(irrGood) points.push(`<strong>Strong IRR at ${irr.toFixed(1)}%</strong> — Your model delivers above the VC threshold of 25%. Top African and MENA firms target 40–50% — you're there.`);
+    else if(irrOk) points.push(`<strong>Acceptable IRR (${irr.toFixed(1)}%) — room to improve</strong> — You clear the 25% minimum, but the margin is tight. A demanding investor may push back. Three levers: accelerate revenue growth, shorten the exit timeline, or justify a higher sector multiple.`);
+    else if(isBad) points.push(`<strong>Insufficient IRR (${irr!==null?irr.toFixed(1):'—'}%)</strong> — Below the VC threshold of 25%, this deal will be hard to close. Priority: revise revenue projections upward or shorten the exit horizon. A higher multiple may also compensate if your sector supports it.`);
+
+    if(cocGood) points.push(`<strong>Cash-on-Cash (CoCa) ${coc.toFixed(1)}x — excellent</strong> — The investor multiplies their money ${coc.toFixed(1)} times. This is in the upper range expected by early-stage funds (target 5x+).`);
+    else if(cocOk) points.push(`<strong>Cash-on-Cash (CoCa) ${coc.toFixed(1)}x — acceptable</strong> — The return multiple is solid (threshold 3x). To attract top-tier VCs, aim for 5x+ through better projections or reduced dilution.`);
+    else if(coc!==null) points.push(`<strong>Cash-on-Cash (CoCa) ${coc.toFixed(1)}x — low</strong> — The investor doesn't recover enough relative to the risk taken. Reducing dilution or increasing projected exit revenue are the two priority actions.`);
+
+    if(isAI) points.push(`<strong>${sectKey.toUpperCase()} sector — premium multiples</strong> — Your sector commands the highest multiples in the market in 2024–2025. A multiple of ${evMult}x is ${evMult>=10?'consistent with top-tier benchmarks':'conservative — you could defend a higher multiple if your technical moat is clear'}.`);
+    else if(sectKey) points.push(`<strong>EV/Revenue multiple of ${evMult}x</strong> — ${evMult>=(SECTEURS[sectKey]?.med||5)?'In the upper range for your sector. Back it up with concrete comparables in your pitch.':'Below the sector median ('+SECTEURS[sectKey]?.med+'x). Consider increasing it if your growth justifies it.'}`);
+
+    if(isEarly) points.push(`<strong>Early-stage startup</strong> — At this stage, investors weigh team quality, addressable market, and traction as much as valuation figures. These projections are a framing tool, not absolute truth. Prepare your narrative and deck alongside the numbers.`);
+
+    if(isAfrica) points.push(`<strong>African / MENA ecosystem</strong> — Valuations in Africa and North Africa are typically discounted vs. mature markets (20–40% discount). Compensate with faster growth, a clearly articulated TAM (Total Addressable Market), and strong regional comparables (M-Pesa, Jumia, Wave, Yassir).`);
+
+    if(spreadPct&&parseInt(spreadPct)>100) points.push(`<strong>High scenario spread (${spreadPct}%)</strong> — The gap between your pessimistic and optimistic scenarios is large, signaling high sensitivity to assumptions. Investors will stress-test every figure. Be ready to defend your growth rates with ground-level data.`);
+
+    if(eqX<0.05) points.push(`<strong>Low exit equity stake (${(eqX*100).toFixed(1)}%)</strong> — After dilution, the investor's share is reduced. Anticipate this by showing that the absolute value more than compensates for the dilution.`);
+
+    points.push(`<strong>Next step</strong> — These numbers are a starting point. To refine your valuation, prepare your data room, and maximize your chances with investors, book a working session with an expert.`);
+  }
+
+  const title=lang==='fr'?'Analyse de votre valorisation':'Valuation analysis';
+  const bookLabel=lang==='fr'?'📅 Réserver une session avec un expert ↗':'📅 Book a session with an expert ↗';
+
+  return `<div class="analysis-box">
+    <div class="stitle">${title}</div>
+    <div class="analysis-points">
+      ${points.map(p=>`<div class="analysis-point"><div class="ap-dot"></div><div class="ap-text">${p}</div></div>`).join('')}
+    </div>
+    <a href="https://calendly.com/yacine-chikhar/30min" target="_blank" class="book-btn">${bookLabel}</a>
+  </div>`;
+}
+
 function calc(){
   const tx=t();
   const cur=document.getElementById('currency').value;
@@ -1068,6 +1157,7 @@ function calc(){
     <div class="irr-ticks"><span>0%</span><span>${tx.irrThresh}</span><span>${tx.irrTop}</span><span>80%+</span></div>
   </div>
   <div class="verdict ${vcls}">${verdict}</div>
+  ${generateAnalysis({irr,coc:r.coc,eqToday:r.eqToday,fy:r.fy,sectKey,evMult,eqX,stade:founderData.stade,cur,tx,irrGood,irrOk,r,res})}
 </div>
 <div class="card" style="margin-bottom:16px">
   <div class="stitle">${tx.scCompare}</div>
