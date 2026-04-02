@@ -148,6 +148,26 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .irr-fill{height:100%;border-radius:20px;transition:width .5s cubic-bezier(.4,0,.2,1)}
 .irr-ticks{display:flex;justify-content:space-between;font-size:9px;color:var(--text3)}
 
+/* ── INVESTOR SCORE ── */
+.score-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;margin-bottom:16px;box-shadow:var(--shadow)}
+.score-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:16px;flex-wrap:wrap}
+.score-circle-wrap{position:relative;width:110px;height:110px;flex-shrink:0}
+.score-circle-wrap svg{transform:rotate(-90deg)}
+.score-circle-bg{fill:none;stroke:var(--surface3);stroke-width:10}
+.score-circle-fill{fill:none;stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1)}
+.score-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-num .sn{font-size:28px;font-weight:600;font-family:var(--font-serif);color:var(--text)}
+.score-num .sl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
+.score-right{flex:1;min-width:180px}
+.score-label{font-size:20px;font-weight:600;color:var(--text);font-family:var(--font-serif);letter-spacing:-.02em;margin-bottom:4px}
+.score-sublabel{font-size:12px;color:var(--text2);line-height:1.5}
+.score-criteria{display:flex;flex-direction:column;gap:10px}
+.sc-row{display:flex;align-items:center;gap:10px}
+.sc-row-label{font-size:11px;color:var(--text2);width:140px;flex-shrink:0}
+.sc-row-bar-wrap{flex:1;background:var(--surface3);border-radius:20px;height:6px;overflow:hidden}
+.sc-row-bar{height:100%;border-radius:20px;transition:width .6s ease}
+.sc-row-pts{font-size:11px;font-weight:500;color:var(--text);width:40px;text-align:right;flex-shrink:0}
+
 /* ── VERDICT ── */
 .verdict{border-radius:var(--radius-lg);padding:14px 16px;font-size:13px;margin-bottom:16px;border:1px solid;line-height:1.6;font-weight:500}
 .verdict.good{background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent)}
@@ -1026,6 +1046,122 @@ function calcScenario(sc){
   return{ev,eqAtExit,eqToday,proceeds,coc,irr,revs,years,fy,eqX,df,invest};
 }
 
+function calcInvestorScore({irr,coc,r,res,sectKey,evMult,stade,tx}){
+  const lang=currentLang;
+  let pts={irr:0,coca:0,growth:0,sector:0,team:0,consistency:0};
+
+  // IRR — 30pts
+  if(irr!==null){
+    if(irr>=50) pts.irr=30;
+    else if(irr>=40) pts.irr=26;
+    else if(irr>=30) pts.irr=20;
+    else if(irr>=25) pts.irr=14;
+    else if(irr>=15) pts.irr=7;
+    else pts.irr=2;
+  }
+
+  // CoCa — 20pts
+  if(coc!==null){
+    if(coc>=8) pts.coca=20;
+    else if(coc>=5) pts.coca=17;
+    else if(coc>=3) pts.coca=12;
+    else if(coc>=2) pts.coca=7;
+    else pts.coca=2;
+  }
+
+  // Revenue growth (avg of central scenario) — 20pts
+  const revs=r.revs.filter(v=>v>0);
+  let avgGrowth=0;
+  if(revs.length>=2){
+    const growths=[];
+    for(let i=1;i<revs.length;i++) if(revs[i-1]>0) growths.push((revs[i]-revs[i-1])/revs[i-1]*100);
+    avgGrowth=growths.reduce((a,b)=>a+b,0)/growths.length;
+  }
+  if(avgGrowth>=100) pts.growth=20;
+  else if(avgGrowth>=60) pts.growth=17;
+  else if(avgGrowth>=40) pts.growth=13;
+  else if(avgGrowth>=20) pts.growth=8;
+  else pts.growth=3;
+
+  // Sector premium — 10pts
+  const sectorPts={ai:10,cybersecurity:10,saas:9,healthtech:8,fintech:8,insurtech:7,edtech:7,biotech:7,agritech:6,hrtech:6,legaltech:6,proptech:5,logistique:5,transport:5,energie:6,construction:4,blockchain:5,gaming:4,adtech:5,traveltech:4,media:4,hardware:3,telecom:4,govtech:5,ecommerce:3,autre:4};
+  pts.sector=sectorPts[sectKey]||4;
+
+  // Team & stage — 10pts
+  const stagePts={idea:2,mvp:4,seed:6,serieA:9,serieB:10};
+  pts.team=stagePts[stade]||5;
+  if(founderData.team&&parseInt(founderData.team)>=3) pts.team=Math.min(pts.team+1,10);
+  if(founderData.arr&&parseFloat(founderData.arr)>0) pts.team=Math.min(pts.team+1,10);
+
+  // Scenario consistency — 10pts (pessimistic not too far from central)
+  const ratio=res.pessimiste.eqToday>0?res.current.eqToday/res.pessimiste.eqToday:99;
+  if(ratio<1.5) pts.consistency=10;
+  else if(ratio<2) pts.consistency=8;
+  else if(ratio<3) pts.consistency=5;
+  else pts.consistency=2;
+
+  const total=Object.values(pts).reduce((a,b)=>a+b,0);
+
+  const labels=lang==='fr'
+    ?{title:'Score d\'attractivité investisseur',irr:'IRR (Taux de Rendement Interne)',coca:'CoCa (Cash-on-Cash Multiple)',growth:'Croissance des revenus',sector:'Prime sectorielle',team:'Équipe & stade',consistency:'Cohérence des scénarios',
+      weak:'Difficile à lever',fair:'À améliorer',good:'Attractif',vgood:'Très attractif',excellent:'Excellent profil VC',sub:'sur 100 points possibles'}
+    :{title:'Investor attractiveness score',irr:'IRR (Internal Rate of Return)',coca:'CoCa (Cash-on-Cash Multiple)',growth:'Revenue growth',sector:'Sector premium',team:'Team & stage',consistency:'Scenario consistency',
+      weak:'Difficult to raise',fair:'Needs improvement',good:'Attractive',vgood:'Very attractive',excellent:'Excellent VC profile',sub:'out of 100 points'};
+
+  let scoreLabel,scoreColor;
+  if(total>=85){scoreLabel=labels.excellent;scoreColor='#1A6B47';}
+  else if(total>=70){scoreLabel=labels.vgood;scoreColor='#2D9B6A';}
+  else if(total>=55){scoreLabel=labels.good;scoreColor='#8B5E0A';}
+  else if(total>=40){scoreLabel=labels.fair;scoreColor='#C07020';}
+  else{scoreLabel=labels.weak;scoreColor='#8B1A1A';}
+
+  const r2=51; // circle radius
+  const circ=2*Math.PI*r2;
+  const dash=circ*(total/100);
+
+  const criteria=[
+    {label:labels.irr,pts:pts.irr,max:30},
+    {label:labels.coca,pts:pts.coca,max:20},
+    {label:labels.growth,pts:pts.growth,max:20},
+    {label:labels.sector,pts:pts.sector,max:10},
+    {label:labels.team,pts:pts.team,max:10},
+    {label:labels.consistency,pts:pts.consistency,max:10}
+  ];
+
+  const crRows=criteria.map(c=>{
+    const pct=(c.pts/c.max)*100;
+    const barColor=pct>=80?'#1A6B47':pct>=50?'#8B5E0A':'#8B1A1A';
+    return`<div class="sc-row">
+      <div class="sc-row-label">${c.label}</div>
+      <div class="sc-row-bar-wrap"><div class="sc-row-bar" style="width:${pct}%;background:${barColor}"></div></div>
+      <div class="sc-row-pts">${c.pts}/${c.max}</div>
+    </div>`;
+  }).join('');
+
+  return`<div class="score-card">
+    <div class="score-header">
+      <div class="score-circle-wrap">
+        <svg width="110" height="110" viewBox="0 0 110 110">
+          <circle class="score-circle-bg" cx="55" cy="55" r="${r2}"/>
+          <circle class="score-circle-fill" cx="55" cy="55" r="${r2}"
+            stroke="${scoreColor}"
+            stroke-dasharray="${circ}"
+            stroke-dashoffset="${circ-dash}"/>
+        </svg>
+        <div class="score-num">
+          <div class="sn">${total}</div>
+          <div class="sl">${labels.sub.split(' ')[0]} 100</div>
+        </div>
+      </div>
+      <div class="score-right">
+        <div class="score-label" style="color:${scoreColor}">${scoreLabel}</div>
+        <div class="score-sublabel">${labels.title} · ${total}/100 ${labels.sub}</div>
+      </div>
+    </div>
+    <div class="score-criteria">${crRows}</div>
+  </div>`;
+}
+
 function generateAnalysis({irr,coc,eqToday,fy,sectKey,evMult,eqX,stade,cur,tx,irrGood,irrOk,r,res}){
   const lang=currentLang;
   const isBad=irr!==null&&irr<25;
@@ -1140,6 +1276,7 @@ function calc(){
   document.getElementById('results_area').innerHTML=`
 <div class="card" style="margin-bottom:16px">
   <div class="stitle">${name} — ${tx.synthTitle} ${sectKey||'—'}</div>
+  ${calcInvestorScore({irr,coc:r.coc,r,res,sectKey,evMult,stade:founderData.stade||'',tx})}
   <div class="mc">
     <div class="m inf"><div class="ml">${tx.mPv}</div><div class="mv">${fmt(r.eqToday,cur)}</div><div class="ms">${tx.mPvSub}</div></div>
     <div class="m"><div class="ml">${tx.mEv} (${exitY})</div><div class="mv">${fmt(r.ev,cur)}</div><div class="ms">${tx.mEvSub.replace('{m}',evMult)}</div></div>
