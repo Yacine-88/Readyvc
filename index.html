@@ -843,7 +843,7 @@ const AIRTABLE_BASE  = 'app23rCRzsckcPuXo';
 const AIRTABLE_TABLE = 'tblIHM43Hfq2Btc7D';
 
 async function saveToAirtable(data){
-  if(!AIRTABLE_TOKEN||AIRTABLE_TOKEN==='patbYcY1lrBMMfwVL') return;
+  if(!AIRTABLE_TOKEN||AIRTABLE_TOKEN==='YOUR_TOKEN_HERE') return;
   try{
     await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}`,{
       method:'POST',
