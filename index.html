@@ -837,39 +837,43 @@ function switchMainTab(name){
   document.getElementById('view-'+name).classList.add('active');
 }
 
-// ── AIRTABLE CONFIG ── Replace YOUR_TOKEN_HERE with your Personal Access Token
-const AIRTABLE_TOKEN = 'patzv81OJ2SxKhvaU.cf29c9770f48563a03482cc6aaacf53d9782ff83756a40533014e42cc2647b60';
-const AIRTABLE_BASE  = 'app23rCRzsckcPuXo';
-const AIRTABLE_TABLE = 'tblIHM43Hfq2Btc7D';
+// ── SUPABASE CONFIG ──
+const SUPABASE_URL = 'https://fvbrzttvdvxhbdkjknje.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YnJ6dHR2ZHZ4aGJka2prbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzgwNTAsImV4cCI6MjA5MDcxNDA1MH0.tcE5PlgMsu7suLAzN3uT5VjKnFhc25qkJJMKkbNmtvI';
 
-async function saveToAirtable(data){
-  if(!AIRTABLE_TOKEN||AIRTABLE_TOKEN==='YOUR_TOKEN_HERE') return;
+async function saveToSupabase(data){
   try{
-    await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}`,{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/founders`,{
       method:'POST',
-      headers:{'Authorization':'Bearer '+AIRTABLE_TOKEN,'Content-Type':'application/json'},
-      body:JSON.stringify({fields:{
-        'Name': data.prenom,
-        'Last Name':  data.nom,
-        'Email':      data.email,
-        'Linkedin':   data.linkedin||'',
-        'Website':    data.website||'',
-        'Country':    data.pays||'',
-        'City':       data.ville||'',
-        'Startup':    data.startup,
-        'Sector':     data.secteur,
-        'Business Model': data.bm||'',
-        'Stage':      data.stade||'',
-        'Team Size':  data.team?parseInt(data.team):null,
-        'ARR':    data.arr?parseFloat(data.arr):null,
-        'Patents':    data.patents||'',
-        'Fundraising':data.levee||'',
-        'Language':   data.lang||'en',
-        'Date':       new Date().toISOString().split('T')[0]
-      }})
+      headers:{
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        first_name:   data.prenom,
+        last_name:    data.nom,
+        email:        data.email,
+        linkedin:     data.linkedin||'',
+        website:      data.website||'',
+        country:      data.pays||'',
+        city:         data.ville||'',
+        startup:      data.startup,
+        sector:       data.secteur,
+        business_model: data.bm||'',
+        stage:        data.stade||'',
+        team_size:    data.team?parseInt(data.team):null,
+        arr:          data.arr?parseFloat(data.arr):null,
+        patents:      data.patents||'',
+        fundraising:  data.levee||'',
+        language:     data.lang||'en'
+      })
     });
-  }catch(e){console.warn('Airtable save failed:',e);}
+    if(!res.ok){const err=await res.text();console.warn('Supabase error:',err);}
+  }catch(e){console.warn('Supabase save failed:',e);}
 }
+
 
 function submitOnboard(){
   const tx=t();
@@ -895,7 +899,7 @@ function submitOnboard(){
     arr:document.getElementById('ob_arr').value,
     date:new Date().toLocaleDateString('fr-FR'),lang:currentLang
   };
-  saveToAirtable(founderData);
+  saveToSupabase(founderData);
   document.getElementById('startup_name').value=startup;
   document.getElementById('secteur_tool').value=secteur;
   renderSecteurs();
