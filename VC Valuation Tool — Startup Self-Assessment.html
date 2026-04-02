@@ -838,21 +838,21 @@ function switchMainTab(name){
 }
 
 // ── AIRTABLE CONFIG ── Replace YOUR_TOKEN_HERE with your Personal Access Token
-const AIRTABLE_TOKEN = 'pat3VO7UrR1Eoc5aJ';
+const AIRTABLE_TOKEN = 'patbYcY1lrBMMfwVL';
 const AIRTABLE_BASE  = 'app23rCRzsckcPuXo';
 const AIRTABLE_TABLE = 'tblIHM43Hfq2Btc7D';
 
 async function saveToAirtable(data){
-  if(!AIRTABLE_TOKEN||AIRTABLE_TOKEN==='pat3VO7UrR1Eoc5aJ') return;
+  if(!AIRTABLE_TOKEN||AIRTABLE_TOKEN==='patbYcY1lrBMMfwVL') return;
   try{
     await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}`,{
       method:'POST',
       headers:{'Authorization':'Bearer '+AIRTABLE_TOKEN,'Content-Type':'application/json'},
       body:JSON.stringify({fields:{
-        'First Name': data.prenom,
+        'Name': data.prenom,
         'Last Name':  data.nom,
         'Email':      data.email,
-        'LinkedIn':   data.linkedin||'',
+        'Linkedin':   data.linkedin||'',
         'Website':    data.website||'',
         'Country':    data.pays||'',
         'City':       data.ville||'',
@@ -861,7 +861,7 @@ async function saveToAirtable(data){
         'Business Model': data.bm||'',
         'Stage':      data.stade||'',
         'Team Size':  data.team?parseInt(data.team):null,
-        'ARR ($)':    data.arr?parseFloat(data.arr):null,
+        'ARR':    data.arr?parseFloat(data.arr):null,
         'Patents':    data.patents||'',
         'Fundraising':data.levee||'',
         'Language':   data.lang||'en',
