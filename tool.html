@@ -54,7 +54,7 @@
 [data-dark] .verdict.good{color:#3DB870;border-color:#3DB870}
 [data-dark] .sc-card{background:#222220;border-color:#3A3A36}
 [data-dark] .sc-btn.active{border-color:#F0EDE6;color:#F0EDE6}
-[data-dark] .honesty-box,[data-dark] .consent-box,[data-dark] .note{background:#222220;border-color:#3A3A36}
+[data-dark] .honesty-box,[data-dark] .consent-box,[data-dark] .note{background:#2A2A27;border-color:#4A4A46;color:#B8B5AE}
 [data-dark] .mult-suggest{background:#0A1F12;border-color:#1A4A2A}
 [data-dark] .how-it-works,[data-dark] .hero-right .hero-stat{border-color:#3A3A36}
 [data-dark] .book-btn{background:#F0EDE6;color:#1A1A17}
@@ -106,8 +106,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 
 /* Honesty warning */
 .honesty-box{background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:24px;display:flex;gap:12px;align-items:flex-start}
-.honesty-box .icon{font-size:18px;flex-shrink:0;margin-top:1px}
-.honesty-box p{font-size:12px;color:var(--warn);line-height:1.6;font-weight:500}
+.honesty-box p{font-size:13px;color:var(--navy2);line-height:1.7}
 
 .consent-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.6;margin:20px 0;display:flex;gap:10px;align-items:flex-start}
 .consent-box input[type=checkbox]{width:15px;height:15px;margin-top:2px;flex-shrink:0;accent-color:var(--accent);cursor:pointer}
@@ -262,6 +261,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 /* ── SCROLL OVERFLOW ── */
 .overflow-x{overflow-x:auto}
 
+/* ── TOOL HEADER ── */
+.tool-header{padding:48px 0 32px;border-bottom:1px solid var(--line);margin-bottom:32px}
+.tool-header-title{font-family:var(--font-serif);font-size:36px;color:var(--navy);letter-spacing:-.03em;font-weight:400;margin-bottom:8px}
+.tool-header-sub{font-size:13px;color:var(--navy3);letter-spacing:.03em}
+
 /* ── ANALYSIS BOX ── */
 .analysis-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px;margin-top:16px}
 .analysis-points{display:flex;flex-direction:column;gap:14px;margin-bottom:20px}
@@ -402,70 +406,11 @@ footer{background:var(--cream);border-top:1px solid var(--line);padding:24px 48p
 
 <div class="container" id="root">
 
-<!-- HERO -->
-<div class="hero">
-  <div class="hero-left">
-    <div class="hero-tag" id="hero_tag">Venture Capital Method</div>
-    <h1 id="hero_h1">Know Your Worth<br>Before You Pitch</h1>
-    <p id="hero_p">Free · Precise · Built for African & MENA founders</p>
-    <a href="#valuation-form" class="hero-cta" id="hero_cta" onclick="event.preventDefault();document.getElementById('valuation-form').scrollIntoView({behavior:'smooth',block:'start'})">Start your valuation →</a>
-  </div>
-  <div class="hero-right">
-    <div class="hero-stat">
-      <div class="hero-stat-num" id="hc1">100+</div>
-      <div class="hero-stat-lbl" id="hc1l">founders assessed</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num">26</div>
-      <div class="hero-stat-lbl" id="hc2l">sectors covered</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num">85+</div>
-      <div class="hero-stat-lbl" id="hc3l">countries</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num">3</div>
-      <div class="hero-stat-lbl">scenarios compared</div>
-    </div>
-  </div>
+<!-- TOOL HEADER -->
+<div class="tool-header">
+  <div class="tool-header-title" id="tool_title">VC Valuation Tool</div>
+  <div class="tool-header-sub" id="tool_sub">Fill in your details to get your valuation</div>
 </div>
-
-<hr class="section-div">
-
-<!-- HOW IT WORKS -->
-<div class="how-it-works">
-  <div class="hiw-label" id="hiw_title">How it works</div>
-  <div class="hiw-steps">
-    <div class="hiw-step">
-      <div class="hiw-num">01</div>
-      <div class="hiw-step-title" id="hiw1t">Fill your profile</div>
-      <div class="hiw-step-desc" id="hiw1d">2-min form — startup, sector, team, ARR</div>
-    </div>
-    <div class="hiw-step">
-      <div class="hiw-num">02</div>
-      <div class="hiw-step-title" id="hiw2t">Get your valuation</div>
-      <div class="hiw-step-desc" id="hiw2d">IRR, EV, CoCa, PV — 3 scenarios, Investor Score /100</div>
-    </div>
-    <div class="hiw-step">
-      <div class="hiw-num">03</div>
-      <div class="hiw-step-title" id="hiw3t">Book a session</div>
-      <div class="hiw-step-desc" id="hiw3d">Refine your numbers with an expert</div>
-    </div>
-  </div>
-</div>
-
-<!-- METRICS -->
-<div class="metrics-strip">
-  <div class="metrics-label">By the numbers</div>
-  <div class="metrics-grid">
-    <div class="ms-item"><span class="ms-num">26</span><span class="ms-lbl" id="ms1">sectors — recommended EV multiples</span></div>
-    <div class="ms-item"><span class="ms-num">85+</span><span class="ms-lbl" id="ms2">countries in the database</span></div>
-    <div class="ms-item"><span class="ms-num">3</span><span class="ms-lbl" id="ms3">scenarios: pessimistic · central · optimistic</span></div>
-    <div class="ms-item"><span class="ms-num">100%</span><span class="ms-lbl" id="ms4">free — no account required</span></div>
-  </div>
-</div>
-
-<hr class="section-div">
 
 <!-- MAIN TABS -->
 <div class="main-tabs" id="valuation-form">
@@ -479,8 +424,7 @@ footer{background:var(--cream);border-top:1px solid var(--line);padding:24px 48p
   <!-- ONBOARDING -->
   <div id="view-onboard">
     <div class="honesty-box">
-      <div class="icon">⚠️</div>
-      <p id="honesty_msg">Soyez honnête sur vos données. Des chiffres gonflés ou inexacts fausseront vos résultats et vous induiront en erreur face aux investisseurs. Cet outil est aussi bon que les données que vous lui donnez.</p>
+      <p id="honesty_msg">⚠️ Be honest about your data — inflated figures will skew your results and mislead you in front of investors. Read the <a href="#" onclick="event.preventDefault();switchMainTab('guide');window.scrollTo({top:0,behavior:'smooth'})" style="color:inherit;text-decoration:underline;cursor:pointer" id="honesty_guide_link">Methodology guide</a> to use this tool effectively.</p>
     </div>
     <div class="ob-card">
       <div class="ob-section" id="ob_s_profile">Votre profil founder</div>
@@ -488,18 +432,12 @@ footer{background:var(--cream);border-top:1px solid var(--line);padding:24px 48p
         <div class="field"><label id="lb_prenom">Prénom *</label><input type="text" id="ob_prenom" placeholder="Yacine"></div>
         <div class="field"><label id="lb_nom">Nom *</label><input type="text" id="ob_nom" placeholder="Benali"></div>
       </div>
-      <div class="ob-g2">
-        <div class="field"><label id="lb_email">Email *</label><input type="email" id="ob_email" placeholder="yacine@startup.dz"></div>
-        <div class="field"><label id="lb_linkedin">LinkedIn</label><input type="text" id="ob_linkedin" placeholder="linkedin.com/in/..."></div>
-      </div>
-      <div class="ob-g2">
-        <div class="field"><label id="lb_pays">Pays</label>
+      <div class="field"><label id="lb_email">Email *</label><input type="email" id="ob_email" placeholder="you@startup.com"></div>
+      <div class="field"><label id="lb_pays">Country</label>
           <select id="ob_pays">
             <option value="">—</option>
           </select>
         </div>
-        <div class="field"><label id="lb_ville">Ville</label><input type="text" id="ob_ville" placeholder="Alger, Tunis, Dakar..."></div>
-      </div>
 
       <div class="ob-section" id="ob_s_startup">Votre startup</div>
       <div class="ob-g2">
@@ -697,50 +635,18 @@ const scenarios={current:{},optimiste:{},pessimiste:{}};
 let founderData={};
 let founderResults=null;
 
-const PAYS={
-  fr:[
-    {g:'── Afrique du Nord ──', c:['Algérie','Maroc','Tunisie','Libye','Mauritanie']},
-    {g:'── Afrique de l\'Ouest ──', c:['Nigeria','Ghana','Sénégal','Côte d\'Ivoire','Bénin','Togo','Burkina Faso','Mali','Guinée','Sierra Leone','Liberia','Gambie','Guinée-Bissau','Cap-Vert','Niger']},
-    {g:'── Afrique de l\'Est ──', c:['Kenya','Éthiopie','Rwanda','Tanzanie','Ouganda','Mozambique','Madagascar','Zambie','Zimbabwe','Malawi','Djibouti','Somalie','Érythrée','Burundi']},
-    {g:'── Afrique Centrale ──', c:['Cameroun','RD Congo (Kinshasa)','Congo (Brazzaville)','Gabon','Tchad','Angola','Centrafrique','Guinée Équatoriale','São Tomé-et-Príncipe']},
-    {g:'── Afrique du Sud & Australe ──', c:['Afrique du Sud','Namibie','Botswana','Zimbabwe','Eswatini','Lesotho']},
-    {g:'── Afrique — Îles ──', c:['Maurice','Seychelles','Comores','Réunion (FR)','Mayotte (FR)']},
-    {g:'── Moyen-Orient & Golfe ──', c:['Égypte','UAE (Émirats Arabes Unis)','Arabie Saoudite','Qatar','Koweït','Bahreïn','Oman','Jordanie','Liban','Irak','Palestine','Yémen']},
-    {g:'── Europe ──', c:['France','Royaume-Uni (UK)','Allemagne','Pays-Bas','Belgique','Espagne','Portugal','Italie','Suisse','Suède','Finlande','Danemark','Norvège','Pologne','Luxembourg','Irlande']},
-    {g:'── Amérique du Nord ──', c:['États-Unis (USA)','Canada','Mexique']},
-    {g:'── Amérique Latine ──', c:['Brésil','Colombie','Argentine','Chili','Pérou','Uruguay']},
-    {g:'── Asie & Pacifique ──', c:['Inde','Singapour','Indonésie','Vietnam','Malaisie','Philippines','Thaïlande','Pakistan','Bangladesh','Sri Lanka','Australie','Nouvelle-Zélande','Japon','Corée du Sud']},
-    {g:'── Autre ──', c:['Autre / Other']}
-  ],
-  en:[
-    {g:'── North Africa ──', c:['Algeria','Morocco','Tunisia','Libya','Mauritania']},
-    {g:'── West Africa ──', c:['Nigeria','Ghana','Senegal','Côte d\'Ivoire','Benin','Togo','Burkina Faso','Mali','Guinea','Sierra Leone','Liberia','Gambia','Guinea-Bissau','Cape Verde','Niger']},
-    {g:'── East Africa ──', c:['Kenya','Ethiopia','Rwanda','Tanzania','Uganda','Mozambique','Madagascar','Zambia','Zimbabwe','Malawi','Djibouti','Somalia','Eritrea','Burundi']},
-    {g:'── Central Africa ──', c:['Cameroon','DR Congo (Kinshasa)','Congo (Brazzaville)','Gabon','Chad','Angola','Central African Republic','Equatorial Guinea','São Tomé and Príncipe']},
-    {g:'── Southern Africa ──', c:['South Africa','Namibia','Botswana','Zimbabwe','Eswatini','Lesotho']},
-    {g:'── African Islands ──', c:['Mauritius','Seychelles','Comoros','Réunion (FR)','Mayotte (FR)']},
-    {g:'── Middle East & Gulf ──', c:['Egypt','UAE (United Arab Emirates)','Saudi Arabia','Qatar','Kuwait','Bahrain','Oman','Jordan','Lebanon','Iraq','Palestine','Yemen']},
-    {g:'── Europe ──', c:['France','United Kingdom (UK)','Germany','Netherlands','Belgium','Spain','Portugal','Italy','Switzerland','Sweden','Finland','Denmark','Norway','Poland','Luxembourg','Ireland']},
-    {g:'── North America ──', c:['United States (USA)','Canada','Mexico']},
-    {g:'── Latin America ──', c:['Brazil','Colombia','Argentina','Chile','Peru','Uruguay']},
-    {g:'── Asia & Pacific ──', c:['India','Singapore','Indonesia','Vietnam','Malaysia','Philippines','Thailand','Pakistan','Bangladesh','Sri Lanka','Australia','New Zealand','Japan','South Korea']},
-    {g:'── Other ──', c:['Other / Autre']}
-  ]
-};
+const PAYS=[
+    'Afghanistan','Albania','Algeria','Angola','Argentina','Armenia','Australia','Austria','Azerbaijan','Bahrain','Bangladesh','Belgium','Benin','Bolivia','Bosnia and Herzegovina','Botswana','Brazil','Bulgaria','Burkina Faso','Burundi','Cambodia','Cameroon','Canada','Cape Verde','Central African Republic','Chad','Chile','China','Colombia','Comoros','Congo (Brazzaville)','Costa Rica','Croatia','Cyprus','Czech Republic','Denmark','Djibouti','DR Congo (Kinshasa)','Ecuador','Egypt','El Salvador','Equatorial Guinea','Eritrea','Estonia','Eswatini','Ethiopia','Finland','France','Gabon','Gambia','Georgia','Germany','Ghana','Greece','Guatemala','Guinea','Guinea-Bissau','Honduras','Hungary','India','Indonesia','Iraq','Ireland','Italy','Ivory Coast','Jamaica','Japan','Jordan','Kazakhstan','Kenya','Kuwait','Kyrgyzstan','Laos','Latvia','Lebanon','Lesotho','Liberia','Libya','Lithuania','Luxembourg','Madagascar','Malawi','Malaysia','Mali','Malta','Mauritania','Mauritius','Mexico','Moldova','Mongolia','Montenegro','Morocco','Mozambique','Myanmar','Namibia','Nepal','Netherlands','New Zealand','Nicaragua','Niger','Nigeria','North Macedonia','Norway','Oman','Other','Pakistan','Palestine','Panama','Paraguay','Peru','Philippines','Poland','Portugal','Qatar','Romania','Rwanda','Saudi Arabia','Senegal','Serbia','Seychelles','Sierra Leone','Singapore','Slovakia','Slovenia','Somalia','South Africa','South Korea','Spain','Sri Lanka','Sudan','Sweden','Switzerland','Syria','Tanzania','Thailand','Togo','Tunisia','Turkey','Uganda','Ukraine','United Arab Emirates','United Kingdom','United States','Uruguay','Uzbekistan','Venezuela','Vietnam','Yemen','Zambia','Zimbabwe'
+  ];
 
 function renderPays(){
   const saved=document.getElementById('ob_pays').value;
   const sel=document.getElementById('ob_pays');
   sel.innerHTML='<option value="">—</option>';
-  PAYS[currentLang].forEach(grp=>{
-    const og=document.createElement('optgroup');
-    og.label=grp.g;
-    grp.c.forEach(c=>{
-      const opt=document.createElement('option');
-      opt.value=c;opt.textContent=c;
-      og.appendChild(opt);
-    });
-    sel.appendChild(og);
+  PAYS.forEach(country=>{
+    const opt=document.createElement('option');
+    opt.value=country;opt.textContent=country;
+    sel.appendChild(opt);
   });
   if(saved)sel.value=saved;
 }
@@ -775,7 +681,7 @@ const SECTEURS={
 };
 
 const T={
-  fr:{heroTag:'Méthode Venture Capital',heroH1:'Sachez ce que vous valez<br>avant de pitcher',heroP:'Gratuit · Précis · Pour les founders africains & MENA',
+  fr:{heroTag:'Méthode Venture Capital',heroH1:'Sachez ce que vous valez<br>avant de pitcher',heroP:'Gratuit · Précis · Pour les founders du monde entier',
     heroCta:'Démarrer votre valorisation →',
     hiwTitle:'Comment ça marche',hiw1t:'Remplissez votre profil',hiw1d:'Formulaire 2 min — startup, secteur, équipe, ARR',
     hiw2t:'Obtenez votre valorisation',hiw2d:'IRR, EV, CoCa, PV — 3 scénarios, Score investisseur',
@@ -786,7 +692,7 @@ const T={
     expP:'Votre valorisation est un point de départ. Réservez une session de 30 min pour affiner vos chiffres, préparer votre data room et aborder votre prochain rendez-vous investisseur avec confiance.',
     expBtn:'Réserver votre session 30 min →',
     tabTool:'Outil de valorisation',tabGuide:'Guide méthodologique',
-    honesty:'⚠️ Soyez honnête sur vos données. Des chiffres gonflés ou inexacts fausseront vos résultats et vous induiront en erreur face aux investisseurs. Cet outil est aussi bon que les données que vous lui donnez.',
+    honesty:'⚠️ Soyez honnête — des chiffres inexacts fausseront vos résultats. Lisez le guide méthodologique pour utiliser cet outil efficacement.',
     obProfile:'Votre profil founder',obStartup:'Votre startup',obTeam:'L\'équipe',
     lbPrenom:'Prénom *',lbNom:'Nom *',lbEmail:'Email *',lbLinkedin:'LinkedIn',lbPays:'Pays',lbVille:'Ville',
     lbStartup:'Nom de la startup *',lbWebsite:'Site web',lbSecteur:'Secteur *',lbBm:'Modèle économique',lbStade:'Stade',lbLevee:'Levée de fonds prévue ?',
@@ -820,6 +726,7 @@ const T={
     p3Note:'Formule : Participation exit = Participation entrée × (1 − Dilution cumulée). Ex : 10% × (1 − 40%) = 6%',
     lbEqEntryDisp:'Participation à l\'entrée',lbEqExitDisp:'Participation à l\'exit (après dilution)',
     btnCalc:'Calculer les résultats →',btnModify:'← Modifier',btnPdf:'⬇ Exporter PDF',btnClaude:'📅 Réserver une session avec un expert ↗',
+    toolTitle:'Outil de valorisation VC',toolSub:'Renseignez vos données pour obtenir votre valorisation',
     founderSaved:'Profil enregistré',
     mPv:'Valorisation aujourd\'hui (PV — Present Value)',mPvSub:'Equity Value actualisée',
     mEv:'EV (Enterprise Value) à l\'exit',mEvSub:'Revenu × {m}x',
@@ -860,7 +767,7 @@ const T={
     expP:'Your valuation is a starting point. Book a 30-min session to refine your numbers, prepare your data room, and walk into your next investor meeting with confidence.',
     expBtn:'Book your 30-min session →',
     tabTool:'Valuation tool',tabGuide:'Methodology guide',
-    honesty:'⚠️ Be honest about your data. Inflated or inaccurate figures will skew your results and mislead you in front of investors. This tool is only as good as the data you put in.',
+    honesty:'⚠️ Be honest about your data — inflated figures will skew your results and mislead investors. Read the Methodology guide to use this tool effectively.',
     obProfile:'Your founder profile',obStartup:'Your startup',obTeam:'The team',
     lbPrenom:'First name *',lbNom:'Last name *',lbEmail:'Email *',lbLinkedin:'LinkedIn',lbPays:'Country',lbVille:'City',
     lbStartup:'Startup name *',lbWebsite:'Website',lbSecteur:'Sector *',lbBm:'Business model',lbStade:'Stage',lbLevee:'Fundraising planned?',
@@ -894,6 +801,7 @@ const T={
     p3Note:'Formula: Exit equity = Entry equity × (1 − Cumulative dilution). Ex: 10% × (1 − 40%) = 6%',
     lbEqEntryDisp:'Equity at entry',lbEqExitDisp:'Equity at exit (post-dilution)',
     btnCalc:'Calculate results →',btnModify:'← Edit',btnPdf:'⬇ Export PDF',btnClaude:'📅 Book a session with an expert ↗',
+    toolTitle:'VC Valuation Tool',toolSub:'Fill in your details to get your valuation',
     founderSaved:'Profile saved',
     mPv:'Valuation today (PV — Present Value)',mPvSub:'Discounted Equity Value',
     mEv:'EV (Enterprise Value) at exit',mEvSub:'Revenue × {m}x',
@@ -1025,6 +933,7 @@ function applyTranslations(){
   const setHTML=(id,val)=>{const el=document.getElementById(id);if(el)el.innerHTML=val;};
   setHTML('hero_tag',tx.heroTag);setHTML('hero_h1',tx.heroH1);set('hero_p',tx.heroP);
   set('tab_tool',tx.tabTool);set('tab_guide',tx.tabGuide);
+  set('tool_title',tx.toolTitle);set('tool_sub',tx.toolSub);
   // Landing sections
   const heroCta=document.getElementById('hero_cta');if(heroCta)heroCta.textContent=tx.heroCta;
   set('hiw_title',tx.hiwTitle);
