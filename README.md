@@ -1,7 +1,7 @@
 # VC Valuation Tool
 ### by Yacine CHIKHAR
 
-> A free, trilingual startup self-assessment tool using the Venture Capital (VC) valuation method — built for founders in Africa, the Middle East, and francophone markets preparing for fundraising.
+> A free startup self-assessment tool using the Venture Capital (VC) valuation method — built for founders preparing for fundraising.
 
 🌐 **Live demo:** (https://yacine-88.github.io/vc-valuation-tool)
 
