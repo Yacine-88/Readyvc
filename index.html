@@ -112,6 +112,34 @@ body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size
 footer{border-top:1px solid var(--line);padding:24px 48px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--navy3);letter-spacing:.06em;text-transform:uppercase}
 footer a{color:var(--green);text-decoration:none}
 
+/* ── NEWSLETTER ── */
+.newsletter{padding:80px 0;border-bottom:1px solid var(--line)}
+.newsletter-grid{display:grid;grid-template-columns:1fr 1fr;gap:100px;align-items:center}
+.newsletter-label{font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--navy3);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.newsletter-label::before{content:'';display:block;width:24px;height:1px;background:var(--navy3)}
+.newsletter-title{font-family:var(--font-serif);font-size:36px;color:var(--navy);letter-spacing:-.03em;font-weight:400;line-height:1.1;margin-bottom:16px}
+.newsletter-desc{font-size:14px;color:var(--navy2);line-height:1.75;margin-bottom:0}
+.newsletter-preview{display:flex;flex-direction:column;gap:0;border:1px solid var(--line)}
+.newsletter-preview-header{background:var(--navy);padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.newsletter-preview-name{font-family:var(--font-serif);font-size:14px;color:var(--cream);letter-spacing:-.01em}
+.newsletter-preview-badge{font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.2);padding:3px 8px}
+.newsletter-preview-body{padding:20px;display:flex;flex-direction:column;gap:14px}
+.newsletter-preview-item{display:flex;gap:12px;align-items:flex-start;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.newsletter-preview-item:last-child{border-bottom:none;padding-bottom:0}
+.newsletter-preview-num{font-size:10px;font-weight:600;color:var(--green);font-family:var(--font-mono);flex-shrink:0;padding-top:2px}
+.newsletter-preview-text{font-size:12px;color:var(--navy2);line-height:1.5}
+.newsletter-preview-text strong{color:var(--navy);font-weight:600}
+.newsletter-form{margin-top:24px;display:flex;flex-direction:column;gap:0;border:1px solid var(--line)}
+.nl-field{display:flex;align-items:center;border-bottom:1px solid var(--line)}
+.nl-field:last-of-type{border-bottom:none}
+.nl-field input,.nl-field select{width:100%;padding:12px 16px;font-size:13px;border:none;background:transparent;color:var(--navy);font-family:var(--font);outline:none}
+.nl-field select option{background:var(--cream);color:var(--navy)}
+.nl-field-label{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);padding:0 16px;white-space:nowrap;border-right:1px solid var(--line);min-width:90px}
+.nl-submit{width:100%;padding:13px;background:var(--navy);color:var(--cream);border:none;font-family:var(--font);font-size:12px;font-weight:500;letter-spacing:.04em;cursor:pointer;transition:background .15s;margin-top:0}
+.nl-submit:hover{background:var(--green)}
+.nl-success{display:none;padding:16px;text-align:center;font-size:13px;color:var(--green);border:1px solid var(--green-border);background:var(--green-bg)}
+.nl-err{display:none;font-size:11px;color:#9A9892;padding:8px 16px;border-top:1px solid var(--line)}
+
 /* ── RESPONSIVE ── */
 @media(max-width:900px){
   .container,.topbar,.expert-inner,footer{padding-left:24px;padding-right:24px}
@@ -119,6 +147,7 @@ footer a{color:var(--green);text-decoration:none}
   .hero h1{font-size:40px}
   .hero-stats{grid-template-columns:1fr 1fr}
   .toolkit-header{grid-template-columns:1fr;gap:16px;margin-bottom:32px}
+  .newsletter-grid{grid-template-columns:1fr;gap:40px}
   .about-grid{grid-template-columns:1fr;gap:16px}
   .topbar-nav{display:none}
   .expert{padding:48px 0}
@@ -141,6 +170,7 @@ footer a{color:var(--green);text-decoration:none}
   </a>
   <nav class="topbar-nav">
     <a href="#toolkit" class="nav-link" onclick="event.preventDefault();document.getElementById('toolkit').scrollIntoView({behavior:'smooth'})" id="nav_toolkit">Toolkit</a>
+    <a href="#newsletter" class="nav-link" onclick="event.preventDefault();document.getElementById('newsletter').scrollIntoView({behavior:'smooth'})" id="nav_newsletter">Newsletter</a>
     <a href="#about" class="nav-link" onclick="event.preventDefault();document.getElementById('about').scrollIntoView({behavior:'smooth'})" id="nav_about">About</a>
     <a href="mailto:yacine.chikhar@globalafricatech.com" class="nav-link" id="nav_contact">Contact</a>
   </nav>
@@ -288,6 +318,73 @@ footer a{color:var(--green);text-decoration:none}
   </div>
 </div>
 
+<!-- NEWSLETTER -->
+<div class="container">
+  <div class="newsletter" id="newsletter">
+    <div class="newsletter-grid">
+      <div>
+        <div class="newsletter-label" id="nl_label">Monthly Newsletter</div>
+        <h2 class="newsletter-title" id="nl_title">Stay sharp.<br>One email a month.</h2>
+        <p class="newsletter-desc" id="nl_desc">A monthly briefing for founders preparing to raise. One deal decoded, one metric explained, one action to take — nothing more.</p>
+      </div>
+      <div>
+        <!-- Preview -->
+        <div class="newsletter-preview">
+          <div class="newsletter-preview-header">
+            <span class="newsletter-preview-name">VCReady Monthly</span>
+            <span class="newsletter-preview-badge" id="nl_badge">April 2026</span>
+          </div>
+          <div class="newsletter-preview-body">
+            <div class="newsletter-preview-item">
+              <span class="newsletter-preview-num">①</span>
+              <div class="newsletter-preview-text"><strong id="nl_p1t">Deal of the month</strong> <span id="nl_p1d">— Wave raises $200M Series C. IRR decoded, what founders can learn.</span></div>
+            </div>
+            <div class="newsletter-preview-item">
+              <span class="newsletter-preview-num">②</span>
+              <div class="newsletter-preview-text"><strong id="nl_p2t">Metric of the month</strong> <span id="nl_p2d">— Why LTV/CAC is the #1 metric every SaaS VC looks at first.</span></div>
+            </div>
+            <div class="newsletter-preview-item">
+              <span class="newsletter-preview-num">③</span>
+              <div class="newsletter-preview-text"><strong id="nl_p3t">Tip of the month</strong> <span id="nl_p3d">— How to justify your EV multiple in 3 slides.</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- Form -->
+        <div class="newsletter-form">
+          <div class="nl-field">
+            <span class="nl-field-label" id="nl_fname">First name</span>
+            <input type="text" id="nl_prenom" placeholder="Yacine">
+          </div>
+          <div class="nl-field">
+            <span class="nl-field-label" id="nl_femail">Email</span>
+            <input type="email" id="nl_email" placeholder="you@startup.com">
+          </div>
+          <div class="nl-field">
+            <span class="nl-field-label" id="nl_fsector">Sector</span>
+            <select id="nl_sector">
+              <option value="">— Select —</option>
+              <option value="saas">SaaS</option>
+              <option value="fintech">Fintech</option>
+              <option value="marketplace">Marketplace</option>
+              <option value="healthtech">Healthtech</option>
+              <option value="edtech">Edtech</option>
+              <option value="agritech">AgriTech</option>
+              <option value="deeptech">Deeptech</option>
+              <option value="ai">AI & Machine Learning</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <button class="nl-submit" id="nl_btn" onclick="subscribeNewsletter()">Subscribe — it's free →</button>
+          <div class="nl-err" id="nl_err">Please fill in your first name and email.</div>
+        </div>
+        <div class="nl-success" id="nl_success">
+          ✓ <span id="nl_success_msg">You're in. First issue lands next month.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ABOUT -->
 <div class="container">
   <div class="about-section" id="about">
@@ -354,7 +451,16 @@ const T={
     aboutTitle:'Built by a founder,<br>for founders.',
     aboutText1:'VCReady was built out of a simple frustration: too many founders walk into investor meetings without knowing their numbers, their weaknesses, or how investors actually evaluate them.',
     aboutText2:'Every tool in this toolkit is free, requires no signup, and is designed to give you the same analytical rigour that institutional investors use — in minutes, not weeks.',
-    aboutRole:'Founder & Startup Ecosystem Builder — Africa & MENA'
+    aboutRole:'Founder & Startup Ecosystem Builder — Africa & MENA',
+    nlLabel:'Monthly Newsletter',nlTitle:'Stay sharp.<br>One email a month.',
+    nlDesc:'A monthly briefing for founders preparing to raise. One deal decoded, one metric explained, one action to take — nothing more.',
+    nlBadge:'April 2026',
+    nlP1t:'Deal of the month',nlP1d:'— Wave raises $200M Series C. IRR decoded, what founders can learn.',
+    nlP2t:'Metric of the month',nlP2d:'— Why LTV/CAC is the #1 metric every SaaS VC looks at first.',
+    nlP3t:'Tip of the month',nlP3d:'— How to justify your EV multiple in 3 slides.',
+    nlFname:'First name',nlFemail:'Email',nlFsector:'Sector',
+    nlBtn:'Subscribe — it\'s free →',
+    nlSuccess:'You\'re in. First issue lands next month.'
   },
   fr:{
     heroTag:'Toolkit Pré-Levée',
@@ -383,9 +489,57 @@ const T={
     aboutTitle:'Conçu par un founder,<br>pour les founders.',
     aboutText1:'VCReady est né d\'une frustration simple : trop de founders entrent dans des réunions investisseurs sans connaître leurs chiffres, leurs faiblesses, ni la façon dont les investisseurs les évaluent réellement.',
     aboutText2:'Chaque outil du toolkit est gratuit, ne nécessite aucune inscription, et est conçu pour vous donner la même rigueur analytique qu\'utilisent les investisseurs institutionnels — en quelques minutes, pas en plusieurs semaines.',
-    aboutRole:'Founder & Bâtisseur d\'écosystème startup — Afrique & MENA'
+    aboutRole:'Founder & Bâtisseur d\'écosystème startup — Afrique & MENA',
+    nlLabel:'Newsletter Mensuelle',nlTitle:'Restez affûté.<br>Un email par mois.',
+    nlDesc:'Un briefing mensuel pour les founders qui préparent leur levée. Un deal décrypté, une métrique expliquée, une action à prendre — rien de plus.',
+    nlBadge:'Avril 2026',
+    nlP1t:'Deal du mois',nlP1d:'— Wave lève $200M en Série C. IRR décrypté, ce que les founders peuvent en apprendre.',
+    nlP2t:'Métrique du mois',nlP2d:'— Pourquoi le LTV/CAC est la métrique #1 que chaque VC SaaS regarde en premier.',
+    nlP3t:'Tip du mois',nlP3d:'— Comment justifier votre multiple sectoriel en 3 slides.',
+    nlFname:'Prénom',nlFemail:'Email',nlFsector:'Secteur',
+    nlBtn:'S\'abonner — c\'est gratuit →',
+    nlSuccess:'C\'est enregistré. Le premier numéro arrive le mois prochain.'
   }
 };
+
+const SUPABASE_URL='https://fvbrzttvdvxhbdkjknje.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YnJ6dHR2ZHZ4aGJka2prbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzgwNTAsImV4cCI6MjA5MDcxNDA1MH0.tcE5PlgMsu7suLAzN3uT5VjKnFhc25qkJJMKkbNmtvI';
+
+async function subscribeNewsletter(){
+  const prenom=document.getElementById('nl_prenom').value.trim();
+  const email=document.getElementById('nl_email').value.trim();
+  const sector=document.getElementById('nl_sector').value;
+  const err=document.getElementById('nl_err');
+  const btn=document.getElementById('nl_btn');
+  if(!prenom||!email){err.style.display='block';return;}
+  err.style.display='none';
+  btn.textContent='Subscribing...';
+  btn.disabled=true;
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/newsletter`,{
+      method:'POST',
+      headers:{
+        'apikey':SUPABASE_KEY,
+        'Authorization':'Bearer '+SUPABASE_KEY,
+        'Content-Type':'application/json',
+        'Prefer':'return=minimal'
+      },
+      body:JSON.stringify({
+        first_name:prenom,
+        email:email,
+        sector:sector||'',
+        language:lang
+      })
+    });
+    document.querySelector('.newsletter-form').style.display='none';
+    document.getElementById('nl_success').style.display='block';
+  }catch(e){
+    btn.textContent=lang==='fr'?'S\'abonner — gratuit →':'Subscribe — it\'s free →';
+    btn.disabled=false;
+    err.textContent=lang==='fr'?'Une erreur est survenue. Réessayez.':'Something went wrong. Please try again.';
+    err.style.display='block';
+  }
+}
 
 let lang='en';
 function setLang(l){
@@ -413,6 +567,15 @@ function setLang(l){
   s('about_label',t.aboutLabel);s('about_title',t.aboutTitle);
   s('about_text1',t.aboutText1);s('about_text2',t.aboutText2);
   s('about_role',t.aboutRole);
+  // Newsletter
+  s('nl_label',t.nlLabel);s('nl_title',t.nlTitle);s('nl_desc',t.nlDesc);
+  s('nl_badge',t.nlBadge);
+  s('nl_p1t',t.nlP1t);s('nl_p1d',t.nlP1d);
+  s('nl_p2t',t.nlP2t);s('nl_p2d',t.nlP2d);
+  s('nl_p3t',t.nlP3t);s('nl_p3d',t.nlP3d);
+  s('nl_fname',t.nlFname);s('nl_femail',t.nlFemail);s('nl_fsector',t.nlFsector);
+  s('nl_btn',t.nlBtn);s('nl_success_msg',t.nlSuccess);
+  const nlBtn=document.getElementById('nl_btn');if(nlBtn)nlBtn.textContent=t.nlBtn;
 }
 setLang('en');
 </script>
