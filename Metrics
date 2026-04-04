@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Startup Metrics Calculator — VC Valuation Tool</title>
+<title>ReadyVC — Metrics Calculator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -130,11 +130,14 @@ footer a{color:var(--green);text-decoration:none}
 <body>
 
 <div class="topbar">
-  <a class="logo" href="index.html">VC <span>Valuation</span> Tool</a>
-  <div class="topbar-nav">
-    <a href="tool.html" class="nav-link">Valuation</a>
-    <a href="metrics.html" class="nav-link active">Metrics</a>
-    <div class="lang-toggle">
+  <a href="index.html" style="font-family:var(--font-serif);font-size:20px;letter-spacing:-.03em;text-decoration:none;display:flex;align-items:baseline;gap:2px">
+    <span style="color:var(--navy)">Ready</span><span style="color:var(--green)">VC</span>
+  </a>
+  <div style="display:flex;align-items:center;gap:0">
+    <a href="index.html" style="font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);text-decoration:none;padding:0 16px;transition:color .15s" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--navy3)'">Home</a>
+    <a href="valuation.html" style="font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);text-decoration:none;padding:0 16px;transition:color .15s" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--navy3)'" id="nav_val">Valuation</a>
+    <a href="metrics.html" style="font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);text-decoration:none;padding:0 16px;transition:color .15s" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--navy3)'" id="nav_met">Metrics</a>
+    <div style="display:flex;border:1px solid var(--line);margin-left:16px">
       <button class="lang-btn active" onclick="setLang('en')">EN</button>
       <button class="lang-btn" onclick="setLang('fr')">FR</button>
     </div>
@@ -204,7 +207,7 @@ footer a{color:var(--green);text-decoration:none}
 </div>
 
 <footer>
-  <span>VC Valuation Tool · by <strong>Yacine CHIKHAR</strong> · © 2026</span>
+  <span>ReadyVC · by <strong>Yacine CHIKHAR</strong> · © 2026</span>
   <a href="tool.html" id="footer_link">← Back to Valuation Tool</a>
 </footer>
 
