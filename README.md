@@ -1,17 +1,17 @@
-# ReadyVC
+# VCReady
 ### *Show up ready.*
 
 > The pre-fundraising toolkit for founders worldwide. Free, precise, and built for every founder preparing to raise.
 
-🌐 **Live:** [readyvc.co](https://readyvc.co) 
+🌐 **Live:** [vcready.co](https://vcready.co) *(or your GitHub Pages URL)*
 
 ---
 
-## What is ReadyVC?
+## What is VCReady?
 
-ReadyVC is a free, open-access toolkit that gives founders every analytical tool they need before walking into an investor meeting. No finance background required. No signup. No cost.
+VCReady is a free, open-access toolkit that gives founders every analytical tool they need before walking into an investor meeting. No finance background required. No signup. No cost.
 
-Built by **Yacine CHIKHAR** — founder, startup ecosystem explorer. 
+Built by **Yacine CHIKHAR** — founder,and startup ecosystem builder across Africa and MENA.
 
 ---
 
@@ -29,7 +29,7 @@ Built by **Yacine CHIKHAR** — founder, startup ecosystem explorer.
 
 ## Tool 01 — VC Valuation
 
-The core ReadyVC tool. Uses the **Venture Capital (VC) Method** — the standard used by professional investors at every stage.
+The core VCReady tool. Uses the **Venture Capital (VC) Method** — the standard used by professional investors at every stage.
 
 **What it calculates:**
 - **PV (Present Value)** — what your startup is worth today in the eyes of an investor
@@ -149,8 +149,8 @@ All tools are free. For founders who want to go deeper — refine their valuatio
 ## Author
 
 **Yacine CHIKHAR**
-Tech Explorer 
-[yacine.chikhar@globalafricatech.com](mailto:yacine.chikhar@globalafricatech.com)
+Startup Ecosystem Explorer 
+[yacine.chikhar@gmail.com](mailto:yacine.chikhar@gmail.com)
 
 ---
 
