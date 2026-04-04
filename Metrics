@@ -426,10 +426,108 @@ function calcAgri(v){
   ];
 }
 
-// ── RENDER ──
+function generateMetricsAnalysis(metrics, v, sector, lang){
+  const fr=lang==='fr';
+  const points=[];
+  const m={};
+  metrics.forEach(mt=>{ if(mt.label) m[mt.label]=mt; });
+
+  if(sector==='saas'){
+    const ltvCac=parseFloat(metrics.find(x=>x.label==='LTV / CAC')?.value)||0;
+    const churn=parseFloat(metrics.find(x=>x.label==='Churn Rate')?.value)||0;
+    const cac=parseFloat(metrics.find(x=>x.label==='CAC')?.value?.replace('$','').replace('K','000').replace('M','000000'))||0;
+    const arr=metrics.find(x=>x.label==='ARR');
+    const growth=parseFloat(metrics.find(x=>x.label==='MRR Growth')?.value)||0;
+
+    if(ltvCac>=3) points.push(fr?`<strong>LTV/CAC solide à ${ltvCac.toFixed(1)}×</strong> — Votre unit economics passe le test VC fondamental. Un ratio ≥ 3× signale qu'un client rapporte au moins 3 fois son coût d'acquisition. Maintenez ce ratio en croissant.`:`<strong>Strong LTV/CAC at ${ltvCac.toFixed(1)}×</strong> — Your unit economics pass the fundamental VC test. A ratio ≥ 3× signals that a customer brings back at least 3 times their acquisition cost. Maintain this as you scale.`);
+    else if(ltvCac>0) points.push(fr?`<strong>LTV/CAC à améliorer (${ltvCac.toFixed(1)}×)</strong> — En dessous du seuil VC de 3×. Deux leviers : réduire le CAC (améliorer le marketing organique, referrals) ou augmenter la LTV (upsell, réduire le churn). Priorisez le churn d'abord.`:`<strong>LTV/CAC needs work (${ltvCac.toFixed(1)}×)</strong> — Below the VC threshold of 3×. Two levers: reduce CAC (improve organic marketing, referrals) or increase LTV (upsell, reduce churn). Prioritize churn first.`);
+
+    if(churn<2) points.push(fr?`<strong>Churn Rate excellent (${churn.toFixed(1)}%)</strong> — En dessous de 2%, vous êtes dans le top quartile SaaS. C'est votre argument le plus fort sur la rétention — mettez-le en avant dans votre pitch deck.`:`<strong>Excellent churn rate (${churn.toFixed(1)}%)</strong> — Below 2%, you're in the top SaaS quartile. This is your strongest retention argument — feature it prominently in your pitch deck.`);
+    else if(churn>5) points.push(fr?`<strong>Churn Rate préoccupant (${churn.toFixed(1)}%)</strong> — Au-dessus de 5%, chaque euro investi en acquisition fuit par le bas. Avant de pitcher, conduisez 10 entretiens de sortie clients. La cause est presque toujours dans l'onboarding ou le product-market fit.`:`<strong>Concerning churn rate (${churn.toFixed(1)}%)</strong> — Above 5%, every dollar invested in acquisition leaks out the bottom. Before pitching, run 10 customer exit interviews. The cause is almost always in onboarding or product-market fit.`);
+
+    if(growth>10) points.push(fr?`<strong>Croissance MRR forte (${growth.toFixed(1)}%/mois)</strong> — Au-dessus de 10% mensuel, vous êtes sur une trajectoire T2D3 (triple, triple, double, double). C'est le profil que les VCs cherchent activement. Préparez votre narrative de croissance.`:`<strong>Strong MRR growth (${growth.toFixed(1)}%/month)</strong> — Above 10% monthly, you're on a T2D3 trajectory (triple, triple, double, double). This is the profile VCs actively look for. Prepare your growth narrative.`);
+
+    if(arr?.status==='bad') points.push(fr?`<strong>ARR encore précoce</strong> — En dessous de $100K ARR, la plupart des VCs institutionnels passeront leur tour. Concentrez-vous sur atteindre $100K ARR avant de pitcher — cela multiplie vos options de financement par 5.`:`<strong>ARR still early-stage</strong> — Below $100K ARR, most institutional VCs will pass. Focus on reaching $100K ARR before pitching — it multiplies your financing options by 5.`);
+  }
+
+  else if(sector==='marketplace'){
+    const gm=parseFloat(metrics.find(x=>x.label==='Gross Margin')?.value)||0;
+    const roas=parseFloat(metrics.find(x=>x.label==='ROAS')?.value)||0;
+    const repeat=parseFloat(metrics.find(x=>x.label==='Repeat Rate')?.value)||0;
+    const take=parseFloat(metrics.find(x=>x.label==='Take Rate')?.value)||0;
+
+    if(gm>50) points.push(fr?`<strong>Marge brute solide (${gm.toFixed(0)}%)</strong> — Au-dessus de 50%, vous avez la structure pour devenir profitable en scalant. Les VCs marketplace cherchent ≥ 60% à maturité. Montrez le chemin vers 60%+.`:`<strong>Strong gross margin (${gm.toFixed(0)}%)</strong> — Above 50%, you have the structure to become profitable at scale. Marketplace VCs look for ≥ 60% at maturity. Show the path to 60%+.`);
+    else if(gm<30) points.push(fr?`<strong>Marge brute faible (${gm.toFixed(0)}%)</strong> — En dessous de 30%, la marketplace sera difficile à financer. Revoyez votre pricing, réduisez les coûts de fulfillment, ou augmentez votre take rate progressivement.`:`<strong>Low gross margin (${gm.toFixed(0)}%)</strong> — Below 30%, the marketplace will be hard to finance. Revisit your pricing, reduce fulfillment costs, or gradually increase your take rate.`);
+
+    if(roas>=3) points.push(fr?`<strong>ROAS excellent (${roas.toFixed(1)}×)</strong> — Chaque dollar investi en pub rapporte ${roas.toFixed(1)}× en revenu. C'est le signe d'une acquisition scalable. Vous pouvez accélérer le budget marketing en maintenant ce ratio.`:`<strong>Excellent ROAS (${roas.toFixed(1)}×)</strong> — Every dollar spent on ads returns ${roas.toFixed(1)}× in revenue. This signals scalable acquisition. You can accelerate marketing spend while maintaining this ratio.`);
+    else if(roas<1.5) points.push(fr?`<strong>ROAS insuffisant (${roas.toFixed(1)}×)</strong> — Vous perdez de l'argent sur chaque acquisition payante. Stoppez les campagnes déficitaires et basculez sur l'acquisition organique (SEO, contenu, partenariats) jusqu'à corriger le funnel.`:`<strong>Insufficient ROAS (${roas.toFixed(1)}×)</strong> — You're losing money on every paid acquisition. Stop underperforming campaigns and shift to organic acquisition (SEO, content, partnerships) until you fix the funnel.`);
+
+    if(repeat>=40) points.push(fr?`<strong>Taux de rachat fort (${repeat.toFixed(0)}%)</strong> — Plus de 40% de vos clients reviennent. C'est votre meilleur indicateur de product-market fit. Mettez ce chiffre en slide 1 de votre deck.`:`<strong>Strong repeat rate (${repeat.toFixed(0)}%)</strong> — Over 40% of your customers come back. This is your strongest product-market fit indicator. Put this number on slide 1 of your deck.`);
+
+    if(take<5) points.push(fr?`<strong>Take rate faible (${take.toFixed(1)}%)</strong> — En dessous de 5%, la monétisation est sous-optimisée. La plupart des marketplaces saines opèrent à 10–20%. Testez une augmentation progressive — si la liquidité ne baisse pas, c'est une opportunité directe sur le P&L.`:`<strong>Low take rate (${take.toFixed(1)}%)</strong> — Below 5%, monetisation is under-optimised. Most healthy marketplaces run at 10–20%. Test a gradual increase — if liquidity doesn't drop, it's a direct P&L opportunity.`);
+  }
+
+  else if(sector==='fintech'){
+    const runway=parseFloat(metrics.find(x=>x.label==='Runway')?.value)||0;
+    const arpu=parseFloat(metrics.find(x=>x.label==='ARPU')?.value?.replace('$',''))||0;
+    const mau=parseFloat(metrics.find(x=>x.label==='MAU')?.value?.replace('K','000').replace('M','000000'))||0;
+    const cac=parseFloat(metrics.find(x=>x.label==='CAC')?.value?.replace('$','').replace('K','000'))||0;
+
+    if(runway>=18) points.push(fr?`<strong>Runway confortable (${runway.toFixed(0)} mois)</strong> — Vous avez le temps de négocier. Un runway ≥ 18 mois vous donne un levier de négociation fort avec les investisseurs — vous n'êtes pas en situation de nécessité.`:`<strong>Comfortable runway (${runway.toFixed(0)} months)</strong> — You have time to negotiate. A runway ≥ 18 months gives you strong negotiating leverage with investors — you're not in a position of need.`);
+    else if(runway<9) points.push(fr?`<strong>Runway critique (${runway.toFixed(0)} mois)</strong> — En dessous de 9 mois, vous êtes en mode survie. Priorité absolue : réduire le burn (coûts non-essentiels), accélérer la conversion de revenus, et lancer le processus de levée immédiatement.`:`<strong>Critical runway (${runway.toFixed(0)} months)</strong> — Below 9 months, you're in survival mode. Absolute priority: reduce burn (non-essential costs), accelerate revenue conversion, and start the fundraising process immediately.`);
+
+    if(arpu>5) points.push(fr?`<strong>ARPU solide ($${arpu.toFixed(2)}/mois)</strong> — Bonne monétisation par utilisateur. Montrez la trajectoire de croissance ARPU dans le temps — les VCs fintech adorent voir l'expansion des revenus sur la base existante.`:`<strong>Solid ARPU ($${arpu.toFixed(2)}/month)</strong> — Good per-user monetisation. Show the ARPU growth trajectory over time — fintech VCs love to see revenue expansion on the existing base.`);
+
+    if(mau<1000) points.push(fr?`<strong>MAU encore limités</strong> — La traction utilisateur est le premier signal pour un VC fintech. Concentrez-vous sur 10× vos MAU avant de pitcher Series A. En dessous de 10K MAU, un pré-seed ou seed avec business angels est plus réaliste.`:`<strong>MAU still limited</strong> — User traction is the primary signal for a fintech VC. Focus on 10× your MAU before pitching Series A. Below 10K MAU, a pre-seed or seed with angels is more realistic.`);
+
+    if(cac<100) points.push(fr?`<strong>CAC excellent (< $100)</strong> — Acquisition très efficiente pour la fintech. Documentez vos canaux d'acquisition — c'est un actif stratégique que les VCs voudront comprendre et répliquer avec leur capital.`:`<strong>Excellent CAC (< $100)</strong> — Very efficient acquisition for fintech. Document your acquisition channels — it's a strategic asset VCs will want to understand and replicate with their capital.`);
+  }
+
+  else if(sector==='deeptech'){
+    const runway=parseFloat(metrics.find(x=>x.label==='Runway')?.value)||0;
+    const rdPct=parseFloat(metrics.find(x=>x.label==='R&D %')?.value)||0;
+    const patents=parseFloat(metrics.find(x=>x.label==='Patents / IP'||x.label==='Brevets / IP')?.value)||0;
+    const milestone=parseFloat(metrics.find(x=>x.label?.includes('Milestone'))?.value)||0;
+
+    if(runway<milestone) points.push(fr?`<strong>⚠️ Runway insuffisant pour atteindre le prochain milestone</strong> — Votre runway (${runway.toFixed(0)} mois) est inférieur à votre timeline milestone (${milestone} mois). C'est le signal d'alarme #1 pour un VC Deeptech. Levée de pont ou réduction du burn immédiate.`:`<strong>⚠️ Runway insufficient to reach next milestone</strong> — Your runway (${runway.toFixed(0)} months) is below your milestone timeline (${milestone} months). This is the #1 red flag for a Deeptech VC. Bridge raise or immediate burn reduction required.`);
+    else if(runway>=24) points.push(fr?`<strong>Runway solide (${runway.toFixed(0)} mois)</strong> — Pour Deeptech, 24+ mois est le standard. Vous pouvez négocier sereinement et attendre le bon moment de marché. Ne pitchez pas trop tôt — chaque milestone accompli multiplie votre valorisation.`:`<strong>Solid runway (${runway.toFixed(0)} months)</strong> — For Deeptech, 24+ months is the standard. You can negotiate calmly and wait for the right market timing. Don't pitch too early — each completed milestone multiplies your valuation.`);
+
+    if(rdPct>60) points.push(fr?`<strong>Profil R&D authentique (${rdPct.toFixed(0)}% du burn)</strong> — Plus de 60% de votre burn est dédié à la R&D. C'est le signal qu'un VC Deeptech ou un fonds d'impact cherche. Documentez vos résultats de recherche et publications.`:`<strong>Authentic R&D profile (${rdPct.toFixed(0)}% of burn)</strong> — Over 60% of your burn is dedicated to R&D. This is the signal a Deeptech VC or impact fund looks for. Document your research results and publications.`);
+
+    if(patents>=2) points.push(fr?`<strong>IP solide (${patents} brevets)</strong> — Les brevets sont votre barrière à l'entrée. Dans un pitch Deeptech, ils justifient un multiple de valorisation premium. Assurez-vous que votre IP est clairement documentée dans votre data room.`:`<strong>Strong IP (${patents} patents)</strong> — Patents are your barrier to entry. In a Deeptech pitch, they justify a premium valuation multiple. Make sure your IP is clearly documented in your data room.`);
+    else points.push(fr?`<strong>IP à renforcer</strong> — Moins de 2 brevets pour une Deeptech fragilise votre moat technologique. Priorisez les dépôts de brevets avant la levée — même en cours de dépôt, cela renforce significativement votre position.`:`<strong>IP to strengthen</strong> — Less than 2 patents for a Deeptech weakens your technological moat. Prioritize patent filings before fundraising — even pending filings significantly strengthen your position.`);
+  }
+
+  else if(sector==='agri'){
+    const mrr=metrics.find(x=>x.label==='MRR');
+    const ltvCac=parseFloat(metrics.find(x=>x.label==='LTV / CAC')?.value)||0;
+    const churn=parseFloat(metrics.find(x=>x.label==='Churn Rate')?.value)||0;
+    const runway=parseFloat(metrics.find(x=>x.label==='Runway')?.value)||0;
+    const arpu=parseFloat(metrics.find(x=>x.label==='ARPU')?.value?.replace('$',''))||0;
+
+    points.push(fr?`<strong>Contexte AgriTech Afrique</strong> — Les VCs impact et les fonds de développement (IFC, AfDB, Seedstars) valorisent 3 métriques clés dans ce secteur : le nombre d'agriculteurs actifs, le revenu par agriculteur (ARPU), et la rétention saisonnière. Documentez ces trois métriques avec des données terrain.`:`<strong>Africa AgriTech context</strong> — Impact VCs and development funds (IFC, AfDB, Seedstars) value 3 key metrics in this sector: active farmer count, revenue per farmer (ARPU), and seasonal retention. Document these three metrics with ground-level data.`);
+
+    if(arpu>10) points.push(fr?`<strong>ARPU solide pour l'Afrique ($${arpu.toFixed(2)}/mois)</strong> — Au-dessus de $10/mois par agriculteur, votre modèle est viable et scalable. Montrez comment l'ARPU peut croître avec l'adoption de services additionnels (crédit, intrants, assurance).`:`<strong>Strong ARPU for Africa ($${arpu.toFixed(2)}/month)</strong> — Above $10/month per farmer, your model is viable and scalable. Show how ARPU can grow with adoption of additional services (credit, inputs, insurance).`);
+
+    if(churn>8) points.push(fr?`<strong>Churn élevé (${churn.toFixed(1)}%)</strong> — Un churn > 8% dans l'AgriTech est souvent lié à la saisonnalité. Distinguez le churn saisonnier (acceptable) du churn permanent (préoccupant) dans votre pitch. Les investisseurs impact comprennent la saisonnalité agricole.`:`<strong>High churn (${churn.toFixed(1)}%)</strong> — Churn > 8% in AgriTech is often linked to seasonality. Distinguish seasonal churn (acceptable) from permanent churn (concerning) in your pitch. Impact investors understand agricultural seasonality.`);
+
+    if(ltvCac>=3) points.push(fr?`<strong>Unit economics viable (LTV/CAC ${ltvCac.toFixed(1)}×)</strong> — Ratio ≥ 3× en contexte rural africain est une performance remarquable. Mettez-le en avant — peu de startups AgriTech africaines peuvent afficher un LTV/CAC positif à ce stade.`:`<strong>Viable unit economics (LTV/CAC ${ltvCac.toFixed(1)}×)</strong> — A ratio ≥ 3× in African rural context is a remarkable performance. Highlight it — few African AgriTech startups can show positive LTV/CAC at this stage.`);
+
+    if(runway<12) points.push(fr?`<strong>Runway court (${runway.toFixed(0)} mois)</strong> — Les cycles de financement impact sont longs (6–9 mois). Avec moins de 12 mois de runway, lancez le processus de levée maintenant. Ciblez d'abord les fonds régionaux rapides : Saviu Ventures, Norrsken22, Jedar Capital.`:`<strong>Short runway (${runway.toFixed(0)} months)</strong> — Impact financing cycles are long (6–9 months). With less than 12 months runway, start the fundraising process now. Target fast regional funds first: Saviu Ventures, Norrsken22, Jedar Capital.`);
+  }
+
+  // Always add a closing action point
+  points.push(fr
+    ?`<strong>Prochaine étape</strong> — Ces métriques sont votre diagnostic de base. Pour transformer ces chiffres en argumentaire investisseur solide et identifier les 2–3 actions prioritaires avant votre levée, réservez une session de travail.`
+    :`<strong>Next step</strong> — These metrics are your baseline diagnostic. To turn these numbers into a solid investor argument and identify your 2–3 priority actions before fundraising, book a working session.`
+  );
+
+  return points;
+}
+
 function fmt(n){if(n>=1000000)return(n/1000000).toFixed(2)+'M';if(n>=1000)return(n/1000).toFixed(1)+'K';return Math.round(n).toLocaleString();}
 
-function renderResults(metrics){
+function renderResults(metrics, v){
   document.getElementById('results-empty').style.display='none';
   document.getElementById('results-area').style.display='block';
   const grid=document.getElementById('metrics-grid');
@@ -469,32 +567,23 @@ function renderResults(metrics){
       </div>`;
   }
 
-  // Verdict
+  // Contextual analysis
+  const analysisPoints=generateMetricsAnalysis(metrics, v, currentSector, lang);
   const goodCount=metrics.filter(m=>m.status==='good').length;
   const badCount=metrics.filter(m=>m.status==='bad').length;
-  let verdictClass='ok', verdictText='';
-  if(goodCount>=4){
-    verdictClass='good';
-    verdictText=lang==='fr'
-      ?`Profil solide — ${goodCount} métriques au-dessus du seuil VC. Vous êtes dans une position favorable pour engager des investisseurs. Préparez vos comparables sectoriels et votre data room.`
-      :`Strong profile — ${goodCount} metrics above VC threshold. You're in a favorable position to engage investors. Prepare your sector comparables and data room.`;
-  } else if(badCount>=3){
-    verdictClass='bad';
-    verdictText=lang==='fr'
-      ?`${badCount} métriques en dessous des seuils. Avant de pitcher, concentrez-vous sur l'amélioration de votre CAC, churn ou runway selon les résultats. Réservez une session pour prioriser vos actions.`
-      :`${badCount} metrics below thresholds. Before pitching, focus on improving your CAC, churn, or runway based on results. Book a session to prioritize your actions.`;
-  } else {
-    verdictText=lang==='fr'
-      ?`Profil mixte — certaines métriques sont solides, d'autres nécessitent du travail. Identifiez vos 2 points faibles prioritaires et construisez un plan d'amélioration avant la levée.`
-      :`Mixed profile — some metrics are strong, others need work. Identify your 2 priority weak points and build an improvement plan before fundraising.`;
-  }
+  const verdictClass=goodCount>=4?'good':badCount>=3?'bad':'ok';
+
   grid.innerHTML+=`
-    <div class="verdict-box ${verdictClass}" style="grid-column:1/-1;margin-top:0;border-top:none">
-      <div class="verdict-title">${lang==='fr'?'Diagnostic investisseur':'Investor diagnostic'}</div>
-      <div class="verdict-text">${verdictText}</div>
-      <div style="margin-top:16px">
-        <a href="https://calendly.com/yacine-chikhar/30min" target="_blank" style="font-size:12px;font-weight:500;color:var(--green);text-decoration:none;letter-spacing:.04em">📅 ${lang==='fr'?'Réserver une session avec un expert →':'Book a session with an expert →'}</a>
+    <div class="verdict-box ${verdictClass}" style="grid-column:1/-1;border-top:1px solid var(--line);padding-top:28px">
+      <div class="verdict-title" style="margin-bottom:20px">${lang==='fr'?'Analyse de votre situation':'Analysis of your situation'}</div>
+      <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:24px">
+        ${analysisPoints.map(p=>`
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div style="width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:7px"></div>
+            <div style="font-size:13px;color:var(--navy2);line-height:1.75">${p}</div>
+          </div>`).join('')}
       </div>
+      <a href="https://calendly.com/yacine-chikhar/30min" target="_blank" style="display:inline-block;background:var(--navy);color:var(--cream);padding:12px 24px;font-size:12px;font-weight:500;letter-spacing:.04em;text-decoration:none;transition:background .15s" onmouseover="this.style.background='var(--green)'" onmouseout="this.style.background='var(--navy)'">📅 ${lang==='fr'?'Réserver une session avec un expert →':'Book a session with an expert →'}</a>
     </div>`;
 }
 
@@ -510,7 +599,7 @@ function calculate(){
   else if(currentSector==='fintech') metrics=calcFintech(v);
   else if(currentSector==='deeptech') metrics=calcDeetech(v);
   else if(currentSector==='agri') metrics=calcAgri(v);
-  renderResults(metrics);
+  renderResults(metrics, v);
 }
 
 function setSector(s){
