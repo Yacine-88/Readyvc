@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VC Valuation Tool — Know Your Worth Before You Pitch</title>
-<meta name="description" content="Free VC valuation tool for African & MENA founders. Calculate your IRR, EV, CoCa and Investor Score in minutes.">
+<title>ReadyVC — Show up ready.</title>
+<meta name="description" content="The pre-fundraising toolkit for founders worldwide. VC Valuation, Metrics, Pitch Score, Data Room, Cap Table — all free.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
 :root{
   --cream:#F5F2EC;--navy:#12120F;--navy2:#3A3830;--navy3:#8A8880;
-  --line:#D8D4CC;--green:#1A6B47;
+  --line:#D8D4CC;--green:#1A6B47;--green-bg:#E8F5EE;--green-border:#A8D5BC;
   --font:'DM Sans',sans-serif;--font-serif:'DM Serif Display',serif;
 }
 html{scroll-behavior:smooth}
@@ -20,69 +20,91 @@ body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size
 
 /* ── TOPBAR ── */
 .topbar{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1px solid var(--line);height:60px;padding:0 48px;display:flex;align-items:center;justify-content:space-between}
-.logo{font-family:var(--font-serif);font-size:18px;color:var(--navy);letter-spacing:-.02em;text-decoration:none}
-.logo span{color:var(--green)}
-.nav-cta{background:var(--navy);color:var(--cream);padding:9px 20px;font-size:12px;font-weight:500;text-decoration:none;letter-spacing:.03em;transition:background .15s}
-.nav-cta:hover{background:var(--green)}
-.lang-toggle{display:flex;gap:0;border:1px solid var(--line);margin-right:16px}
+.logo{font-family:var(--font-serif);font-size:20px;color:var(--navy);letter-spacing:-.03em;text-decoration:none;display:flex;align-items:baseline;gap:2px}
+.logo-ready{color:var(--navy)}
+.logo-vc{color:var(--green)}
+.topbar-right{display:flex;align-items:center;gap:0}
+.lang-toggle{display:flex;border:1px solid var(--line);margin-right:20px}
 .lang-btn{padding:6px 12px;font-size:11px;font-weight:500;background:transparent;border:none;color:var(--navy3);cursor:pointer;font-family:var(--font);letter-spacing:.04em;transition:all .15s}
 .lang-btn.active{background:var(--navy);color:var(--cream)}
-.topbar-right{display:flex;align-items:center;gap:0}
+.topbar-cta{background:var(--navy);color:var(--cream);padding:9px 20px;font-size:12px;font-weight:500;text-decoration:none;letter-spacing:.03em;transition:background .15s}
+.topbar-cta:hover{background:var(--green)}
 
 /* ── CONTAINER ── */
 .container{max-width:1200px;margin:0 auto;padding:0 48px}
 
 /* ── HERO ── */
-.hero{padding:110px 0 100px;display:grid;grid-template-columns:1fr 1fr;gap:100px;align-items:center;border-bottom:1px solid var(--line)}
-.hero-tag{font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--navy3);margin-bottom:28px;display:flex;align-items:center;gap:10px}
+.hero{padding:100px 0 80px;display:grid;grid-template-columns:1fr 1fr;gap:100px;align-items:center;border-bottom:1px solid var(--line)}
+.hero-tag{font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--navy3);margin-bottom:24px;display:flex;align-items:center;gap:10px}
 .hero-tag::before{content:'';display:block;width:24px;height:1px;background:var(--navy3)}
-.hero h1{font-family:var(--font-serif);font-size:58px;color:var(--navy);letter-spacing:-.04em;line-height:1.02;font-weight:400;margin-bottom:24px}
-.hero p{font-size:15px;color:var(--navy2);line-height:1.75;margin-bottom:40px;max-width:380px}
+.hero h1{font-family:var(--font-serif);font-size:60px;color:var(--navy);letter-spacing:-.04em;line-height:1.0;font-weight:400;margin-bottom:20px}
+.hero h1 em{color:var(--green);font-style:normal}
+.hero p{font-size:15px;color:var(--navy2);line-height:1.75;margin-bottom:36px;max-width:400px}
 .hero-cta{display:inline-block;background:var(--navy);color:var(--cream);padding:15px 32px;font-size:13px;font-weight:500;text-decoration:none;letter-spacing:.03em;transition:background .15s}
 .hero-cta:hover{background:var(--green)}
-.hero-sub{font-size:11px;color:var(--navy3);margin-top:16px;letter-spacing:.03em}
-.hero-sub span{color:var(--green)}
+.hero-sub{font-size:11px;color:var(--navy3);margin-top:14px;letter-spacing:.03em}
 
-/* HERO RIGHT — stats */
+/* HERO STATS */
 .hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:0}
-.stat{border-top:1px solid var(--line);padding:32px 28px 28px}
-.stat-num{font-family:var(--font-serif);font-size:48px;color:var(--navy);letter-spacing:-.04em;font-weight:400;line-height:1;margin-bottom:10px}
+.stat{border-top:1px solid var(--line);padding:28px 24px 24px}
+.stat-num{font-family:var(--font-serif);font-size:44px;color:var(--navy);letter-spacing:-.04em;font-weight:400;line-height:1;margin-bottom:8px}
 .stat-lbl{font-size:12px;color:var(--navy3);line-height:1.5}
 
-/* ── DIVIDER ── */
-hr{border:none;border-top:1px solid var(--line)}
+/* ── TOOLKIT SECTION ── */
+.toolkit{padding:80px 0;border-bottom:1px solid var(--line)}
+.toolkit-header{display:grid;grid-template-columns:280px 1fr;gap:80px;margin-bottom:48px}
+.toolkit-label{font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--navy3)}
+.toolkit-intro{font-size:15px;color:var(--navy2);line-height:1.75;max-width:520px}
 
-/* ── STATS SECTION ── */
-.stats-section{padding:80px 0;display:grid;grid-template-columns:320px 1fr;gap:80px;align-items:start;border-bottom:1px solid var(--line)}
-.section-label{font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--navy3);padding-top:4px}
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
-.stat-item{border-top:1px solid var(--line);padding:28px 0 24px;padding-right:40px}
-.stat-item-num{font-family:var(--font-serif);font-size:40px;color:var(--navy);letter-spacing:-.03em;font-weight:400;margin-bottom:8px}
-.stat-item-lbl{font-size:12px;color:var(--navy3);line-height:1.5}
+/* TOOLS LIST */
+.tools-list{display:flex;flex-direction:column;gap:0}
+.tool-row{display:grid;grid-template-columns:48px 1fr auto;gap:0;align-items:center;border-top:1px solid var(--line);padding:28px 0;text-decoration:none;color:inherit;transition:all .2s;cursor:pointer}
+.tool-row:last-child{border-bottom:1px solid var(--line)}
+.tool-row:hover .tool-num{color:var(--green)}
+.tool-row:hover .tool-arrow{transform:translateX(4px);color:var(--green)}
+.tool-row:hover .tool-name{color:var(--green)}
+.tool-row.soon{opacity:.5;cursor:default;pointer-events:none}
+.tool-num{font-family:var(--font-serif);font-size:13px;color:var(--navy3);letter-spacing:.04em;transition:color .2s;padding-top:2px}
+.tool-body{padding:0 32px 0 0}
+.tool-name{font-family:var(--font-serif);font-size:22px;color:var(--navy);letter-spacing:-.02em;font-weight:400;margin-bottom:6px;transition:color .2s}
+.tool-desc{font-size:13px;color:var(--navy3);line-height:1.5}
+.tool-tags{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.tool-tag{font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--navy3);background:transparent;border:1px solid var(--line);padding:3px 8px}
+.tool-tag.green{border-color:var(--green-border);color:var(--green);background:var(--green-bg)}
+.tool-right{display:flex;align-items:center;gap:16px;flex-shrink:0}
+.tool-arrow{font-size:18px;color:var(--navy3);transition:all .2s}
+.tool-badge{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);border:1px solid var(--line);padding:4px 10px;white-space:nowrap}
+.tool-badge.live{border-color:var(--green-border);color:var(--green);background:var(--green-bg)}
 
 /* ── EXPERT CTA ── */
-.expert-section{background:var(--navy);padding:0;margin-top:0}
-.expert-inner{max-width:1200px;margin:0 auto;padding:80px 48px;display:grid;grid-template-columns:1fr 1fr;gap:100px;align-items:center}
+.expert{background:var(--navy);padding:80px 0;margin-top:0}
+.expert-inner{max-width:1200px;margin:0 auto;padding:0 48px;display:grid;grid-template-columns:1fr 1fr;gap:100px;align-items:center}
 .expert-tag{font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:20px;display:flex;align-items:center;gap:10px}
 .expert-tag::before{content:'';display:block;width:20px;height:1px;background:rgba(255,255,255,.3)}
-.expert-section h2{font-family:var(--font-serif);font-size:44px;color:#FFF;letter-spacing:-.04em;font-weight:400;line-height:1.05}
-.expert-section p{font-size:15px;color:rgba(255,255,255,.6);line-height:1.75;margin-bottom:32px}
+.expert h2{font-family:var(--font-serif);font-size:40px;color:#FFF;letter-spacing:-.04em;font-weight:400;line-height:1.1}
+.expert p{font-size:15px;color:rgba(255,255,255,.65);line-height:1.75;margin-bottom:28px}
 .expert-btn{display:inline-block;border:1px solid rgba(255,255,255,.3);color:#FFF;padding:14px 28px;font-size:13px;letter-spacing:.03em;text-decoration:none;transition:all .15s}
 .expert-btn:hover{background:#FFF;color:var(--navy)}
 
 /* ── FOOTER ── */
-footer{padding:28px 48px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--navy3);letter-spacing:.06em;text-transform:uppercase}
+footer{border-top:1px solid var(--line);padding:24px 48px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--navy3);letter-spacing:.06em;text-transform:uppercase}
 footer a{color:var(--green);text-decoration:none}
 
 /* ── RESPONSIVE ── */
 @media(max-width:900px){
-  .container,.expert-inner,.topbar{padding-left:24px;padding-right:24px}
-  .hero{grid-template-columns:1fr;padding:64px 0 60px;gap:48px}
+  .container,.topbar,.expert-inner,footer{padding-left:24px;padding-right:24px}
+  .hero{grid-template-columns:1fr;padding:60px 0 48px;gap:40px}
   .hero h1{font-size:40px}
-  .stats-section{grid-template-columns:1fr;gap:24px}
-  .expert-inner{grid-template-columns:1fr;gap:32px;padding:48px 24px}
-  .expert-section h2{font-size:32px}
-  footer{padding:20px 24px;flex-direction:column;gap:8px;text-align:center}
+  .hero-stats{grid-template-columns:1fr 1fr}
+  .toolkit-header{grid-template-columns:1fr;gap:16px;margin-bottom:32px}
+  .expert{padding:48px 0}
+  .expert-inner{grid-template-columns:1fr;gap:28px;padding:0 24px}
+  .expert h2{font-size:28px}
+  .tool-row{grid-template-columns:40px 1fr auto;padding:20px 0}
+  .tool-name{font-size:18px}
+  .tool-body{padding-right:16px}
+  footer{flex-direction:column;gap:8px;text-align:center;padding:20px 24px}
+  .topbar{padding:0 24px}
 }
 </style>
 </head>
@@ -90,14 +112,15 @@ footer a{color:var(--green);text-decoration:none}
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <a class="logo" href="/">VC <span>Valuation</span> Tool</a>
+  <a class="logo" href="/">
+    <span class="logo-ready">Ready</span><span class="logo-vc">VC</span>
+  </a>
   <div class="topbar-right">
     <div class="lang-toggle">
       <button class="lang-btn active" onclick="setLang('en')">EN</button>
       <button class="lang-btn" onclick="setLang('fr')">FR</button>
     </div>
-    <a href="metrics.html" class="nav-link" style="padding:0 20px;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);text-decoration:none">Metrics</a>
-    <a href="tool.html" class="nav-cta" id="nav_cta">Start your valuation →</a>
+    <a href="valuation.html" class="topbar-cta" id="topbar_cta">Start your valuation →</a>
   </div>
 </div>
 
@@ -105,114 +128,201 @@ footer a{color:var(--green);text-decoration:none}
 <div class="container">
   <div class="hero">
     <div>
-      <div class="hero-tag" id="hero_tag">Venture Capital Method</div>
-      <h1 id="hero_h1">Know Your Worth<br>Before You Pitch</h1>
-      <p id="hero_p">The VC valuation method, made accessible. Know your IRR, EV, CoCa, and Investor Score before you walk into any investor meeting.</p>
-      <a href="tool.html" class="hero-cta" id="hero_cta">Start your valuation →</a>
-      <div class="hero-sub" id="hero_sub">Free · <span>No account required</span> · FR / EN</div>
+      <div class="hero-tag" id="hero_tag">Pre-Fundraising Toolkit</div>
+      <h1 id="hero_h1">Show up<br><em>ready.</em></h1>
+      <p id="hero_p">Every tool a founder needs before walking into an investor meeting. Free, precise, and built for founders worldwide.</p>
+      <a href="#toolkit" class="hero-cta" onclick="event.preventDefault();document.getElementById('toolkit').scrollIntoView({behavior:'smooth'})" id="hero_cta">Explore the toolkit →</a>
+      <div class="hero-sub" id="hero_sub">Free · No signup · EN / FR</div>
     </div>
     <div class="hero-stats">
       <div class="stat">
-        <div class="stat-num">100+</div>
-        <div class="stat-lbl" id="s1l">founders assessed worldwide</div>
+        <div class="stat-num">5</div>
+        <div class="stat-lbl" id="s1l">tools in the toolkit</div>
       </div>
       <div class="stat">
         <div class="stat-num">26</div>
-        <div class="stat-lbl" id="s2l">sectors with EV multiples</div>
+        <div class="stat-lbl" id="s2l">sectors covered</div>
       </div>
       <div class="stat">
-        <div class="stat-num">85+</div>
-        <div class="stat-lbl" id="s3l">countries in the database</div>
+        <div class="stat-num">100+</div>
+        <div class="stat-lbl" id="s3l">founders assessed</div>
       </div>
       <div class="stat">
-        <div class="stat-num">3</div>
-        <div class="stat-lbl" id="s4l">scenarios compared</div>
+        <div class="stat-num">0€</div>
+        <div class="stat-lbl" id="s4l">cost — always free</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- STATS SECTION -->
+<!-- TOOLKIT -->
 <div class="container">
-  <div class="stats-section">
-    <div class="section-label" id="sl1">What you get</div>
-    <div class="stats-grid">
-      <div class="stat-item">
-        <div class="stat-item-num">IRR</div>
-        <div class="stat-item-lbl" id="g1">Internal Rate of Return — the metric every VC looks at first</div>
+  <div class="toolkit" id="toolkit">
+    <div class="toolkit-header">
+      <div class="toolkit-label" id="tk_label">Fundraising Toolkit</div>
+      <div class="toolkit-intro" id="tk_intro">Five tools covering every dimension of fundraising preparation. Know your valuation, your metrics, your pitch strength, your data room readiness, and your dilution — before the room does.</div>
+    </div>
+
+    <div class="tools-list">
+
+      <!-- 01 VC Valuation -->
+      <a href="valuation.html" class="tool-row">
+        <div class="tool-num">01</div>
+        <div class="tool-body">
+          <div class="tool-name" id="t1_name">VC Valuation</div>
+          <div class="tool-desc" id="t1_desc">Calculate your IRR, EV, CoCa, PV and Investor Score /100 using the Venture Capital method. 3 scenarios, 26 sectors.</div>
+          <div class="tool-tags">
+            <span class="tool-tag green" id="t1_tag1">IRR · EV · CoCa · PV</span>
+            <span class="tool-tag" id="t1_tag2">Investor Score /100</span>
+            <span class="tool-tag" id="t1_tag3">3 scenarios</span>
+          </div>
+        </div>
+        <div class="tool-right">
+          <span class="tool-badge live" id="t1_badge">Live</span>
+          <span class="tool-arrow">→</span>
+        </div>
+      </a>
+
+      <!-- 02 Metrics -->
+      <a href="metrics.html" class="tool-row">
+        <div class="tool-num">02</div>
+        <div class="tool-body">
+          <div class="tool-name" id="t2_name">Metrics Calculator</div>
+          <div class="tool-desc" id="t2_desc">Sector-specific KPIs that investors will ask about. Unit economics, runway, growth health — with contextual analysis.</div>
+          <div class="tool-tags">
+            <span class="tool-tag green" id="t2_tag1">CAC · LTV · Churn · ARPU</span>
+            <span class="tool-tag" id="t2_tag2">5 sectors</span>
+            <span class="tool-tag" id="t2_tag3">Runway visual</span>
+          </div>
+        </div>
+        <div class="tool-right">
+          <span class="tool-badge live" id="t2_badge">Live</span>
+          <span class="tool-arrow">→</span>
+        </div>
+      </a>
+
+      <!-- 03 Pitch Readiness -->
+      <div class="tool-row soon">
+        <div class="tool-num">03</div>
+        <div class="tool-body">
+          <div class="tool-name" id="t3_name">Pitch Readiness</div>
+          <div class="tool-desc" id="t3_desc">Score your pitch /100 across 6 VC evaluation criteria. Team, market, traction, product, business model, fundraising ask.</div>
+          <div class="tool-tags">
+            <span class="tool-tag" id="t3_tag1">Score /100</span>
+            <span class="tool-tag" id="t3_tag2">6 criteria</span>
+            <span class="tool-tag" id="t3_tag3">Actionable feedback</span>
+          </div>
+        </div>
+        <div class="tool-right">
+          <span class="tool-badge" id="t3_badge">Soon</span>
+          <span class="tool-arrow">→</span>
+        </div>
       </div>
-      <div class="stat-item">
-        <div class="stat-item-num">EV</div>
-        <div class="stat-item-lbl" id="g2">Enterprise Value at exit, based on sector-specific multiples</div>
+
+      <!-- 04 Data Room -->
+      <div class="tool-row soon">
+        <div class="tool-num">04</div>
+        <div class="tool-body">
+          <div class="tool-name" id="t4_name">Data Room Checklist</div>
+          <div class="tool-desc" id="t4_desc">35 documents every investor will request. Check what you have, see what's missing, get a readiness score.</div>
+          <div class="tool-tags">
+            <span class="tool-tag" id="t4_tag1">35 documents</span>
+            <span class="tool-tag" id="t4_tag2">Corporate · Legal · Financial</span>
+            <span class="tool-tag" id="t4_tag3">Readiness score</span>
+          </div>
+        </div>
+        <div class="tool-right">
+          <span class="tool-badge" id="t4_badge">Soon</span>
+          <span class="tool-arrow">→</span>
+        </div>
       </div>
-      <div class="stat-item">
-        <div class="stat-item-num">CoCa</div>
-        <div class="stat-item-lbl" id="g3">Cash-on-Cash Multiple — how many times the investor gets their money back</div>
+
+      <!-- 05 Cap Table -->
+      <div class="tool-row soon">
+        <div class="tool-num">05</div>
+        <div class="tool-body">
+          <div class="tool-name" id="t5_name">Cap Table Simulator</div>
+          <div class="tool-desc" id="t5_desc">Model your dilution across multiple funding rounds. See your equity at exit before you sign anything.</div>
+          <div class="tool-tags">
+            <span class="tool-tag" id="t5_tag1">Multi-round modeling</span>
+            <span class="tool-tag" id="t5_tag2">Exit simulation</span>
+            <span class="tool-tag" id="t5_tag3">Founder equity</span>
+          </div>
+        </div>
+        <div class="tool-right">
+          <span class="tool-badge" id="t5_badge">Soon</span>
+          <span class="tool-arrow">→</span>
+        </div>
       </div>
-      <div class="stat-item">
-        <div class="stat-item-num">/100</div>
-        <div class="stat-item-lbl" id="g4">Investor Attractiveness Score — 6 criteria, instant feedback</div>
-      </div>
+
     </div>
   </div>
 </div>
 
 <!-- EXPERT CTA -->
-<div class="expert-section">
+<div class="expert">
   <div class="expert-inner">
     <div>
       <div class="expert-tag" id="exp_tag">Expert session</div>
       <h2 id="exp_h2">Ready to go further?</h2>
     </div>
     <div>
-      <p id="exp_p">Your valuation is a starting point. Book a 30-min session to refine your numbers, prepare your data room, and walk into your next investor meeting with confidence.</p>
+      <p id="exp_p">The toolkit gives you the numbers. A session gives you the strategy. Book 30 minutes to refine your valuation, sharpen your pitch, and walk into your next investor meeting with confidence.</p>
       <a href="https://calendly.com/yacine-chikhar/30min" target="_blank" class="expert-btn" id="exp_btn">Book your 30-min session →</a>
     </div>
   </div>
 </div>
 
 <footer>
-  <span>VC Valuation Tool · by <strong>Yacine CHIKHAR</strong> · © 2026</span>
-  <a href="tool.html" id="footer_link">Start your valuation →</a>
+  <span id="footer_copy">ReadyVC · by <strong>Yacine CHIKHAR</strong> · © 2026</span>
+  <a href="https://calendly.com/yacine-chikhar/30min" target="_blank" id="footer_link">Book a session →</a>
 </footer>
 
 <script>
 const T={
   en:{
-    heroTag:'Venture Capital Method',
-    heroH1:'Know Your Worth<br>Before You Pitch',
-    heroP:'The VC valuation method, made accessible. Know your IRR, EV, CoCa, and Investor Score before you walk into any investor meeting.',
-    heroCta:'Start your valuation →',
-    heroSub:'Free · No signup · 5 minutes',
-    navCta:'Start your valuation →',
-    s1l:'founders assessed worldwide',s2l:'sectors with EV multiples',s3l:'countries in the database',s4l:'scenarios compared',
-    sl1:'What you get',
-    g1:'Internal Rate of Return — the metric every VC looks at first',
-    g2:'Enterprise Value at exit, based on sector-specific multiples',
-    g3:'Cash-on-Cash Multiple — how many times the investor gets their money back',
-    g4:'Investor Attractiveness Score — 6 criteria, instant feedback',
+    heroTag:'Pre-Fundraising Toolkit',
+    heroH1:'Show up<br><em>ready.</em>',
+    heroP:'Every tool a founder needs before walking into an investor meeting. Free, precise, and built for founders worldwide.',
+    heroCta:'Explore the toolkit →',
+    heroSub:'Free · No signup · EN / FR',
+    topbarCta:'Start your valuation →',
+    s1l:'tools in the toolkit',s2l:'sectors covered',s3l:'founders assessed',s4l:'cost — always free',
+    tkLabel:'Fundraising Toolkit',
+    tkIntro:'Five tools covering every dimension of fundraising preparation. Know your valuation, your metrics, your pitch strength, your data room readiness, and your dilution — before the room does.',
+    t1Name:'VC Valuation',t1Desc:'Calculate your IRR, EV, CoCa, PV and Investor Score /100 using the Venture Capital method. 3 scenarios, 26 sectors.',
+    t2Name:'Metrics Calculator',t2Desc:'Sector-specific KPIs that investors will ask about. Unit economics, runway, growth health — with contextual analysis.',
+    t3Name:'Pitch Readiness',t3Desc:'Score your pitch /100 across 6 VC evaluation criteria. Team, market, traction, product, business model, fundraising ask.',
+    t4Name:'Data Room Checklist',t4Desc:'35 documents every investor will request. Check what you have, see what\'s missing, get a readiness score.',
+    t5Name:'Cap Table Simulator',t5Desc:'Model your dilution across multiple funding rounds. See your equity at exit before you sign anything.',
+    live:'Live',soon:'Soon',
     expTag:'Expert session',expH2:'Ready to go further?',
-    expP:'Your valuation is a starting point. Book a 30-min session to refine your numbers, prepare your data room, and walk into your next investor meeting with confidence.',
+    expP:'The toolkit gives you the numbers. A session gives you the strategy. Book 30 minutes to refine your valuation, sharpen your pitch, and walk into your next investor meeting with confidence.',
     expBtn:'Book your 30-min session →',
-    footerLink:'Start your valuation →'
+    footerCopy:'ReadyVC · by Yacine CHIKHAR · © 2026',
+    footerLink:'Book a session →'
   },
   fr:{
-    heroTag:'Méthode Venture Capital',
-    heroH1:'Connaissez votre valeur<br>avant de pitcher',
-    heroP:'La méthode de valorisation VC, rendue accessible. Connaissez votre IRR, EV, CoCa et Score Investisseur avant d\'entrer dans la salle.',
-    heroCta:'Démarrer votre valorisation →',
-    heroSub:'Gratuit · Sans inscription · 5 minutes',
-    navCta:'Démarrer votre valorisation →',
-    s1l:'founders évalués dans le monde',s2l:'secteurs avec multiples EV',s3l:'pays dans la base',s4l:'scénarios comparés',
-    sl1:'Ce que vous obtenez',
-    g1:'Internal Rate of Return — la métrique que chaque VC regarde en premier',
-    g2:'Enterprise Value à l\'exit, basée sur des multiples sectoriels',
-    g3:'Cash-on-Cash Multiple — combien de fois l\'investisseur récupère sa mise',
-    g4:'Score d\'attractivité investisseur — 6 critères, résultat instantané',
+    heroTag:'Toolkit Pré-Levée',
+    heroH1:'Entrez dans la salle<br><em>prêt.</em>',
+    heroP:'Tous les outils dont un founder a besoin avant de rencontrer un investisseur. Gratuit, précis, conçu pour les founders du monde entier.',
+    heroCta:'Explorer le toolkit →',
+    heroSub:'Gratuit · Sans inscription · EN / FR',
+    topbarCta:'Démarrer votre valorisation →',
+    s1l:'outils dans le toolkit',s2l:'secteurs couverts',s3l:'founders évalués',s4l:'coût — toujours gratuit',
+    tkLabel:'Fundraising Toolkit',
+    tkIntro:'Cinq outils couvrant chaque dimension de la préparation à la levée. Connaissez votre valorisation, vos métriques, la force de votre pitch, votre data room et votre dilution — avant d\'entrer dans la salle.',
+    t1Name:'Valorisation VC',t1Desc:'Calculez votre IRR, EV, CoCa, PV et Score Investisseur /100 via la méthode Venture Capital. 3 scénarios, 26 secteurs.',
+    t2Name:'Calculateur de Métriques',t2Desc:'Les KPIs sectoriels que les investisseurs vous demanderont. Unit economics, runway, santé de croissance — avec analyse contextuelle.',
+    t3Name:'Pitch Readiness',t3Desc:'Scorez votre pitch /100 sur 6 critères d\'évaluation VC. Équipe, marché, traction, produit, modèle économique, ask.',
+    t4Name:'Data Room Checklist',t4Desc:'35 documents que chaque investisseur demande. Cochez ce que vous avez, voyez ce qui manque, obtenez un score.',
+    t5Name:'Cap Table Simulator',t5Desc:'Modélisez votre dilution sur plusieurs tours de financement. Voyez votre equity à l\'exit avant de signer quoi que ce soit.',
+    live:'Disponible',soon:'Bientôt',
     expTag:'Session expert',expH2:'Prêt à aller plus loin ?',
-    expP:'Votre valorisation est un point de départ. Réservez une session de 30 min pour affiner vos chiffres, préparer votre data room et aborder votre prochain rendez-vous investisseur avec confiance.',
+    expP:'Le toolkit vous donne les chiffres. Une session vous donne la stratégie. Réservez 30 minutes pour affiner votre valorisation, renforcer votre pitch et entrer dans votre prochain rendez-vous investisseur avec confiance.',
     expBtn:'Réserver votre session 30 min →',
-    footerLink:'Démarrer votre valorisation →'
+    footerCopy:'ReadyVC © 2026',
+    footerLink:'Réserver une session →'
   }
 };
 
@@ -221,16 +331,20 @@ function setLang(l){
   lang=l;
   document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',['en','fr'][i]===l));
   const t=T[l];
-  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.innerHTML=v;};
-  set('hero_tag',t.heroTag);set('hero_h1',t.heroH1);set('hero_p',t.heroP);
-  set('hero_cta',t.heroCta);set('hero_sub',t.heroSub);set('nav_cta',t.navCta);
-  set('s1l',t.s1l);set('s2l',t.s2l);set('s3l',t.s3l);set('s4l',t.s4l);
-  set('sl1',t.sl1);set('g1',t.g1);set('g2',t.g2);set('g3',t.g3);set('g4',t.g4);
-  set('exp_tag',t.expTag);set('exp_h2',t.expH2);set('exp_p',t.expP);set('exp_btn',t.expBtn);
-  set('footer_link',t.footerLink);
-  // update href for cta buttons
-  document.getElementById('hero_cta').href='tool.html';
-  document.getElementById('nav_cta').href='tool.html';
+  const s=(id,v)=>{const el=document.getElementById(id);if(el)el.innerHTML=v;};
+  s('hero_tag',t.heroTag);s('hero_h1',t.heroH1);s('hero_p',t.heroP);
+  s('hero_cta',t.heroCta);s('hero_sub',t.heroSub);s('topbar_cta',t.topbarCta);
+  s('s1l',t.s1l);s('s2l',t.s2l);s('s3l',t.s3l);s('s4l',t.s4l);
+  s('tk_label',t.tkLabel);s('tk_intro',t.tkIntro);
+  s('t1_name',t.t1Name);s('t1_desc',t.t1Desc);
+  s('t2_name',t.t2Name);s('t2_desc',t.t2Desc);
+  s('t3_name',t.t3Name);s('t3_desc',t.t3Desc);
+  s('t4_name',t.t4Name);s('t4_desc',t.t4Desc);
+  s('t5_name',t.t5Name);s('t5_desc',t.t5Desc);
+  document.querySelectorAll('.tool-badge.live').forEach(el=>el.textContent=t.live);
+  document.querySelectorAll('.tool-badge:not(.live)').forEach(el=>el.textContent=t.soon);
+  s('exp_tag',t.expTag);s('exp_h2',t.expH2);s('exp_p',t.expP);s('exp_btn',t.expBtn);
+  s('footer_copy',t.footerCopy);s('footer_link',t.footerLink);
 }
 setLang('en');
 </script>
