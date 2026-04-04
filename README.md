@@ -11,7 +11,7 @@
 
 ReadyVC is a free, open-access toolkit that gives founders every analytical tool they need before walking into an investor meeting. No finance background required. No signup. No cost.
 
-Built by **Yacine CHIKHAR** — founder, operator, and startup ecosystem builder across Africa and MENA.
+Built by **Yacine CHIKHAR** — founder, startup ecosystem explorer. 
 
 ---
 
