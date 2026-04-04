@@ -626,7 +626,7 @@ footer{background:var(--cream);border-top:1px solid var(--line);padding:24px 48p
 </div>
 
 <footer>
-  <p>VC Valuation Tool · by <strong>Yacine CHIKHAR</strong> · © 2026</p>
+  <p>VC Valuation Tool · by <strong>YC</strong> · © 2026</p>
 </footer>
 
 <script>
@@ -636,7 +636,7 @@ let founderData={};
 let founderResults=null;
 
 const PAYS=[
-    'Afghanistan','Albania','Algeria','Angola','Argentina','Armenia','Australia','Austria','Azerbaijan','Bahrain','Bangladesh','Belgium','Benin','Bolivia','Bosnia and Herzegovina','Botswana','Brazil','Bulgaria','Burkina Faso','Burundi','Cambodia','Cameroon','Canada','Cape Verde','Central African Republic','Chad','Chile','China','Colombia','Comoros','Congo (Brazzaville)','Costa Rica','Croatia','Cyprus','Czech Republic','Denmark','Djibouti','DR Congo (Kinshasa)','Ecuador','Egypt','El Salvador','Equatorial Guinea','Eritrea','Estonia','Eswatini','Ethiopia','Finland','France','Gabon','Gambia','Georgia','Germany','Ghana','Greece','Guatemala','Guinea','Guinea-Bissau','Honduras','Hungary','India','Indonesia','Iraq','Ireland','Italy','Ivory Coast','Jamaica','Japan','Jordan','Kazakhstan','Kenya','Kuwait','Kyrgyzstan','Laos','Latvia','Lebanon','Lesotho','Liberia','Libya','Lithuania','Luxembourg','Madagascar','Malawi','Malaysia','Mali','Malta','Mauritania','Mauritius','Mexico','Moldova','Mongolia','Montenegro','Morocco','Mozambique','Myanmar','Namibia','Nepal','Netherlands','New Zealand','Nicaragua','Niger','Nigeria','North Macedonia','Norway','Oman','Other','Pakistan','Palestine','Panama','Paraguay','Peru','Philippines','Poland','Portugal','Qatar','Romania','Rwanda','Saudi Arabia','Senegal','Serbia','Seychelles','Sierra Leone','Singapore','Slovakia','Slovenia','Somalia','South Africa','South Korea','Spain','Sri Lanka','Sudan','Sweden','Switzerland','Syria','Tanzania','Thailand','Togo','Tunisia','Turkey','Uganda','Ukraine','United Arab Emirates','United Kingdom','United States','Uruguay','Uzbekistan','Venezuela','Vietnam','Yemen','Zambia','Zimbabwe'
+    'Afghanistan','Albania','Algeria','Angola','Argentina','Armenia','Australia','Austria','Azerbaijan','Bahrain','Bangladesh','Belgium','Benin','Bolivia','Bosnia and Herzegovina','Botswana','Brazil','Bulgaria','Burkina Faso','Burundi','Cambodia','Cameroon','Canada','Cape Verde','Central African Republic','Chad','Chile','China','Colombia','Comoros','Congo (Brazzaville)','Costa Rica','Croatia','Cyprus','Czech Republic','Denmark','Djibouti','DR Congo (Kinshasa)','Ecuador','Egypt','El Salvador','Equatorial Guinea','Eritrea','Estonia','Eswatini','Ethiopia','Finland','France','Gabon','Gambia','Georgia','Germany','Ghana','Greece','Guatemala','Guinea','Guinea-Bissau','Honduras','Hungary','India','Indonesia','Iraq','Ireland','Israel','Italy','Ivory Coast','Jamaica','Japan','Jordan','Kazakhstan','Kenya','Kuwait','Kyrgyzstan','Laos','Latvia','Lebanon','Lesotho','Liberia','Libya','Lithuania','Luxembourg','Madagascar','Malawi','Malaysia','Mali','Malta','Mauritania','Mauritius','Mexico','Moldova','Mongolia','Montenegro','Morocco','Mozambique','Myanmar','Namibia','Nepal','Netherlands','New Zealand','Nicaragua','Niger','Nigeria','North Macedonia','Norway','Oman','Other','Pakistan','Palestine','Panama','Paraguay','Peru','Philippines','Poland','Portugal','Qatar','Romania','Rwanda','Saudi Arabia','Senegal','Serbia','Seychelles','Sierra Leone','Singapore','Slovakia','Slovenia','Somalia','South Africa','South Korea','Spain','Sri Lanka','Sudan','Sweden','Switzerland','Syria','Tanzania','Thailand','Togo','Tunisia','Turkey','Uganda','Ukraine','United Arab Emirates','United Kingdom','United States','Uruguay','Uzbekistan','Venezuela','Vietnam','Yemen','Zambia','Zimbabwe'
   ];
 
 function renderPays(){
@@ -681,7 +681,7 @@ const SECTEURS={
 };
 
 const T={
-  fr:{heroTag:'Méthode Venture Capital',heroH1:'Sachez ce que vous valez<br>avant de pitcher',heroP:'Gratuit · Précis · Pour les founders du monde entier',
+  fr:{heroTag:'Méthode Venture Capital',heroH1:'Sachez ce que vous valez<br>avant de pitcher',heroP:'Gratuit · Précis · Pour les founders africains & MENA',
     heroCta:'Démarrer votre valorisation →',
     hiwTitle:'Comment ça marche',hiw1t:'Remplissez votre profil',hiw1d:'Formulaire 2 min — startup, secteur, équipe, ARR',
     hiw2t:'Obtenez votre valorisation',hiw2d:'IRR, EV, CoCa, PV — 3 scénarios, Score investisseur',
@@ -1100,10 +1100,10 @@ function submitOnboard(){
   if(!prenom||!nom||!email||!startup||!secteur||!consent){err.style.display='block';return;}
   err.style.display='none';
   founderData={prenom,nom,email,startup,secteur,
-    linkedin:document.getElementById('ob_linkedin').value,
+    linkedin:'',
     website:document.getElementById('ob_website').value,
     pays:document.getElementById('ob_pays').value,
-    ville:document.getElementById('ob_ville').value,
+    ville:'',
     bm:document.getElementById('ob_bm').value,
     stade:document.getElementById('ob_stade').value,
     levee:document.getElementById('ob_levee').value,
@@ -1146,7 +1146,7 @@ function updateMultSuggest(){
   if(!s||!SECTEURS[s]){box.style.display='none';return;}
   const d=SECTEURS[s];
   box.style.display='block';
-  document.getElementById('ms_range').textContent=`${d.min}x – ${d.max}x  (median : ${d.med}x)`;
+  document.getElementById('ms_range').textContent=`${d.min}x – ${d.max}x  (médiane / median : ${d.med}x)`;
   document.getElementById('ms_desc').textContent=d.desc[currentLang]||d.desc.fr;
 }
 
