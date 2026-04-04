@@ -1,114 +1,156 @@
-# VC Valuation Tool
-### by Yacine CHIKHAR
+# ReadyVC
+### *Show up ready.*
 
-> A free startup self-assessment tool using the Venture Capital (VC) valuation method — built for founders preparing for fundraising.
+> The pre-fundraising toolkit for founders worldwide. Free, precise, and built for every founder preparing to raise.
 
-🌐 **Live demo:** (https://yacine-88.github.io/vc-valuation-tool)
+🌐 **Live:** [readyvc.co](https://readyvc.co) *(or your GitHub Pages URL)*
 
 ---
 
-## What it does
+## What is ReadyVC?
 
-Founders enter their financial projections and assumptions, and the tool calculates:
+ReadyVC is a free, open-access toolkit that gives founders every analytical tool they need before walking into an investor meeting. No finance background required. No signup. No cost.
 
+Built by **Yacine CHIKHAR** — founder, operator, and startup ecosystem builder across Africa and MENA.
+
+---
+
+## The Toolkit
+
+| # | Tool | Status | What it does |
+|---|---|---|---|
+| 01 | **VC Valuation** | ✅ Live | Calculate IRR, EV, CoCa, PV and Investor Score /100 using the Venture Capital method |
+| 02 | **Metrics Calculator** | ✅ Live | Sector-specific KPIs — unit economics, runway, growth health with contextual analysis |
+| 03 | **Pitch Readiness** | 🔜 Soon | Score your pitch /100 across 6 VC evaluation criteria with actionable feedback |
+| 04 | **Data Room Checklist** | 🔜 Soon | 35 documents every investor requests — check readiness, see what's missing |
+| 05 | **Cap Table Simulator** | 🔜 Soon | Model dilution across multiple rounds, simulate equity at exit |
+
+---
+
+## Tool 01 — VC Valuation
+
+The core ReadyVC tool. Uses the **Venture Capital (VC) Method** — the standard used by professional investors at every stage.
+
+**What it calculates:**
 - **PV (Present Value)** — what your startup is worth today in the eyes of an investor
 - **EV (Enterprise Value)** — valuation at exit using sector-specific revenue multiples
-- **IRR (Internal Rate of Return)** — annualized investor return, benchmarked against VC thresholds
+- **IRR (Internal Rate of Return)** — annualized investor return vs. VC thresholds
 - **CoCa (Cash-on-Cash Multiple)** — how many times the investor gets their money back
-- **Dilution modeling** — equity stake at entry vs. exit after cumulative dilution
+- **Investor Score /100** — 6-criteria attractiveness score with breakdown bars
 - **3-scenario comparison** — pessimistic / central / optimistic side by side
+
+**The VC Method formula:**
+```
+EV (Enterprise Value)  = Exit Revenue × EV/Revenue Multiple
+Equity Value           = EV − Financial Debt + Cash
+PV (Present Value)     = Equity Value ÷ (1 + Required Return)^N years
+IRR                    = Annual rate where NPV = 0
+CoCa                   = Exit Proceeds ÷ Investment
+```
+
+**VC thresholds:**
+
+| Metric | Difficult | Acceptable | Excellent |
+|--------|-----------|------------|-----------|
+| IRR | < 25% | 25–40% | ≥ 40% |
+| CoCa | < 3x | 3–5x | ≥ 5x |
+
+**Investor Score breakdown:**
+
+| Criteria | Weight |
+|---|---|
+| IRR | 30 pts |
+| CoCa | 20 pts |
+| Revenue growth | 20 pts |
+| Sector premium | 10 pts |
+| Team & stage | 10 pts |
+| Scenario consistency | 10 pts |
+
+---
+
+## Tool 02 — Metrics Calculator
+
+Sector-specific KPI calculator. Select your sector, enter your numbers, get an instant investor-grade diagnostic with contextual analysis.
+
+**5 sectors covered:**
+
+| Sector | Key metrics |
+|---|---|
+| SaaS & Subscription | ARR, CAC, LTV, LTV/CAC, Churn Rate, MRR Growth |
+| Marketplace & Commerce | Net Revenue, Gross Margin, AOV, ROAS, Repeat Rate, Take Rate |
+| Fintech & Transactional | Net Revenue, ARPU, CAC, MAU, Runway, Burn Rate |
+| Deeptech & R&D | Runway, Burn Rate, R&D %, Months to Milestone, Patents, Cash |
+| AgriTech & Impact | MRR, ARPU, CAC, LTV/CAC, Churn Rate, Runway |
+
+Each metric includes a status indicator (good / acceptable / needs work), a VC benchmark reference, and a contextual analysis paragraph tailored to the sector and the founder's actual numbers.
+
+---
+
+## Sector Multiples Reference (Tool 01)
+
+| Sector | Range | Median | Source |
+|--------|-------|--------|--------|
+| AI & Machine Learning | 8–25x | 14x | Damodaran NYU |
+| SaaS | 8–15x | 10x | Damodaran NYU |
+| Cybersecurity | 6–15x | 9x | Damodaran NYU |
+| Healthtech | 4–12x | 7x | Damodaran NYU |
+| Fintech | 5–12x | 7x | Damodaran NYU |
+| Edtech | 3–9x | 5x | Damodaran NYU |
+| AgriTech | 2–7x | 4x | Damodaran NYU |
+| E-commerce | 1–4x | 2x | Damodaran NYU |
+| Hardware & IoT | 1–4x | 2x | Damodaran NYU |
+
+*Full list of 26 sectors available in the tool.*
 
 ---
 
 ## Features
 
-- **Trilingual** — French 🇫🇷 · English 🇬🇧 · Arabic 🇩🇿 (with full RTL support)
-- **26 sectors** with recommended EV/Revenue multiples (sourced from Prof. Damodaran, NYU)
-- **85+ countries** organized by region, translated in all 3 languages
-- **Founder onboarding form** — collects profile, startup info, team size, ARR, IP/patents
-- **Animated financial background** — live candlesticks, stock curves, floating symbols
-- **Glassmorphism UI** with dark mode support
-- **PDF export** — full report with founder profile and all calculations
-- **Methodology guide** — 6-step explanation of the VC method, in all 3 languages
-- **Zero dependencies** — single self-contained HTML file, no backend, no framework
+- **Bilingual** — English 🇬🇧 and French 🇫🇷
+- **Dark mode** — full dark theme support
+- **PDF export** — full valuation report download
+- **Supabase integration** — founder data collected on form submission
+- **Calendly integration** — direct booking link for expert sessions
+- **Zero dependencies** — single HTML files, no framework, no build step
+- **Mobile responsive** — works on all screen sizes
 
 ---
 
-## How to use
-
-Just open `vc-valuation-tool.html` in any modern browser. No installation, no server needed.
-
-**Hosted version:** upload the file to any static hosting (GitHub Pages, Netlify, Vercel) and share the link.
-
----
-
-## The VC Method — quick summary
-
-```
-EV (Enterprise Value)  = Exit Revenue × EV/Revenue Multiple
-Equity Value           = EV − Financial Debt + Cash
-PV (Present Value)     = Equity Value ÷ (1 + Required Return)^N years
-Exit Equity Stake      = Entry Stake × (1 − Cumulative Dilution)
-IRR                    = Annual rate where NPV = 0
-CoCa                   = Exit Proceeds ÷ Investment
-```
-
-**VC thresholds (rules of thumb):**
-
-| Metric | Difficult | Acceptable | Excellent |
-|--------|-----------|------------|-----------|
-| IRR    | < 25%     | 25–40%     | ≥ 40%     |
-| CoCa   | < 3x      | 3–5x       | ≥ 5x      |
-
----
-
-## Sector multiples reference
-
-| Sector | Range | Median |
-|--------|-------|--------|
-| AI & Machine Learning | 8–25x | 14x |
-| SaaS | 8–15x | 10x |
-| Cybersecurity | 6–15x | 9x |
-| Healthtech | 4–12x | 7x |
-| Fintech | 5–12x | 7x |
-| Edtech | 3–9x | 5x |
-| Agritech | 2–7x | 4x |
-| E-commerce & Marketplace | 1–4x | 2x |
-| Hardware & IoT | 1–4x | 2x |
-
-*Source: Prof. Aswath Damodaran (NYU Stern) — updated annually*
-
----
-
-## Tech stack
+## Tech Stack
 
 - **Pure HTML/CSS/JS** — zero build step, zero framework
 - **Chart.js 4.4** — revenue projection chart
-- **Google Fonts** — DM Serif Display, DM Sans, Amiri (Arabic), JetBrains Mono
-- **Canvas API** — animated financial background (candlesticks, curves, floating symbols)
-
----
-
-## Honest data disclaimer
-
-> ⚠️ This tool is only as good as the data you put in. Inflated or inaccurate figures will skew your results and mislead you in front of investors. Use real numbers.
+- **Google Fonts** — DM Serif Display + DM Sans
+- **Supabase** — founder database (REST API, anon key)
+- **Resend** — confirmation email on form submission
 
 ---
 
 ## Roadmap
 
-- [ ] Save & share results via unique URL
-- [ ] Add DCF (Discounted Cash Flow) method alongside VC method
-- [ ] Berkus method for pre-revenue startups
-- [ ] Comparable transactions database for African startups
-- [ ] API endpoint for embedding in accelerator platforms
+- [x] VC Valuation Tool
+- [x] Metrics Calculator
+- [ ] Pitch Readiness Score
+- [ ] Data Room Checklist
+- [ ] Cap Table Simulator
+- [ ] Investor Matching (Africa & MENA funds)
+- [ ] Comparable transactions database
+
+---
+
+## Expert Sessions
+
+All tools are free. For founders who want to go deeper — refine their valuation, prepare their data room, or sharpen their investor narrative — book a 30-min working session:
+
+**→ [calendly.com/yacine-chikhar/30min](https://calendly.com/yacine-chikhar/30min)**
 
 ---
 
 ## Author
 
-**Yacine CHKHAR**
-LinkedIn: https://www.linkedin.com/in/yacine-chikhar-a53906103 
+**Yacine CHIKHAR**
+Tech Explorer 
+[yacine.chikhar@globalafricatech.com](mailto:yacine.chikhar@globalafricatech.com)
 
 ---
 
