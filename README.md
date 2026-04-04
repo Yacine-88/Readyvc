@@ -3,7 +3,7 @@
 
 > The pre-fundraising toolkit for founders worldwide. Free, precise, and built for every founder preparing to raise.
 
-🌐 **Live:** [readyvc.co](https://readyvc.co) *(or your GitHub Pages URL)*
+🌐 **Live:** [readyvc.co](https://readyvc.co) 
 
 ---
 
