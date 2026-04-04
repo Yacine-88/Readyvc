@@ -23,11 +23,14 @@ body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size
 .logo{font-family:var(--font-serif);font-size:20px;color:var(--navy);letter-spacing:-.03em;text-decoration:none;display:flex;align-items:baseline;gap:2px}
 .logo-ready{color:var(--navy)}
 .logo-vc{color:var(--green)}
-.topbar-right{display:flex;align-items:center;gap:0}
-.lang-toggle{display:flex;border:1px solid var(--line);margin-right:20px}
+.topbar-nav{display:flex;align-items:center;gap:0}
+.nav-link{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);text-decoration:none;padding:0 18px;height:60px;display:flex;align-items:center;border-bottom:2px solid transparent;transition:all .15s}
+.nav-link:hover{color:var(--navy);border-bottom-color:var(--navy)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.lang-toggle{display:flex;border:1px solid var(--line)}
 .lang-btn{padding:6px 12px;font-size:11px;font-weight:500;background:transparent;border:none;color:var(--navy3);cursor:pointer;font-family:var(--font);letter-spacing:.04em;transition:all .15s}
 .lang-btn.active{background:var(--navy);color:var(--cream)}
-.topbar-cta{background:var(--navy);color:var(--cream);padding:9px 20px;font-size:12px;font-weight:500;text-decoration:none;letter-spacing:.03em;transition:background .15s}
+.topbar-cta{background:var(--navy);color:var(--cream);padding:9px 20px;font-size:12px;font-weight:500;text-decoration:none;letter-spacing:.03em;transition:background .15s;white-space:nowrap}
 .topbar-cta:hover{background:var(--green)}
 
 /* ── CONTAINER ── */
@@ -76,6 +79,17 @@ body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size
 .tool-badge{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);border:1px solid var(--line);padding:4px 10px;white-space:nowrap}
 .tool-badge.live{border-color:var(--green-border);color:var(--green);background:var(--green-bg)}
 
+/* ── ABOUT ── */
+.about-section{padding:80px 0;border-bottom:1px solid var(--line)}
+.about-grid{display:grid;grid-template-columns:280px 1fr;gap:80px;align-items:start}
+.about-label{font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--navy3);padding-top:4px}
+.about-title{font-family:var(--font-serif);font-size:36px;color:var(--navy);letter-spacing:-.03em;font-weight:400;line-height:1.1;margin-bottom:24px}
+.about-text{font-size:14px;color:var(--navy2);line-height:1.75;margin-bottom:16px;max-width:560px}
+.about-text:last-of-type{margin-bottom:28px}
+.about-author{border-top:1px solid var(--line);padding-top:20px;max-width:560px}
+.about-author-name{font-family:var(--font-serif);font-size:18px;color:var(--navy);letter-spacing:-.02em;margin-bottom:4px}
+.about-author-role{font-size:12px;color:var(--navy3)}
+
 /* ── EXPERT CTA ── */
 .expert{background:var(--navy);padding:80px 0;margin-top:0}
 .expert-inner{max-width:1200px;margin:0 auto;padding:0 48px;display:grid;grid-template-columns:1fr 1fr;gap:100px;align-items:center}
@@ -97,6 +111,8 @@ footer a{color:var(--green);text-decoration:none}
   .hero h1{font-size:40px}
   .hero-stats{grid-template-columns:1fr 1fr}
   .toolkit-header{grid-template-columns:1fr;gap:16px;margin-bottom:32px}
+  .about-grid{grid-template-columns:1fr;gap:16px}
+  .topbar-nav{display:none}
   .expert{padding:48px 0}
   .expert-inner{grid-template-columns:1fr;gap:28px;padding:0 24px}
   .expert h2{font-size:28px}
@@ -112,15 +128,20 @@ footer a{color:var(--green);text-decoration:none}
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <a class="logo" href="/">
+  <a class="logo" href="index.html">
     <span class="logo-ready">Ready</span><span class="logo-vc">VC</span>
   </a>
+  <nav class="topbar-nav">
+    <a href="#toolkit" class="nav-link" onclick="event.preventDefault();document.getElementById('toolkit').scrollIntoView({behavior:'smooth'})" id="nav_toolkit">Toolkit</a>
+    <a href="#about" class="nav-link" onclick="event.preventDefault();document.getElementById('about').scrollIntoView({behavior:'smooth'})" id="nav_about">About</a>
+    <a href="mailto:yacine.chikhar@globalafricatech.com" class="nav-link" id="nav_contact">Contact</a>
+  </nav>
   <div class="topbar-right">
     <div class="lang-toggle">
       <button class="lang-btn active" onclick="setLang('en')">EN</button>
       <button class="lang-btn" onclick="setLang('fr')">FR</button>
     </div>
-    <a href="valuation.html" class="topbar-cta" id="topbar_cta">Start your valuation →</a>
+    <a href="https://calendly.com/yacine-chikhar/30min" target="_blank" class="topbar-cta" id="topbar_cta">Book a session →</a>
   </div>
 </div>
 
@@ -259,6 +280,24 @@ footer a{color:var(--green);text-decoration:none}
   </div>
 </div>
 
+<!-- ABOUT -->
+<div class="container">
+  <div class="about-section" id="about">
+    <div class="about-grid">
+      <div class="about-label" id="about_label">About</div>
+      <div class="about-content">
+        <h2 class="about-title" id="about_title">Built by a founder,<br>for founders.</h2>
+        <p class="about-text" id="about_text1">ReadyVC was built out of a simple frustration: too many founders walk into investor meetings without knowing their numbers, their weaknesses, or how investors actually evaluate them.</p>
+        <p class="about-text" id="about_text2">Every tool in this toolkit is free, requires no signup, and is designed to give you the same analytical rigour that institutional investors use — in minutes, not weeks.</p>
+        <div class="about-author">
+          <div class="about-author-name">Yacine CHIKHAR</div>
+          <div class="about-author-role" id="about_role">Founder & Startup Ecosystem Builder — Africa & MENA</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- EXPERT CTA -->
 <div class="expert">
   <div class="expert-inner">
@@ -300,7 +339,14 @@ const T={
     expP:'The toolkit gives you the numbers. A session gives you the strategy. Book 30 minutes to refine your valuation, sharpen your pitch, and walk into your next investor meeting with confidence.',
     expBtn:'Book your 30-min session →',
     footerCopy:'ReadyVC · by Yacine CHIKHAR · © 2026',
-    footerLink:'Book a session →'
+    footerLink:'Book a session →',
+    navToolkit:'Toolkit',navAbout:'About',navContact:'Contact',
+    topbarCta:'Book a session →',
+    aboutLabel:'About',
+    aboutTitle:'Built by a founder,<br>for founders.',
+    aboutText1:'ReadyVC was built out of a simple frustration: too many founders walk into investor meetings without knowing their numbers, their weaknesses, or how investors actually evaluate them.',
+    aboutText2:'Every tool in this toolkit is free, requires no signup, and is designed to give you the same analytical rigour that institutional investors use — in minutes, not weeks.',
+    aboutRole:'Founder & Startup Ecosystem Builder — Africa & MENA'
   },
   fr:{
     heroTag:'Toolkit Pré-Levée',
@@ -321,8 +367,15 @@ const T={
     expTag:'Session expert',expH2:'Prêt à aller plus loin ?',
     expP:'Le toolkit vous donne les chiffres. Une session vous donne la stratégie. Réservez 30 minutes pour affiner votre valorisation, renforcer votre pitch et entrer dans votre prochain rendez-vous investisseur avec confiance.',
     expBtn:'Réserver votre session 30 min →',
-    footerCopy:'ReadyVC © 2026',
-    footerLink:'Réserver une session →'
+    footerCopy:'ReadyVC · by Yacine CHIKHAR · © 2026',
+    footerLink:'Réserver une session →',
+    navToolkit:'Toolkit',navAbout:'À propos',navContact:'Contact',
+    topbarCta:'Réserver une session →',
+    aboutLabel:'À propos',
+    aboutTitle:'Conçu par un founder,<br>pour les founders.',
+    aboutText1:'ReadyVC est né d\'une frustration simple : trop de founders entrent dans des réunions investisseurs sans connaître leurs chiffres, leurs faiblesses, ni la façon dont les investisseurs les évaluent réellement.',
+    aboutText2:'Chaque outil du toolkit est gratuit, ne nécessite aucune inscription, et est conçu pour vous donner la même rigueur analytique qu\'utilisent les investisseurs institutionnels — en quelques minutes, pas en plusieurs semaines.',
+    aboutRole:'Founder & Bâtisseur d\'écosystème startup — Afrique & MENA'
   }
 };
 
@@ -345,6 +398,13 @@ function setLang(l){
   document.querySelectorAll('.tool-badge:not(.live)').forEach(el=>el.textContent=t.soon);
   s('exp_tag',t.expTag);s('exp_h2',t.expH2);s('exp_p',t.expP);s('exp_btn',t.expBtn);
   s('footer_copy',t.footerCopy);s('footer_link',t.footerLink);
+  // Nav
+  s('nav_toolkit',t.navToolkit);s('nav_about',t.navAbout);s('nav_contact',t.navContact);
+  s('topbar_cta',t.topbarCta);
+  // About
+  s('about_label',t.aboutLabel);s('about_title',t.aboutTitle);
+  s('about_text1',t.aboutText1);s('about_text2',t.aboutText2);
+  s('about_role',t.aboutRole);
 }
 setLang('en');
 </script>
