@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VCReady — My Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+:root{
+  --cream:#F5F2EC;--navy:#12120F;--navy2:#3A3830;--navy3:#8A8880;
+  --line:#D8D4CC;--green:#1A6B47;--green-bg:#E8F5EE;--green-border:#A8D5BC;
+  --font:'DM Sans',sans-serif;--font-serif:'DM Serif Display',serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh}
+
+/* ── TOPBAR ── */
+.topbar{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1px solid var(--line);height:60px;padding:0 48px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--font-serif);font-size:20px;color:var(--navy);letter-spacing:-.03em;text-decoration:none}
+.logo span{color:var(--green)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.user-badge{font-size:12px;color:var(--navy2);display:flex;align-items:center;gap:8px}
+.user-avatar{width:28px;height:28px;background:var(--navy);color:var(--cream);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.btn-signout{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--navy3);background:transparent;border:1px solid var(--line);padding:6px 14px;cursor:pointer;font-family:var(--font);transition:all .15s}
+.btn-signout:hover{border-color:var(--navy);color:var(--navy)}
+
+/* ── AUTH SCREEN ── */
+.auth-screen{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:40px 24px}
+.auth-card{max-width:440px;width:100%}
+.auth-title{font-family:var(--font-serif);font-size:36px;color:var(--navy);letter-spacing:-.03em;font-weight:400;margin-bottom:8px}
+.auth-sub{font-size:14px;color:var(--navy2);margin-bottom:40px;line-height:1.6}
+.auth-divider{display:flex;align-items:center;gap:16px;margin:20px 0}
+.auth-divider-line{flex:1;height:1px;background:var(--line)}
+.auth-divider-text{font-size:11px;color:var(--navy3);letter-spacing:.06em;text-transform:uppercase}
+.auth-field{border:1px solid var(--line);border-bottom:none;display:flex;align-items:center}
+.auth-field:last-of-type{border-bottom:1px solid var(--line)}
+.auth-field input{width:100%;padding:14px 16px;font-size:13px;border:none;background:transparent;color:var(--navy);font-family:var(--font);outline:none}
+.auth-field input::placeholder{color:var(--navy3)}
+.btn-magic{width:100%;padding:14px;background:var(--navy);color:var(--cream);border:none;font-family:var(--font);font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:background .15s;margin-top:0}
+.btn-magic:hover{background:var(--green)}
+.btn-google{width:100%;padding:13px;background:transparent;color:var(--navy);border:1px solid var(--line);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn-google:hover{border-color:var(--navy);background:var(--navy);color:var(--cream)}
+.google-icon{width:16px;height:16px;flex-shrink:0}
+.auth-note{font-size:11px;color:var(--navy3);margin-top:16px;text-align:center;line-height:1.6}
+.auth-success{display:none;padding:16px;background:var(--green-bg);border:1px solid var(--green-border);font-size:13px;color:var(--green);margin-top:16px;text-align:center}
+.auth-err{display:none;font-size:12px;color:#9A9892;margin-top:8px;text-align:center}
+
+/* ── DASHBOARD ── */
+.dashboard{display:none;max-width:1200px;margin:0 auto;padding:48px 48px 80px}
+
+/* HEADER */
+.dash-header{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:32px;border-bottom:1px solid var(--line);margin-bottom:48px;flex-wrap:wrap;gap:16px}
+.dash-greeting{font-family:var(--font-serif);font-size:40px;color:var(--navy);letter-spacing:-.04em;font-weight:400}
+.dash-greeting span{color:var(--green)}
+.dash-meta{font-size:12px;color:var(--navy3);margin-top:6px}
+.btn-new-val{background:var(--navy);color:var(--cream);padding:10px 20px;font-size:12px;font-weight:500;letter-spacing:.04em;text-decoration:none;transition:background .15s;display:inline-block}
+.btn-new-val:hover{background:var(--green)}
+
+/* STATS ROW */
+.dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:48px;border:1px solid var(--line)}
+.dash-stat{padding:20px 24px;border-right:1px solid var(--line)}
+.dash-stat:last-child{border-right:none}
+.dash-stat-num{font-family:var(--font-serif);font-size:32px;color:var(--navy);letter-spacing:-.03em;font-weight:400;margin-bottom:4px}
+.dash-stat-lbl{font-size:11px;color:var(--navy3);letter-spacing:.04em;text-transform:uppercase}
+
+/* SECTION */
+.dash-section{margin-bottom:48px}
+.dash-section-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:2px solid var(--navy);margin-bottom:0}
+.dash-section-title{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy)}
+.dash-section-link{font-size:11px;color:var(--green);text-decoration:none;letter-spacing:.04em}
+.dash-section-link:hover{text-decoration:underline}
+
+/* VALUATION ROWS */
+.val-row{display:grid;grid-template-columns:100px 1fr 80px 80px 100px 40px;gap:0;align-items:center;border-bottom:1px solid var(--line);padding:16px 0;transition:background .15s;cursor:pointer}
+.val-row:hover{background:var(--green-bg)}
+.val-row-head{display:grid;grid-template-columns:100px 1fr 80px 80px 100px 40px;gap:0;padding:10px 0;border-bottom:1px solid var(--line)}
+.val-col{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--navy3)}
+.val-date{font-size:12px;color:var(--navy3);font-family:var(--font-mono)}
+.val-startup{font-size:13px;font-weight:500;color:var(--navy)}
+.val-sector{font-size:11px;color:var(--navy3);margin-top:2px}
+.val-irr{font-family:var(--font-serif);font-size:18px;letter-spacing:-.02em}
+.val-irr.good{color:var(--green)}
+.val-irr.ok{color:#6B6B66}
+.val-irr.bad{color:#9A9892}
+.val-score{display:flex;align-items:center;gap:6px}
+.val-score-num{font-family:var(--font-serif);font-size:18px;letter-spacing:-.02em;color:var(--navy)}
+.val-score-bar{flex:1;height:3px;background:var(--line);max-width:40px}
+.val-score-fill{height:100%;background:var(--navy);transition:width .4s}
+.val-pv{font-size:13px;color:var(--navy);font-family:var(--font-mono)}
+.val-arrow{font-size:14px;color:var(--navy3)}
+.val-empty{padding:40px 0;text-align:center;font-size:13px;color:var(--navy3);border-bottom:1px solid var(--line)}
+.val-empty a{color:var(--green);text-decoration:none}
+
+/* CHART */
+.dash-chart-wrap{border:1px solid var(--line);padding:24px;border-top:none}
+.dash-chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.dash-chart-title{font-size:12px;color:var(--navy2);font-weight:500}
+.dash-chart-legend{display:flex;gap:16px}
+.dash-chart-leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--navy3)}
+.dash-chart-leg-dot{width:8px;height:8px;border-radius:50%}
+.chart-container{height:180px;position:relative}
+
+/* NEXT STEPS */
+.next-steps{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-top:none}
+.next-step{display:flex;gap:16px;align-items:flex-start;padding:20px 24px;border-bottom:1px solid var(--line);transition:background .15s}
+.next-step:last-child{border-bottom:none}
+.next-step:hover{background:var(--green-bg)}
+.next-step-icon{width:32px;height:32px;background:var(--navy);color:var(--cream);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;font-family:var(--font-mono)}
+.next-step-body{flex:1}
+.next-step-title{font-size:13px;font-weight:500;color:var(--navy);margin-bottom:3px}
+.next-step-desc{font-size:12px;color:var(--navy3);line-height:1.5}
+.next-step-action{font-size:11px;color:var(--green);text-decoration:none;font-weight:500;flex-shrink:0;align-self:center}
+
+/* PROFILE */
+.profile-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0;border:1px solid var(--line);border-top:none}
+.profile-item{padding:20px 24px;border-right:1px solid var(--line)}
+.profile-item:last-child{border-right:none}
+.profile-item-label{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);margin-bottom:6px}
+.profile-item-val{font-size:14px;color:var(--navy);font-weight:500}
+
+/* EMPTY STATE */
+.dash-empty{padding:60px 0;text-align:center;border:1px solid var(--line);border-top:none}
+.dash-empty-num{font-family:var(--font-serif);font-size:48px;color:var(--line);margin-bottom:8px}
+.dash-empty-text{font-size:13px;color:var(--navy3);margin-bottom:20px}
+.dash-empty-link{display:inline-block;background:var(--navy);color:var(--cream);padding:10px 20px;font-size:12px;font-weight:500;text-decoration:none;transition:background .15s}
+.dash-empty-link:hover{background:var(--green)}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .topbar,.dashboard{padding-left:24px;padding-right:24px}
+  .dash-stats{grid-template-columns:1fr 1fr}
+  .dash-stat{border-bottom:1px solid var(--line)}
+  .profile-grid{grid-template-columns:1fr 1fr}
+  .profile-item{border-bottom:1px solid var(--line)}
+  .val-row,.val-row-head{grid-template-columns:80px 1fr 60px 40px}
+  .val-pv,.val-score{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <a href="index.html" class="logo">VC<span>Ready</span></a>
+  <div class="topbar-right">
+    <div class="user-badge">
+      <div class="user-avatar" id="user_avatar">—</div>
+      <span id="user_name">Loading...</span>
+    </div>
+    <button class="btn-signout" onclick="signOut()" id="btn_signout">Sign out</button>
+  </div>
+</div>
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="auth-screen">
+  <div class="auth-card">
+    <h1 class="auth-title">Your founder<br>dashboard.</h1>
+    <p class="auth-sub">Sign in to save your valuations, track your metrics over time, and get personalized recommendations.</p>
+
+    <!-- Google OAuth -->
+    <button class="btn-google" onclick="signInGoogle()">
+      <svg class="google-icon" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Continue with Google
+    </button>
+
+    <div class="auth-divider">
+      <div class="auth-divider-line"></div>
+      <span class="auth-divider-text">or</span>
+      <div class="auth-divider-line"></div>
+    </div>
+
+    <!-- Magic Link -->
+    <div class="auth-field">
+      <input type="email" id="auth_email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')sendMagicLink()">
+    </div>
+    <button class="btn-magic" onclick="sendMagicLink()">Send magic link →</button>
+    <div class="auth-success" id="auth_success">
+      ✓ Check your inbox — we sent you a sign-in link.
+    </div>
+    <div class="auth-err" id="auth_err"></div>
+    <p class="auth-note">No password. No spam. Just a sign-in link sent to your email.</p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+
+  <!-- HEADER -->
+  <div class="dash-header">
+    <div>
+      <div class="dash-greeting">Good to see you, <span id="dash_name">—</span></div>
+      <div class="dash-meta" id="dash_meta">Member since —</div>
+    </div>
+    <a href="valuation.html" class="btn-new-val">+ New Valuation</a>
+  </div>
+
+  <!-- STATS -->
+  <div class="dash-stats">
+    <div class="dash-stat">
+      <div class="dash-stat-num" id="stat_vals">0</div>
+      <div class="dash-stat-lbl">Valuations run</div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat-num" id="stat_irr">—</div>
+      <div class="dash-stat-lbl">Best IRR</div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat-num" id="stat_score">—</div>
+      <div class="dash-stat-lbl">Best investor score</div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat-num" id="stat_pv">—</div>
+      <div class="dash-stat-lbl">Highest valuation (PV)</div>
+    </div>
+  </div>
+
+  <!-- VALUATIONS -->
+  <div class="dash-section">
+    <div class="dash-section-header">
+      <span class="dash-section-title">My Valuations</span>
+      <a href="valuation.html" class="dash-section-link">Run a new valuation →</a>
+    </div>
+    <div class="val-row-head">
+      <span class="val-col">Date</span>
+      <span class="val-col">Startup</span>
+      <span class="val-col">IRR</span>
+      <span class="val-col">Score</span>
+      <span class="val-col">PV Today</span>
+      <span></span>
+    </div>
+    <div id="val_list">
+      <div class="val-empty">No valuations yet. <a href="valuation.html">Run your first one →</a></div>
+    </div>
+  </div>
+
+  <!-- PROGRESSION CHART -->
+  <div class="dash-section" id="chart_section" style="display:none">
+    <div class="dash-section-header">
+      <span class="dash-section-title">IRR Progression</span>
+    </div>
+    <div class="dash-chart-wrap">
+      <div class="dash-chart-header">
+        <span class="dash-chart-title">Your IRR over time</span>
+        <div class="dash-chart-legend">
+          <div class="dash-chart-leg-item"><div class="dash-chart-leg-dot" style="background:var(--navy)"></div> IRR</div>
+          <div class="dash-chart-leg-item"><div class="dash-chart-leg-dot" style="background:var(--green)"></div> VC threshold (25%)</div>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="irrChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="dash-section">
+    <div class="dash-section-header">
+      <span class="dash-section-title">Founder Profile</span>
+      <a href="valuation.html" class="dash-section-link">Update →</a>
+    </div>
+    <div class="profile-grid" id="profile_grid">
+      <div class="profile-item">
+        <div class="profile-item-label">Startup</div>
+        <div class="profile-item-val" id="p_startup">—</div>
+      </div>
+      <div class="profile-item">
+        <div class="profile-item-label">Sector</div>
+        <div class="profile-item-val" id="p_sector">—</div>
+      </div>
+      <div class="profile-item">
+        <div class="profile-item-label">Stage</div>
+        <div class="profile-item-val" id="p_stage">—</div>
+      </div>
+      <div class="profile-item">
+        <div class="profile-item-label">Country</div>
+        <div class="profile-item-val" id="p_country">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEXT STEPS -->
+  <div class="dash-section">
+    <div class="dash-section-header">
+      <span class="dash-section-title">Recommended next steps</span>
+    </div>
+    <div class="next-steps" id="next_steps">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+</div><!-- /dashboard -->
+
+<script>
+// ── SUPABASE CONFIG ──
+const SUPABASE_URL='https://fvbrzttvdvxhbdkjknje.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YnJ6dHR2ZHZ4aGJka2prbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzgwNTAsImV4cCI6MjA5MDcxNDA1MH0.tcE5PlgMsu7suLAzN3uT5VjKnFhc25qkJJMKkbNmtvI';
+
+// ── SUPABASE CLIENT (lightweight) ──
+const sb={
+  async signInWithOtp(email){
+    return fetch(`${SUPABASE_URL}/auth/v1/otp`,{
+      method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({email,create_user:true})
+    });
+  },
+  async signInWithGoogle(){
+    const res=await fetch(`${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.origin+'/dashboard.html')}`,{
+      headers:{'apikey':SUPABASE_KEY}
+    });
+    return res;
+  },
+  async getSession(){
+    const token=localStorage.getItem('sb_access_token');
+    if(!token) return null;
+    const res=await fetch(`${SUPABASE_URL}/auth/v1/user`,{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+token}
+    });
+    if(!res.ok){localStorage.removeItem('sb_access_token');return null;}
+    return res.json();
+  },
+  async signOut(){
+    const token=localStorage.getItem('sb_access_token');
+    if(token) await fetch(`${SUPABASE_URL}/auth/v1/logout`,{
+      method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+token}
+    });
+    localStorage.removeItem('sb_access_token');
+    localStorage.removeItem('sb_refresh_token');
+  },
+  async query(table,filter=''){
+    const token=localStorage.getItem('sb_access_token')||SUPABASE_KEY;
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}&order=created_at.desc`,{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+token}
+    });
+    if(!res.ok) return [];
+    return res.json();
+  }
+};
+
+// ── HANDLE AUTH CALLBACK (magic link / OAuth) ──
+function handleAuthCallback(){
+  const hash=window.location.hash;
+  if(hash.includes('access_token')){
+    const params=new URLSearchParams(hash.substring(1));
+    const token=params.get('access_token');
+    const refresh=params.get('refresh_token');
+    if(token){
+      localStorage.setItem('sb_access_token',token);
+      if(refresh) localStorage.setItem('sb_refresh_token',refresh);
+      window.history.replaceState({},document.title,window.location.pathname);
+    }
+  }
+}
+
+// ── AUTH FUNCTIONS ──
+async function sendMagicLink(){
+  const email=document.getElementById('auth_email').value.trim();
+  const err=document.getElementById('auth_err');
+  const succ=document.getElementById('auth_success');
+  if(!email||!email.includes('@')){err.textContent='Please enter a valid email.';err.style.display='block';return;}
+  err.style.display='none';
+  try{
+    const res=await sb.signInWithOtp(email);
+    if(res.ok){
+      succ.style.display='block';
+    } else {
+      const d=await res.json();
+      err.textContent=d.msg||'Something went wrong. Try again.';
+      err.style.display='block';
+    }
+  }catch(e){
+    err.textContent='Connection error. Please try again.';
+    err.style.display='block';
+  }
+}
+
+async function signInGoogle(){
+  window.location.href=`${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.origin+'/dashboard.html')}`;
+}
+
+async function signOut(){
+  await sb.signOut();
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+}
+
+// ── FORMAT HELPERS ──
+function fmt(n){if(!n&&n!==0)return'—';if(Math.abs(n)>=1000000)return'$'+(n/1000000).toFixed(2)+'M';if(Math.abs(n)>=1000)return'$'+(n/1000).toFixed(1)+'K';return'$'+Math.round(n).toLocaleString();}
+function fmtDate(d){if(!d)return'—';const dt=new Date(d);return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
+
+// ── LOAD DASHBOARD ──
+async function loadDashboard(user){
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+
+  // User info
+  const email=user.email||'';
+  const name=user.user_metadata?.full_name||user.user_metadata?.name||email.split('@')[0]||'Founder';
+  const initials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('user_avatar').textContent=initials;
+  document.getElementById('user_name').textContent=email;
+  document.getElementById('dash_name').textContent=name.split(' ')[0];
+  document.getElementById('dash_meta').textContent=`Member since ${fmtDate(user.created_at)}`;
+
+  // Load founder data from Supabase
+  let founders=[];
+  try{
+    founders=await sb.query('founders',`email=eq.${encodeURIComponent(email)}`);
+  }catch(e){}
+
+  // Profile
+  if(founders.length>0){
+    const f=founders[0];
+    document.getElementById('p_startup').textContent=f.startup||'—';
+    document.getElementById('p_sector').textContent=f.sector||'—';
+    document.getElementById('p_stage').textContent=f.stage||'—';
+    document.getElementById('p_country').textContent=f.country||'—';
+  }
+
+  // Load saved valuations
+  let valuations=[];
+  try{
+    valuations=await sb.query('valuations',`user_id=eq.${user.id}`);
+  }catch(e){}
+
+  // Stats
+  document.getElementById('stat_vals').textContent=valuations.length||founders.length||0;
+
+  if(valuations.length>0){
+    const bestIrr=Math.max(...valuations.map(v=>v.irr||0));
+    const bestScore=Math.max(...valuations.map(v=>v.score||0));
+    const bestPv=Math.max(...valuations.map(v=>v.pv||0));
+    document.getElementById('stat_irr').textContent=bestIrr>0?bestIrr.toFixed(1)+'%':'—';
+    document.getElementById('stat_score').textContent=bestScore>0?bestScore+'/100':'—';
+    document.getElementById('stat_pv').textContent=fmt(bestPv);
+    renderValuations(valuations);
+    renderChart(valuations);
+  } else if(founders.length>0){
+    // Show data from founders table as proxy
+    document.getElementById('stat_vals').textContent=founders.length;
+  }
+
+  renderNextSteps(valuations, founders);
+}
+
+function renderValuations(valuations){
+  if(!valuations.length){return;}
+  const list=document.getElementById('val_list');
+  list.innerHTML=valuations.map(v=>{
+    const irrClass=v.irr>=40?'good':v.irr>=25?'ok':'bad';
+    const scorePct=((v.score||0)/100)*100;
+    return`<div class="val-row" onclick="window.location='valuation.html'">
+      <span class="val-date">${fmtDate(v.created_at)}</span>
+      <div><div class="val-startup">${v.startup||'—'}</div><div class="val-sector">${v.sector||''}</div></div>
+      <span class="val-irr ${irrClass}">${v.irr?v.irr.toFixed(1)+'%':'—'}</span>
+      <div class="val-score"><span class="val-score-num">${v.score||'—'}</span></div>
+      <span class="val-pv">${fmt(v.pv)}</span>
+      <span class="val-arrow">→</span>
+    </div>`;
+  }).join('');
+}
+
+function renderChart(valuations){
+  if(valuations.length<2) return;
+  document.getElementById('chart_section').style.display='block';
+  const sorted=valuations.slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const labels=sorted.map(v=>fmtDate(v.created_at));
+  const data=sorted.map(v=>v.irr||0);
+  const ctx=document.getElementById('irrChart');
+  new Chart(ctx,{
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {label:'IRR',data,borderColor:'#12120F',borderWidth:2,pointRadius:4,pointBackgroundColor:'#12120F',fill:false,tension:.3},
+        {label:'VC Threshold',data:data.map(()=>25),borderColor:'#1A6B47',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:10},color:'#8A8880'}},
+        y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{callback:v=>v+'%',font:{size:10},color:'#8A8880'},min:0}
+      }
+    }
+  });
+}
+
+function renderNextSteps(valuations, founders){
+  const steps=[];
+  const lastVal=valuations[0];
+  const founder=founders[0];
+
+  if(!founders.length&&!valuations.length){
+    steps.push({icon:'01',title:'Run your first valuation',desc:'Calculate your IRR, EV, CoCa and Investor Score using the VC method.',link:'valuation.html',linkText:'Start →'});
+    steps.push({icon:'02',title:'Check your metrics',desc:'Get sector-specific KPIs that investors will ask about.',link:'metrics.html',linkText:'Calculate →'});
+    steps.push({icon:'03',title:'Book an expert session',desc:'30 minutes to sharpen your pitch and refine your numbers.',link:'https://calendly.com/yacine-chikhar/30min',linkText:'Book →'});
+  } else {
+    if(lastVal&&lastVal.irr<25){
+      steps.push({icon:'↑',title:'Improve your IRR',desc:`Your last IRR was ${lastVal.irr?.toFixed(1)}% — below the VC threshold of 25%. Focus on increasing revenue projections or adjusting your exit timeline.`,link:'valuation.html',linkText:'Recalculate →'});
+    }
+    if(lastVal&&lastVal.score<50){
+      steps.push({icon:'↑',title:'Improve your Investor Score',desc:`Your score of ${lastVal.score}/100 has room to grow. Check your CoCa, churn rate, and sector multiple.`,link:'valuation.html',linkText:'Simulate →'});
+    }
+    steps.push({icon:'②',title:'Run your sector metrics',desc:'Get unit economics, runway and growth health analysis for your sector.',link:'metrics.html',linkText:'Calculate →'});
+    steps.push({icon:'③',title:'Book an expert session',desc:'Turn your numbers into a compelling investor narrative.',link:'https://calendly.com/yacine-chikhar/30min',linkText:'Book →'});
+  }
+
+  document.getElementById('next_steps').innerHTML=steps.map(s=>`
+    <div class="next-step">
+      <div class="next-step-icon">${s.icon}</div>
+      <div class="next-step-body">
+        <div class="next-step-title">${s.title}</div>
+        <div class="next-step-desc">${s.desc}</div>
+      </div>
+      <a href="${s.link}" class="next-step-action">${s.linkText}</a>
+    </div>`).join('');
+}
+
+// ── INIT ──
+async function init(){
+  handleAuthCallback();
+  try{
+    const user=await sb.getSession();
+    if(user) loadDashboard(user);
+    else {
+      document.getElementById('auth-screen').style.display='flex';
+      document.getElementById('dashboard').style.display='none';
+    }
+  }catch(e){
+    document.getElementById('auth-screen').style.display='flex';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
