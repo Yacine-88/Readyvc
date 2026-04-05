@@ -406,7 +406,8 @@ async function loadDashboard(user){
 
   // User info
   const email=user.email||'';
-  const name=user.user_metadata?.full_name||user.user_metadata?.name||email.split('@')[0]||'Founder';
+  const rawName=user.user_metadata?.full_name||user.user_metadata?.name||email.split('@')[0]||'Founder';
+  const name=rawName.replace(/[._-]/g,' ').split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
   const initials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
   document.getElementById('user_avatar').textContent=initials;
   document.getElementById('user_name').textContent=email;
