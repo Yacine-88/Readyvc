@@ -501,7 +501,11 @@ async function sendMagicLink(){
     const res=await fetch(`${SUPA_URL}/auth/v1/otp`,{
       method:'POST',
       headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({email,create_user:true})
+      body:JSON.stringify({
+        email,
+        create_user:true,
+        options:{emailRedirectTo:'https://vcready.co/dashboard.html'}
+      })
     });
     succ.style.display='block';
   }catch(e){err.textContent='Something went wrong. Try again.';err.style.display='block';}
