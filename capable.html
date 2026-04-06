@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VCReady — Cap Table Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7BRPFG4JQL"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-7BRPFG4JQL');</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+:root{
+  --cream:#F5F2EC;--navy:#12120F;--navy2:#3A3830;--navy3:#8A8880;
+  --line:#D8D4CC;--green:#1A6B47;--green-bg:#E8F5EE;--green-border:#A8D5BC;
+  --font:'DM Sans',sans-serif;--font-serif:'DM Serif Display',serif;--font-mono:'JetBrains Mono',monospace;
+  --c0:#12120F;--c1:#1A6B47;--c2:#8A8880;--c3:#D8D4CC;--c4:#3A3830;
+}
+html{scroll-behavior:smooth}
+body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1px solid var(--line);height:60px;padding:0 48px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--font-serif);font-size:20px;color:var(--navy);letter-spacing:-.03em;text-decoration:none}
+.logo span{color:var(--green)}
+.topbar-nav{display:flex;align-items:center}
+.nav-link{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);text-decoration:none;padding:0 14px;height:60px;display:flex;align-items:center;border-bottom:2px solid transparent;transition:all .15s}
+.nav-link:hover{color:var(--navy)}
+.nav-link.active{color:var(--navy);border-bottom-color:var(--navy)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.lang-toggle{display:flex;border:1px solid var(--line)}
+.lang-btn{padding:6px 12px;font-size:11px;font-weight:500;background:transparent;border:none;color:var(--navy3);cursor:pointer;font-family:var(--font);letter-spacing:.04em;transition:all .15s}
+.lang-btn.active{background:var(--navy);color:var(--cream)}
+
+/* CONTAINER */
+.container{max-width:1100px;margin:0 auto;padding:0 48px}
+
+/* PAGE HEADER */
+.page-header{padding:60px 0 48px;border-bottom:1px solid var(--line)}
+.page-tag{font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--navy3);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.page-tag::before{content:'';display:block;width:24px;height:1px;background:var(--navy3)}
+.page-header h1{font-family:var(--font-serif);font-size:44px;color:var(--navy);letter-spacing:-.04em;line-height:1.05;font-weight:400;margin-bottom:12px}
+.page-header p{font-size:14px;color:var(--navy2);line-height:1.75;max-width:560px}
+
+/* FORM */
+.form-body{padding:48px 0;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}
+
+/* FOUNDER SECTION */
+.form-section{margin-bottom:32px}
+.form-section-title{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);padding-bottom:12px;border-bottom:2px solid var(--navy);margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:0}
+.field{border-bottom:1px solid var(--line);padding:14px 0}
+.field-label{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy3);margin-bottom:6px}
+.field input,.field select{width:100%;background:transparent;border:none;font-size:14px;color:var(--navy);font-family:var(--font);outline:none;padding:0}
+.field input::placeholder{color:var(--line)}
+.field select{-webkit-appearance:none;appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238A8880' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 2px center}
+
+/* ROUNDS */
+.rounds-grid{display:flex;flex-direction:column;gap:0}
+.round-card{border:1px solid var(--line);border-bottom:none;padding:20px 24px}
+.round-card:last-child{border-bottom:1px solid var(--line)}
+.round-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.round-name{display:flex;align-items:center;gap:10px}
+.round-dot{width:8px;height:8px;border-radius:50%}
+.round-title{font-size:12px;font-weight:600;color:var(--navy);letter-spacing:.04em;text-transform:uppercase}
+.round-toggle{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--navy3)}
+.round-toggle input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:var(--navy)}
+.round-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0}
+.round-fields .field{padding:10px 0}
+.round-fields .field:not(:last-child){border-right:none}
+
+/* ESOP */
+.esop-row{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);margin-top:16px}
+.esop-row .field{padding:14px 16px;border-bottom:none}
+.esop-row .field:first-child{border-right:1px solid var(--line)}
+
+/* CALC BTN */
+.calc-btn{width:100%;padding:16px;background:var(--navy);color:var(--cream);border:none;font-family:var(--font);font-size:13px;font-weight:500;letter-spacing:.04em;cursor:pointer;transition:background .15s;margin-top:24px}
+.calc-btn:hover{background:var(--green)}
+
+/* PREVIEW */
+.preview-panel{background:transparent}
+.preview-title{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);padding-bottom:12px;border-bottom:2px solid var(--navy);margin-bottom:20px}
+.preview-table{width:100%;border-collapse:collapse;font-size:12px}
+.preview-table th{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);padding:8px 0;border-bottom:1px solid var(--line);text-align:left}
+.preview-table th:last-child,.preview-table td:last-child{text-align:right}
+.preview-table td{padding:12px 0;border-bottom:1px solid var(--line);color:var(--navy2);vertical-align:middle}
+.preview-table tr:last-child td{border-bottom:none}
+.preview-table .name-cell{display:flex;align-items:center;gap:8px}
+.preview-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pct-bar-wrap{display:flex;align-items:center;gap:8px}
+.pct-bar{flex:1;background:var(--line);height:3px;max-width:60px}
+.pct-bar-fill{height:100%}
+.pct-val{font-family:var(--font-mono);font-size:11px;color:var(--navy);min-width:36px;text-align:right}
+.preview-hint{font-size:11px;color:var(--navy3);margin-top:16px;line-height:1.6}
+
+/* RESULTS */
+.results{display:none;padding:0 0 80px}
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:48px}
+
+/* SUMMARY CARDS */
+.summary-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);margin-bottom:48px}
+.summary-card{padding:20px 24px;border-right:1px solid var(--line)}
+.summary-card:last-child{border-right:none}
+.summary-card-label{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);margin-bottom:8px}
+.summary-card-val{font-family:var(--font-serif);font-size:28px;color:var(--navy);letter-spacing:-.03em;font-weight:400;line-height:1}
+.summary-card-sub{font-size:11px;color:var(--navy3);margin-top:4px}
+.summary-card-val.good{color:var(--green)}
+.summary-card-val.warn{color:#6B6B66}
+
+/* TABLE */
+.results-table-wrap{margin-bottom:48px;overflow-x:auto}
+.results-table{width:100%;border-collapse:collapse;font-size:12px}
+.results-table th{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);padding:10px 16px;border-bottom:2px solid var(--navy);text-align:left;white-space:nowrap}
+.results-table th:not(:first-child){text-align:right}
+.results-table td{padding:14px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+.results-table td:not(:first-child){text-align:right;font-family:var(--font-mono);font-size:11px}
+.results-table tr.founder-row td{font-weight:600;color:var(--navy)}
+.results-table tr.founder-row td:first-child{font-family:var(--font-serif);font-size:15px}
+.results-table tr.total-row td{border-top:2px solid var(--navy);border-bottom:none;font-weight:600;color:var(--navy)}
+.results-table .entity-cell{display:flex;align-items:center;gap:10px}
+.results-table .entity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dilution-badge{display:inline-block;font-size:9px;font-weight:500;padding:2px 6px;font-family:var(--font-mono)}
+.dilution-badge.red{background:#FEE2E2;color:#991B1B}
+.dilution-badge.green{background:var(--green-bg);color:var(--green)}
+
+/* CHARTS */
+.charts-section{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:48px}
+.chart-wrap{border:1px solid var(--line);padding:24px}
+.chart-title{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);margin-bottom:20px}
+.chart-container{height:220px;position:relative}
+
+/* METHODOLOGY */
+.meth-section{padding:48px 0;border-top:1px solid var(--line);margin-bottom:48px}
+.meth-header{display:flex;align-items:baseline;justify-content:space-between;padding-bottom:12px;border-bottom:2px solid var(--navy);margin-bottom:32px}
+.meth-title{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy)}
+.meth-subtitle{font-size:11px;color:var(--navy3)}
+.meth-steps{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.meth-step{padding:24px 24px 24px 0;border-bottom:1px solid var(--line);border-right:1px solid var(--line)}
+.meth-step:nth-child(even){padding:24px 0 24px 24px;border-right:none}
+.meth-step:nth-last-child(-n+2){border-bottom:none}
+.meth-step-num{font-family:var(--font-mono);font-size:10px;color:var(--navy3);letter-spacing:.08em;margin-bottom:10px}
+.meth-step-title{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:8px}
+.meth-step-desc{font-size:12px;color:var(--navy2);line-height:1.7;margin-bottom:12px}
+.meth-formula{background:var(--navy);padding:10px 14px;font-family:var(--font-mono);font-size:10px;color:rgba(255,255,255,.7);line-height:1.8;letter-spacing:.02em}
+.meth-formula span{color:#FFF;font-weight:500}
+.meth-warning{grid-column:1/-1;padding:20px 24px;border:1px solid var(--line);border-top:none;background:transparent;display:flex;gap:14px;align-items:flex-start}
+.meth-warning-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.meth-warning-text{font-size:12px;color:var(--navy3);line-height:1.6}
+.meth-warning-text strong{color:var(--navy2)}
+
+/* ANALYSIS */
+.analysis-section{margin-bottom:48px}
+.analysis-title{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);padding-bottom:12px;border-bottom:2px solid var(--navy);margin-bottom:0}
+.analysis-items{display:flex;flex-direction:column}
+.analysis-item{display:flex;gap:12px;padding:20px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.analysis-item:last-child{border-bottom:none}
+.analysis-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6px}
+.analysis-dot.green{background:var(--green)}
+.analysis-dot.warn{background:#6B6B66}
+.analysis-dot.alert{background:#9A9892}
+.analysis-text{font-size:13px;color:var(--navy2);line-height:1.7}
+.analysis-text strong{color:var(--navy)}
+
+/* CTA */
+.results-cta{background:var(--navy);padding:32px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.results-cta-title{font-family:var(--font-serif);font-size:22px;color:#FFF;letter-spacing:-.02em;font-weight:400;margin-bottom:4px}
+.results-cta-sub{font-size:13px;color:rgba(255,255,255,.6)}
+.results-cta-btn{background:#FFF;color:var(--navy);padding:12px 24px;font-size:12px;font-weight:500;letter-spacing:.04em;text-decoration:none;white-space:nowrap;transition:all .15s;flex-shrink:0}
+.results-cta-btn:hover{background:var(--green);color:#FFF}
+.btn-restart{background:transparent;border:1px solid var(--line);color:var(--navy2);padding:10px 20px;font-size:12px;cursor:pointer;font-family:var(--font);transition:all .15s;margin-top:16px}
+.btn-restart:hover{border-color:var(--navy);color:var(--navy)}
+
+footer{border-top:1px solid var(--line);padding:24px 48px;font-size:11px;color:var(--navy3);letter-spacing:.06em;text-transform:uppercase;display:flex;justify-content:space-between}
+footer a{color:var(--green);text-decoration:none}
+
+@media(max-width:900px){
+  .container,.topbar,footer{padding-left:24px;padding-right:24px}
+  .form-body{grid-template-columns:1fr}
+  .page-header h1{font-size:32px}
+  .summary-cards{grid-template-columns:1fr 1fr}
+  .summary-card{border-bottom:1px solid var(--line)}
+  .charts-section,.results-grid{grid-template-columns:1fr}
+  .round-fields{grid-template-columns:1fr 1fr}
+  .form-row{grid-template-columns:1fr}
+  .topbar-nav{display:none}
+  .meth-steps{grid-template-columns:1fr}
+  .meth-step:nth-child(even){padding:24px 0;border-right:none}
+  .meth-step:nth-last-child(-n+2){border-bottom:1px solid var(--line)}
+  .meth-step:last-of-type{border-bottom:none}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="index.html" class="logo">VC<span>Ready</span></a>
+  <nav class="topbar-nav">
+    <a href="index.html" class="nav-link">Home</a>
+    <a href="valuation.html" class="nav-link">Valuation</a>
+    <a href="metrics.html" class="nav-link">Metrics</a>
+    <a href="pitch.html" class="nav-link">Pitch</a>
+    <a href="dataroom.html" class="nav-link">Data Room</a>
+    <a href="captable.html" class="nav-link active">Cap Table</a>
+  </nav>
+  <div class="topbar-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('fr')">FR</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-header">
+    <div class="page-tag" id="pg_tag">Cap Table Simulator</div>
+    <h1 id="pg_h1">Model your dilution<br>before you sign.</h1>
+    <p id="pg_p">Simulate 4 funding rounds. See your equity at each stage, investor returns, and dilution impact — before you negotiate a single term.</p>
+  </div>
+
+  <!-- FORM -->
+  <div class="form-body" id="form-body">
+
+    <!-- LEFT — INPUTS -->
+    <div>
+      <!-- FOUNDERS -->
+      <div class="form-section">
+        <div class="form-section-title" id="fs_founders">Founders</div>
+        <div class="form-row">
+          <div class="field" style="border-right:1px solid var(--line);padding-right:16px">
+            <div class="field-label" id="lbl_f1">Founder 1 equity (%)</div>
+            <input type="number" id="f1_eq" value="50" min="0" max="100" oninput="updatePreview()">
+          </div>
+          <div class="field" style="padding-left:16px">
+            <div class="field-label" id="lbl_f2">Founder 2 equity (%)</div>
+            <input type="number" id="f2_eq" value="50" min="0" max="100" oninput="updatePreview()">
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label" id="lbl_f3">Founder 3 equity (% — optional)</div>
+          <input type="number" id="f3_eq" value="0" min="0" max="100" oninput="updatePreview()">
+        </div>
+        <!-- ESOP -->
+        <div class="esop-row">
+          <div class="field">
+            <div class="field-label" id="lbl_esop">ESOP pool (%)</div>
+            <input type="number" id="esop_eq" value="10" min="0" max="30" oninput="updatePreview()">
+          </div>
+          <div class="field">
+            <div class="field-label" id="lbl_cur">Currency</div>
+            <select id="currency">
+              <option value="USD">USD $</option>
+              <option value="EUR">EUR €</option>
+              <option value="DZD">DZD</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXIT -->
+      <div class="form-section">
+        <div class="form-section-title" id="fs_exit">Exit Scenario</div>
+        <div class="form-row">
+          <div class="field" style="border-right:1px solid var(--line);padding-right:16px">
+            <div class="field-label" id="lbl_exit_val">Exit valuation</div>
+            <input type="number" id="exit_val" value="50000000" oninput="updatePreview()">
+          </div>
+          <div class="field" style="padding-left:16px">
+            <div class="field-label" id="lbl_exit_yr">Exit year</div>
+            <input type="number" id="exit_yr" value="2031" min="2025" max="2045" oninput="updatePreview()">
+          </div>
+        </div>
+      </div>
+
+      <!-- ROUNDS -->
+      <div class="form-section">
+        <div class="form-section-title" id="fs_rounds">Funding Rounds</div>
+        <div class="rounds-grid" id="rounds-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <button class="calc-btn" onclick="calculate()" id="calc_btn">Calculate cap table →</button>
+    </div>
+
+    <!-- RIGHT — LIVE PREVIEW -->
+    <div class="preview-panel">
+      <div class="preview-title" id="prev_title">Current equity split</div>
+      <table class="preview-table" id="preview-table">
+        <thead>
+          <tr>
+            <th id="pth_entity">Entity</th>
+            <th id="pth_shares">Shares</th>
+            <th id="pth_pct">Ownership</th>
+          </tr>
+        </thead>
+        <tbody id="preview-body"></tbody>
+      </table>
+      <div class="preview-hint" id="prev_hint">This reflects ownership <em>before</em> any funding round. Enable rounds on the left to see dilution.</div>
+    </div>
+
+  </div><!-- /form-body -->
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+
+    <!-- SUMMARY CARDS -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="summary-card-label" id="sc1_lbl">Founder equity at exit</div>
+        <div class="summary-card-val" id="sc1_val">—</div>
+        <div class="summary-card-sub" id="sc1_sub">combined</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-card-label" id="sc2_lbl">Founder exit proceeds</div>
+        <div class="summary-card-val" id="sc2_val">—</div>
+        <div class="summary-card-sub" id="sc3_sub">at exit valuation</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-card-label" id="sc3_lbl">Total dilution</div>
+        <div class="summary-card-val" id="sc3_val">—</div>
+        <div class="summary-card-sub" id="sc3_sub2">from all rounds</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-card-label" id="sc4_lbl">Total raised</div>
+        <div class="summary-card-val" id="sc4_val">—</div>
+        <div class="summary-card-sub" id="sc4_sub">across all rounds</div>
+      </div>
+    </div>
+
+    <!-- DETAILED TABLE -->
+    <div class="results-table-wrap">
+      <table class="results-table" id="results-table">
+        <thead id="results-thead"></thead>
+        <tbody id="results-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="charts-section">
+      <div class="chart-wrap">
+        <div class="chart-title" id="chart1_title">Equity at Exit — Distribution</div>
+        <div class="chart-container"><canvas id="pieChart"></canvas></div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-title" id="chart2_title">Dilution by Round</div>
+        <div class="chart-container"><canvas id="dilutionChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- METHODOLOGY -->
+    <div class="meth-section">
+      <div class="meth-header">
+        <span class="meth-title" id="meth_tag">Methodology</span>
+        <span class="meth-subtitle" id="meth_sub">How the simulator calculates your numbers</span>
+      </div>
+      <div class="meth-steps">
+
+        <div class="meth-step">
+          <div class="meth-step-num">01</div>
+          <div class="meth-step-title" id="meth_s1t">Post-money & investor ownership</div>
+          <div class="meth-step-desc" id="meth_s1d">When an investor puts in $1M at a $4M pre-money valuation, post-money = $5M. The investor owns 20%. All existing shareholders are diluted proportionally.</div>
+          <div class="meth-formula">
+            <span>Post-money</span> = Pre-money + Investment<br>
+            <span>Investor %</span> = Investment ÷ Post-money<br>
+            <span>Dilution factor</span> = 1 − Investor %
+          </div>
+        </div>
+
+        <div class="meth-step">
+          <div class="meth-step-num">02</div>
+          <div class="meth-step-title" id="meth_s2t">Cumulative dilution across rounds</div>
+          <div class="meth-step-desc" id="meth_s2d">Each round dilutes all existing shareholders. 45% ownership before a 15% Seed round becomes 45% × 85% = 38.25%. This compounds across every round.</div>
+          <div class="meth-formula">
+            <span>Equity after</span> = Equity before × Dilution factor<br>
+            <span>Total dilution</span> = 1 − ∏(all dilution factors)
+          </div>
+        </div>
+
+        <div class="meth-step">
+          <div class="meth-step-num">03</div>
+          <div class="meth-step-title" id="meth_s3t">Exit proceeds distribution</div>
+          <div class="meth-step-desc" id="meth_s3d">At exit, proceeds are distributed proportionally. 22% ownership at a $50M exit = $11M in proceeds. Simple pro-rata, no liquidation preferences.</div>
+          <div class="meth-formula">
+            <span>Proceeds</span> = Exit valuation × Ownership %<br>
+            <span>Note:</span> No liquidation preferences applied
+          </div>
+        </div>
+
+        <div class="meth-step">
+          <div class="meth-step-num">04</div>
+          <div class="meth-step-title" id="meth_s4t">Investor IRR & CoCa</div>
+          <div class="meth-step-desc" id="meth_s4d">For each round, IRR and Cash-on-Cash multiple are calculated from ownership at exit vs. investment amount. IRR uses bisection against a 25% VC threshold.</div>
+          <div class="meth-formula">
+            <span>CoCa</span> = Exit proceeds ÷ Investment<br>
+            <span>IRR:</span> NPV = −Invest + Proceeds÷(1+r)^n = 0
+          </div>
+        </div>
+
+        <div class="meth-warning">
+          <span class="meth-warning-icon">⚠</span>
+          <div class="meth-warning-text" id="meth_s5d"><strong>Important limitations —</strong> This simulator provides indicative estimates only. It does not model liquidation preferences, anti-dilution clauses, pro-rata rights, convertible notes, or down rounds. For legally binding cap table modeling, consult a lawyer and use dedicated tools like Carta or Capdesk.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ANALYSIS -->
+    <div class="analysis-section">
+      <div class="analysis-title" id="analysis_title">Analysis</div>
+      <div class="analysis-items" id="analysis-items"></div>
+    </div>
+
+    <!-- CTA -->
+    <div class="results-cta">
+      <div>
+        <div class="results-cta-title" id="cta_title">Negotiate smarter. Sign informed.</div>
+        <div class="results-cta-sub" id="cta_sub">Book a session to review your cap table and optimize your terms before the next round.</div>
+        <button class="btn-restart" onclick="restart()" id="btn_restart">↺ Reset simulation</button>
+      </div>
+      <a href="https://calendly.com/yacine-chikhar/30min" target="_blank" class="results-cta-btn" id="cta_btn">Book your session →</a>
+    </div>
+
+  </div><!-- /results -->
+
+</div><!-- /container -->
+
+</div>
+
+<footer>
+  <span>VCReady · by <strong>Yacine CHIKHAR</strong> · © 2026</span>
+  <a href="index.html">← Back to toolkit</a>
+</footer>
+
+<script>
+let currentLang='en';
+let pieChartInst=null, dilChartInst=null;
+
+const ROUNDS_DEF=[
+  {id:'preseed',label:'Pre-Seed',color:'#3A3830',defaultAmt:200000,defaultPre:1000000,defaultYear:2026},
+  {id:'seed',label:'Seed',color:'#1A6B47',defaultAmt:750000,defaultPre:4000000,defaultYear:2027},
+  {id:'seriesA',label:'Series A',color:'#12120F',defaultAmt:3000000,defaultPre:12000000,defaultYear:2029},
+  {id:'seriesB',label:'Series B',color:'#8A8880',defaultAmt:10000000,defaultPre:40000000,defaultYear:2031},
+];
+
+function fmtM(n,cur){
+  const s=cur==='EUR'?'€':cur==='DZD'?'DZD ':' $';
+  if(Math.abs(n)>=1000000) return s+(n/1000000).toFixed(2)+'M';
+  if(Math.abs(n)>=1000) return s+(n/1000).toFixed(0)+'K';
+  return s+Math.round(n).toLocaleString();
+}
+function pct(n){return n.toFixed(1)+'%';}
+function gv(id){return parseFloat(document.getElementById(id)?.value)||0;}
+
+// Build rounds HTML
+function buildRounds(){
+  const lang=currentLang;
+  const labels=lang==='fr'?
+    {active:['Actif','Montant levé','Valorisation pré-money','Année'],inactive:'Inclure ce tour'}:
+    {active:['Active','Amount raised','Pre-money valuation','Year'],inactive:'Include this round'};
+
+  document.getElementById('rounds-grid').innerHTML=ROUNDS_DEF.map((r,i)=>`
+    <div class="round-card" id="rc_${r.id}">
+      <div class="round-header">
+        <div class="round-name">
+          <div class="round-dot" style="background:${r.color}"></div>
+          <span class="round-title">${r.label}</span>
+        </div>
+        <div class="round-toggle">
+          <input type="checkbox" id="r_${r.id}_on" ${i<2?'checked':''} onchange="updatePreview()">
+          <label for="r_${r.id}_on" style="cursor:pointer;font-size:11px;color:var(--navy3)">${labels.inactive}</label>
+        </div>
+      </div>
+      <div class="round-fields">
+        <div class="field">
+          <div class="field-label">${labels.active[1]}</div>
+          <input type="number" id="r_${r.id}_amt" value="${r.defaultAmt}" oninput="updatePreview()">
+        </div>
+        <div class="field" style="border-left:1px solid var(--line);padding-left:12px">
+          <div class="field-label">${labels.active[2]}</div>
+          <input type="number" id="r_${r.id}_pre" value="${r.defaultPre}" oninput="updatePreview()">
+        </div>
+        <div class="field" style="border-left:1px solid var(--line);padding-left:12px">
+          <div class="field-label">${labels.active[3]}</div>
+          <input type="number" id="r_${r.id}_yr" value="${r.defaultYear}" oninput="updatePreview()">
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// Calculate dilution through rounds
+function computeCap(){
+  const cur=document.getElementById('currency').value;
+  let f1=gv('f1_eq'), f2=gv('f2_eq'), f3=gv('f3_eq'), esop=gv('esop_eq');
+  const total=f1+f2+f3+esop;
+  if(total<=0||total>100) return null;
+
+  // Normalize to 100%
+  const scale=100/total;
+  let equity={
+    f1:f1*scale, f2:f2*scale, f3:f3>0?f3*scale:0,
+    esop:esop*scale
+  };
+
+  const rounds=[];
+  let totalRaised=0;
+  const exitVal=gv('exit_val');
+  const exitYr=gv('exit_yr');
+
+  ROUNDS_DEF.forEach(r=>{
+    const active=document.getElementById(`r_${r.id}_on`)?.checked;
+    if(!active) return;
+    const amt=gv(`r_${r.id}_amt`);
+    const pre=gv(`r_${r.id}_pre`);
+    const yr=gv(`r_${r.id}_yr`);
+    if(!amt||!pre) return;
+
+    const post=pre+amt;
+    const invPct=(amt/post)*100; // investor % of post-money
+    const dilFactor=1-(invPct/100); // existing shareholders multiplied by this
+
+    // Dilute everyone
+    const prevEquity={...equity};
+    Object.keys(equity).forEach(k=>equity[k]*=dilFactor);
+
+    rounds.push({
+      label:r.label, color:r.color, amt, pre, post,
+      invPct, yr,
+      equityBefore:{...prevEquity},
+      equityAfter:{...equity},
+      investorEq:invPct
+    });
+    totalRaised+=amt;
+  });
+
+  // Exit proceeds
+  const founderEqAtExit=(equity.f1+(equity.f2||0)+(equity.f3||0));
+  const founderProceeds=exitVal*(founderEqAtExit/100);
+  const initialFounderEq=f1+f2+f3;
+  const totalDilution=initialFounderEq>0?((initialFounderEq-founderEqAtExit)/initialFounderEq*100):0;
+
+  // IRR per round
+  rounds.forEach(r=>{
+    const fy=exitYr-r.yr;
+    const proceeds=exitVal*(r.invPct/100);
+    if(fy>0&&r.amt>0){
+      let lo=0,hi=10;
+      for(let i=0;i<200;i++){
+        const m=(lo+hi)/2;
+        const npv=-r.amt+proceeds/Math.pow(1+m,fy);
+        if(Math.abs(npv)<1){r.irr=m*100;break;}
+        if(npv>0)lo=m;else hi=m;
+      }
+      if(!r.irr) r.irr=(lo+hi)/2*100;
+      r.coc=proceeds/r.amt;
+      r.proceeds=proceeds;
+    }
+  });
+
+  return{equity,rounds,totalRaised,founderEqAtExit,founderProceeds,totalDilution,exitVal,exitYr,cur,
+    f1init:f1*scale,f2init:f2*scale,f3init:f3>0?f3*scale:0,esopInit:esop*scale};
+}
+
+// Live preview
+function updatePreview(){
+  const cur=document.getElementById('currency')?.value||'USD';
+  let f1=gv('f1_eq'),f2=gv('f2_eq'),f3=gv('f3_eq'),esop=gv('esop_eq');
+  const total=f1+f2+f3+esop;
+  const lang=currentLang;
+
+  const entities=[
+    {name:lang==='fr'?'Fondateur 1':'Founder 1',eq:f1,color:'#12120F'},
+    {name:lang==='fr'?'Fondateur 2':'Founder 2',eq:f2,color:'#1A6B47'},
+  ];
+  if(f3>0) entities.push({name:lang==='fr'?'Fondateur 3':'Founder 3',eq:f3,color:'#3A3830'});
+  entities.push({name:'ESOP',eq:esop,color:'#8A8880'});
+
+  const rows=entities.map(e=>`
+    <tr>
+      <td><div class="name-cell"><div class="preview-dot" style="background:${e.color}"></div>${e.name}</div></td>
+      <td style="font-family:var(--font-mono);font-size:11px;text-align:right">${total>0?Math.round(e.eq/total*1000000).toLocaleString():0}</td>
+      <td>
+        <div class="pct-bar-wrap" style="justify-content:flex-end">
+          <div class="pct-bar"><div class="pct-bar-fill" style="width:${total>0?e.eq/total*100:0}%;background:${e.color}"></div></div>
+          <span class="pct-val">${total>0?pct(e.eq/total*100):'0%'}</span>
+        </div>
+      </td>
+    </tr>`).join('');
+
+  document.getElementById('preview-body').innerHTML=rows;
+}
+
+// Main calculate
+function calculate(){
+  const data=computeCap();
+  if(!data){alert('Please check your inputs — total equity must equal 100%.'); return;}
+
+  document.getElementById('form-body').style.display='none';
+  document.getElementById('results').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+
+  const{equity,rounds,totalRaised,founderEqAtExit,founderProceeds,totalDilution,exitVal,exitYr,cur}=data;
+  const lang=currentLang;
+
+  // Summary cards
+  const sc1=founderEqAtExit;
+  document.getElementById('sc1_val').textContent=pct(sc1);
+  document.getElementById('sc1_val').className='summary-card-val '+(sc1>=30?'good':'warn');
+  document.getElementById('sc2_val').textContent=fmtM(founderProceeds,cur);
+  document.getElementById('sc2_val').className='summary-card-val '+(founderProceeds>=5000000?'good':'warn');
+  document.getElementById('sc3_val').textContent=pct(totalDilution);
+  document.getElementById('sc3_val').className='summary-card-val '+(totalDilution<60?'good':'warn');
+  document.getElementById('sc4_val').textContent=fmtM(totalRaised,cur);
+
+  // Detailed table
+  const cols=[lang==='fr'?'Entité':'Entity','Pre-Seed','Seed','Series A','Series B',lang==='fr'?'À l\'exit':'At Exit',lang==='fr'?'Produit exit':'Exit Proceeds'];
+  const activeRounds=rounds.map(r=>r.label);
+
+  const thead=`<tr>
+    <th>${lang==='fr'?'Entité':'Entity'}</th>
+    ${activeRounds.map(l=>`<th>${l}</th>`).join('')}
+    <th>${lang==='fr'?'À l\'exit':'At Exit'}</th>
+    <th>${lang==='fr'?'Produit exit':'Exit Proceeds'}</th>
+  </tr>`;
+
+  const founders=[
+    {name:lang==='fr'?'Fondateur 1':'Founder 1',key:'f1',color:'#12120F'},
+    {name:lang==='fr'?'Fondateur 2':'Founder 2',key:'f2',color:'#1A6B47'},
+    {name:lang==='fr'?'Fondateur 3':'Founder 3',key:'f3',color:'#3A3830'},
+    {name:'ESOP',key:'esop',color:'#8A8880'},
+  ].filter(f=>f.key==='esop'||gv(f.key==='f1'?'f1_eq':f.key==='f2'?'f2_eq':'f3_eq')>0);
+
+  const tbody=founders.map(f=>{
+    const atExit=equity[f.key]||0;
+    const proceeds=f.key!=='esop'?exitVal*(atExit/100):0;
+    return`<tr class="founder-row">
+      <td><div class="entity-cell"><div class="entity-dot" style="background:${f.color}"></div>${f.name}</div></td>
+      ${rounds.map(r=>`<td>${pct(r.equityAfter[f.key]||0)}</td>`).join('')}
+      <td>${pct(atExit)}</td>
+      <td>${f.key!=='esop'?fmtM(proceeds,cur):'—'}</td>
+    </tr>`;
+  }).join('');
+
+  // Investor rows
+  const investorRows=rounds.map(r=>`
+    <tr>
+      <td><div class="entity-cell"><div class="entity-dot" style="background:${r.color}"></div>${r.label} ${lang==='fr'?'Investisseurs':'Investors'}</div></td>
+      ${rounds.map(rr=>`<td>${rr.label===r.label?pct(r.investorEq):'—'}</td>`).join('')}
+      <td>${pct(r.investorEq)}</td>
+      <td>${r.proceeds?fmtM(r.proceeds,cur):'—'}</td>
+    </tr>`).join('');
+
+  document.getElementById('results-thead').innerHTML=thead;
+  document.getElementById('results-tbody').innerHTML=tbody+investorRows;
+
+  // Charts
+  buildPieChart(equity,rounds,lang);
+  buildDilutionChart(data,lang);
+
+  // Analysis
+  buildAnalysis(data,lang);
+}
+
+function buildPieChart(equity,rounds,lang){
+  if(pieChartInst){pieChartInst.destroy();pieChartInst=null;}
+  const f1=gv('f1_eq'),f2=gv('f2_eq'),f3=gv('f3_eq');
+  const labels=[];const data=[];const colors=[];
+
+  if(f1>0){labels.push(lang==='fr'?'Fondateur 1':'Founder 1');data.push(parseFloat(pct(equity.f1)));colors.push('#12120F');}
+  if(f2>0){labels.push(lang==='fr'?'Fondateur 2':'Founder 2');data.push(parseFloat(pct(equity.f2)));colors.push('#1A6B47');}
+  if(f3>0){labels.push(lang==='fr'?'Fondateur 3':'Founder 3');data.push(parseFloat(pct(equity.f3)));colors.push('#3A3830');}
+  labels.push('ESOP');data.push(parseFloat(pct(equity.esop)));colors.push('#D8D4CC');
+  rounds.forEach(r=>{labels.push(r.label);data.push(parseFloat(pct(r.investorEq)));colors.push(r.color);});
+
+  const ctx=document.getElementById('pieChart');
+  pieChartInst=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderColor:colors,borderWidth:2,hoverBorderWidth:3}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'right',labels:{font:{size:10,family:'DM Sans'},padding:12,boxWidth:10}},
+        tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw}%`}}
+      },
+      cutout:'60%'
+    }
+  });
+}
+
+function buildDilutionChart(data,lang){
+  if(dilChartInst){dilChartInst.destroy();dilChartInst=null;}
+  const {rounds,f1init,f2init,f3init} = data;
+  const f1=gv('f1_eq'),f2=gv('f2_eq'),f3=gv('f3_eq');
+
+  const stageLabels=[lang==='fr'?'Avant levée':'Pre-funding',...rounds.map(r=>r.label)];
+  const f1data=[f1init,...rounds.map(r=>r.equityAfter.f1||0)];
+  const f2data=[f2init,...rounds.map(r=>r.equityAfter.f2||0)];
+  const f3data=f3>0?[f3init,...rounds.map(r=>r.equityAfter.f3||0)]:null;
+
+  const datasets=[
+    {label:lang==='fr'?'Fondateur 1':'Founder 1',data:f1data,borderColor:'#12120F',backgroundColor:'rgba(18,18,15,.05)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:'#12120F'},
+    {label:lang==='fr'?'Fondateur 2':'Founder 2',data:f2data,borderColor:'#1A6B47',backgroundColor:'rgba(26,107,71,.05)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:'#1A6B47'},
+  ];
+  if(f3data) datasets.push({label:lang==='fr'?'Fondateur 3':'Founder 3',data:f3data,borderColor:'#3A3830',backgroundColor:'rgba(58,56,48,.05)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:'#3A3830'});
+
+  const ctx=document.getElementById('dilutionChart');
+  dilChartInst=new Chart(ctx,{
+    type:'line',
+    data:{labels:stageLabels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:{size:10,family:'DM Sans'},boxWidth:10}}},
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:10},color:'#8A8880'}},
+        y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:v=>v+'%',font:{size:10},color:'#8A8880'},min:0,max:100}
+      }
+    }
+  });
+}
+
+function buildAnalysis(data,lang){
+  const {founderEqAtExit,founderProceeds,totalDilution,totalRaised,rounds,exitVal,cur}=data;
+  const items=[];
+  const fr=lang==='fr';
+
+  // Founder equity at exit
+  if(founderEqAtExit>=30){
+    items.push({dot:'green',text:fr
+      ?`<strong>Equity fondateur solide à l'exit : ${pct(founderEqAtExit)}</strong> — Au-dessus de 30%, les fondateurs conservent un intérêt économique significatif. C'est un signal positif pour attirer de nouveaux investisseurs et motiver l'équipe.`
+      :`<strong>Strong founder equity at exit: ${pct(founderEqAtExit)}</strong> — Above 30%, founders retain a meaningful economic stake. This is a positive signal for attracting future investors and keeping the team motivated.`});
+  } else {
+    items.push({dot:'alert',text:fr
+      ?`<strong>Equity fondateur faible à l'exit : ${pct(founderEqAtExit)}</strong> — En dessous de 30%, les fondateurs risquent un désalignement avec les intérêts des investisseurs. Négociez des valorisations pré-money plus élevées ou réduisez le nombre de tours.`
+      :`<strong>Low founder equity at exit: ${pct(founderEqAtExit)}</strong> — Below 30%, founders risk misalignment with investor interests. Negotiate higher pre-money valuations or reduce the number of rounds.`});
+  }
+
+  // Total dilution
+  if(totalDilution>70){
+    items.push({dot:'alert',text:fr
+      ?`<strong>Dilution totale élevée : ${pct(totalDilution)}</strong> — Plus de 70% de dilution cumulée est significatif. Chaque tour futur réduira davantage votre participation. Envisagez de lever moins mais à des valorisations plus élevées.`
+      :`<strong>High total dilution: ${pct(totalDilution)}</strong> — Over 70% cumulative dilution is significant. Each future round will further reduce your stake. Consider raising less at higher valuations.`});
+  } else {
+    items.push({dot:'green',text:fr
+      ?`<strong>Dilution totale acceptable : ${pct(totalDilution)}</strong> — La dilution cumulée reste dans une fourchette gérable. Continuez à prioriser des valorisations élevées lors des prochains tours.`
+      :`<strong>Acceptable total dilution: ${pct(totalDilution)}</strong> — Cumulative dilution remains in a manageable range. Continue prioritizing high valuations in future rounds.`});
+  }
+
+  // Exit proceeds
+  items.push({dot:founderProceeds>=5000000?'green':'warn',text:fr
+    ?`<strong>Produit exit fondateurs : ${fmtM(founderProceeds,cur)}</strong> — Pour une exit à ${fmtM(exitVal,cur)}, les fondateurs reçoivent ${fmtM(founderProceeds,cur)} combinés. ${founderProceeds>=10000000?'Excellent retour sur investissement en temps.' : founderProceeds>=2000000?'Retour convenable selon le temps passé.':'Retour relativement faible — envisagez d\'augmenter la valorisation d\'exit cible.'}`
+    :`<strong>Founder exit proceeds: ${fmtM(founderProceeds,cur)}</strong> — At a ${fmtM(exitVal,cur)} exit, founders receive ${fmtM(founderProceeds,cur)} combined. ${founderProceeds>=10000000?'Excellent return for time invested.':founderProceeds>=2000000?'Decent return relative to time invested.':'Relatively low return — consider increasing your target exit valuation.'}`});
+
+  // Investor IRR
+  const goodRounds=rounds.filter(r=>r.irr>=25);
+  if(goodRounds.length>0){
+    items.push({dot:'green',text:fr
+      ?`<strong>IRR investisseurs attractif</strong> — ${goodRounds.map(r=>`${r.label}: ${pct(r.irr||0)} IRR, ${r.coc?.toFixed(1)}× CoCa`).join(' · ')}. Ces retours sont au-dessus du seuil VC de 25% — votre cap table est attractive pour des investisseurs institutionnels.`
+      :`<strong>Attractive investor IRR</strong> — ${goodRounds.map(r=>`${r.label}: ${pct(r.irr||0)} IRR, ${r.coc?.toFixed(1)}× CoCa`).join(' · ')}. These returns are above the 25% VC threshold — your cap table is attractive to institutional investors.`});
+  }
+
+  // ESOP
+  const esop=gv('esop_eq');
+  if(esop<10){
+    items.push({dot:'warn',text:fr
+      ?`<strong>Pool ESOP faible : ${pct(esop)}</strong> — La plupart des VCs demandent un pool d'options d'au moins 10-15% avant d'investir. Envisagez d'augmenter l'ESOP avant votre prochaine levée.`
+      :`<strong>Small ESOP pool: ${pct(esop)}</strong> — Most VCs require an option pool of at least 10-15% before investing. Consider increasing the ESOP before your next raise.`});
+  }
+
+  document.getElementById('analysis-items').innerHTML=items.map(i=>`
+    <div class="analysis-item">
+      <div class="analysis-dot ${i.dot}"></div>
+      <div class="analysis-text">${i.text}</div>
+    </div>`).join('');
+}
+
+function restart(){
+  document.getElementById('results').style.display='none';
+  document.getElementById('form-body').style.display='grid';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function setLang(l){
+  currentLang=l;
+  document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',['en','fr'][i]===l));
+  const s=(id,v)=>{const el=document.getElementById(id);if(el)el.innerHTML=v;};
+  buildRounds();
+  updatePreview();
+  if(l==='fr'){
+    s('pg_tag','Simulateur Cap Table');
+    s('pg_h1','Modélisez votre dilution<br>avant de signer.');
+    s('pg_p','Simulez 4 tours de financement. Voyez votre equity à chaque étape, les retours investisseurs et l\'impact dilutif — avant de négocier la moindre clause.');
+    s('fs_founders','Fondateurs');s('fs_exit','Scénario de sortie');s('fs_rounds','Tours de financement');
+    s('lbl_f1','Equity Fondateur 1 (%)');s('lbl_f2','Equity Fondateur 2 (%)');s('lbl_f3','Equity Fondateur 3 (% — optionnel)');
+    s('lbl_esop','Pool ESOP (%)');s('lbl_cur','Devise');
+    s('lbl_exit_val','Valorisation de sortie');s('lbl_exit_yr','Année de sortie');
+    s('calc_btn','Calculer la cap table →');
+    s('prev_title','Répartition equity actuelle');
+    s('pth_entity','Entité');s('pth_shares','Parts');s('pth_pct','Participation');
+    s('prev_hint','Reflète la propriété <em>avant</em> tout tour de financement.');
+    s('sc1_lbl','Equity fondateurs à l\'exit');s('sc2_lbl','Produit exit fondateurs');
+    s('sc3_lbl','Dilution totale');s('sc4_lbl','Total levé');
+    s('sc1_sub','combiné');s('sc3_sub2','tous tours confondus');s('sc4_sub','tous tours');
+    s('chart1_title','Equity à l\'exit — Répartition');s('chart2_title','Dilution par tour');
+    s('analysis_title','Analyse');
+    s('meth_tag','Méthodologie');s('meth_sub','Comment le simulateur calcule vos chiffres');
+    s('meth_s1t','Post-money & participation investisseur');
+    s('meth_s1d','Quand un investisseur apporte 1M$ à une valorisation pré-money de 4M$, le post-money = 5M$. L\'investisseur détient 20%. Tous les actionnaires existants sont dilués proportionnellement.');
+    s('meth_s2t','Dilution cumulée sur plusieurs tours');
+    s('meth_s2d','Chaque tour dilue tous les actionnaires. 45% avant un tour Seed à 15% devient 45% × 85% = 38,25%. Cela se compose à chaque tour.');
+    s('meth_s3t','Distribution des produits à l\'exit');
+    s('meth_s3d','À l\'exit, les produits sont distribués au prorata. 22% à un exit de 50M$ = 11M$ de produits. Distribution simple sans préférences de liquidation.');
+    s('meth_s4t','IRR & CoCa investisseur');
+    s('meth_s4d','Pour chaque tour, l\'IRR et le CoCa sont calculés à partir de la participation à l\'exit vs le montant investi. L\'IRR utilise la bisection contre un seuil VC de 25%.');
+    s('meth_s5d','<strong>Limitations importantes —</strong> Ce simulateur fournit des estimations indicatives uniquement. Il ne modélise pas les préférences de liquidation, les clauses anti-dilution, les droits pro-rata, les obligations convertibles ou les tours baissiers. Pour une modélisation contraignante, consultez un avocat et utilisez Carta ou Capdesk.');
+    s('meth_title','Comment fonctionne le simulateur');
+    s('meth_sub','Comprendre les mécanismes derrière les chiffres.');
+    s('meth_s1t','Valorisation post-money et participation investisseur');
+    s('meth_s1d','Quand un investisseur apporte 1M$ à une valorisation pré-money de 4M$, la valorisation post-money devient 5M$. L\'investisseur détient 1M$/5M$ = 20% de la société. Tous les actionnaires existants — fondateurs, ESOP — sont dilués proportionnellement de 20%.');
+    s('meth_s2t','Dilution cumulée sur plusieurs tours');
+    s('meth_s2d','Chaque tour dilue tous les actionnaires existants. Si le Fondateur 1 détient 45% après le Pre-Seed et qu\'un tour Seed émet 15% à de nouveaux investisseurs, sa participation devient 45% × (1 − 15%) = 38,25%. Cela se compose à chaque tour.');
+    s('meth_s3t','Distribution des produits à l\'exit');
+    s('meth_s3d','À l\'exit, les produits sont distribués proportionnellement à la participation. Si la société est acquise pour 50M$ et que le Fondateur 1 détient 22% à l\'exit, il reçoit 50M$ × 22% = 11M$. Ce simulateur suppose une distribution simple au prorata sans préférences de liquidation.');
+    s('meth_s4t','IRR et multiple CoCa investisseur');
+    s('meth_s4d','Pour chaque tour, le simulateur calcule l\'IRR attendu et le CoCa de l\'investisseur basés sur sa participation à l\'exit et la valorisation de sortie. L\'IRR est calculé par méthode de bisection par rapport au seuil VC de 25%.');
+    s('meth_s5t','Limitations importantes');
+    s('meth_s5d','Ce simulateur fournit des estimations indicatives uniquement. Il ne modélise pas les préférences de liquidation, les clauses anti-dilution, les droits pro-rata, les obligations convertibles, les tours baissiers ou les transactions secondaires. Pour une modélisation de cap table contraignante, consultez un avocat et utilisez des outils dédiés comme Carta ou Capdesk.');
+    s('cta_sub','Réservez une session pour revoir votre cap table et optimiser vos conditions avant le prochain tour.');
+    s('cta_btn','Réserver votre session →');s('btn_restart','↺ Réinitialiser la simulation');
+  } else {
+    s('pg_tag','Cap Table Simulator');
+    s('pg_h1','Model your dilution<br>before you sign.');
+    s('pg_p','Simulate 4 funding rounds. See your equity at each stage, investor returns, and dilution impact — before you negotiate a single term.');
+    s('fs_founders','Founders');s('fs_exit','Exit Scenario');s('fs_rounds','Funding Rounds');
+    s('lbl_f1','Founder 1 equity (%)');s('lbl_f2','Founder 2 equity (%)');s('lbl_f3','Founder 3 equity (% — optional)');
+    s('lbl_esop','ESOP pool (%)');s('lbl_cur','Currency');
+    s('lbl_exit_val','Exit valuation');s('lbl_exit_yr','Exit year');
+    s('calc_btn','Calculate cap table →');
+    s('prev_title','Current equity split');
+    s('pth_entity','Entity');s('pth_shares','Shares');s('pth_pct','Ownership');
+    s('prev_hint','This reflects ownership <em>before</em> any funding round.');
+    s('sc1_lbl','Founder equity at exit');s('sc2_lbl','Founder exit proceeds');
+    s('sc3_lbl','Total dilution');s('sc4_lbl','Total raised');
+    s('sc1_sub','combined');s('sc3_sub2','from all rounds');s('sc4_sub','across all rounds');
+    s('chart1_title','Equity at Exit — Distribution');s('chart2_title','Dilution by Round');
+    s('analysis_title','Analysis');
+    s('meth_tag','Methodology');s('meth_sub','How the simulator calculates your numbers');
+    s('meth_s1t','Post-money & investor ownership');
+    s('meth_s1d','When an investor puts in $1M at a $4M pre-money valuation, post-money = $5M. The investor owns 20%. All existing shareholders are diluted proportionally.');
+    s('meth_s2t','Cumulative dilution across rounds');
+    s('meth_s2d','Each round dilutes all existing shareholders. 45% ownership before a 15% Seed round becomes 45% × 85% = 38.25%. This compounds across every round.');
+    s('meth_s3t','Exit proceeds distribution');
+    s('meth_s3d','At exit, proceeds are distributed proportionally. 22% ownership at a $50M exit = $11M in proceeds. Simple pro-rata, no liquidation preferences.');
+    s('meth_s4t','Investor IRR & CoCa');
+    s('meth_s4d','For each round, IRR and Cash-on-Cash multiple are calculated from ownership at exit vs. investment amount. IRR uses bisection against a 25% VC threshold.');
+    s('meth_s5d','<strong>Important limitations —</strong> This simulator provides indicative estimates only. It does not model liquidation preferences, anti-dilution clauses, pro-rata rights, convertible notes, or down rounds. For legally binding cap table modeling, consult a lawyer and use dedicated tools like Carta or Capdesk.');
+    s('meth_title','How the cap table simulator works');
+    s('meth_sub','Understanding the mechanics behind the numbers.');
+    s('meth_s1t','Post-money valuation & investor ownership');
+    s('meth_s1d','When an investor puts in $1M at a $4M pre-money valuation, the post-money valuation becomes $5M. The investor owns $1M/$5M = 20% of the company. All existing shareholders — founders, ESOP — are diluted proportionally by this 20%.');
+    s('meth_s2t','Cumulative dilution across rounds');
+    s('meth_s2d','Each round dilutes all existing shareholders. If Founder 1 owns 45% after Pre-Seed and a Seed round issues 15% to new investors, Founder 1\'s stake becomes 45% × (1 − 15%) = 38.25%. This compounds across every round.');
+    s('meth_s3t','Exit proceeds distribution');
+    s('meth_s3d','At exit, proceeds are distributed proportionally to ownership percentage. If the company is acquired for $50M and Founder 1 owns 22% at exit, they receive $50M × 22% = $11M. This simulator assumes a simple pro-rata distribution without liquidation preferences.');
+    s('meth_s4t','Investor IRR & Cash-on-Cash multiple');
+    s('meth_s4d','For each round, the simulator calculates the investor\'s expected IRR and CoCa based on their ownership at exit and the exit valuation. IRR is calculated via bisection method against the VC threshold of 25%.');
+    s('meth_s5t','Important limitations');
+    s('meth_s5d','This simulator provides indicative estimates only. It does not model liquidation preferences, anti-dilution clauses, pro-rata rights, convertible notes, down rounds, or secondary transactions. For legally binding cap table modeling, consult a lawyer and use dedicated tools like Carta or Capdesk.');
+    s('cta_sub','Book a session to review your cap table and optimize your terms before the next round.');
+    s('cta_btn','Book your session →');s('btn_restart','↺ Reset simulation');
+  }
+}
+
+// Init
+buildRounds();
+updatePreview();
+</script>
+</body>
+</html>
