@@ -471,94 +471,14 @@ footer{background:var(--cream);border-top:1px solid var(--line);padding:24px 48p
 <div class="view active" id="view-tool">
 
   <!-- ONBOARDING -->
-  <div id="view-onboard">
-    <div class="honesty-box">
-      <p id="honesty_msg">⚠️ Be honest about your data — inflated figures will skew your results and mislead you in front of investors. Read the <a href="#" onclick="event.preventDefault();switchMainTab('guide');window.scrollTo({top:0,behavior:'smooth'})" style="color:inherit;text-decoration:underline;cursor:pointer" id="honesty_guide_link">Methodology guide</a> to use this tool effectively.</p>
-    </div>
-    <div class="ob-card">
-      <div class="ob-section" id="ob_s_profile">Votre profil founder</div>
-      <div class="ob-g2">
-        <div class="field"><label id="lb_prenom">Prénom *</label><input type="text" id="ob_prenom" placeholder="Yacine"></div>
-        <div class="field"><label id="lb_nom">Nom *</label><input type="text" id="ob_nom" placeholder="Benali"></div>
-      </div>
-      <div class="field"><label id="lb_email">Email *</label><input type="email" id="ob_email" placeholder="you@startup.com"></div>
-      <div class="field"><label id="lb_pays">Country</label>
-          <select id="ob_pays">
-            <option value="">—</option>
-          </select>
-        </div>
-
-      <div class="ob-section" id="ob_s_startup">Votre startup</div>
-      <div class="ob-g2">
-        <div class="field"><label id="lb_startup">Nom de la startup *</label><input type="text" id="ob_startup" placeholder="TechDZ, AgriSeed..."></div>
-        <div class="field"><label id="lb_website">Site web</label><input type="url" id="ob_website" placeholder="https://startup.dz"></div>
-      </div>
-      <div class="ob-g2">
-        <div class="field"><label id="lb_secteur">Secteur *</label>
-          <select id="ob_secteur" onchange="onSecteurChange()">
-            <option value="" id="sect_ph">Sélectionner...</option>
-          </select>
-        </div>
-        <div class="field"><label id="lb_bm">Modèle économique</label>
-          <select id="ob_bm">
-            <option value="">—</option>
-            <option value="subscription" id="bm_sub">Abonnement (Subscription)</option>
-            <option value="marketplace">Marketplace / Commission</option>
-            <option value="freemium">Freemium</option>
-            <option value="b2b">B2B</option><option value="b2c">B2C</option><option value="b2b2c">B2B2C</option>
-            <option value="hardware" id="bm_hw">Vente hardware + service</option>
-            <option value="autre" id="bm_other">Autre</option>
-          </select>
-        </div>
-      </div>
-      <div class="ob-g2">
-        <div class="field"><label id="lb_stade">Stade</label>
-          <select id="ob_stade">
-            <option value="">—</option>
-            <option value="idea" id="st_idea">Idée / Pré-produit</option>
-            <option value="mvp">MVP</option>
-            <option value="seed" id="st_seed">Seed (premières revenues)</option>
-            <option value="serieA" id="st_a">Série A</option>
-            <option value="serieB" id="st_b">Série B+</option>
-          </select>
-        </div>
-        <div class="field"><label id="lb_levee">Levée de fonds prévue ?</label>
-          <select id="ob_levee">
-            <option value="non" id="lev_no">Non / Exploration</option>
-            <option value="3mois" id="lev_3m">Dans les 3 prochains mois</option>
-            <option value="6mois" id="lev_6m">Dans les 6 prochains mois</option>
-            <option value="encours" id="lev_now">Déjà en cours</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="ob-section" id="ob_s_team">L'équipe</div>
-      <div class="ob-g3">
-        <div class="field"><label id="lb_team">Nombre de membres</label><input type="number" id="ob_team" placeholder="5" min="1"></div>
-        <div class="field"><label id="lb_patents">Brevets / IP</label>
-          <select id="ob_patents">
-            <option value="non" id="pat_no">Aucun brevet</option>
-            <option value="en_cours" id="pat_pending">En cours de dépôt</option>
-            <option value="national" id="pat_nat">Brevet(s) national</option>
-            <option value="international" id="pat_intl">Brevet(s) international</option>
-          </select>
-        </div>
-        <div class="field"><label id="lb_arr">ARR actuel ($)</label><input type="number" id="ob_arr" placeholder="Ex: 120 000" min="0"></div>
-      </div>
-
-      <div class="consent-box">
-        <input type="checkbox" id="ob_consent">
-        <label for="ob_consent" id="lb_consent" style="cursor:pointer">J'accepte que ces informations soient utilisées pour améliorer cet outil et recevoir des ressources pour les founders. Aucune donnée ne sera revendue ni partagée à des tiers sans consentement explicite.</label>
-      </div>
-      <div class="ob-err" id="ob_err">Veuillez remplir les champs obligatoires (*) et accepter les conditions.</div>
-      <button class="btn-primary" id="ob_submit_btn" onclick="submitOnboard()">Accéder à l'outil →</button>
-      <div class="btn-skip" id="ob_skip_lnk" onclick="skipOnboard()">Continuer sans créer de profil</div>
-    </div>
-  </div>
-
   <!-- MAIN TOOL -->
-  <div id="view-main" style="display:none">
+  <div id="view-main">
     <div id="founder_badge"></div>
+    <!-- SAVE BANNER — shown only when not logged in -->
+    <div id="save_banner" style="display:none;background:var(--navy);padding:12px 24px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+      <span style="font-size:12px;color:rgba(255,255,255,.7)">Sign in to save your results and track your progress over time.</span>
+      <a href="dashboard.html" style="font-size:11px;font-weight:600;color:#FFF;text-decoration:none;border:1px solid rgba(255,255,255,.3);padding:6px 14px;transition:all .15s" onmouseover="this.style.background='var(--green)'" onmouseout="this.style.background='transparent'">Sign in →</a>
+    </div>
 
     <div class="steps-nav">
       <button class="step-btn active" id="s1" onclick="goto(1)">1 · Startup</button>
@@ -576,10 +496,22 @@ footer{background:var(--cream);border-top:1px solid var(--line);padding:24px 48p
           <select id="currency"><option value="USD">USD ($)</option><option value="DZD">DZD</option><option value="EUR">EUR (€)</option></select>
         </div>
       </div>
+      <div class="g2">
       <div class="field"><label id="lb_sect_tool">Secteur d'activité</label>
         <select id="secteur_tool" onchange="updateMultSuggest()">
           <option value="" id="st_ph">Sélectionner pour voir les multiples recommandés...</option>
         </select>
+      </div>
+      <div class="field"><label id="lb_stade_tool">Stade</label>
+        <select id="stade_tool">
+          <option value="">—</option>
+          <option value="idea">Idée / Pré-produit</option>
+          <option value="mvp">MVP</option>
+          <option value="seed">Seed</option>
+          <option value="serieA">Série A</option>
+          <option value="serieB">Série B+</option>
+        </select>
+      </div>
       </div>
       <div id="mult_suggest_box" style="display:none" class="mult-suggest">
         <div class="ms-label" id="ms_lbl">Multiple EV/Revenue recommandé</div>
@@ -690,8 +622,8 @@ const PAYS=[
   ];
 
 function renderPays(){
-  const saved=document.getElementById('ob_pays').value;
-  const sel=document.getElementById('ob_pays');
+  const saved='';
+  const sel=null; // ob_pays removed
   sel.innerHTML='<option value="">—</option>';
   PAYS.forEach(country=>{
     const opt=document.createElement('option');
@@ -947,7 +879,7 @@ const SECTEURS_LABELS={
 };
 
 function renderSecteurs(){
-  const saved1=document.getElementById('ob_secteur').value;
+  const saved1=document.getElementById('secteur_tool')?.value||'';
   const saved2=document.getElementById('secteur_tool').value;
   const labels=SECTEURS_LABELS[currentLang];
   [['ob_secteur',t().sectPh],['secteur_tool',t().stPh]].forEach(([id,ph])=>{
@@ -1174,72 +1106,42 @@ async function saveToSupabase(data){
 }
 
 
-function submitOnboard(){
-  const tx=t();
-  const prenom=document.getElementById('ob_prenom').value.trim();
-  const nom=document.getElementById('ob_nom').value.trim();
-  const email=document.getElementById('ob_email').value.trim();
-  const startup=document.getElementById('ob_startup').value.trim();
-  const secteur=document.getElementById('ob_secteur').value;
-  const consent=document.getElementById('ob_consent').checked;
-  const err=document.getElementById('ob_err');
-  if(!prenom||!nom||!email||!startup||!secteur||!consent){err.style.display='block';return;}
-  err.style.display='none';
-  founderData={prenom,nom,email,startup,secteur,
-    linkedin:'',
-    website:document.getElementById('ob_website').value,
-    pays:document.getElementById('ob_pays').value,
-    ville:'',
-    bm:document.getElementById('ob_bm').value,
-    stade:document.getElementById('ob_stade').value,
-    levee:document.getElementById('ob_levee').value,
-    team:document.getElementById('ob_team').value,
-    patents:document.getElementById('ob_patents').value,
-    arr:document.getElementById('ob_arr').value,
-    date:new Date().toLocaleDateString('fr-FR'),lang:currentLang
-  };
-  saveToSupabase(founderData);
-  // Email sent after calc() populates founderResults — triggered via goto(4)
-  document.getElementById('startup_name').value=startup;
-  document.getElementById('secteur_tool').value=secteur;
-  renderSecteurs();
-  updateMultSuggest();
-  showMain();
-}
-
-
-function skipOnboard(){founderData={};showMain();}
-
-function showMain(){
-  document.getElementById('view-onboard').style.display='none';
-  document.getElementById('view-main').style.display='block';
-  const badge=document.getElementById('founder_badge');
-  if(founderData.prenom){
-    const init=(founderData.prenom[0]||'')+(founderData.nom?founderData.nom[0]:'');
-    const web=founderData.website?` · <a href="${founderData.website}" target="_blank" style="color:var(--accent)">${founderData.website.replace('https://','').replace('http://','')}</a>`:'';
-    badge.innerHTML=`<div class="founder-badge"><div class="fb-avatar">${init.toUpperCase()}</div><span>${founderData.prenom} ${founderData.nom} · ${founderData.startup}${web} · ${t().founderSaved}</span></div>`;
+function initValuationTool(){
+  // Check if user is logged in and populate founderData from auth
+  const token=localStorage.getItem('sb_access');
+  if(token){
+    fetch('https://fvbrzttvdvxhbdkjknje.supabase.co/auth/v1/user',{
+      headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YnJ6dHR2ZHZ4aGJka2prbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzgwNTAsImV4cCI6MjA5MDcxNDA1MH0.tcE5PlgMsu7suLAzN3uT5VjKnFhc25qkJJMKkbNmtvI','Authorization':'Bearer '+token}
+    }).then(r=>r.json()).then(user=>{
+      if(user?.email){
+        // Hide save banner — user is logged in
+        const banner=document.getElementById('save_banner');
+        if(banner) banner.style.display='none';
+        // Pre-fill email
+        founderData.email=user.email;
+        const name=user.user_metadata?.full_name||user.user_metadata?.name||'';
+        if(name){
+          const parts=name.split(' ');
+          founderData.prenom=parts[0]||'';
+          founderData.nom=parts.slice(1).join(' ')||'';
+        }
+        // Update topbar sign in button to show dashboard
+        const navLogin=document.getElementById('nav_login');
+        if(navLogin){navLogin.textContent='My Dashboard →';navLogin.href='dashboard.html';}
+      } else {
+        showSaveBanner();
+      }
+    }).catch(()=>showSaveBanner());
+  } else {
+    showSaveBanner();
   }
 }
 
-function onSecteurChange(){
-  document.getElementById('secteur_tool').value=document.getElementById('ob_secteur').value;
-  updateMultSuggest();
+function showSaveBanner(){
+  const banner=document.getElementById('save_banner');
+  if(banner) banner.style.display='flex';
 }
 
-function updateMultSuggest(){
-  const s=document.getElementById('secteur_tool').value;
-  const box=document.getElementById('mult_suggest_box');
-  if(!s||!SECTEURS[s]){box.style.display='none';return;}
-  const d=SECTEURS[s];
-  box.style.display='block';
-  document.getElementById('ms_range').textContent=`${d.min}x – ${d.max}x  (médiane / median : ${d.med}x)`;
-  document.getElementById('ms_desc').textContent=d.desc[currentLang]||d.desc.fr;
-}
-
-function applyMult(){
-  const s=document.getElementById('secteur_tool').value;
-  if(s&&SECTEURS[s])document.getElementById('ev_mult').value=SECTEURS[s].med;
-}
 
 function goto(n){
   [1,2,3,4].forEach(i=>{
@@ -1548,7 +1450,7 @@ function calc(){
   document.getElementById('results_area').innerHTML=`
 <div class="card" style="margin-bottom:16px">
   <div class="stitle">${name} — ${tx.synthTitle} ${sectKey||'—'}</div>
-  ${calcInvestorScore({irr,coc:r.coc,r,res,sectKey,evMult,stade:founderData.stade||'',tx})}
+  ${calcInvestorScore({irr,coc:r.coc,r,res,sectKey,evMult,stade:document.getElementById('stade_tool')?.value||'',tx})}
   <div class="mc">
     <div class="m inf"><div class="ml">${tx.mPv}</div><div class="mv">${fmt(r.eqToday,cur)}</div><div class="ms">${tx.mPvSub}</div></div>
     <div class="m"><div class="ml">${tx.mEv} (${exitY})</div><div class="mv">${fmt(r.ev,cur)}</div><div class="ms">${tx.mEvSub.replace('{m}',evMult)}</div></div>
@@ -1566,7 +1468,7 @@ function calc(){
     <div class="irr-ticks"><span>0%</span><span>${tx.irrThresh}</span><span>${tx.irrTop}</span><span>80%+</span></div>
   </div>
   <div class="verdict ${vcls}">${verdict}</div>
-  ${generateAnalysis({irr,coc:r.coc,eqToday:r.eqToday,fy:r.fy,sectKey,evMult,eqX,stade:founderData.stade,cur,tx,irrGood,irrOk,r,res})}
+  ${generateAnalysis({irr,coc:r.coc,eqToday:r.eqToday,fy:r.fy,sectKey,evMult,eqX,stade:document.getElementById('stade_tool')?.value||'',cur,tx,irrGood,irrOk,r,res})}
 </div>
 <div class="card" style="margin-bottom:16px">
   <div class="stitle">${tx.scCompare}</div>
@@ -1613,7 +1515,7 @@ function calc(){
   saveValuationIfLoggedIn({
     startup:founderData.startup||'',
     sector:sectKey,
-    stade:founderData.stade||'',
+    stade:document.getElementById('stade_tool')?.value||'',
     irr:irr!==null?parseFloat(irr.toFixed(2)):null,
     coc:r.coc!==null?parseFloat(r.coc.toFixed(2)):null,
     ev:r.ev?parseFloat(r.ev.toFixed(0)):null,
@@ -1623,7 +1525,7 @@ function calc(){
     exit_year:exitY||null,
     req_return:gv('req_return')||null
   });
-  const scoreHtml=calcInvestorScore({irr,coc:r.coc,r,res,sectKey,evMult,stade:founderData.stade||'',tx});
+  const scoreHtml=calcInvestorScore({irr,coc:r.coc,r,res,sectKey,evMult,stade:document.getElementById('stade_tool')?.value||'',tx});
   const scoreMatch=scoreHtml.match(/<div class="sn">(\d+)<\/div>/);
   founderResults={
     pv:fmt(r.eqToday,cur),ev:fmt(r.ev,cur),
@@ -1632,10 +1534,7 @@ function calc(){
     score:scoreMatch?scoreMatch[1]:'—'
   };
   // Send confirmation email on first calc
-  if(founderData.email&&!founderData._emailSent){
-    founderData._emailSent=true;
-    sendConfirmationEmail(founderData);
-  }
+  // Email confirmation removed — users sign in via dashboard
 }
 
 // ── WHAT-IF SIMULATOR ──
