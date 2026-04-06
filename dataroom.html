@@ -62,8 +62,40 @@ body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size
 .cat-score-bar-fill{height:100%;background:var(--green);transition:width .4s}
 
 /* ── CHECKLIST ── */
-.checklist-body{padding:48px 0 80px;display:grid;grid-template-columns:240px 1fr;gap:48px;align-items:start}
-.checklist-nav{position:sticky;top:80px}
+.checklist-body{padding:48px 0 80px;display:grid;grid-template-columns:1fr 280px;gap:48px;align-items:start}
+.checklist-nav{position:sticky;top:80px;display:flex;flex-direction:column;gap:0}
+
+/* PROGRESS SIDEBAR */
+.sidebar{position:sticky;top:80px;display:flex;flex-direction:column;gap:0}
+.sidebar-score{border:1px solid var(--line);padding:28px 24px;border-bottom:none}
+.sidebar-score-label{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy3);margin-bottom:16px}
+.sidebar-score-circle{position:relative;width:100px;height:100px;margin:0 auto 20px}
+.sidebar-score-circle svg{transform:rotate(-90deg)}
+.sc-bg{fill:none;stroke:var(--line);stroke-width:6}
+.sc-fg{fill:none;stroke:var(--navy);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1)}
+.sidebar-score-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.sidebar-score-num{font-family:var(--font-serif);font-size:28px;color:var(--navy);letter-spacing:-.04em;font-weight:400;line-height:1}
+.sidebar-score-den{font-size:10px;color:var(--navy3);letter-spacing:.04em}
+.sidebar-verdict{font-size:11px;color:var(--navy2);line-height:1.6;text-align:center;padding-top:4px}
+.sidebar-verdict strong{color:var(--green)}
+
+/* CATEGORY LIST */
+.sidebar-cats{border:1px solid var(--line);border-bottom:none}
+.sidebar-cat{padding:14px 20px;border-bottom:1px solid var(--line);cursor:pointer;transition:all .15s}
+.sidebar-cat:hover{background:var(--green-bg)}
+.sidebar-cat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sidebar-cat-name{font-size:11px;font-weight:500;color:var(--navy);letter-spacing:.02em}
+.sidebar-cat-count{font-size:10px;font-family:var(--font-mono);color:var(--navy3)}
+.sidebar-cat-track{background:var(--line);height:3px;border-radius:2px}
+.sidebar-cat-fill{height:100%;border-radius:2px;transition:width .4s ease}
+
+/* SIDEBAR CTA */
+.sidebar-cta{border:1px solid var(--line);padding:20px 20px;background:var(--navy)}
+.sidebar-cta-text{font-size:12px;color:rgba(255,255,255,.7);line-height:1.5;margin-bottom:14px}
+.sidebar-cta-text strong{color:#FFF;display:block;margin-bottom:4px;font-family:var(--font-serif);font-size:15px;font-weight:400;letter-spacing:-.01em}
+.sidebar-cta-btn{display:block;text-align:center;background:transparent;border:1px solid rgba(255,255,255,.3);color:#FFF;padding:10px;font-size:11px;font-weight:500;letter-spacing:.04em;text-decoration:none;transition:all .15s}
+.sidebar-cta-btn:hover{background:#FFF;color:var(--navy)}
+
 .checklist-nav-title{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy3);margin-bottom:12px}
 .checklist-nav-items{display:flex;flex-direction:column;gap:0;border:1px solid var(--line)}
 .checklist-nav-item{padding:12px 16px;font-size:12px;color:var(--navy2);cursor:pointer;border-bottom:1px solid var(--line);transition:all .15s;display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -121,9 +153,8 @@ footer a{color:var(--green);text-decoration:none}
   .page-header{grid-template-columns:1fr;gap:32px;padding:40px 0 32px}
   .page-header h1{font-size:32px}
   .checklist-body{grid-template-columns:1fr;gap:24px}
-  .checklist-nav{position:static}
-  .checklist-nav-items{flex-direction:row;flex-wrap:wrap;border:none;gap:8px}
-  .checklist-nav-item{border:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .sidebar{position:static}
+  .sidebar-score-circle{width:80px;height:80px}
   .category-scores{grid-template-columns:1fr 1fr}
   .cta-inner{flex-direction:column;gap:20px}
 }
@@ -176,14 +207,43 @@ footer a{color:var(--green);text-decoration:none}
   <!-- CHECKLIST BODY -->
   <div class="checklist-body">
 
-    <!-- NAV -->
-    <div class="checklist-nav">
-      <div class="checklist-nav-title" id="nav_title">Categories</div>
-      <div class="checklist-nav-items" id="nav_items"></div>
-    </div>
-
-    <!-- SECTIONS -->
+    <!-- SECTIONS (left) -->
     <div class="checklist-sections" id="checklist-sections"></div>
+
+    <!-- SIDEBAR (right, sticky) -->
+    <div class="sidebar">
+
+      <!-- Score circle -->
+      <div class="sidebar-score">
+        <div class="sidebar-score-label" id="sb_label">Readiness Score</div>
+        <div class="sidebar-score-circle">
+          <svg width="100" height="100" viewBox="0 0 100 100">
+            <circle class="sc-bg" cx="50" cy="50" r="42"/>
+            <circle class="sc-fg" id="sc_arc" cx="50" cy="50" r="42"
+              stroke-dasharray="263.9"
+              stroke-dashoffset="263.9"/>
+          </svg>
+          <div class="sidebar-score-text">
+            <div class="sidebar-score-num" id="sb_num">0</div>
+            <div class="sidebar-score-den" id="sb_den">/ 35</div>
+          </div>
+        </div>
+        <div class="sidebar-verdict" id="sb_verdict">Start checking documents</div>
+      </div>
+
+      <!-- Category bars -->
+      <div class="sidebar-cats" id="sb_cats"></div>
+
+      <!-- CTA -->
+      <div class="sidebar-cta">
+        <div class="sidebar-cta-text">
+          <strong id="sb_cta_title">Need help?</strong>
+          <span id="sb_cta_sub">Book a session to prioritize your data room with an expert.</span>
+        </div>
+        <a href="https://calendly.com/yacine-chikhar/30min" target="_blank" class="sidebar-cta-btn" id="sb_cta_btn">Book 30 min →</a>
+      </div>
+
+    </div>
 
   </div>
 
@@ -318,7 +378,43 @@ function render(){
   const done=docs.filter((_,i)=>checked[i]).length;
   const pct=total>0?Math.round(done/total*100):0;
 
-  // Score
+  // Sidebar score circle
+  const circ=263.9;
+  const arc=document.getElementById('sc_arc');
+  if(arc){
+    arc.style.strokeDashoffset=circ-(circ*pct/100);
+    arc.style.stroke=pct>=75?'#1A6B47':pct>=50?'#12120F':'#9A9892';
+  }
+  document.getElementById('sb_num').textContent=done;
+  document.getElementById('sb_den').textContent='/ '+total;
+
+  // Sidebar verdict
+  const sbVerdicts={
+    en:{v0:'Start checking documents',v25:'Keep going — focus on critical docs first',v50:'Good progress — almost halfway there',v75:'Almost ready — a few gaps remain',v100:'🎉 Data room complete!'},
+    fr:{v0:'Commencez à cocher les documents',v25:'Continuez — priorité aux docs critiques',v50:'Bon progrès — presque à mi-chemin',v75:'Presque prêt — quelques lacunes restent',v100:'🎉 Data room complète !'}
+  };
+  const sbvk=done===0?'v0':pct<50?'v25':pct<75?'v50':pct<100?'v75':'v100';
+  document.getElementById('sb_verdict').innerHTML=pct>=75
+    ?`<strong>${sbVerdicts[lang][sbvk]}</strong>`
+    :sbVerdicts[lang][sbvk];
+
+  // Sidebar category bars
+  const catColors=['#1A6B47','#12120F','#6B6B66','#3A3830','#8A8880','#1A6B47'];
+  document.getElementById('sb_cats').innerHTML=catCounts.map((cc,i)=>{
+    const p=cc.total>0?cc.done/cc.total:0;
+    const barColor=p>=0.75?'#1A6B47':p>=0.5?'#12120F':'#D8D4CC';
+    return`<div class="sidebar-cat" onclick="scrollToSection(${i})">
+      <div class="sidebar-cat-top">
+        <span class="sidebar-cat-name">${cats[i]}</span>
+        <span class="sidebar-cat-count">${cc.done}/${cc.total}</span>
+      </div>
+      <div class="sidebar-cat-track">
+        <div class="sidebar-cat-fill" style="width:${p*100}%;background:${barColor}"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Score panel (header — keep in sync)
   document.getElementById('score_num').textContent=done;
   document.getElementById('score_den').textContent='/ '+total;
   document.getElementById('score_bar').style.width=pct+'%';
@@ -462,7 +558,10 @@ function setLang(l){
   if(l==='fr'){
     s('pg_tag','Data Room Checklist');s('pg_h1','Êtes-vous prêt<br>pour la due diligence ?');
     s('pg_p','35 documents que chaque investisseur demandera. Cochez ce que vous avez, voyez ce qui manque, et obtenez votre score de préparation avant que la salle ne pose la question.');
-    s('score_label','Score de préparation');
+    s('sb_label','Score de préparation');
+    s('sb_cta_title','Besoin d\'aide ?');
+    s('sb_cta_sub','Réservez une session pour prioriser votre data room avec un expert.');
+    s('sb_cta_btn','Réserver 30 min →');
     s('nav_title','Catégories');
     s('btn_reset','Tout réinitialiser');s('btn_export','⬇ Exporter les documents manquants');
     s('actions_hint','Votre progression est sauvegardée automatiquement');
@@ -472,7 +571,10 @@ function setLang(l){
   } else {
     s('pg_tag','Data Room Checklist');s('pg_h1','Are you ready<br>for due diligence?');
     s('pg_p','35 documents every investor will request. Check what you have, see what\'s missing, and get your readiness score before the room asks.');
-    s('score_label','Readiness Score');
+    s('sb_label','Readiness Score');
+    s('sb_cta_title','Need help?');
+    s('sb_cta_sub','Book a session to prioritize your data room with an expert.');
+    s('sb_cta_btn','Book 30 min →');
     s('nav_title','Categories');
     s('btn_reset','Reset all');s('btn_export','⬇ Export missing list');
     s('actions_hint','Your progress is saved automatically');
