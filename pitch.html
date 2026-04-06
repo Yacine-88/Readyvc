@@ -653,6 +653,28 @@ function setLang(l){
   renderQ();
 }
 
+
+// ── SAVE TO DASHBOARD ──
+const _SU='https://fvbrzttvdvxhbdkjknje.supabase.co';const _SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YnJ6dHR2ZHZ4aGJka2prbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzgwNTAsImV4cCI6MjA5MDcxNDA1MH0.tcE5PlgMsu7suLAzN3uT5VjKnFhc25qkJJMKkbNmtvI';
+async function _saveScore(table,data){
+  const token=localStorage.getItem('sb_access');
+  if(!token) return;
+  try{
+    const user=await (await fetch(`${_SU}/auth/v1/user`,{headers:{'apikey':_SK,'Authorization':'Bearer '+token}})).json();
+    if(!user?.id) return;
+    await fetch(`${_SU}/rest/v1/${table}`,{
+      method:'POST',
+      headers:{'apikey':_SK,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({...data,user_id:user.id})
+    });
+    const el=document.createElement('div');
+    el.style.cssText='position:fixed;bottom:24px;right:24px;background:#1A6B47;color:#FFF;padding:12px 18px;font-size:12px;font-family:DM Sans,sans-serif;z-index:9999;transition:opacity .5s';
+    el.textContent='✓ Score saved to your dashboard';
+    document.body.appendChild(el);
+    setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),500);},3000);
+  }catch{}
+}
+
 // Init
 renderQ();
 </script>
