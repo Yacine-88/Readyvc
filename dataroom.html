@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VCReady — Data Room Checklist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7BRPFG4JQL"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-7BRPFG4JQL');</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+:root{
+  --cream:#F5F2EC;--navy:#12120F;--navy2:#3A3830;--navy3:#8A8880;
+  --line:#D8D4CC;--green:#1A6B47;--green-bg:#E8F5EE;--green-border:#A8D5BC;
+  --font:'DM Sans',sans-serif;--font-serif:'DM Serif Display',serif;--font-mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh}
+
+/* ── TOPBAR ── */
+.topbar{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1px solid var(--line);height:60px;padding:0 48px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--font-serif);font-size:20px;color:var(--navy);letter-spacing:-.03em;text-decoration:none}
+.logo span{color:var(--green)}
+.topbar-nav{display:flex;align-items:center}
+.nav-link{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);text-decoration:none;padding:0 16px;height:60px;display:flex;align-items:center;border-bottom:2px solid transparent;transition:all .15s}
+.nav-link:hover{color:var(--navy)}
+.nav-link.active{color:var(--navy);border-bottom-color:var(--navy)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.lang-toggle{display:flex;border:1px solid var(--line)}
+.lang-btn{padding:6px 12px;font-size:11px;font-weight:500;background:transparent;border:none;color:var(--navy3);cursor:pointer;font-family:var(--font);letter-spacing:.04em;transition:all .15s}
+.lang-btn.active{background:var(--navy);color:var(--cream)}
+
+/* ── LAYOUT ── */
+.container{max-width:1100px;margin:0 auto;padding:0 48px}
+
+/* ── PAGE HEADER ── */
+.page-header{padding:60px 0 48px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:end}
+.page-tag{font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--navy3);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.page-tag::before{content:'';display:block;width:24px;height:1px;background:var(--navy3)}
+.page-header h1{font-family:var(--font-serif);font-size:44px;color:var(--navy);letter-spacing:-.04em;line-height:1.05;font-weight:400;margin-bottom:12px}
+.page-header p{font-size:14px;color:var(--navy2);line-height:1.75;max-width:420px}
+
+/* SCORE PANEL */
+.score-panel{border:1px solid var(--line);padding:28px}
+.score-panel-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.score-panel-title{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy3)}
+.score-big{font-family:var(--font-serif);font-size:48px;color:var(--navy);letter-spacing:-.04em;font-weight:400;line-height:1}
+.score-total{font-size:14px;color:var(--navy3);margin-left:4px}
+.score-track{background:var(--line);height:4px;margin-bottom:12px}
+.score-fill{height:100%;background:var(--navy);transition:width .5s ease}
+.score-verdict{font-size:12px;color:var(--navy2);line-height:1.5}
+.score-verdict strong{color:var(--navy)}
+.category-scores{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:20px;border-top:1px solid var(--line)}
+.cat-score{padding:12px 0 8px;border-bottom:1px solid var(--line)}
+.cat-score:nth-child(odd){padding-right:16px;border-right:1px solid var(--line)}
+.cat-score:nth-child(even){padding-left:16px}
+.cat-score-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);margin-bottom:4px}
+.cat-score-val{font-size:13px;font-weight:500;color:var(--navy);font-family:var(--font-mono)}
+.cat-score-bar{background:var(--line);height:2px;margin-top:6px}
+.cat-score-bar-fill{height:100%;background:var(--green);transition:width .4s}
+
+/* ── CHECKLIST ── */
+.checklist-body{padding:48px 0 80px;display:grid;grid-template-columns:240px 1fr;gap:48px;align-items:start}
+.checklist-nav{position:sticky;top:80px}
+.checklist-nav-title{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy3);margin-bottom:12px}
+.checklist-nav-items{display:flex;flex-direction:column;gap:0;border:1px solid var(--line)}
+.checklist-nav-item{padding:12px 16px;font-size:12px;color:var(--navy2);cursor:pointer;border-bottom:1px solid var(--line);transition:all .15s;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.checklist-nav-item:last-child{border-bottom:none}
+.checklist-nav-item:hover{background:var(--green-bg);color:var(--green)}
+.checklist-nav-item.active{background:var(--navy);color:var(--cream)}
+.checklist-nav-item.active .nav-item-count{background:rgba(255,255,255,.15);color:var(--cream)}
+.nav-item-count{font-size:10px;font-family:var(--font-mono);color:var(--navy3);background:var(--line);padding:2px 6px;white-space:nowrap}
+
+/* SECTIONS */
+.checklist-sections{}
+.checklist-section{margin-bottom:40px}
+.section-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:2px solid var(--navy);margin-bottom:0}
+.section-title{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy)}
+.section-progress{font-size:11px;font-family:var(--font-mono);color:var(--navy3)}
+.section-items{display:flex;flex-direction:column}
+.item{display:flex;align-items:flex-start;gap:14px;padding:16px 0;border-bottom:1px solid var(--line);cursor:pointer;transition:all .15s}
+.item:last-child{border-bottom:none}
+.item:hover{padding-left:4px}
+.item-check{width:20px;height:20px;border:1px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;margin-top:1px}
+.item.checked .item-check{background:var(--navy);border-color:var(--navy)}
+.item.checked .item-check::after{content:'✓';font-size:11px;color:var(--cream);font-weight:600}
+.item.priority .item-priority-dot{display:block}
+.item-priority-dot{display:none;width:6px;height:6px;background:var(--green);border-radius:50%;flex-shrink:0;margin-top:7px}
+.item-body{flex:1}
+.item-name{font-size:13px;color:var(--navy);font-weight:500;margin-bottom:2px;transition:color .15s}
+.item.checked .item-name{color:var(--navy3);text-decoration:line-through}
+.item-desc{font-size:11px;color:var(--navy3);line-height:1.5}
+.item-tag{display:inline-block;font-size:9px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border:1px solid var(--line);color:var(--navy3);margin-top:4px}
+.item-tag.critical{border-color:var(--green-border);color:var(--green);background:var(--green-bg)}
+
+/* ── ACTIONS ── */
+.actions-bar{display:flex;align-items:center;gap:12px;padding:24px 0;border-top:1px solid var(--line);margin-top:0;position:sticky;bottom:0;background:var(--cream)}
+.btn-reset{background:transparent;border:1px solid var(--line);color:var(--navy2);padding:10px 18px;font-size:11px;font-weight:500;letter-spacing:.04em;cursor:pointer;font-family:var(--font);transition:all .15s}
+.btn-reset:hover{border-color:var(--navy);color:var(--navy)}
+.btn-export{background:var(--navy);color:var(--cream);padding:10px 18px;font-size:11px;font-weight:500;letter-spacing:.04em;cursor:pointer;font-family:var(--font);border:none;transition:background .15s}
+.btn-export:hover{background:var(--green)}
+.actions-hint{font-size:11px;color:var(--navy3);margin-left:auto}
+
+/* ── CTA ── */
+.cta-section{background:var(--navy);padding:48px;margin-bottom:80px}
+.cta-inner{display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap}
+.cta-title{font-family:var(--font-serif);font-size:26px;color:#FFF;letter-spacing:-.03em;font-weight:400;margin-bottom:6px}
+.cta-sub{font-size:13px;color:rgba(255,255,255,.6)}
+.cta-btn{background:#FFF;color:var(--navy);padding:12px 24px;font-size:12px;font-weight:500;letter-spacing:.04em;text-decoration:none;white-space:nowrap;transition:all .15s;flex-shrink:0}
+.cta-btn:hover{background:var(--green);color:#FFF}
+
+/* FOOTER */
+footer{border-top:1px solid var(--line);padding:24px 48px;font-size:11px;color:var(--navy3);letter-spacing:.06em;text-transform:uppercase;display:flex;justify-content:space-between}
+footer a{color:var(--green);text-decoration:none}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .container,.topbar,footer{padding-left:24px;padding-right:24px}
+  .page-header{grid-template-columns:1fr;gap:32px;padding:40px 0 32px}
+  .page-header h1{font-size:32px}
+  .checklist-body{grid-template-columns:1fr;gap:24px}
+  .checklist-nav{position:static}
+  .checklist-nav-items{flex-direction:row;flex-wrap:wrap;border:none;gap:8px}
+  .checklist-nav-item{border:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .category-scores{grid-template-columns:1fr 1fr}
+  .cta-inner{flex-direction:column;gap:20px}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <a href="index.html" class="logo">VC<span>Ready</span></a>
+  <nav class="topbar-nav">
+    <a href="index.html" class="nav-link">Home</a>
+    <a href="valuation.html" class="nav-link">Valuation</a>
+    <a href="metrics.html" class="nav-link">Metrics</a>
+    <a href="pitch.html" class="nav-link">Pitch</a>
+    <a href="dataroom.html" class="nav-link active">Data Room</a>
+  </nav>
+  <div class="topbar-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('fr')">FR</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div>
+      <div class="page-tag" id="pg_tag">Data Room Checklist</div>
+      <h1 id="pg_h1">Are you ready<br>for due diligence?</h1>
+      <p id="pg_p">35 documents every investor will request. Check what you have, see what's missing, and get your readiness score before the room asks.</p>
+    </div>
+    <!-- SCORE PANEL -->
+    <div class="score-panel">
+      <div class="score-panel-top">
+        <div class="score-panel-title" id="score_label">Readiness Score</div>
+        <div>
+          <span class="score-big" id="score_num">0</span>
+          <span class="score-total" id="score_den">/ 35</span>
+        </div>
+      </div>
+      <div class="score-track"><div class="score-fill" id="score_bar" style="width:0%"></div></div>
+      <div class="score-verdict" id="score_verdict">Check the documents you have ready to get your score.</div>
+      <div class="category-scores" id="cat_scores"></div>
+    </div>
+  </div>
+
+  <!-- CHECKLIST BODY -->
+  <div class="checklist-body">
+
+    <!-- NAV -->
+    <div class="checklist-nav">
+      <div class="checklist-nav-title" id="nav_title">Categories</div>
+      <div class="checklist-nav-items" id="nav_items"></div>
+    </div>
+
+    <!-- SECTIONS -->
+    <div class="checklist-sections" id="checklist-sections"></div>
+
+  </div>
+
+  <!-- ACTIONS BAR -->
+  <div class="actions-bar">
+    <button class="btn-reset" onclick="resetAll()" id="btn_reset">Reset all</button>
+    <button class="btn-export" onclick="exportPDF()" id="btn_export">⬇ Export missing list</button>
+    <span class="actions-hint" id="actions_hint">Your progress is saved automatically</span>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <div class="cta-inner">
+      <div>
+        <div class="cta-title" id="cta_title">Need help completing your data room?</div>
+        <div class="cta-sub" id="cta_sub">Book a 30-min session to prioritize what to prepare and how to present it to investors.</div>
+      </div>
+      <a href="https://calendly.com/yacine-chikhar/30min" target="_blank" class="cta-btn" id="cta_btn">Book your session →</a>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<footer>
+  <span>VCReady · by <strong>Yacine CHIKHAR</strong> · © 2026</span>
+  <a href="index.html">← Back to toolkit</a>
+</footer>
+
+<script>
+let currentLang='en';
+let checked=JSON.parse(localStorage.getItem('dr_checked')||'{}');
+
+// ── DATA ──
+const CATEGORIES={
+  en:['Corporate','Financial','Commercial','Legal & IP','Technical','Team'],
+  fr:['Corporate','Financier','Commercial','Juridique & IP','Technique','Équipe']
+};
+
+const DOCS={
+  en:[
+    // CORPORATE (0)
+    {cat:0,name:'Certificate of incorporation',desc:'Legal proof your company exists',critical:true},
+    {cat:0,name:'Articles of association / Bylaws',desc:'Rules governing the company',critical:true},
+    {cat:0,name:'Shareholder register (cap table)',desc:'Who owns what — fully up to date',critical:true},
+    {cat:0,name:'Board meeting minutes (last 12 months)',desc:'Key decisions made by the board',critical:false},
+    {cat:0,name:'Shareholders\' agreement',desc:'Rights, obligations, drag-along, tag-along clauses',critical:true},
+    {cat:0,name:'Previous investment agreements',desc:'SAFEs, convertible notes, term sheets signed',critical:false},
+    // FINANCIAL (1)
+    {cat:1,name:'Last 2 years financial statements',desc:'P&L, balance sheet, cash flow — audited if possible',critical:true},
+    {cat:1,name:'Current year management accounts',desc:'YTD financials, ideally monthly',critical:true},
+    {cat:1,name:'3-year financial projections (P&L)',desc:'Revenue, costs, EBITDA — with assumptions',critical:true},
+    {cat:1,name:'Monthly cash flow forecast (18 months)',desc:'When do you run out of cash?',critical:true},
+    {cat:1,name:'Revenue breakdown by product/customer',desc:'Shows concentration risk',critical:false},
+    {cat:1,name:'Key metrics dashboard (MRR, ARR, churn)',desc:'Investor-grade metrics, month by month',critical:true},
+    // COMMERCIAL (2)
+    {cat:2,name:'3–5 signed customer contracts',desc:'Proves commercial traction and terms',critical:true},
+    {cat:2,name:'Customer pipeline (CRM export)',desc:'Weighted pipeline and close probability',critical:false},
+    {cat:2,name:'Letters of Intent (LOIs)',desc:'Signed interest from prospective customers',critical:false},
+    {cat:2,name:'Pricing deck / pricing model',desc:'How you price, by tier and channel',critical:false},
+    {cat:2,name:'Customer references list',desc:'2–3 customers willing to speak to investors',critical:true},
+    {cat:2,name:'Churn & retention analysis',desc:'Monthly cohort analysis — who stays, who leaves',critical:true},
+    // LEGAL & IP (3)
+    {cat:3,name:'IP / patent certificates',desc:'Granted or pending patents, trademarks',critical:false},
+    {cat:3,name:'Trademark registrations',desc:'Brand protection in key markets',critical:false},
+    {cat:3,name:'Key supplier / partner contracts',desc:'Dependencies and exclusivity terms',critical:false},
+    {cat:3,name:'Employment contracts (key team)',desc:'Founder vesting schedules, non-competes',critical:true},
+    {cat:3,name:'GDPR / data compliance documentation',desc:'Privacy policy, DPA, data processing records',critical:false},
+    {cat:3,name:'Any ongoing litigation',desc:'Disclose early — surprises kill deals',critical:true},
+    // TECHNICAL (4)
+    {cat:4,name:'Product architecture diagram',desc:'How the product is built — tech stack overview',critical:false},
+    {cat:4,name:'Security & compliance overview',desc:'SOC2, ISO 27001, pen test results',critical:false},
+    {cat:4,name:'Product roadmap (12 months)',desc:'What you\'re building and when',critical:true},
+    {cat:4,name:'Tech debt assessment',desc:'Known issues and remediation plan',critical:false},
+    {cat:4,name:'Uptime / SLA metrics',desc:'Reliability track record',critical:false},
+    // TEAM (5)
+    {cat:5,name:'Org chart',desc:'Current structure and reporting lines',critical:false},
+    {cat:5,name:'Founder CVs / LinkedIn profiles',desc:'Background, education, track record',critical:true},
+    {cat:5,name:'Key hire plan (next 18 months)',desc:'Who you need to hire with this round',critical:true},
+    {cat:5,name:'Advisor list with agreements',desc:'Who advises you and their equity/time commitment',critical:false},
+    {cat:5,name:'Employee stock option plan (ESOP)',desc:'Option pool, vesting schedule, grants made',critical:false},
+  ],
+  fr:[
+    // CORPORATE (0)
+    {cat:0,name:'Extrait Kbis / Certificat d\'immatriculation',desc:'Preuve légale que votre entreprise existe',critical:true},
+    {cat:0,name:'Statuts de la société',desc:'Règles régissant la société',critical:true},
+    {cat:0,name:'Registre des actionnaires (cap table)',desc:'Qui détient quoi — entièrement à jour',critical:true},
+    {cat:0,name:'Procès-verbaux du conseil (12 derniers mois)',desc:'Décisions clés prises par le conseil',critical:false},
+    {cat:0,name:'Pacte d\'actionnaires',desc:'Droits, obligations, clauses drag-along, tag-along',critical:true},
+    {cat:0,name:'Accords d\'investissement précédents',desc:'SAFEs, obligations convertibles, term sheets signés',critical:false},
+    // FINANCIER (1)
+    {cat:1,name:'États financiers des 2 dernières années',desc:'P&L, bilan, flux de trésorerie — audités si possible',critical:true},
+    {cat:1,name:'Comptes de gestion de l\'année en cours',desc:'Finances YTD, idéalement mensuelles',critical:true},
+    {cat:1,name:'Projections financières sur 3 ans (P&L)',desc:'Revenus, coûts, EBITDA — avec hypothèses',critical:true},
+    {cat:1,name:'Prévision de trésorerie mensuelle (18 mois)',desc:'Quand manquez-vous de liquidités ?',critical:true},
+    {cat:1,name:'Décomposition des revenus par produit/client',desc:'Montre le risque de concentration',critical:false},
+    {cat:1,name:'Dashboard métriques clés (MRR, ARR, churn)',desc:'Métriques investisseur, mois par mois',critical:true},
+    // COMMERCIAL (2)
+    {cat:2,name:'3 à 5 contrats clients signés',desc:'Prouve la traction commerciale et les conditions',critical:true},
+    {cat:2,name:'Pipeline commercial (export CRM)',desc:'Pipeline pondéré et probabilité de closing',critical:false},
+    {cat:2,name:'Lettres d\'intention (LOI)',desc:'Intérêt signé de clients potentiels',critical:false},
+    {cat:2,name:'Deck de pricing / modèle tarifaire',desc:'Comment vous pricez, par tier et canal',critical:false},
+    {cat:2,name:'Liste de références clients',desc:'2–3 clients prêts à parler aux investisseurs',critical:true},
+    {cat:2,name:'Analyse churn & rétention',desc:'Analyse de cohorte mensuelle',critical:true},
+    // JURIDIQUE & IP (3)
+    {cat:3,name:'Certificats IP / brevets',desc:'Brevets accordés ou en cours, marques déposées',critical:false},
+    {cat:3,name:'Enregistrements de marques',desc:'Protection de la marque sur les marchés clés',critical:false},
+    {cat:3,name:'Contrats fournisseurs / partenaires clés',desc:'Dépendances et clauses d\'exclusivité',critical:false},
+    {cat:3,name:'Contrats de travail (équipe clé)',desc:'Calendriers de vesting fondateurs, non-concurrences',critical:true},
+    {cat:3,name:'Documentation conformité RGPD',desc:'Politique de confidentialité, DPA, registres de traitement',critical:false},
+    {cat:3,name:'Litiges en cours',desc:'Divulguez tôt — les surprises tuent les deals',critical:true},
+    // TECHNIQUE (4)
+    {cat:4,name:'Schéma d\'architecture produit',desc:'Comment le produit est construit — vue d\'ensemble tech',critical:false},
+    {cat:4,name:'Vue d\'ensemble sécurité & conformité',desc:'SOC2, ISO 27001, résultats de tests de pénétration',critical:false},
+    {cat:4,name:'Roadmap produit (12 mois)',desc:'Ce que vous construisez et quand',critical:true},
+    {cat:4,name:'Évaluation de la dette technique',desc:'Problèmes connus et plan de remédiation',critical:false},
+    {cat:4,name:'Métriques de disponibilité / SLA',desc:'Historique de fiabilité',critical:false},
+    // ÉQUIPE (5)
+    {cat:5,name:'Organigramme',desc:'Structure actuelle et lignes hiérarchiques',critical:false},
+    {cat:5,name:'CVs fondateurs / profils LinkedIn',desc:'Parcours, formation, track record',critical:true},
+    {cat:5,name:'Plan de recrutement (18 prochains mois)',desc:'Qui recruter avec ce tour',critical:true},
+    {cat:5,name:'Liste des advisors avec accords',desc:'Qui vous conseille et leur engagement equity/temps',critical:false},
+    {cat:5,name:'Plan de stock-options (ESOP)',desc:'Pool d\'options, calendrier de vesting, attributions',critical:false},
+  ]
+};
+
+// ── RENDER ──
+function render(){
+  const lang=currentLang;
+  const cats=CATEGORIES[lang];
+  const docs=DOCS[lang];
+  const total=docs.length;
+  const done=docs.filter((_,i)=>checked[i]).length;
+  const pct=total>0?Math.round(done/total*100):0;
+
+  // Score
+  document.getElementById('score_num').textContent=done;
+  document.getElementById('score_den').textContent='/ '+total;
+  document.getElementById('score_bar').style.width=pct+'%';
+
+  // Verdict
+  const verdicts={
+    en:{
+      v0:'Check the documents you have ready to get your score.',
+      v25:`${pct}% ready — early stage. Focus on the critical documents first (marked in green).`,
+      v50:`${pct}% ready — good progress. You're missing some important documents that investors will ask for.`,
+      v75:`${pct}% ready — almost there. A few gaps remain — address them before sharing the data room.`,
+      v100:`100% ready — your data room is complete. You're prepared for a serious due diligence process.`
+    },
+    fr:{
+      v0:'Cochez les documents que vous avez pour obtenir votre score.',
+      v25:`${pct}% prêt — stade précoce. Concentrez-vous d'abord sur les documents critiques (marqués en vert).`,
+      v50:`${pct}% prêt — bon progrès. Il vous manque des documents importants que les investisseurs demanderont.`,
+      v75:`${pct}% prêt — presque là. Quelques lacunes subsistent — traitez-les avant de partager la data room.`,
+      v100:`100% prêt — votre data room est complète. Vous êtes prêt pour un processus de due diligence sérieux.`
+    }
+  };
+  const vk=done===0?'v0':pct<50?'v25':pct<75?'v50':pct<100?'v75':'v100';
+  document.getElementById('score_verdict').innerHTML=`<strong>${done}/${total} documents ready</strong> — `+verdicts[lang][vk];
+
+  // Category scores
+  const catCounts=cats.map((_,ci)=>({
+    total:docs.filter(d=>d.cat===ci).length,
+    done:docs.filter((d,i)=>d.cat===ci&&checked[i]).length
+  }));
+  document.getElementById('cat_scores').innerHTML=catCounts.map((c,i)=>{
+    const p=c.total>0?c.done/c.total:0;
+    return`<div class="cat-score">
+      <div class="cat-score-label">${cats[i]}</div>
+      <div class="cat-score-val">${c.done}/${c.total}</div>
+      <div class="cat-score-bar"><div class="cat-score-bar-fill" style="width:${p*100}%"></div></div>
+    </div>`;
+  }).join('');
+
+  // Nav
+  document.getElementById('nav_items').innerHTML=cats.map((cat,ci)=>{
+    const catDone=docs.filter((d,i)=>d.cat===ci&&checked[i]).length;
+    const catTotal=docs.filter(d=>d.cat===ci).length;
+    return`<div class="checklist-nav-item" onclick="scrollToSection(${ci})">
+      <span>${cat}</span>
+      <span class="nav-item-count">${catDone}/${catTotal}</span>
+    </div>`;
+  }).join('');
+
+  // Sections
+  let sectionsHTML='';
+  cats.forEach((cat,ci)=>{
+    const catDocs=docs.map((d,i)=>({...d,idx:i})).filter(d=>d.cat===ci);
+    const catDone=catDocs.filter(d=>checked[d.idx]).length;
+    sectionsHTML+=`<div class="checklist-section" id="section_${ci}">
+      <div class="section-header">
+        <span class="section-title">${cat}</span>
+        <span class="section-progress">${catDone}/${catDocs.length}</span>
+      </div>
+      <div class="section-items">
+        ${catDocs.map(d=>`
+          <div class="item${checked[d.idx]?' checked':''}${d.critical?' priority':''}" onclick="toggle(${d.idx})">
+            <div class="item-check"></div>
+            ${d.critical?'<div class="item-priority-dot"></div>':''}
+            <div class="item-body">
+              <div class="item-name">${d.name}</div>
+              <div class="item-desc">${d.desc}</div>
+              ${d.critical?`<span class="item-tag critical">${lang==='fr'?'Critique':'Critical'}</span>`:''}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  });
+  document.getElementById('checklist-sections').innerHTML=sectionsHTML;
+}
+
+function toggle(idx){
+  checked[idx]=!checked[idx];
+  localStorage.setItem('dr_checked',JSON.stringify(checked));
+  render();
+}
+
+function resetAll(){
+  if(confirm(currentLang==='fr'?'Réinitialiser toute la checklist ?':'Reset the entire checklist?')){
+    checked={};
+    localStorage.removeItem('dr_checked');
+    render();
+  }
+}
+
+function scrollToSection(ci){
+  document.getElementById('section_'+ci)?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function exportPDF(){
+  const lang=currentLang;
+  const docs=DOCS[lang];
+  const cats=CATEGORIES[lang];
+  const missing=docs.map((d,i)=>({...d,idx:i})).filter(d=>!checked[d.idx]);
+  const done=docs.length-missing.length;
+
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Data Room — Missing Documents</title>
+<style>
+body{font-family:Arial,sans-serif;padding:32px;color:#111;font-size:12px;max-width:800px;margin:0 auto}
+h1{font-size:20px;font-weight:700;margin-bottom:4px}
+.sub{font-size:11px;color:#666;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid #eee}
+h2{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#666;margin:20px 0 8px;padding-bottom:4px;border-bottom:1px solid #eee}
+.item{padding:8px 0;border-bottom:1px solid #f0f0ee;display:flex;gap:12px;align-items:flex-start}
+.item-name{font-weight:600;font-size:12px}
+.item-desc{font-size:11px;color:#666;margin-top:2px}
+.critical{display:inline-block;font-size:9px;font-weight:700;text-transform:uppercase;color:#1A6B47;border:1px solid #A8D5BC;padding:1px 5px;margin-top:3px}
+.score{background:#f5f5f3;padding:12px 16px;margin-bottom:20px;font-size:13px}
+@media print{@page{margin:20mm}}
+</style></head><body>
+<h1>Data Room — ${lang==='fr'?'Documents Manquants':'Missing Documents'}</h1>
+<p class="sub">VCReady · by Yacine CHIKHAR · ${new Date().toLocaleDateString(lang==='fr'?'fr-FR':'en-GB')} · ${done}/${docs.length} ${lang==='fr'?'documents prêts':'documents ready'}</p>
+<div class="score">${lang==='fr'?'Score de préparation':'Readiness score'}: <strong>${done}/${docs.length} (${Math.round(done/docs.length*100)}%)</strong> — ${missing.length} ${lang==='fr'?'document(s) manquant(s)':'document(s) missing'}</div>
+${cats.map((cat,ci)=>{
+  const catMissing=missing.filter(d=>d.cat===ci);
+  if(!catMissing.length) return`<h2>✓ ${cat} — ${lang==='fr'?'Complet':'Complete'}</h2>`;
+  return`<h2>${cat} (${catMissing.length} ${lang==='fr'?'manquant(s)':'missing'})</h2>
+${catMissing.map(d=>`<div class="item">
+  <div style="flex:1">
+    <div class="item-name">${d.name}</div>
+    <div class="item-desc">${d.desc}</div>
+    ${d.critical?`<span class="critical">${lang==='fr'?'Critique':'Critical'}</span>`:''}
+  </div>
+</div>`).join('')}`;
+}).join('')}
+</body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),500);
+}
+
+// ── TRANSLATIONS ──
+function setLang(l){
+  currentLang=l;
+  document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',['en','fr'][i]===l));
+  const s=(id,v)=>{const el=document.getElementById(id);if(el)el.innerHTML=v;};
+  if(l==='fr'){
+    s('pg_tag','Data Room Checklist');s('pg_h1','Êtes-vous prêt<br>pour la due diligence ?');
+    s('pg_p','35 documents que chaque investisseur demandera. Cochez ce que vous avez, voyez ce qui manque, et obtenez votre score de préparation avant que la salle ne pose la question.');
+    s('score_label','Score de préparation');
+    s('nav_title','Catégories');
+    s('btn_reset','Tout réinitialiser');s('btn_export','⬇ Exporter les documents manquants');
+    s('actions_hint','Votre progression est sauvegardée automatiquement');
+    s('cta_title','Besoin d\'aide pour compléter votre data room ?');
+    s('cta_sub','Réservez 30 min pour prioriser ce qu\'il faut préparer et comment le présenter aux investisseurs.');
+    s('cta_btn','Réserver votre session →');
+  } else {
+    s('pg_tag','Data Room Checklist');s('pg_h1','Are you ready<br>for due diligence?');
+    s('pg_p','35 documents every investor will request. Check what you have, see what\'s missing, and get your readiness score before the room asks.');
+    s('score_label','Readiness Score');
+    s('nav_title','Categories');
+    s('btn_reset','Reset all');s('btn_export','⬇ Export missing list');
+    s('actions_hint','Your progress is saved automatically');
+    s('cta_title','Need help completing your data room?');
+    s('cta_sub','Book a 30-min session to prioritize what to prepare and how to present it to investors.');
+    s('cta_btn','Book your session →');
+  }
+  render();
+}
+
+// Init
+render();
+</script>
+</body>
+</html>
