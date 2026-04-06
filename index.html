@@ -34,12 +34,12 @@ body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size
 .topbar-nav{display:flex;align-items:center;gap:0}
 .nav-link{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);text-decoration:none;padding:0 18px;height:60px;display:flex;align-items:center;border-bottom:2px solid transparent;transition:all .15s}
 .nav-link:hover{color:var(--navy);border-bottom-color:var(--navy)}
-.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-right{display:flex;align-items:center;gap:10px}
 .lang-toggle{display:flex;border:1px solid var(--line)}
-.lang-btn{padding:6px 12px;font-size:11px;font-weight:500;background:transparent;border:none;color:var(--navy3);cursor:pointer;font-family:var(--font);letter-spacing:.04em;transition:all .15s}
+.lang-btn{padding:5px 10px;font-size:11px;font-weight:500;background:transparent;border:none;color:var(--navy3);cursor:pointer;font-family:var(--font);letter-spacing:.04em;transition:all .15s}
 .lang-btn.active{background:var(--navy);color:var(--cream)}
-.topbar-cta{background:var(--navy);color:var(--cream);padding:9px 20px;font-size:12px;font-weight:500;text-decoration:none;letter-spacing:.03em;transition:background .15s;white-space:nowrap}
-.topbar-cta:hover{background:var(--green)}
+.topbar-signin{background:var(--navy);color:var(--cream);padding:8px 16px;font-size:12px;font-weight:500;text-decoration:none;letter-spacing:.03em;transition:background .15s;white-space:nowrap}
+.topbar-signin:hover{background:var(--green)}
 
 /* ── CONTAINER ── */
 .container{max-width:1200px;margin:0 auto;padding:0 48px}
@@ -157,6 +157,9 @@ footer a{color:var(--green);text-decoration:none}
   .hero{grid-template-columns:1fr;padding:60px 0 48px;gap:40px}
   .hero h1{font-size:40px}
   .hero-stats{grid-template-columns:1fr 1fr}
+  .topbar{padding:0 20px}
+  .lang-toggle{display:none}
+  .topbar-signin{font-size:11px;padding:7px 14px}
   .toolkit-header{grid-template-columns:1fr;gap:16px;margin-bottom:32px}
   .newsletter-grid{grid-template-columns:1fr;gap:40px}
   .about-grid{grid-template-columns:1fr;gap:16px}
@@ -169,6 +172,32 @@ footer a{color:var(--green);text-decoration:none}
   .tool-body{padding-right:16px}
   footer{flex-direction:column;gap:8px;text-align:center;padding:20px 24px}
   .topbar{padding:0 24px}
+}
+
+/* ── MOBILE TOPBAR ── */
+@media(max-width:768px){
+  .topbar{padding:0 20px;height:52px}
+  .topbar-nav{display:none}
+  .lang-toggle{display:none !important}
+  .topbar-right{gap:8px}
+  .topbar-cta{display:none !important}
+  /* Sign in pill — small and clean */
+  .topbar-signin{padding:7px 14px !important;font-size:11px !important}
+  /* Hero */
+  .hero{padding:48px 0 40px;grid-template-columns:1fr;gap:32px}
+  .hero h1{font-size:44px}
+  /* Tools */
+  .tool-row{padding:16px 0}
+  .tool-name{font-size:17px}
+  /* Newsletter */
+  .newsletter-grid{grid-template-columns:1fr;gap:32px}
+  /* About */
+  .about-grid{grid-template-columns:1fr;gap:16px}
+  /* Expert */
+  .expert-inner{grid-template-columns:1fr;gap:24px;padding:0 20px}
+  /* Footer */
+  footer{flex-direction:column;gap:8px;text-align:center;padding:20px}
+  .container,.topbar{padding-left:20px;padding-right:20px}
 }
 </style>
 </head>
@@ -190,7 +219,7 @@ footer a{color:var(--green);text-decoration:none}
       <button class="lang-btn active" onclick="setLang('en')">EN</button>
       <button class="lang-btn" onclick="setLang('fr')">FR</button>
     </div>
-    <a href="dashboard.html" style="background:var(--navy);color:var(--cream);padding:9px 20px;font-size:12px;font-weight:500;letter-spacing:.03em;text-decoration:none;transition:background .15s" onmouseover="this.style.background='var(--green)'" onmouseout="this.style.background='var(--navy)'">Sign in →</a><a href="https://calendly.com/yacine-chikhar/30min" target="_blank" class="topbar-cta" id="topbar_cta">Book a session →</a>
+    <a href="dashboard.html" style="background:var(--navy);color:var(--cream);padding:8px 18px;font-size:12px;font-weight:500;letter-spacing:.03em;text-decoration:none;transition:background .15s" class="topbar-signin" id="topbar_signin" onmouseover="this.style.background='var(--green)'" onmouseout="this.style.background='var(--navy)'">Sign in →</a>
   </div>
 </div>
 
@@ -649,7 +678,7 @@ function setLang(l){
   s('footer_copy',t.footerCopy);s('footer_link',t.footerLink);
   // Nav
   s('nav_toolkit',t.navToolkit);s('nav_about',t.navAbout);s('nav_contact',t.navContact);
-  s('topbar_cta',t.topbarCta);
+  // topbar_cta removed
   // About
   s('about_label',t.aboutLabel);s('about_title',t.aboutTitle);
   s('about_text1',t.aboutText1);s('about_text2',t.aboutText2);
