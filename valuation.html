@@ -448,7 +448,8 @@ footer{background:var(--cream);border-top:1px solid var(--line);padding:24px 48p
       <button class="lang-btn" onclick="setLang('fr')">FR</button>
       <button class="lang-btn active" onclick="setLang('en')">EN</button>
     </div>
-    <a href="dashboard.html" style="font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);text-decoration:none;padding:0 12px;transition:color .15s" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--navy3)'">My Dashboard</a><button class="theme-btn" onclick="toggleDark()" id="theme-icon" style="margin-left:8px">🌙</button>
+    <a href="dashboard.html" style="background:var(--navy);color:var(--cream);padding:9px 20px;font-size:12px;font-weight:500;letter-spacing:.03em;text-decoration:none;transition:background .15s" id="nav_login" onmouseover="this.style.background='var(--green)'" onmouseout="this.style.background='var(--navy)'">Sign in →</a>
+    <button class="theme-btn" onclick="toggleDark()" id="theme-icon" style="margin-left:8px">🌙</button>
   </div>
 </div>
 
@@ -1058,6 +1059,40 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // ── RESEND EMAIL CONFIG ── Replace YOUR_RESEND_KEY with your Resend API key
 const RESEND_KEY = 'YOUR_RESEND_KEY';
 
+// ── SUPABASE SAVE ──
+const SUPA_URL='https://fvbrzttvdvxhbdkjknje.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YnJ6dHR2ZHZ4aGJka2prbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzgwNTAsImV4cCI6MjA5MDcxNDA1MH0.tcE5PlgMsu7suLAzN3uT5VjKnFhc25qkJJMKkbNmtvI';
+
+async function getLoggedInUser(){
+  const token=localStorage.getItem('sb_access');
+  if(!token) return null;
+  try{
+    const res=await fetch(`${SUPA_URL}/auth/v1/user`,{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+token}});
+    if(!res.ok) return null;
+    return res.json();
+  }catch{return null;}
+}
+
+async function saveValuationIfLoggedIn(data){
+  try{
+    const user=await getLoggedInUser();
+    if(!user) return;
+    const token=localStorage.getItem('sb_access');
+    const res=await fetch(`${SUPA_URL}/rest/v1/valuations`,{
+      method:'POST',
+      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({...data,user_id:user.id})
+    });
+    if(res.ok||res.status===201){
+      const el=document.createElement('div');
+      el.style.cssText='position:fixed;bottom:24px;right:24px;background:#1A6B47;color:#FFF;padding:12px 18px;font-size:12px;font-family:DM Sans,sans-serif;z-index:9999;transition:opacity .5s;border-radius:0';
+      el.textContent='✓ Valuation saved to your dashboard';
+      document.body.appendChild(el);
+      setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),500);},3000);
+    }
+  }catch{}
+}
+
 async function sendConfirmationEmail(data){
   if(!RESEND_KEY||RESEND_KEY==='YOUR_RESEND_KEY') return;
   // Results are stored in founderResults after calc()
@@ -1574,6 +1609,20 @@ function calc(){
   renderWhatIf();
 
   // Store results for confirmation email
+  // Save valuation to Supabase if user is logged in
+  saveValuationIfLoggedIn({
+    startup:founderData.startup||'',
+    sector:sectKey,
+    stade:founderData.stade||'',
+    irr:irr!==null?parseFloat(irr.toFixed(2)):null,
+    coc:r.coc!==null?parseFloat(r.coc.toFixed(2)):null,
+    ev:r.ev?parseFloat(r.ev.toFixed(0)):null,
+    pv:r.eqToday?parseFloat(r.eqToday.toFixed(0)):null,
+    score:investorScore||null,
+    ev_mult:evMult||null,
+    exit_year:exitY||null,
+    req_return:gv('req_return')||null
+  });
   const scoreHtml=calcInvestorScore({irr,coc:r.coc,r,res,sectKey,evMult,stade:founderData.stade||'',tx});
   const scoreMatch=scoreHtml.match(/<div class="sn">(\d+)<\/div>/);
   founderResults={
