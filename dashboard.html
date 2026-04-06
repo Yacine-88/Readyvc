@@ -210,6 +210,17 @@ body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size
   .val-head,.val-row{grid-template-columns:80px 1fr 60px 60px}
   .val-pv,.val-stage{display:none}
 }
+
+/* ── MOBILE TOPBAR ── */
+@media(max-width:768px){
+  .topbar{padding:0 20px;height:52px}
+  .topbar-nav{display:none !important}
+  .lang-toggle{display:none !important}
+  .topbar-cta{display:none !important}
+  .topbar-right{gap:8px}
+  .btn-signout{padding:5px 10px;font-size:10px}
+  [id="nav_login"]{padding:7px 14px !important;font-size:11px !important;white-space:nowrap}
+}
 </style>
 </head>
 <body>
@@ -574,6 +585,7 @@ async function loadDashboard(user){
   if(valuations.length>=2) renderChart(valuations);
   renderToolScores(valuations,latestPitch,latestDataroom,latestQA);
   renderAdvancedAnalysis(valuations,latestPitch,latestDataroom,latestQA,f);
+  if(valuations.length>0) renderInsights(valuations,f);
   renderNextSteps(valuations,latestPitch,latestDataroom,latestQA,f);
 }
 
