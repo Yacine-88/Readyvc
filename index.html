@@ -206,7 +206,7 @@ footer a{color:var(--green);text-decoration:none}
     </div>
     <div class="hero-stats">
       <div class="stat">
-        <div class="stat-num">5</div>
+        <div class="stat-num">6</div>
         <div class="stat-lbl" id="s1l">tools in the toolkit</div>
       </div>
       <div class="stat">
@@ -321,6 +321,24 @@ footer a{color:var(--green);text-decoration:none}
         </div>
         <div class="tool-right">
           <span class="tool-badge live" id="t5_badge">Live</span>
+          <span class="tool-arrow">→</span>
+        </div>
+      </a>
+
+      <!-- 06 Investor Q&A -->
+      <a href="qa.html" class="tool-row">
+        <div class="tool-num">06</div>
+        <div class="tool-body">
+          <div class="tool-name" id="t6_name">Investor Q&A</div>
+          <div class="tool-desc" id="t6_desc">40 questions VCs ask in first meetings. Check what you can answer, get a guide and examples for the rest.</div>
+          <div class="tool-tags">
+            <span class="tool-tag green">40 questions</span>
+            <span class="tool-tag">8 themes</span>
+            <span class="tool-tag">Answer guide</span>
+          </div>
+        </div>
+        <div class="tool-right">
+          <span class="tool-badge live" id="t6_badge">Live</span>
           <span class="tool-arrow">→</span>
         </div>
       </a>
@@ -473,6 +491,7 @@ const T={
     expTag:'Expert session',expH2:'Ready to go further?',
     expP:'The toolkit gives you the numbers. A session gives you the strategy. Book 30 minutes to refine your valuation, sharpen your pitch, and walk into your next investor meeting with confidence.',
     expBtn:'Book your 30-min session →',
+    t6Name:'Investor Q&A',t6Desc:'40 questions VCs ask in first meetings. Check what you can answer, get a guide and examples for the rest.',
     footerCopy:'VCReady · by Yacine CHIKHAR · © 2026',
     footerLink:'Book a session →',
     navToolkit:'Toolkit',navAbout:'About',navContact:'Contact',
@@ -512,6 +531,7 @@ const T={
     expTag:'Session expert',expH2:'Prêt à aller plus loin ?',
     expP:'Le toolkit vous donne les chiffres. Une session vous donne la stratégie. Réservez 30 minutes pour affiner votre valorisation, renforcer votre pitch et entrer dans votre prochain rendez-vous investisseur avec confiance.',
     expBtn:'Réserver votre session 30 min →',
+    t6Name:'Q&R Investisseur',t6Desc:'40 questions que les VCs posent lors des premiers rendez-vous. Cochez celles auxquelles vous pouvez répondre, obtenez un guide pour les autres.',
     footerCopy:'VCReady · by Yacine CHIKHAR · © 2026',
     footerLink:'Réserver une session →',
     navToolkit:'Toolkit',navAbout:'À propos',navContact:'Contact',
@@ -604,6 +624,7 @@ function setLang(l){
   s('t3_name',t.t3Name);s('t3_desc',t.t3Desc);
   s('t4_name',t.t4Name);s('t4_desc',t.t4Desc);
   s('t5_name',t.t5Name);s('t5_desc',t.t5Desc);
+  s('t6_name',t.t6Name);s('t6_desc',t.t6Desc);
   document.querySelectorAll('.tool-badge.live').forEach(el=>el.textContent=t.live);
   document.querySelectorAll('.tool-badge:not(.live)').forEach(el=>el.textContent=t.soon);
   s('exp_tag',t.expTag);s('exp_h2',t.expH2);s('exp_p',t.expP);s('exp_btn',t.expBtn);
