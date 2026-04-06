@@ -327,7 +327,7 @@ const DOCS={
   ],
   fr:[
     // CORPORATE (0)
-    {cat:0,name:'Registre de Commerce',desc:'Preuve légale que votre entreprise existe',critical:true},
+    {cat:0,name:'Extrait Kbis / Certificat d\'immatriculation',desc:'Preuve légale que votre entreprise existe',critical:true},
     {cat:0,name:'Statuts de la société',desc:'Règles régissant la société',critical:true},
     {cat:0,name:'Registre des actionnaires (cap table)',desc:'Qui détient quoi — entièrement à jour',critical:true},
     {cat:0,name:'Procès-verbaux du conseil (12 derniers mois)',desc:'Décisions clés prises par le conseil',critical:false},
@@ -492,6 +492,13 @@ function toggle(idx){
   checked[idx]=!checked[idx];
   localStorage.setItem('dr_checked',JSON.stringify(checked));
   render();
+  // Save progress to dashboard (debounced)
+  clearTimeout(window._drSaveTimer);
+  window._drSaveTimer=setTimeout(()=>{
+    const docs=DOCS[currentLang];
+    const done=docs.filter((_,i)=>checked[i]).length;
+    _saveScore('dataroom_scores',{score:done,total:docs.length,checked_ids:JSON.stringify(Object.keys(checked).filter(k=>checked[k]))});
+  },2000);
 }
 
 function resetAll(){
@@ -581,6 +588,28 @@ function setLang(l){
     s('cta_btn','Book your session →');
   }
   render();
+}
+
+
+// ── SAVE TO DASHBOARD ──
+const _SU='https://fvbrzttvdvxhbdkjknje.supabase.co';const _SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YnJ6dHR2ZHZ4aGJka2prbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzgwNTAsImV4cCI6MjA5MDcxNDA1MH0.tcE5PlgMsu7suLAzN3uT5VjKnFhc25qkJJMKkbNmtvI';
+async function _saveScore(table,data){
+  const token=localStorage.getItem('sb_access');
+  if(!token) return;
+  try{
+    const user=await (await fetch(`${_SU}/auth/v1/user`,{headers:{'apikey':_SK,'Authorization':'Bearer '+token}})).json();
+    if(!user?.id) return;
+    await fetch(`${_SU}/rest/v1/${table}`,{
+      method:'POST',
+      headers:{'apikey':_SK,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({...data,user_id:user.id})
+    });
+    const el=document.createElement('div');
+    el.style.cssText='position:fixed;bottom:24px;right:24px;background:#1A6B47;color:#FFF;padding:12px 18px;font-size:12px;font-family:DM Sans,sans-serif;z-index:9999;transition:opacity .5s';
+    el.textContent='✓ Score saved to your dashboard';
+    document.body.appendChild(el);
+    setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),500);},3000);
+  }catch{}
 }
 
 // Init
