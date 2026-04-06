@@ -378,29 +378,36 @@ function render(){
   const done=docs.filter((_,i)=>checked[i]).length;
   const pct=total>0?Math.round(done/total*100):0;
 
-  // Sidebar score circle
+  // Category counts (declared first — used by sidebar and sections)
+  const catCounts=cats.map((_,ci)=>({
+    total:docs.filter(d=>d.cat===ci).length,
+    done:docs.filter((d,i)=>d.cat===ci&&checked[i]).length
+  }));
+
+  // ── SIDEBAR SCORE CIRCLE ──
   const circ=263.9;
   const arc=document.getElementById('sc_arc');
   if(arc){
     arc.style.strokeDashoffset=circ-(circ*pct/100);
-    arc.style.stroke=pct>=75?'#1A6B47':pct>=50?'#12120F':'#9A9892';
+    arc.style.stroke=pct>=75?'#1A6B47':pct>=40?'#12120F':'#9A9892';
   }
-  document.getElementById('sb_num').textContent=done;
-  document.getElementById('sb_den').textContent='/ '+total;
+  const sbNum=document.getElementById('sb_num');
+  const sbDen=document.getElementById('sb_den');
+  if(sbNum) sbNum.textContent=done;
+  if(sbDen) sbDen.textContent='/ '+total;
 
-  // Sidebar verdict
+  // ── SIDEBAR VERDICT ──
   const sbVerdicts={
     en:{v0:'Start checking documents',v25:'Keep going — focus on critical docs first',v50:'Good progress — almost halfway there',v75:'Almost ready — a few gaps remain',v100:'🎉 Data room complete!'},
     fr:{v0:'Commencez à cocher les documents',v25:'Continuez — priorité aux docs critiques',v50:'Bon progrès — presque à mi-chemin',v75:'Presque prêt — quelques lacunes restent',v100:'🎉 Data room complète !'}
   };
   const sbvk=done===0?'v0':pct<50?'v25':pct<75?'v50':pct<100?'v75':'v100';
-  document.getElementById('sb_verdict').innerHTML=pct>=75
-    ?`<strong>${sbVerdicts[lang][sbvk]}</strong>`
-    :sbVerdicts[lang][sbvk];
+  const sbVerdict=document.getElementById('sb_verdict');
+  if(sbVerdict) sbVerdict.innerHTML=pct>=75?`<strong>${sbVerdicts[lang][sbvk]}</strong>`:sbVerdicts[lang][sbvk];
 
-  // Sidebar category bars
-  const catColors=['#1A6B47','#12120F','#6B6B66','#3A3830','#8A8880','#1A6B47'];
-  document.getElementById('sb_cats').innerHTML=catCounts.map((cc,i)=>{
+  // ── SIDEBAR CATEGORY BARS ──
+  const sbCats=document.getElementById('sb_cats');
+  if(sbCats) sbCats.innerHTML=catCounts.map((cc,i)=>{
     const p=cc.total>0?cc.done/cc.total:0;
     const barColor=p>=0.75?'#1A6B47':p>=0.5?'#12120F':'#D8D4CC';
     return`<div class="sidebar-cat" onclick="scrollToSection(${i})">
@@ -414,56 +421,47 @@ function render(){
     </div>`;
   }).join('');
 
-  // Score panel (header — keep in sync)
-  document.getElementById('score_num').textContent=done;
-  document.getElementById('score_den').textContent='/ '+total;
-  document.getElementById('score_bar').style.width=pct+'%';
+  // ── HEADER SCORE PANEL ──
+  const snum=document.getElementById('score_num');
+  const sden=document.getElementById('score_den');
+  const sbar=document.getElementById('score_bar');
+  if(snum) snum.textContent=done;
+  if(sden) sden.textContent='/ '+total;
+  if(sbar) sbar.style.width=pct+'%';
 
-  // Verdict
+  // Header verdict
   const verdicts={
     en:{
       v0:'Check the documents you have ready to get your score.',
-      v25:`${pct}% ready — early stage. Focus on the critical documents first (marked in green).`,
-      v50:`${pct}% ready — good progress. You're missing some important documents that investors will ask for.`,
-      v75:`${pct}% ready — almost there. A few gaps remain — address them before sharing the data room.`,
-      v100:`100% ready — your data room is complete. You're prepared for a serious due diligence process.`
+      v25:`${pct}% ready — focus on the critical documents first (marked in green).`,
+      v50:`${pct}% ready — good progress. A few important documents are still missing.`,
+      v75:`${pct}% ready — almost there. Address the remaining gaps before sharing.`,
+      v100:`100% ready — your data room is complete.`
     },
     fr:{
       v0:'Cochez les documents que vous avez pour obtenir votre score.',
-      v25:`${pct}% prêt — stade précoce. Concentrez-vous d'abord sur les documents critiques (marqués en vert).`,
-      v50:`${pct}% prêt — bon progrès. Il vous manque des documents importants que les investisseurs demanderont.`,
-      v75:`${pct}% prêt — presque là. Quelques lacunes subsistent — traitez-les avant de partager la data room.`,
-      v100:`100% prêt — votre data room est complète. Vous êtes prêt pour un processus de due diligence sérieux.`
+      v25:`${pct}% prêt — concentrez-vous d'abord sur les documents critiques (en vert).`,
+      v50:`${pct}% prêt — bon progrès. Quelques documents importants manquent encore.`,
+      v75:`${pct}% prêt — presque là. Traitez les lacunes restantes avant de partager.`,
+      v100:`100% prêt — votre data room est complète.`
     }
   };
   const vk=done===0?'v0':pct<50?'v25':pct<75?'v50':pct<100?'v75':'v100';
-  document.getElementById('score_verdict').innerHTML=`<strong>${done}/${total} documents ready</strong> — `+verdicts[lang][vk];
+  const sv=document.getElementById('score_verdict');
+  if(sv) sv.innerHTML=`<strong>${done}/${total} ${lang==='fr'?'documents prêts':'documents ready'}</strong> — `+verdicts[lang][vk];
 
-  // Category scores
-  const catCounts=cats.map((_,ci)=>({
-    total:docs.filter(d=>d.cat===ci).length,
-    done:docs.filter((d,i)=>d.cat===ci&&checked[i]).length
-  }));
-  document.getElementById('cat_scores').innerHTML=catCounts.map((c,i)=>{
-    const p=c.total>0?c.done/c.total:0;
+  // Header category scores
+  const catScores=document.getElementById('cat_scores');
+  if(catScores) catScores.innerHTML=catCounts.map((cc,i)=>{
+    const p=cc.total>0?cc.done/cc.total:0;
     return`<div class="cat-score">
       <div class="cat-score-label">${cats[i]}</div>
-      <div class="cat-score-val">${c.done}/${c.total}</div>
+      <div class="cat-score-val">${cc.done}/${cc.total}</div>
       <div class="cat-score-bar"><div class="cat-score-bar-fill" style="width:${p*100}%"></div></div>
     </div>`;
   }).join('');
 
-  // Nav
-  document.getElementById('nav_items').innerHTML=cats.map((cat,ci)=>{
-    const catDone=docs.filter((d,i)=>d.cat===ci&&checked[i]).length;
-    const catTotal=docs.filter(d=>d.cat===ci).length;
-    return`<div class="checklist-nav-item" onclick="scrollToSection(${ci})">
-      <span>${cat}</span>
-      <span class="nav-item-count">${catDone}/${catTotal}</span>
-    </div>`;
-  }).join('');
-
-  // Sections
+  // ── CHECKLIST SECTIONS ──
   let sectionsHTML='';
   cats.forEach((cat,ci)=>{
     const catDocs=docs.map((d,i)=>({...d,idx:i})).filter(d=>d.cat===ci);
@@ -487,9 +485,9 @@ function render(){
       </div>
     </div>`;
   });
-  document.getElementById('checklist-sections').innerHTML=sectionsHTML;
+  const sections=document.getElementById('checklist-sections');
+  if(sections) sections.innerHTML=sectionsHTML;
 }
-
 function toggle(idx){
   checked[idx]=!checked[idx];
   localStorage.setItem('dr_checked',JSON.stringify(checked));
