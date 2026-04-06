@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VCReady — Investor Q&A Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7BRPFG4JQL"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-7BRPFG4JQL');</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+:root{
+  --cream:#F5F2EC;--navy:#12120F;--navy2:#3A3830;--navy3:#8A8880;
+  --line:#D8D4CC;--green:#1A6B47;--green-bg:#E8F5EE;--green-border:#A8D5BC;
+  --font:'DM Sans',sans-serif;--font-serif:'DM Serif Display',serif;--font-mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1px solid var(--line);height:60px;padding:0 48px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--font-serif);font-size:20px;color:var(--navy);letter-spacing:-.03em;text-decoration:none}
+.logo span{color:var(--green)}
+.topbar-nav{display:flex;align-items:center}
+.nav-link{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);text-decoration:none;padding:0 12px;height:60px;display:flex;align-items:center;border-bottom:2px solid transparent;transition:all .15s}
+.nav-link:hover{color:var(--navy)}
+.nav-link.active{color:var(--navy);border-bottom-color:var(--navy)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.lang-toggle{display:flex;border:1px solid var(--line)}
+.lang-btn{padding:6px 12px;font-size:11px;font-weight:500;background:transparent;border:none;color:var(--navy3);cursor:pointer;font-family:var(--font);letter-spacing:.04em;transition:all .15s}
+.lang-btn.active{background:var(--navy);color:var(--cream)}
+
+/* CONTAINER */
+.container{max-width:860px;margin:0 auto;padding:0 48px}
+
+/* PAGE HEADER */
+.page-header{padding:60px 0 48px;border-bottom:1px solid var(--line)}
+.page-tag{font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--navy3);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.page-tag::before{content:'';display:block;width:24px;height:1px;background:var(--navy3)}
+.page-header h1{font-family:var(--font-serif);font-size:44px;color:var(--navy);letter-spacing:-.04em;line-height:1.05;font-weight:400;margin-bottom:12px}
+.page-header p{font-size:14px;color:var(--navy2);line-height:1.75;max-width:560px}
+.header-meta{display:flex;gap:24px;margin-top:20px}
+.header-meta-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--navy3)}
+.header-meta-item::before{content:'';display:block;width:4px;height:4px;background:var(--green);border-radius:50%}
+
+/* INTERVIEW SCREEN */
+.interview{padding:60px 0;min-height:500px}
+.interview-context{display:flex;align-items:center;gap:16px;margin-bottom:40px;padding:16px 20px;border:1px solid var(--line)}
+.interviewer-avatar{width:40px;height:40px;background:var(--navy);color:var(--cream);display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-size:16px;flex-shrink:0}
+.interviewer-info{}
+.interviewer-name{font-size:12px;font-weight:600;color:var(--navy)}
+.interviewer-role{font-size:11px;color:var(--navy3)}
+
+/* PROGRESS BAR */
+.interview-progress{display:flex;align-items:center;gap:16px;margin-bottom:40px}
+.progress-track{flex:1;background:var(--line);height:2px}
+.progress-fill{height:100%;background:var(--navy);transition:width .4s ease}
+.progress-info{font-size:11px;font-family:var(--font-mono);color:var(--navy3);white-space:nowrap}
+.theme-badge{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--green);border:1px solid var(--green-border);background:var(--green-bg);padding:3px 10px;white-space:nowrap}
+
+/* QUESTION CARD */
+.question-card{border:1px solid var(--line);border-top:3px solid var(--navy);padding:32px;margin-bottom:32px;animation:slideIn .25s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.question-num{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy3);font-family:var(--font-mono);margin-bottom:16px}
+.question-text{font-family:var(--font-serif);font-size:24px;color:var(--navy);letter-spacing:-.02em;font-weight:400;line-height:1.25;margin-bottom:32px}
+.answer-options{display:flex;flex-direction:column;gap:0}
+.answer-opt{display:flex;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid var(--line);cursor:pointer;transition:all .15s}
+.answer-opt:first-child{border-top:1px solid var(--line)}
+.answer-opt:hover .answer-opt-text{color:var(--navy)}
+.answer-opt:hover .answer-check{border-color:var(--navy)}
+.answer-check{width:20px;height:20px;border:1px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.answer-opt.selected .answer-check{background:var(--navy);border-color:var(--navy)}
+.answer-opt.selected .answer-check::after{content:'✓';font-size:11px;color:var(--cream);font-weight:700}
+.answer-opt.selected .answer-opt-text{color:var(--navy);font-weight:500}
+.answer-opt-text{font-size:13px;color:var(--navy2);line-height:1.5;transition:color .15s}
+
+/* NAV */
+.interview-nav{display:flex;align-items:center;justify-content:space-between}
+.btn-back{background:transparent;border:1px solid var(--line);color:var(--navy2);padding:10px 20px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .15s;letter-spacing:.02em}
+.btn-back:hover{border-color:var(--navy);color:var(--navy)}
+.btn-back:disabled{opacity:.3;cursor:default}
+.btn-forward{background:var(--navy);border:none;color:var(--cream);padding:10px 24px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:background .15s;letter-spacing:.02em}
+.btn-forward:hover{background:var(--green)}
+.btn-forward:disabled{opacity:.4;cursor:default;background:var(--navy)}
+.nav-hint{font-size:11px;color:var(--navy3)}
+
+/* RESULTS */
+.results{display:none;padding:60px 0 80px}
+
+/* SCORE HEADER */
+.score-header{display:grid;grid-template-columns:auto 1fr;gap:48px;align-items:center;padding-bottom:48px;border-bottom:1px solid var(--line);margin-bottom:48px}
+.score-gauge{position:relative;width:120px;height:120px;flex-shrink:0}
+.score-gauge svg{transform:rotate(-90deg)}
+.sg-bg{fill:none;stroke:var(--line);stroke-width:7}
+.sg-fg{fill:none;stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1)}
+.score-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-num{font-family:var(--font-serif);font-size:32px;color:var(--navy);letter-spacing:-.04em;font-weight:400;line-height:1}
+.score-den{font-size:10px;color:var(--navy3);letter-spacing:.06em;margin-top:2px}
+.score-verdict{font-family:var(--font-serif);font-size:28px;color:var(--navy);letter-spacing:-.03em;font-weight:400;margin-bottom:8px}
+.score-verdict.ready{color:var(--green)}
+.score-sub{font-size:13px;color:var(--navy2);line-height:1.7;max-width:480px;margin-bottom:16px}
+.score-themes{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.score-theme-badge{font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border:1px solid var(--line)}
+.score-theme-badge.strong{border-color:var(--green-border);color:var(--green);background:var(--green-bg)}
+.score-theme-badge.weak{border-color:var(--line);color:var(--navy3)}
+
+/* THEME BREAKDOWN */
+.theme-breakdown{margin-bottom:48px}
+.breakdown-title{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);padding-bottom:12px;border-bottom:2px solid var(--navy);margin-bottom:0}
+.breakdown-rows{display:flex;flex-direction:column}
+.breakdown-row{display:grid;grid-template-columns:140px 1fr 50px;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.breakdown-row:last-child{border-bottom:none}
+.breakdown-name{font-size:12px;font-weight:500;color:var(--navy)}
+.breakdown-track{background:var(--line);height:3px}
+.breakdown-fill{height:100%;transition:width .5s ease}
+.breakdown-pct{font-size:11px;font-family:var(--font-mono);color:var(--navy);text-align:right}
+
+/* QUESTION REVIEW */
+.review-section{margin-bottom:48px}
+.review-title{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);padding-bottom:12px;border-bottom:2px solid var(--navy);margin-bottom:0}
+.review-items{display:flex;flex-direction:column}
+.review-item{padding:24px 0;border-bottom:1px solid var(--line)}
+.review-item:last-child{border-bottom:none}
+.review-item-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.review-status{width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px}
+.review-status.ready{background:var(--green);color:#FFF}
+.review-status.gap{background:var(--line);color:var(--navy3)}
+.review-q{font-size:13px;font-weight:500;color:var(--navy);line-height:1.4;flex:1}
+.review-theme-tag{font-size:9px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);border:1px solid var(--line);padding:2px 7px;white-space:nowrap;flex-shrink:0;margin-top:3px}
+.review-answer{font-size:12px;color:var(--navy3);margin-bottom:12px;padding-left:36px;font-style:italic}
+.review-guide{padding-left:36px}
+.review-guide-title{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);margin-bottom:8px}
+.review-guide-text{font-size:12px;color:var(--navy2);line-height:1.7;margin-bottom:8px}
+.review-example{background:var(--navy);padding:12px 16px;font-size:11px;color:rgba(255,255,255,.8);line-height:1.7;border-left:3px solid var(--green)}
+.review-example strong{color:#FFF}
+
+/* CTA */
+.results-cta{background:var(--navy);padding:32px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.results-cta-title{font-family:var(--font-serif);font-size:22px;color:#FFF;letter-spacing:-.02em;font-weight:400;margin-bottom:4px}
+.results-cta-sub{font-size:13px;color:rgba(255,255,255,.6)}
+.results-cta-btn{background:#FFF;color:var(--navy);padding:12px 24px;font-size:12px;font-weight:500;letter-spacing:.04em;text-decoration:none;white-space:nowrap;transition:all .15s;flex-shrink:0}
+.results-cta-btn:hover{background:var(--green);color:#FFF}
+.btn-restart{background:transparent;border:1px solid var(--line);color:var(--navy2);padding:10px 20px;font-size:12px;cursor:pointer;font-family:var(--font);transition:all .15s;margin-top:16px}
+.btn-restart:hover{border-color:var(--navy);color:var(--navy)}
+
+footer{border-top:1px solid var(--line);padding:24px 48px;font-size:11px;color:var(--navy3);letter-spacing:.06em;text-transform:uppercase;display:flex;justify-content:space-between}
+footer a{color:var(--green);text-decoration:none}
+
+@media(max-width:768px){
+  .container,.topbar,footer{padding-left:24px;padding-right:24px}
+  .page-header h1{font-size:32px}
+  .question-text{font-size:20px}
+  .score-header{grid-template-columns:1fr;gap:24px}
+  .breakdown-row{grid-template-columns:100px 1fr 40px}
+  .topbar-nav{display:none}
+  .results-cta{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="index.html" class="logo">VC<span>Ready</span></a>
+  <nav class="topbar-nav">
+    <a href="index.html" class="nav-link">Home</a>
+    <a href="valuation.html" class="nav-link">Valuation</a>
+    <a href="metrics.html" class="nav-link">Metrics</a>
+    <a href="pitch.html" class="nav-link">Pitch</a>
+    <a href="dataroom.html" class="nav-link">Data Room</a>
+    <a href="captable.html" class="nav-link">Cap Table</a>
+    <a href="qa.html" class="nav-link active">Q&A</a>
+  </nav>
+  <div class="topbar-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('fr')">FR</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-header">
+    <div class="page-tag" id="pg_tag">Investor Q&A Simulator</div>
+    <h1 id="pg_h1">Prepare for the<br>questions that matter.</h1>
+    <p id="pg_p">40 questions across 8 themes — the exact questions VCs ask in first meetings. Check the ones you can answer confidently. Get a guide for the rest.</p>
+    <div class="header-meta">
+      <div class="header-meta-item" id="hm1">40 VC questions</div>
+      <div class="header-meta-item" id="hm2">8 themes</div>
+      <div class="header-meta-item" id="hm3">Answer guide + examples</div>
+      <div class="header-meta-item" id="hm4">~10 minutes</div>
+    </div>
+  </div>
+
+  <!-- INTERVIEW -->
+  <div class="interview" id="interview">
+    <div class="interview-context">
+      <div class="interviewer-avatar">VC</div>
+      <div class="interviewer-info">
+        <div class="interviewer-name" id="iv_name">Sarah Chen — Partner, Horizon Ventures</div>
+        <div class="interviewer-role" id="iv_role">First meeting · Series A screen · 45 minutes</div>
+      </div>
+    </div>
+
+    <div class="interview-progress">
+      <div class="progress-track"><div class="progress-fill" id="progress_fill" style="width:0%"></div></div>
+      <div class="progress-info" id="progress_info">1 / 40</div>
+      <div class="theme-badge" id="theme_badge">Market</div>
+    </div>
+
+    <div class="question-card" id="q_card">
+      <div class="question-num" id="q_num">Question 01</div>
+      <div class="question-text" id="q_text">Loading...</div>
+      <div class="answer-options" id="q_answers"></div>
+    </div>
+
+    <div class="interview-nav">
+      <button class="btn-back" id="btn_back" onclick="prevQ()" disabled>← Back</button>
+      <span class="nav-hint" id="nav_hint">Can you answer this confidently?</span>
+      <button class="btn-forward" id="btn_forward" onclick="nextQ()" disabled>Next →</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div class="score-header">
+      <div class="score-gauge">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle class="sg-bg" cx="60" cy="60" r="50"/>
+          <circle class="sg-fg" id="score_arc" cx="60" cy="60" r="50"
+            stroke-dasharray="314.2" stroke-dashoffset="314.2" stroke="#12120F"/>
+        </svg>
+        <div class="score-center">
+          <div class="score-num" id="res_num">0</div>
+          <div class="score-den">/ 40</div>
+        </div>
+      </div>
+      <div>
+        <div class="score-verdict" id="res_verdict">—</div>
+        <div class="score-sub" id="res_sub">—</div>
+        <div class="score-themes" id="res_themes"></div>
+        <button class="btn-restart" onclick="restart()" id="btn_restart">↺ Retake the simulation</button>
+      </div>
+    </div>
+
+    <div class="theme-breakdown">
+      <div class="breakdown-title" id="breakdown_title">Preparation by theme</div>
+      <div class="breakdown-rows" id="breakdown_rows"></div>
+    </div>
+
+    <div class="review-section">
+      <div class="review-title" id="review_title">Question-by-question review</div>
+      <div class="review-items" id="review_items"></div>
+    </div>
+
+    <div class="results-cta">
+      <div>
+        <div class="results-cta-title" id="cta_title">Practice the gaps with an expert.</div>
+        <div class="results-cta-sub" id="cta_sub">Book a 30-min mock investor session to drill your weak points before the real meeting.</div>
+        <button class="btn-restart" onclick="restart()" style="border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.6)" id="btn_restart2">↺ Redo simulation</button>
+      </div>
+      <a href="https://calendly.com/yacine-chikhar/30min" target="_blank" class="results-cta-btn" id="cta_btn">Book your session →</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>VCReady · by <strong>Yacine CHIKHAR</strong> · © 2026</span>
+  <a href="index.html">← Back to toolkit</a>
+</footer>
+
+<script>
+let currentLang='en', currentQ=0, answers=new Array(40).fill(null);
+
+const THEMES={
+  en:['Market','Team','Traction','Product','Business Model','Financials','Fundraising','Risk'],
+  fr:['Marché','Équipe','Traction','Produit','Modèle Éco.','Finances','Levée','Risques']
+};
+
+const QA={
+  en:[
+    // MARKET (0-4)
+    {th:0,q:'How big is your total addressable market, and how did you calculate it?',
+     guide:'VCs want a bottom-up AND top-down TAM. Never just cite a market research report.',
+     example:'"Our TAM is $4.2B. Bottom-up: 850K SMBs in our target segment × $5K ACV = $4.25B. Top-down confirms: the HR software market is $20B, we address the 21% SMB sub-segment."'},
+    {th:0,q:'Why is now the right time for your company to exist?',
+     guide:'Identify the specific inflection point — regulatory change, technology shift, behavioral trend. "The market is growing" is not an answer.',
+     example:'"Three things converged in 2024: mobile penetration in West Africa hit 70%, the CIMA regulation opened digital insurance, and post-COVID behavior normalized remote financial products."'},
+    {th:0,q:'Who are your top 3 competitors and what makes you different?',
+     guide:'Never say "we have no competitors." Show you know the landscape and articulate a specific, defensible differentiation.',
+     example:'"Wave and MTN MoMo are infrastructure. We sit on top of them. Our differentiation is agricultural context-scoring — they can\'t replicate 3 years of crop yield data."'},
+    {th:0,q:'What is your go-to-market strategy for the next 12 months?',
+     guide:'Be specific: channels, targets, conversion rates, CAC assumptions. Not "we will do marketing."',
+     example:'"Phase 1: direct sales to 50 anchor cooperatives in the Souss region, 2 FTEs, target 500 farmers. Phase 2: white-label to 3 regional banks using our API, Q3 2026."'},
+    {th:0,q:'How do you define your beachhead market and why start there?',
+     guide:'The best founders start hyper-focused. Explain exactly why this segment is the right wedge.',
+     example:'"We\'re starting with mango exporters in Agadir — 340 exporters, $2.3B export value, a segment with acute pain around logistics timing and under-served by existing tools."'},
+    // TEAM (5-9)
+    {th:1,q:'Why are you the right team to solve this problem?',
+     guide:'This is about unfair advantage. What do you know or have access to that others don\'t?',
+     example:'"I spent 6 years at BIAT running the SMB lending portfolio. My co-founder built the core risk engine at Experian Africa. We have the domain knowledge and the network most fintech founders lack."'},
+    {th:1,q:'What is the biggest gap in your team right now?',
+     guide:'Never say "we have everything we need." VCs know you don\'t. Show self-awareness and a plan.',
+     example:'"We\'re missing a VP Sales with enterprise relationships. We\'ve identified two candidates and plan to hire using 20% of this round by Q2."'},
+    {th:1,q:'How are equity and vesting structured among founders?',
+     guide:'Have a clear, fair vesting schedule. Cliffs and vesting schedules show maturity.',
+     example:'"50/50 split, 4-year vesting with a 1-year cliff for both founders. We signed the founders\' agreement 8 months ago when we incorporated."'},
+    {th:1,q:'What would make you give up on this company?',
+     guide:'This tests resilience and self-awareness. A good answer shows you\'ve thought about failure modes without being defeatist.',
+     example:'"If after 18 months of iteration we can\'t get our LTV/CAC above 1×, that\'s the signal. But we haven\'t hit that point — every pivot has improved the ratio."'},
+    {th:1,q:'How do you make decisions when you disagree with your co-founder?',
+     guide:'VCs are terrified of co-founder conflict. Show a clear, mature decision process.',
+     example:'"We have a 72-hour rule: we each write our position, sleep on it, then decide. On strategic decisions we bring in our lead advisor as a tie-breaker. We\'ve used it twice in 18 months."'},
+    // TRACTION (10-14)
+    {th:2,q:'What is your current ARR or MRR, and what is your growth rate?',
+     guide:'Be precise. Month-over-month growth is more compelling than absolute numbers at early stage.',
+     example:'"$28K MRR, growing at 14% month-over-month for the last 5 months. That\'s 4.5× YoY if we maintain the current rate. 87% of growth is from existing customer expansion."'},
+    {th:2,q:'Who are your top 3 customers and why do they buy from you?',
+     guide:'Named customers (if possible) and specific reasons. "They liked our product" is not an answer.',
+     example:'"Coopaz, a 1,200-member cooperative, Solexport, and Primeur Souss. They buy because we cut their logistics dispute resolution time from 12 days to 48 hours — we can prove it."'},
+    {th:2,q:'What is your churn rate and what drives it?',
+     guide:'Know your churn by cohort. Distinguish seasonal churn from structural churn. Have a plan.',
+     example:'"Monthly gross churn is 2.1%. It\'s almost entirely seasonal — post-harvest, cooperatives pause subscriptions. Net revenue retention is 118% because active customers expand."'},
+    {th:2,q:'What is your CAC and LTV, and how did you calculate them?',
+     guide:'Show the actual calculation, not just the ratio. VCs will probe the assumptions.',
+     example:'"CAC is $340, blended across direct sales (70%) and referrals (30%). LTV at 24-month payback window is $1,840, so LTV/CAC is 5.4×. We use a 36-month contract term as the LTV horizon."'},
+    {th:2,q:'What is the one metric you track most closely and why?',
+     guide:'This reveals what you actually understand about your business. Pick a leading indicator, not vanity metrics.',
+     example:'"Weekly active cooperatives using our dispute module. It\'s the leading indicator for renewal — 100% of customers above 3 weekly uses have renewed. Below 2, churn probability is 60%."'},
+    // PRODUCT (15-19)
+    {th:3,q:'What problem does your product solve, in one sentence?',
+     guide:'If you need more than one sentence, you don\'t have clarity yet. Practice until it\'s instinctive.',
+     example:'"We help agricultural cooperatives in Africa get paid 8 days faster by automating the dispute resolution process between them and their export buyers."'},
+    {th:3,q:'What is your product\'s core technical differentiation?',
+     guide:'Explain the moat. Data, algorithms, integrations, network effects — be specific.',
+     example:'"Our document matching algorithm is trained on 3 years of agricultural export documents from 14 countries. No one else has this training data. It handles Arabic, French, and English invoices natively."'},
+    {th:3,q:'What does your product roadmap look like for the next 12 months?',
+     guide:'Show sequencing logic, not a feature wish-list. Every item should tie to a business outcome.',
+     example:'"Q1: embedded credit scoring. Q2: API for banks. Q3: cross-border payment rails. Each unlocks a new revenue stream — credit scoring alone adds $180/user/year in projected LTV."'},
+    {th:3,q:'How do customers use your product today — walk me through a typical session?',
+     guide:'Specific, concrete, shows you know your users deeply. Avoid generic product descriptions.',
+     example:'"A cooperative manager opens the app Monday morning. They see 3 flagged disputes from last week\'s shipments. They confirm the quantities, our system auto-generates the credit note, and it\'s sent to the buyer in 2 clicks. Whole process: 4 minutes."'},
+    {th:3,q:'What is the biggest product failure you\'ve had, and what did you learn?',
+     guide:'VCs love this question. It tests intellectual honesty. Have a real answer.',
+     example:'"We built a mobile-first UI in v1. 80% of our users are cooperative managers, average age 52, using feature phones. We rebuilt for USSD in Q2 and conversion jumped 3×. We now do field visits before any major build."'},
+    // BUSINESS MODEL (20-24)
+    {th:4,q:'How do you make money, and what is your pricing model?',
+     guide:'Be precise. SaaS? Transaction fee? Freemium? Explain the logic behind the pricing.',
+     example:'"SaaS: $280/month per cooperative for the core platform. $0.90 per dispute resolved above 50/month. We tested 4 price points — $280 gave the best conversion without sacrificing LTV."'},
+    {th:4,q:'What is your path to profitability, and when do you expect to reach it?',
+     guide:'Show a model. Gross margin, fixed cost base, revenue needed to cover it. Don\'t just say "at scale."',
+     example:'"At 320 cooperatives, our gross margin covers fixed costs. At current growth, that\'s month 19 post-raise. Our contribution margin is already positive — we need $115K MRR to break even on fully-loaded costs."'},
+    {th:4,q:'How does your revenue model scale — what happens as you add customers?',
+     guide:'This is about operating leverage. Show that costs don\'t grow linearly with revenue.',
+     example:'"Onboarding cost per customer drops from $800 to $200 as we automate. Support cost per customer dropped 60% between cohort 1 and cohort 3. Gross margin expands from 62% today to 78% at 500 customers."'},
+    {th:4,q:'What are the key assumptions behind your financial projections?',
+     guide:'VCs will stress-test your projections. Know your assumptions cold. Have a downside case.',
+     example:'"Base case assumes 12% monthly growth, maintaining current CAC of $340, and 2.1% churn. Downside at 8% growth still gets us to breakeven in month 26. The most sensitive variable is churn — a 2% increase delays breakeven by 8 months."'},
+    {th:4,q:'Do you have any revenue concentration risk?',
+     guide:'If your top 3 customers are >50% of revenue, acknowledge it and explain your mitigation plan.',
+     example:'"Top customer is 18% of MRR. Top 5 is 41%. We\'re aware of the concentration — our Q1 goal is to reduce top-5 to below 30% by signing 12 new mid-size cooperatives."'},
+    // FINANCIALS (25-29)
+    {th:5,q:'How much runway do you have, and what is your current burn rate?',
+     guide:'Know this precisely. Vague answers on burn signal poor financial management.',
+     example:'"$28K monthly burn. $340K in the bank. 12 months runway. We\'re cash-flow positive on a contribution margin basis — the burn is entirely S&M investment."'},
+    {th:5,q:'What are your gross margins and what drives them?',
+     guide:'Know your unit economics. Explain the COGS components and how they improve over time.',
+     example:'"62% gross margin. COGS is hosting (18%), payment processing (12%), and human-in-the-loop QA (8%) that we\'re automating out. By Q4 we project 74% as automation scales."'},
+    {th:5,q:'Have you raised money before? What were the terms?',
+     guide:'Be transparent. VCs will do due diligence. A convertible note with a high cap is not shameful.',
+     example:'"$180K pre-seed: $120K from family office, $60K from 2 angels. $200K convertible note, 20% discount, $2.5M cap, 8% interest, 18-month maturity. No warrants."'},
+    {th:5,q:'What is your current valuation, and how did you arrive at it?',
+     guide:'Have a methodology. Use comparables, DCF, or VC method. Never say "we think we\'re worth X."',
+     example:'"$4.2M pre-money. We used the VC method: $1.2M projected ARR in 2027, 8× revenue multiple for B2B SaaS AgriTech comparables, 40% required return, 3-year horizon. Damodaran multiples as reference."'},
+    {th:5,q:'What are your key financial milestones for the next 18 months?',
+     guide:'Tie milestones to fundability. The next raise should be triggered by this round\'s milestones.',
+     example:'"$500K ARR by month 12, 200 cooperatives by month 15, Series A-ready metrics by month 18: $1M ARR, >110% NRR, <2% monthly churn. These are the conditions that make a Series A viable at a $12M+ pre-money."'},
+    // FUNDRAISING (30-34)
+    {th:6,q:'How much are you raising and what will you use it for?',
+     guide:'Specific amounts, specific allocations, tied to specific milestones. Not "for growth."',
+     example:'"$1.2M Seed. 40% product (2 engineers), 35% sales (3 AEs in Morocco and Ivory Coast), 15% ops, 10% reserve. This funds us to $500K ARR and Series A readiness."'},
+    {th:6,q:'Who else is in this round, and what is the current status?',
+     guide:'Social proof matters. Name who\'s in, what\'s committed vs. soft-circled. Never fake urgency.',
+     example:'"$400K committed: $200K from Flat6Labs (lead), $200K from two angels. $300K soft-circled pending final DD. We\'re looking for one more strategic investor with distribution in West Africa."'},
+    {th:6,q:'What is your ideal investor profile for this round?',
+     guide:'Shows strategic thinking. You want the right investor, not just money. Be specific.',
+     example:'"We want an investor who has portfolio companies in African financial services or AgriTech — not just for the check, but for introductions to cooperative federations and agricultural banks."'},
+    {th:6,q:'What is your plan if you don\'t close this round?',
+     guide:'Shows resilience and planning. Every founder should have a Plan B. It also signals you\'re not desperate.',
+     example:'"We have 12 months of runway at current burn. If we don\'t close in 90 days, we reduce burn to $18K and extend to 18 months. We can reach contribution margin breakeven without external capital."'},
+    {th:6,q:'What does success look like in 5 years?',
+     guide:'VCs invest in big outcomes. Show ambition grounded in logic, not fantasy.',
+     example:'"120,000 cooperatives across 12 African countries, processing $8B in trade disputes annually. The infrastructure layer for agricultural finance in Africa — IPO or strategic acquisition by a global payment network at $500M+ valuation."'},
+    // RISK (35-39)
+    {th:7,q:'What is your biggest risk right now, and how are you mitigating it?',
+     guide:'Show you\'ve done honest risk analysis. The worst answer is "we don\'t see major risks."',
+     example:'"Regulatory risk in Ivory Coast — we\'re operating under a WAEMU sandbox license that expires Q3 2026. We\'ve engaged a regulatory lawyer and submitted our full license application 6 months early."'},
+    {th:7,q:'What happens if a large player — Google, a bank — enters your market?',
+     guide:'Show your moat is real. If a big player can replicate you in 6 months, that\'s a problem.',
+     example:'"Our moat is the data, not the software. 3 years of dispute resolution data from 14 countries is not replicable. A bank could build the UI — they can\'t build the model without the data. We\'re also already integrated into their systems."'},
+    {th:7,q:'What are the key dependencies in your business model?',
+     guide:'Every business has dependencies. Show you\'ve mapped them and have contingencies.',
+     example:'"Two: Wave for payment rails (30% of transactions) and a single logistics data provider. We\'re onboarding Orange Money as a second rail. We\'re in conversation with two alternative data providers."'},
+    {th:7,q:'How do you think about market timing risk — what if the market isn\'t ready?',
+     guide:'This is subtle. Show evidence the market IS ready, not just that you hope it is.',
+     example:'"We have 47 paying cooperatives. That\'s not a timing question anymore. The question is speed of adoption. Our 14% monthly growth suggests the market is ready — the barrier was product quality, not market readiness."'},
+    {th:7,q:'What keeps you up at night?',
+     guide:'Authenticity wins here. Pick something real. VCs can tell when you\'re performing.',
+     example:'"Talent density. We\'re a 6-person team and 3 of our 4 engineers are the core of the product. I think about what happens if one of them gets a Google offer. We\'re working on competitive equity packages but it\'s a real concern."'},
+  ],
+  fr:[
+    // MARCHÉ
+    {th:0,q:'Quelle est la taille de votre marché adressable total, et comment l\'avez-vous calculé ?',
+     guide:'Les VCs veulent un TAM bottom-up ET top-down. Ne citez jamais seulement une étude de marché.',
+     example:'"Notre TAM est de 4,2 Mds$. Bottom-up : 850 000 PME dans notre segment cible × 5 000$ ACV = 4,25 Mds$. Top-down confirme : le marché RH logiciel est de 20 Mds$, nous adressons le sous-segment PME à 21%."'},
+    {th:0,q:'Pourquoi est-ce le bon moment pour que votre entreprise existe ?',
+     guide:'Identifiez le point d\'inflexion spécifique — changement réglementaire, technologique ou comportemental. "Le marché grandit" n\'est pas une réponse.',
+     example:'"Trois choses ont convergé en 2024 : la pénétration mobile en Afrique de l\'Ouest a atteint 70%, la réglementation CIMA a ouvert l\'assurance digitale, et le comportement post-COVID a normalisé les produits financiers à distance."'},
+    {th:0,q:'Qui sont vos 3 principaux concurrents et qu\'est-ce qui vous différencie ?',
+     guide:'Ne dites jamais "nous n\'avons pas de concurrents." Montrez que vous connaissez le paysage et articulez une différenciation spécifique et défendable.',
+     example:'"Wave et MTN MoMo sont de l\'infrastructure. Nous nous positionnons au-dessus. Notre différenciation est le scoring agri-contextuel — ils ne peuvent pas répliquer 3 ans de données de rendement agricole."'},
+    {th:0,q:'Quelle est votre stratégie go-to-market pour les 12 prochains mois ?',
+     guide:'Soyez spécifique : canaux, cibles, taux de conversion, hypothèses CAC. Pas "nous ferons du marketing."',
+     example:'"Phase 1 : vente directe à 50 coopératives ancrages dans la région du Souss, 2 ETP, objectif 500 agriculteurs. Phase 2 : white-label à 3 banques régionales via notre API, T3 2026."'},
+    {th:0,q:'Comment définissez-vous votre marché tête de pont et pourquoi commencer là ?',
+     guide:'Les meilleurs fondateurs commencent hyper-focalisés. Expliquez exactement pourquoi ce segment est le bon coin d\'entrée.',
+     example:'"Nous commençons avec les exportateurs de mangues d\'Agadir — 340 exportateurs, 2,3 Mds$ de valeur export, un segment avec une douleur aiguë autour du timing logistique mal servi par les outils existants."'},
+    // ÉQUIPE
+    {th:1,q:'Pourquoi êtes-vous la bonne équipe pour résoudre ce problème ?',
+     guide:'Il s\'agit d\'avantage injuste. Que savez-vous ou à quoi avez-vous accès que les autres n\'ont pas ?',
+     example:'"J\'ai passé 6 ans à la BIAT à gérer le portefeuille de crédit PME. Mon co-fondateur a construit le moteur de risque principal chez Experian Africa. Nous avons la connaissance du domaine et le réseau que la plupart des fondateurs fintech n\'ont pas."'},
+    {th:1,q:'Quelle est la plus grande lacune dans votre équipe actuellement ?',
+     guide:'Ne dites jamais "nous avons tout ce qu\'il nous faut." Les VCs savent que non. Montrez de la conscience de soi et un plan.',
+     example:'"Il nous manque un VP Sales avec des relations entreprises. Nous avons identifié deux candidats et prévoyons de recruter avec 20% de ce tour d\'ici T2."'},
+    {th:1,q:'Comment est structuré l\'equity et le vesting entre les fondateurs ?',
+     guide:'Ayez un calendrier de vesting clair et équitable. Les cliffs et les vesting schedules montrent de la maturité.',
+     example:'"50/50, vesting sur 4 ans avec cliff de 1 an pour les deux fondateurs. Nous avons signé l\'accord il y a 8 mois lors de l\'incorporation."'},
+    {th:1,q:'Qu\'est-ce qui vous ferait abandonner cette entreprise ?',
+     guide:'Cela teste la résilience et la conscience de soi. Une bonne réponse montre que vous avez réfléchi aux modes d\'échec sans être défaitiste.',
+     example:'"Si après 18 mois d\'itération nous ne pouvons pas dépasser un LTV/CAC de 1×, c\'est le signal. Mais nous n\'en sommes pas là — chaque pivot a amélioré le ratio."'},
+    {th:1,q:'Comment prenez-vous des décisions quand vous n\'êtes pas d\'accord avec votre co-fondateur ?',
+     guide:'Les VCs craignent les conflits entre co-fondateurs. Montrez un processus décisionnel clair et mature.',
+     example:'"Nous avons une règle de 72h : chacun rédige sa position, on dort dessus, puis on décide. Sur les décisions stratégiques, on fait appel à notre advisor principal comme arbitre. Nous l\'avons utilisé deux fois en 18 mois."'},
+    // TRACTION
+    {th:2,q:'Quel est votre ARR ou MRR actuel, et quel est votre taux de croissance ?',
+     guide:'Soyez précis. La croissance mensuelle est plus convaincante que les chiffres absolus en early-stage.',
+     example:'"28 000$ MRR, croissance de 14% mois sur mois depuis 5 mois. C\'est 4,5× annualisé si nous maintenons le rythme. 87% de la croissance vient de l\'expansion des clients existants."'},
+    {th:2,q:'Qui sont vos 3 principaux clients et pourquoi achètent-ils chez vous ?',
+     guide:'Clients nommés (si possible) et raisons spécifiques. "Ils ont aimé notre produit" n\'est pas une réponse.',
+     example:'"Coopaz (1 200 membres), Solexport et Primeur Souss. Ils achètent parce que nous réduisons leur délai de résolution des litiges logistiques de 12 jours à 48h — nous pouvons le prouver."'},
+    {th:2,q:'Quel est votre taux de churn et qu\'est-ce qui le génère ?',
+     guide:'Connaissez votre churn par cohorte. Distinguez le churn saisonnier du churn structurel. Ayez un plan.',
+     example:'"Churn mensuel brut de 2,1%. C\'est quasi-entièrement saisonnier — post-récolte, les coopératives suspendent leurs abonnements. La NRR est de 118% car les clients actifs s\'étendent."'},
+    {th:2,q:'Quel est votre CAC et LTV, et comment les avez-vous calculés ?',
+     guide:'Montrez le calcul réel, pas seulement le ratio. Les VCs vont sonder les hypothèses.',
+     example:'"CAC de 340$, mixte vente directe (70%) et référencements (30%). LTV sur horizon 24 mois est de 1 840$, soit LTV/CAC de 5,4×. Nous utilisons un contrat de 36 mois comme horizon LTV."'},
+    {th:2,q:'Quelle est la métrique que vous suivez le plus attentivement et pourquoi ?',
+     guide:'Cela révèle ce que vous comprenez réellement de votre business. Choisissez un indicateur avancé, pas des vanity metrics.',
+     example:'"Coopératives actives hebdomadaires utilisant notre module litiges. C\'est l\'indicateur avancé du renouvellement — 100% des clients au-dessus de 3 utilisations hebdo ont renouvelé. En dessous de 2, la probabilité de churn est de 60%."'},
+    // PRODUIT
+    {th:3,q:'Quel problème votre produit résout-il, en une phrase ?',
+     guide:'Si vous avez besoin de plus d\'une phrase, vous n\'avez pas encore la clarté. Pratiquez jusqu\'à ce que ce soit instinctif.',
+     example:'"Nous aidons les coopératives agricoles en Afrique à être payées 8 jours plus vite en automatisant le processus de résolution des litiges avec leurs acheteurs export."'},
+    {th:3,q:'Quelle est la différenciation technique principale de votre produit ?',
+     guide:'Expliquez le moat. Données, algorithmes, intégrations, effets réseau — soyez spécifique.',
+     example:'"Notre algorithme de matching de documents est entraîné sur 3 ans de documents export agricoles de 14 pays. Personne d\'autre n\'a ces données d\'entraînement. Il gère les factures en arabe, français et anglais nativement."'},
+    {th:3,q:'À quoi ressemble votre roadmap produit pour les 12 prochains mois ?',
+     guide:'Montrez la logique de séquençage, pas une liste de souhaits de features. Chaque item doit être lié à un résultat business.',
+     example:'"T1 : scoring de crédit embarqué. T2 : API pour les banques. T3 : rails de paiement transfrontaliers. Chacun ouvre un nouveau flux de revenus — le scoring de crédit seul ajoute 180$/utilisateur/an en LTV projeté."'},
+    {th:3,q:'Comment les clients utilisent-ils votre produit aujourd\'hui — décrivez une session typique ?',
+     guide:'Spécifique, concret, montre que vous connaissez profondément vos utilisateurs. Évitez les descriptions génériques.',
+     example:'"Un gérant de coopérative ouvre l\'app le lundi matin. Il voit 3 litiges signalés des expéditions de la semaine dernière. Il confirme les quantités, notre système génère automatiquement la note de crédit, et elle est envoyée à l\'acheteur en 2 clics. Temps total : 4 minutes."'},
+    {th:3,q:'Quel est le plus grand échec produit que vous avez eu, et qu\'avez-vous appris ?',
+     guide:'Les VCs adorent cette question. Elle teste l\'honnêteté intellectuelle. Ayez une vraie réponse.',
+     example:'"Nous avons construit une UI mobile-first en v1. 80% de nos utilisateurs sont des gérants de coopératives, âge moyen 52 ans, utilisant des feature phones. Nous avons rebâti pour l\'USSD au T2 et la conversion a triplé. Nous faisons maintenant des visites terrain avant tout développement majeur."'},
+    // MODÈLE ÉCO.
+    {th:4,q:'Comment gagnez-vous de l\'argent et quel est votre modèle de tarification ?',
+     guide:'Soyez précis. SaaS ? Frais de transaction ? Freemium ? Expliquez la logique derrière le pricing.',
+     example:'"SaaS : 280$/mois par coopérative pour la plateforme principale. 0,90$ par litige résolu au-delà de 50/mois. Nous avons testé 4 points de prix — 280$ donnait la meilleure conversion sans sacrifier la LTV."'},
+    {th:4,q:'Quel est votre chemin vers la rentabilité, et quand pensez-vous l\'atteindre ?',
+     guide:'Montrez un modèle. Marge brute, base de coûts fixes, revenus nécessaires pour les couvrir. Ne dites pas juste "à l\'échelle."',
+     example:'"À 320 coopératives, notre marge brute couvre les coûts fixes. À la croissance actuelle, c\'est le mois 19 post-levée. Notre marge sur contribution est déjà positive — il nous faut 115 000$ MRR pour atteindre le seuil de rentabilité."'},
+    {th:4,q:'Comment votre modèle de revenus scale-t-il à mesure que vous ajoutez des clients ?',
+     guide:'Il s\'agit de levier opérationnel. Montrez que les coûts ne croissent pas linéairement avec les revenus.',
+     example:'"Le coût d\'onboarding par client passe de 800$ à 200$ avec l\'automatisation. Le coût de support par client a chuté de 60% entre la cohorte 1 et la cohorte 3. La marge brute s\'étend de 62% aujourd\'hui à 78% à 500 clients."'},
+    {th:4,q:'Quelles sont les hypothèses clés derrière vos projections financières ?',
+     guide:'Les VCs vont stress-tester vos projections. Connaissez vos hypothèses parfaitement. Ayez un scénario pessimiste.',
+     example:'"Le scénario de base suppose 12% de croissance mensuelle, maintien du CAC actuel de 340$, et 2,1% de churn. Le scénario pessimiste à 8% de croissance atteint toujours le seuil de rentabilité au mois 26. La variable la plus sensible est le churn — une hausse de 2% retarde le seuil de 8 mois."'},
+    {th:4,q:'Avez-vous un risque de concentration de revenus ?',
+     guide:'Si vos 3 meilleurs clients représentent plus de 50% des revenus, reconnaissez-le et expliquez votre plan de mitigation.',
+     example:'"Le premier client est à 18% du MRR. Les 5 premiers à 41%. Nous sommes conscients de la concentration — notre objectif T1 est de réduire les 5 premiers à moins de 30% en signant 12 nouvelles coopératives mid-size."'},
+    // FINANCES
+    {th:5,q:'Quel est votre runway et quel est votre burn rate actuel ?',
+     guide:'Connaissez cela précisément. Des réponses vagues sur le burn signalent une mauvaise gestion financière.',
+     example:'"28 000$ de burn mensuel. 340 000$ en banque. 12 mois de runway. Nous sommes cash-flow positifs sur une base de marge sur contribution — le burn est entièrement un investissement S&M."'},
+    {th:5,q:'Quelles sont vos marges brutes et qu\'est-ce qui les détermine ?',
+     guide:'Connaissez vos unit economics. Expliquez les composantes COGS et comment elles s\'améliorent.',
+     example:'"62% de marge brute. Le COGS est l\'hébergement (18%), le traitement des paiements (12%), et le QA humain (8%) que nous automatisons. D\'ici T4, nous projetons 74% avec l\'automatisation."'},
+    {th:5,q:'Avez-vous déjà levé des fonds ? Quelles étaient les conditions ?',
+     guide:'Soyez transparent. Les VCs feront la due diligence. Une obligation convertible avec un cap élevé n\'est pas une honte.',
+     example:'"180 000$ en pre-seed : 120 000$ d\'un family office, 60 000$ de 2 business angels. 200 000$ d\'obligations convertibles, 20% de remise, cap de 2,5M$, 8% d\'intérêt, maturité 18 mois. Pas de warrants."'},
+    {th:5,q:'Quelle est votre valorisation actuelle, et comment y êtes-vous arrivé ?',
+     guide:'Ayez une méthodologie. Utilisez des comparables, le DCF ou la méthode VC. Ne dites jamais "nous pensons valoir X."',
+     example:'"4,2M$ pre-money. Nous avons utilisé la méthode VC : 1,2M$ ARR projeté en 2027, multiple de 8× pour les comparables B2B SaaS AgriTech, rendement requis de 40%, horizon 3 ans. Multiples Damodaran comme référence."'},
+    {th:5,q:'Quels sont vos jalons financiers clés pour les 18 prochains mois ?',
+     guide:'Liez les jalons à la levabilité. La prochaine levée devrait être déclenchée par les jalons de ce tour.',
+     example:'"500 000$ ARR au mois 12, 200 coopératives au mois 15, métriques Series A au mois 18 : 1M$ ARR, >110% NRR, <2% de churn mensuel. Ce sont les conditions qui rendent une Series A viable à 12M$+ pre-money."'},
+    // LEVÉE
+    {th:6,q:'Combien levez-vous et à quoi cela servira-t-il ?',
+     guide:'Montants spécifiques, allocations spécifiques, liés à des jalons spécifiques. Pas "pour la croissance."',
+     example:'"1,2M$ Seed. 40% produit (2 ingénieurs), 35% ventes (3 AEs au Maroc et en Côte d\'Ivoire), 15% ops, 10% réserve. Cela nous finance jusqu\'à 500 000$ ARR et la préparation Series A."'},
+    {th:6,q:'Qui d\'autre est dans ce tour, et quel est le statut actuel ?',
+     guide:'La preuve sociale compte. Nommez qui est dans le tour, ce qui est engagé vs. soft-circled. Ne jamais créer une fausse urgence.',
+     example:'"400 000$ engagés : 200 000$ de Flat6Labs (lead), 200 000$ de deux business angels. 300 000$ soft-circled en attente de la DD finale. Nous cherchons un dernier investisseur stratégique avec une distribution en Afrique de l\'Ouest."'},
+    {th:6,q:'Quel est votre profil d\'investisseur idéal pour ce tour ?',
+     guide:'Montre une réflexion stratégique. Vous voulez le bon investisseur, pas juste de l\'argent. Soyez spécifique.',
+     example:'"Nous voulons un investisseur avec des sociétés en portefeuille dans les services financiers africains ou l\'AgriTech — pas juste pour le chèque, mais pour des introductions aux fédérations de coopératives et aux banques agricoles."'},
+    {th:6,q:'Quel est votre plan si vous ne clôturez pas ce tour ?',
+     guide:'Montre de la résilience et de la planification. Chaque fondateur devrait avoir un Plan B. Cela signale aussi que vous n\'êtes pas désespéré.',
+     example:'"Nous avons 12 mois de runway au burn actuel. Si nous ne clôturons pas en 90 jours, nous réduisons le burn à 18 000$ et étendons à 18 mois. Nous pouvons atteindre le seuil de rentabilité sur contribution margin sans capital externe."'},
+    {th:6,q:'À quoi ressemble le succès dans 5 ans ?',
+     guide:'Les VCs investissent dans de grands outcomes. Montrez de l\'ambition ancrée dans la logique, pas de la fantaisie.',
+     example:'"120 000 coopératives dans 12 pays africains, traitant 8 Mds$ de litiges commerciaux annuellement. La couche d\'infrastructure pour la finance agricole en Afrique — IPO ou acquisition stratégique par un réseau de paiement mondial à 500M$+ de valorisation."'},
+    // RISQUES
+    {th:7,q:'Quel est votre plus grand risque actuellement, et comment le mitiger ?',
+     guide:'Montrez que vous avez fait une analyse de risque honnête. La pire réponse est "nous ne voyons pas de risques majeurs."',
+     example:'"Risque réglementaire en Côte d\'Ivoire — nous opérons sous une licence sandbox UEMOA qui expire T3 2026. Nous avons engagé un avocat réglementaire et soumis notre demande de licence complète 6 mois en avance."'},
+    {th:7,q:'Que se passe-t-il si un grand acteur — Google, une banque — entre sur votre marché ?',
+     guide:'Montrez que votre moat est réel. Si un grand acteur peut vous répliquer en 6 mois, c\'est un problème.',
+     example:'"Notre moat c\'est la donnée, pas le logiciel. 3 ans de données de résolution de litiges de 14 pays ne sont pas réplicables. Une banque pourrait construire l\'UI — elle ne peut pas construire le modèle sans les données. Nous sommes aussi déjà intégrés dans leurs systèmes."'},
+    {th:7,q:'Quelles sont les dépendances clés dans votre modèle économique ?',
+     guide:'Chaque entreprise a des dépendances. Montrez que vous les avez cartographiées et avez des contingences.',
+     example:'"Deux : Wave pour les rails de paiement (30% des transactions) et un seul fournisseur de données logistiques. Nous intégrons Orange Money comme second rail. Nous sommes en conversation avec deux fournisseurs de données alternatifs."'},
+    {th:7,q:'Comment pensez-vous au risque de timing de marché — et si le marché n\'est pas prêt ?',
+     guide:'C\'est subtil. Montrez des preuves que le marché EST prêt, pas juste que vous l\'espérez.',
+     example:'"Nous avons 47 coopératives payantes. Ce n\'est plus une question de timing. La question est la vitesse d\'adoption. Notre croissance mensuelle de 14% suggère que le marché est prêt — la barrière était la qualité du produit, pas la maturité du marché."'},
+    {th:7,q:'Qu\'est-ce qui vous empêche de dormir la nuit ?',
+     guide:'L\'authenticité gagne ici. Choisissez quelque chose de réel. Les VCs peuvent détecter quand vous jouez un rôle.',
+     example:'"La densité des talents. Nous sommes une équipe de 6 et 3 de nos 4 ingénieurs sont le cœur du produit. Je pense à ce qui se passe si l\'un d\'eux reçoit une offre de Google. Nous travaillons sur des packages d\'equity compétitifs mais c\'est une vraie préoccupation."'},
+  ]
+};
+
+// answer options
+const OPTS={
+  en:['Yes — I can answer this confidently right now','Mostly — I have an answer but it needs refinement','Somewhat — I have thoughts but no structured answer','No — I\'m not prepared for this question'],
+  fr:['Oui — je peux répondre à ça avec confiance maintenant','Presque — j\'ai une réponse mais elle doit être affinée','Partiellement — j\'ai des idées mais pas de réponse structurée','Non — je ne suis pas préparé pour cette question']
+};
+
+function qa(){return QA[currentLang];}
+function themes(){return THEMES[currentLang];}
+
+function renderQ(){
+  const q=qa()[currentQ];
+  const t=themes();
+  const lang=currentLang;
+  const total=qa().length;
+
+  document.getElementById('progress_fill').style.width=((currentQ)/total*100)+'%';
+  document.getElementById('progress_info').textContent=`${currentQ+1} / ${total}`;
+  document.getElementById('theme_badge').textContent=t[q.th];
+  document.getElementById('q_num').textContent=`Question ${String(currentQ+1).padStart(2,'0')} — ${t[q.th]}`;
+  document.getElementById('q_text').textContent=q.q;
+
+  const opts=OPTS[lang];
+  document.getElementById('q_answers').innerHTML=opts.map((o,i)=>`
+    <div class="answer-opt${answers[currentQ]===i?' selected':''}" onclick="selectAns(${i})">
+      <div class="answer-check"></div>
+      <div class="answer-opt-text">${o}</div>
+    </div>`).join('');
+
+  document.getElementById('btn_back').disabled=currentQ===0;
+  document.getElementById('btn_forward').disabled=answers[currentQ]===null;
+  document.getElementById('btn_forward').textContent=currentQ===total-1
+    ?(lang==='fr'?'Voir mes résultats →':'See my results →')
+    :(lang==='fr'?'Suivant →':'Next →');
+  document.getElementById('nav_hint').textContent=answers[currentQ]!==null?''
+    :(lang==='fr'?'Pouvez-vous répondre à cette question ?':'Can you answer this confidently?');
+}
+
+function selectAns(i){
+  answers[currentQ]=i;
+  renderQ();
+}
+
+function nextQ(){
+  if(answers[currentQ]===null) return;
+  if(currentQ===qa().length-1){showResults();return;}
+  currentQ++;
+  renderQ();
+  window.scrollTo({top:document.getElementById('interview').offsetTop-70,behavior:'smooth'});
+}
+
+function prevQ(){
+  if(currentQ===0) return;
+  currentQ--;
+  renderQ();
+}
+
+function showResults(){
+  document.getElementById('interview').style.display='none';
+  document.getElementById('results').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+
+  const qs=qa();
+  const t=themes();
+  const lang=currentLang;
+  const total=qs.length;
+  const ready=answers.filter(a=>a===0||a===1).length;
+  const pct=Math.round(ready/total*100);
+
+  // Score arc
+  const circ=314.2;
+  setTimeout(()=>{
+    document.getElementById('score_arc').style.strokeDashoffset=circ-(circ*ready/total);
+    document.getElementById('score_arc').style.stroke=pct>=75?'#1A6B47':pct>=50?'#12120F':'#9A9892';
+  },100);
+  document.getElementById('res_num').textContent=ready;
+
+  // Verdict
+  const vs={
+    en:{v75:'Well prepared.',v50:'Mostly ready.',v25:'Significant gaps.',v0:'Not ready.'},
+    fr:{v75:'Bien préparé.',v50:'Presque prêt.',v25:'Lacunes importantes.',v0:'Pas prêt.'}
+  };
+  const vk=pct>=75?'v75':pct>=50?'v50':pct>=25?'v25':'v0';
+  const verdict=document.getElementById('res_verdict');
+  verdict.textContent=vs[lang][vk];
+  verdict.className='score-verdict'+(pct>=75?' ready':'');
+
+  const subs={
+    en:{v75:`You can confidently answer ${ready} of ${total} investor questions. Focus on the gaps below before your next meeting.`,
+        v50:`You're prepared for ${ready}/${total} questions. Several high-priority gaps remain — especially on the themes marked below.`,
+        v25:`Only ${ready}/${total} questions covered. Significant preparation needed before approaching institutional investors.`,
+        v0:`${ready}/${total} questions answered confidently. Start with the fundamentals — market, traction, and team.`},
+    fr:{v75:`Vous pouvez répondre avec confiance à ${ready} des ${total} questions investisseur. Concentrez-vous sur les lacunes ci-dessous avant votre prochain rendez-vous.`,
+        v50:`Vous êtes préparé pour ${ready}/${total} questions. Plusieurs lacunes prioritaires subsistent — notamment sur les thèmes marqués ci-dessous.`,
+        v25:`Seulement ${ready}/${total} questions couvertes. Une préparation significative est nécessaire avant d'approcher des investisseurs institutionnels.`,
+        v0:`${ready}/${total} questions répondues avec confiance. Commencez par les fondamentaux — marché, traction et équipe.`}
+  };
+  document.getElementById('res_sub').textContent=subs[lang][vk];
+
+  // Theme scores
+  const themeScores=THEMES.en.map((_,ti)=>{
+    const tqs=qs.filter(q=>q.th===ti);
+    const tReady=tqs.filter((_,i)=>answers[qs.filter(q=>q.th===ti).map(q=>qs.indexOf(q))[i]]<=1).length;
+    return{ready:tReady,total:tqs.length,pct:Math.round(tReady/tqs.length*100)};
+  });
+
+  document.getElementById('res_themes').innerHTML=themeScores.map((s,i)=>
+    `<span class="score-theme-badge ${s.pct>=60?'strong':'weak'}">${t[i]} ${s.ready}/${s.total}</span>`
+  ).join('');
+
+  // Breakdown
+  document.getElementById('breakdown_rows').innerHTML=themeScores.map((s,i)=>{
+    const color=s.pct>=75?'#1A6B47':s.pct>=50?'#12120F':'#9A9892';
+    return`<div class="breakdown-row">
+      <div class="breakdown-name">${t[i]}</div>
+      <div class="breakdown-track"><div class="breakdown-fill" style="width:${s.pct}%;background:${color}"></div></div>
+      <div class="breakdown-pct">${s.pct}%</div>
+    </div>`;
+  }).join('');
+
+  // Full question review
+  document.getElementById('review_items').innerHTML=qs.map((q,i)=>{
+    const ans=answers[i];
+    const isReady=ans===0||ans===1;
+    const ansLabels=OPTS[lang];
+    return`<div class="review-item">
+      <div class="review-item-header">
+        <div class="review-status ${isReady?'ready':'gap'}">${isReady?'✓':'?'}</div>
+        <div class="review-q">${q.q}</div>
+        <span class="review-theme-tag">${t[q.th]}</span>
+      </div>
+      <div class="review-answer">${lang==='fr'?'Votre réponse :':'Your answer:'} "${ansLabels[ans]||'—'}"</div>
+      ${!isReady?`<div class="review-guide">
+        <div class="review-guide-title">${lang==='fr'?'Comment bien répondre':'How to answer well'}</div>
+        <div class="review-guide-text">${q.guide}</div>
+        <div class="review-example"><strong>${lang==='fr'?'Exemple :':'Example:'}</strong> ${q.example}</div>
+      </div>`:`<div style="padding-left:36px;font-size:11px;color:var(--green)">✓ ${lang==='fr'?'Bien préparé. Consultez l\'exemple pour affiner si besoin.':'Well prepared. Check the example to refine if needed.'}</div>
+      <div class="review-guide" style="margin-top:8px">
+        <div class="review-example" style="border-left-color:var(--line);background:var(--green-bg);color:var(--navy2)"><strong style="color:var(--navy)">${lang==='fr'?'Exemple fort :':'Strong example:'}</strong> ${q.example}</div>
+      </div>`}
+    </div>`;
+  }).join('');
+}
+
+function restart(){
+  answers=new Array(40).fill(null);
+  currentQ=0;
+  document.getElementById('results').style.display='none';
+  document.getElementById('interview').style.display='block';
+  renderQ();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function setLang(l){
+  currentLang=l;
+  document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',['en','fr'][i]===l));
+  const s=(id,v)=>{const el=document.getElementById(id);if(el)el.innerHTML=v;};
+  if(l==='fr'){
+    s('pg_tag','Simulateur Q&R Investisseur');
+    s('pg_h1','Préparez-vous aux<br>questions qui comptent.');
+    s('pg_p','40 questions sur 8 thèmes — les questions exactes que les VCs posent lors des premiers rendez-vous. Cochez celles auxquelles vous pouvez répondre avec confiance. Obtenez un guide pour les autres.');
+    s('hm1','40 questions VC');s('hm2','8 thèmes');s('hm3','Guide de réponse + exemples');s('hm4','~10 minutes');
+    s('iv_name','Sarah Chen — Associée, Horizon Ventures');
+    s('iv_role','Premier rendez-vous · Screen Series A · 45 minutes');
+    s('breakdown_title','Préparation par thème');
+    s('review_title','Revue question par question');
+    s('cta_title','Pratiquez les lacunes avec un expert.');
+    s('cta_sub','Réservez 30 min de simulation d\'entretien investisseur pour travailler vos points faibles avant le vrai rendez-vous.');
+    s('cta_btn','Réserver votre session →');
+    s('btn_restart','↺ Refaire la simulation');
+    s('btn_restart2','↺ Refaire la simulation');
+  } else {
+    s('pg_tag','Investor Q&A Simulator');
+    s('pg_h1','Prepare for the<br>questions that matter.');
+    s('pg_p','40 questions across 8 themes — the exact questions VCs ask in first meetings. Check the ones you can answer confidently. Get a guide for the rest.');
+    s('hm1','40 VC questions');s('hm2','8 themes');s('hm3','Answer guide + examples');s('hm4','~10 minutes');
+    s('iv_name','Sarah Chen — Partner, Horizon Ventures');
+    s('iv_role','First meeting · Series A screen · 45 minutes');
+    s('breakdown_title','Preparation by theme');
+    s('review_title','Question-by-question review');
+    s('cta_title','Practice the gaps with an expert.');
+    s('cta_sub','Book a 30-min mock investor session to drill your weak points before the real meeting.');
+    s('cta_btn','Book your session →');
+    s('btn_restart','↺ Retake the simulation');
+    s('btn_restart2','↺ Redo simulation');
+  }
+  renderQ();
+}
+
+renderQ();
+</script>
+</body>
+</html>
