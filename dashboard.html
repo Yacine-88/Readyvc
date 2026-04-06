@@ -8,137 +8,167 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7BRPFG4JQL"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-7BRPFG4JQL');</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
 :root{
   --cream:#F5F2EC;--navy:#12120F;--navy2:#3A3830;--navy3:#8A8880;
   --line:#D8D4CC;--green:#1A6B47;--green-bg:#E8F5EE;--green-border:#A8D5BC;
-  --font:'DM Sans',sans-serif;--font-serif:'DM Serif Display',serif;
-  --font-mono:'JetBrains Mono',monospace;
+  --font:'DM Sans',sans-serif;--font-serif:'DM Serif Display',serif;--font-mono:'JetBrains Mono',monospace;
 }
-html{scroll-behavior:smooth}
 body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh}
 
-/* ── TOPBAR ── */
+/* TOPBAR */
 .topbar{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1px solid var(--line);height:60px;padding:0 48px;display:flex;align-items:center;justify-content:space-between}
 .logo{font-family:var(--font-serif);font-size:20px;color:var(--navy);letter-spacing:-.03em;text-decoration:none}
 .logo span{color:var(--green)}
 .topbar-right{display:flex;align-items:center;gap:12px}
-.user-badge{font-size:12px;color:var(--navy2);display:flex;align-items:center;gap:8px}
-.user-avatar{width:28px;height:28px;background:var(--navy);color:var(--cream);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.user-info{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--navy2)}
+.user-avatar{width:30px;height:30px;background:var(--navy);color:var(--cream);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;font-family:var(--font-mono)}
 .btn-signout{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--navy3);background:transparent;border:1px solid var(--line);padding:6px 14px;cursor:pointer;font-family:var(--font);transition:all .15s}
 .btn-signout:hover{border-color:var(--navy);color:var(--navy)}
 
 /* ── AUTH SCREEN ── */
 .auth-screen{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:40px 24px}
-.auth-card{max-width:440px;width:100%}
-.auth-title{font-family:var(--font-serif);font-size:36px;color:var(--navy);letter-spacing:-.03em;font-weight:400;margin-bottom:8px}
-.auth-sub{font-size:14px;color:var(--navy2);margin-bottom:40px;line-height:1.6}
-.auth-divider{display:flex;align-items:center;gap:16px;margin:20px 0}
+.auth-card{max-width:460px;width:100%}
+.auth-eyebrow{font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--navy3);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.auth-eyebrow::before{content:'';display:block;width:24px;height:1px;background:var(--navy3)}
+.auth-title{font-family:var(--font-serif);font-size:40px;color:var(--navy);letter-spacing:-.04em;font-weight:400;line-height:1.05;margin-bottom:10px}
+.auth-sub{font-size:14px;color:var(--navy2);line-height:1.7;margin-bottom:40px;max-width:380px}
+
+/* BENEFITS */
+.auth-benefits{display:flex;flex-direction:column;gap:10px;margin-bottom:36px;padding:20px 24px;border:1px solid var(--line)}
+.auth-benefit{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--navy2)}
+.auth-benefit::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0}
+
+/* GOOGLE BTN — prominent */
+.btn-google{width:100%;padding:14px;background:var(--navy);color:var(--cream);border:none;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:12px;letter-spacing:.02em;margin-bottom:0}
+.btn-google:hover{background:var(--green)}
+.google-icon{width:18px;height:18px;flex-shrink:0}
+
+/* DIVIDER */
+.auth-divider{display:flex;align-items:center;gap:16px;margin:16px 0}
 .auth-divider-line{flex:1;height:1px;background:var(--line)}
 .auth-divider-text{font-size:11px;color:var(--navy3);letter-spacing:.06em;text-transform:uppercase}
-.auth-field{border:1px solid var(--line);border-bottom:none;display:flex;align-items:center}
-.auth-field:last-of-type{border-bottom:1px solid var(--line)}
-.auth-field input{width:100%;padding:14px 16px;font-size:13px;border:none;background:transparent;color:var(--navy);font-family:var(--font);outline:none}
-.auth-field input::placeholder{color:var(--navy3)}
-.btn-magic{width:100%;padding:14px;background:var(--navy);color:var(--cream);border:none;font-family:var(--font);font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:background .15s;margin-top:0}
-.btn-magic:hover{background:var(--green)}
-.btn-google{width:100%;padding:13px;background:transparent;color:var(--navy);border:1px solid var(--line);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:10px}
-.btn-google:hover{border-color:var(--navy);background:var(--navy);color:var(--cream)}
-.google-icon{width:16px;height:16px;flex-shrink:0}
+
+/* MAGIC LINK */
+.magic-wrap{border:1px solid var(--line);border-bottom:none}
+.magic-input{width:100%;padding:14px 16px;font-size:13px;border:none;background:transparent;color:var(--navy);font-family:var(--font);outline:none}
+.magic-input::placeholder{color:var(--navy3)}
+.btn-magic{width:100%;padding:14px;background:transparent;color:var(--navy);border:1px solid var(--line);font-family:var(--font);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.btn-magic:hover{background:var(--navy);color:var(--cream);border-color:var(--navy)}
+.auth-success{display:none;padding:14px 16px;background:var(--green-bg);border:1px solid var(--green-border);font-size:13px;color:var(--green);margin-top:0;text-align:center}
+.auth-err{display:none;font-size:11px;color:#9A9892;margin-top:8px;text-align:center}
 .auth-note{font-size:11px;color:var(--navy3);margin-top:16px;text-align:center;line-height:1.6}
-.auth-success{display:none;padding:16px;background:var(--green-bg);border:1px solid var(--green-border);font-size:13px;color:var(--green);margin-top:16px;text-align:center}
-.auth-err{display:none;font-size:12px;color:#9A9892;margin-top:8px;text-align:center}
 
 /* ── DASHBOARD ── */
-.dashboard{display:none;max-width:1200px;margin:0 auto;padding:48px 48px 80px}
+.dashboard{display:none;max-width:1100px;margin:0 auto;padding:48px 48px 80px}
 
 /* HEADER */
-.dash-header{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:32px;border-bottom:1px solid var(--line);margin-bottom:48px;flex-wrap:wrap;gap:16px}
-.dash-greeting{font-family:var(--font-serif);font-size:40px;color:var(--navy);letter-spacing:-.04em;font-weight:400}
+.dash-header{padding-bottom:32px;border-bottom:1px solid var(--line);margin-bottom:40px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.dash-greeting{font-family:var(--font-serif);font-size:40px;color:var(--navy);letter-spacing:-.04em;font-weight:400;line-height:1}
 .dash-greeting span{color:var(--green)}
-.dash-meta{font-size:12px;color:var(--navy3);margin-top:6px}
-.btn-new-val{background:var(--navy);color:var(--cream);padding:10px 20px;font-size:12px;font-weight:500;letter-spacing:.04em;text-decoration:none;transition:background .15s;display:inline-block}
-.btn-new-val:hover{background:var(--green)}
+.dash-meta{font-size:12px;color:var(--navy3);margin-top:8px}
+.btn-new{background:var(--navy);color:var(--cream);padding:10px 20px;font-size:12px;font-weight:500;letter-spacing:.04em;text-decoration:none;transition:background .15s;display:inline-block}
+.btn-new:hover{background:var(--green)}
 
-/* STATS ROW */
-.dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:48px;border:1px solid var(--line)}
+/* STATS */
+.dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);margin-bottom:48px}
 .dash-stat{padding:20px 24px;border-right:1px solid var(--line)}
 .dash-stat:last-child{border-right:none}
-.dash-stat-num{font-family:var(--font-serif);font-size:32px;color:var(--navy);letter-spacing:-.03em;font-weight:400;margin-bottom:4px}
-.dash-stat-lbl{font-size:11px;color:var(--navy3);letter-spacing:.04em;text-transform:uppercase}
+.dash-stat-num{font-family:var(--font-serif);font-size:32px;color:var(--navy);letter-spacing:-.03em;font-weight:400;line-height:1;margin-bottom:4px}
+.dash-stat-num.green{color:var(--green)}
+.dash-stat-lbl{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3)}
 
 /* SECTION */
 .dash-section{margin-bottom:48px}
-.dash-section-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:2px solid var(--navy);margin-bottom:0}
+.dash-section-hd{display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:2px solid var(--navy);margin-bottom:0}
 .dash-section-title{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy)}
 .dash-section-link{font-size:11px;color:var(--green);text-decoration:none;letter-spacing:.04em}
 .dash-section-link:hover{text-decoration:underline}
 
-/* VALUATION ROWS */
-.val-row{display:grid;grid-template-columns:100px 1fr 80px 80px 100px 40px;gap:0;align-items:center;border-bottom:1px solid var(--line);padding:16px 0;transition:background .15s;cursor:pointer}
-.val-row:hover{background:var(--green-bg)}
-.val-row-head{display:grid;grid-template-columns:100px 1fr 80px 80px 100px 40px;gap:0;padding:10px 0;border-bottom:1px solid var(--line)}
-.val-col{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--navy3)}
-.val-date{font-size:12px;color:var(--navy3);font-family:var(--font-mono)}
-.val-startup{font-size:13px;font-weight:500;color:var(--navy)}
+/* VALUATIONS TABLE */
+.val-head{display:grid;grid-template-columns:90px 1fr 70px 70px 100px 80px 36px;padding:10px 0;border-bottom:1px solid var(--line)}
+.val-col{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3)}
+.val-row{display:grid;grid-template-columns:90px 1fr 70px 70px 100px 80px 36px;align-items:center;padding:16px 0;border-bottom:1px solid var(--line);cursor:pointer;transition:background .15s}
+.val-row:hover{background:var(--green-bg);padding-left:8px}
+.val-date{font-size:11px;color:var(--navy3);font-family:var(--font-mono)}
+.val-name{font-size:13px;font-weight:500;color:var(--navy)}
 .val-sector{font-size:11px;color:var(--navy3);margin-top:2px}
 .val-irr{font-family:var(--font-serif);font-size:18px;letter-spacing:-.02em}
 .val-irr.good{color:var(--green)}
-.val-irr.ok{color:#6B6B66}
-.val-irr.bad{color:#9A9892}
-.val-score{display:flex;align-items:center;gap:6px}
-.val-score-num{font-family:var(--font-serif);font-size:18px;letter-spacing:-.02em;color:var(--navy)}
-.val-score-bar{flex:1;height:3px;background:var(--line);max-width:40px}
-.val-score-fill{height:100%;background:var(--navy);transition:width .4s}
-.val-pv{font-size:13px;color:var(--navy);font-family:var(--font-mono)}
-.val-arrow{font-size:14px;color:var(--navy3)}
-.val-empty{padding:40px 0;text-align:center;font-size:13px;color:var(--navy3);border-bottom:1px solid var(--line)}
+.val-irr.ok{color:var(--navy2)}
+.val-irr.bad{color:var(--navy3)}
+.val-score{font-family:var(--font-mono);font-size:12px;color:var(--navy)}
+.val-pv{font-family:var(--font-mono);font-size:11px;color:var(--navy)}
+.val-stage{font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);padding:2px 7px;color:var(--navy3)}
+.val-arrow{color:var(--navy3);font-size:14px}
+.val-empty{padding:48px 0;text-align:center;font-size:13px;color:var(--navy3);border-bottom:1px solid var(--line)}
 .val-empty a{color:var(--green);text-decoration:none}
 
-/* CHART */
-.dash-chart-wrap{border:1px solid var(--line);padding:24px;border-top:none}
-.dash-chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.dash-chart-title{font-size:12px;color:var(--navy2);font-weight:500}
-.dash-chart-legend{display:flex;gap:16px}
-.dash-chart-leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--navy3)}
-.dash-chart-leg-dot{width:8px;height:8px;border-radius:50%}
+/* IRR CHART */
+.chart-card{border:1px solid var(--line);padding:24px;border-top:none}
+.chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.chart-title{font-size:12px;font-weight:500;color:var(--navy2)}
+.chart-legend{display:flex;gap:16px}
+.chart-leg{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--navy3)}
+.chart-leg-dot{width:8px;height:8px;border-radius:50%}
 .chart-container{height:180px;position:relative}
 
-/* NEXT STEPS */
-.next-steps{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-top:none}
-.next-step{display:flex;gap:16px;align-items:flex-start;padding:20px 24px;border-bottom:1px solid var(--line);transition:background .15s}
-.next-step:last-child{border-bottom:none}
-.next-step:hover{background:var(--green-bg)}
-.next-step-icon{width:32px;height:32px;background:var(--navy);color:var(--cream);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;font-family:var(--font-mono)}
-.next-step-body{flex:1}
-.next-step-title{font-size:13px;font-weight:500;color:var(--navy);margin-bottom:3px}
-.next-step-desc{font-size:12px;color:var(--navy3);line-height:1.5}
-.next-step-action{font-size:11px;color:var(--green);text-decoration:none;font-weight:500;flex-shrink:0;align-self:center}
+/* ANALYSIS CARDS */
+.analysis-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-top:none}
+.an-card{padding:20px 24px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.an-card:nth-child(2n){border-right:none}
+.an-card:nth-last-child(-n+2){border-bottom:none}
+.an-card-label{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);margin-bottom:6px}
+.an-card-val{font-family:var(--font-serif);font-size:22px;color:var(--navy);letter-spacing:-.02em;font-weight:400;margin-bottom:4px}
+.an-card-val.green{color:var(--green)}
+.an-card-val.warn{color:#6B6B66}
+.an-card-desc{font-size:12px;color:var(--navy2);line-height:1.6}
+
+/* INSIGHTS */
+.insights-list{display:flex;flex-direction:column;border:1px solid var(--line);border-top:none}
+.insight{display:flex;gap:14px;padding:20px 24px;border-bottom:1px solid var(--line);align-items:flex-start}
+.insight:last-child{border-bottom:none}
+.insight-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6px}
+.insight-dot.green{background:var(--green)}
+.insight-dot.warn{background:#6B6B66}
+.insight-dot.neutral{background:var(--navy3)}
+.insight-text{font-size:13px;color:var(--navy2);line-height:1.7}
+.insight-text strong{color:var(--navy)}
 
 /* PROFILE */
-.profile-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0;border:1px solid var(--line);border-top:none}
-.profile-item{padding:20px 24px;border-right:1px solid var(--line)}
+.profile-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);border-top:none}
+.profile-item{padding:18px 24px;border-right:1px solid var(--line)}
 .profile-item:last-child{border-right:none}
-.profile-item-label{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);margin-bottom:6px}
+.profile-item-label{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);margin-bottom:4px}
 .profile-item-val{font-size:14px;color:var(--navy);font-weight:500}
 
-/* EMPTY STATE */
-.dash-empty{padding:60px 0;text-align:center;border:1px solid var(--line);border-top:none}
-.dash-empty-num{font-family:var(--font-serif);font-size:48px;color:var(--line);margin-bottom:8px}
-.dash-empty-text{font-size:13px;color:var(--navy3);margin-bottom:20px}
-.dash-empty-link{display:inline-block;background:var(--navy);color:var(--cream);padding:10px 20px;font-size:12px;font-weight:500;text-decoration:none;transition:background .15s}
-.dash-empty-link:hover{background:var(--green)}
+/* NEXT STEPS */
+.next-steps{display:flex;flex-direction:column;border:1px solid var(--line);border-top:none}
+.next-step{display:flex;gap:16px;padding:18px 24px;border-bottom:1px solid var(--line);align-items:center;transition:background .15s}
+.next-step:last-child{border-bottom:none}
+.next-step:hover{background:var(--green-bg)}
+.next-step-num{width:28px;height:28px;background:var(--navy);color:var(--cream);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;font-family:var(--font-mono)}
+.next-step-body{flex:1}
+.next-step-title{font-size:13px;font-weight:500;color:var(--navy);margin-bottom:2px}
+.next-step-desc{font-size:11px;color:var(--navy3)}
+.next-step-link{font-size:11px;color:var(--green);text-decoration:none;font-weight:500;white-space:nowrap}
 
-/* RESPONSIVE */
+/* LOADING */
+.loading{display:flex;align-items:center;justify-content:center;min-height:200px;font-size:12px;color:var(--navy3);letter-spacing:.06em;text-transform:uppercase}
+
 @media(max-width:900px){
   .topbar,.dashboard{padding-left:24px;padding-right:24px}
   .dash-stats{grid-template-columns:1fr 1fr}
   .dash-stat{border-bottom:1px solid var(--line)}
   .profile-grid{grid-template-columns:1fr 1fr}
   .profile-item{border-bottom:1px solid var(--line)}
-  .val-row,.val-row-head{grid-template-columns:80px 1fr 60px 40px}
-  .val-pv,.val-score{display:none}
+  .analysis-grid{grid-template-columns:1fr}
+  .an-card{border-right:none}
+  .val-head,.val-row{grid-template-columns:80px 1fr 60px 60px}
+  .val-pv,.val-stage{display:none}
 }
 </style>
 </head>
@@ -147,22 +177,30 @@ body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size
 <!-- TOPBAR -->
 <div class="topbar">
   <a href="index.html" class="logo">VC<span>Ready</span></a>
-  <div class="topbar-right">
-    <div class="user-badge">
+  <div class="topbar-right" id="topbar-right">
+    <div class="user-info" id="user-info" style="display:none">
       <div class="user-avatar" id="user_avatar">—</div>
-      <span id="user_name">Loading...</span>
+      <span id="user_email" style="font-size:11px;color:var(--navy3)"></span>
     </div>
-    <button class="btn-signout" onclick="signOut()" id="btn_signout">Sign out</button>
+    <button class="btn-signout" onclick="signOut()" id="btn_signout" style="display:none">Sign out</button>
   </div>
 </div>
 
 <!-- AUTH SCREEN -->
-<div class="auth-screen" id="auth-screen">
+<div class="auth-screen" id="auth-screen" style="display:none">
   <div class="auth-card">
-    <h1 class="auth-title">Your founder<br>dashboard.</h1>
-    <p class="auth-sub">Sign in to save your valuations, track your metrics over time, and get personalized recommendations.</p>
+    <div class="auth-eyebrow">Your founder space</div>
+    <h1 class="auth-title">Sign in to<br>VC Ready.</h1>
+    <p class="auth-sub">Save your valuations, track your metrics over time, and get personalized recommendations.</p>
 
-    <!-- Google OAuth -->
+    <div class="auth-benefits">
+      <div class="auth-benefit">Your valuations saved automatically</div>
+      <div class="auth-benefit">IRR & score progression tracked over time</div>
+      <div class="auth-benefit">Personalized recommendations after each analysis</div>
+      <div class="auth-benefit">Free — always</div>
+    </div>
+
+    <!-- Google — primary CTA -->
     <button class="btn-google" onclick="signInGoogle()">
       <svg class="google-icon" viewBox="0 0 24 24">
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -179,18 +217,18 @@ body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size
       <div class="auth-divider-line"></div>
     </div>
 
-    <!-- Magic Link -->
-    <div class="auth-field">
-      <input type="email" id="auth_email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')sendMagicLink()">
+    <div class="magic-wrap">
+      <input type="email" class="magic-input" id="auth_email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')sendMagicLink()">
     </div>
     <button class="btn-magic" onclick="sendMagicLink()">Send magic link →</button>
-    <div class="auth-success" id="auth_success">
-      ✓ Check your inbox — we sent you a sign-in link.
-    </div>
+    <div class="auth-success" id="auth_success">✓ Check your inbox — sign-in link sent.</div>
     <div class="auth-err" id="auth_err"></div>
-    <p class="auth-note">No password. No spam. Just a sign-in link sent to your email.</p>
+    <p class="auth-note">No password. No spam. Just a secure link in your inbox.</p>
   </div>
 </div>
+
+<!-- LOADING -->
+<div class="loading" id="loading">Loading your dashboard...</div>
 
 <!-- DASHBOARD -->
 <div class="dashboard" id="dashboard">
@@ -198,17 +236,17 @@ body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size
   <!-- HEADER -->
   <div class="dash-header">
     <div>
-      <div class="dash-greeting">Good to see you, <span id="dash_name">—</span></div>
-      <div class="dash-meta" id="dash_meta">Member since —</div>
+      <div class="dash-greeting">Hello, <span id="dash_name">—</span></div>
+      <div class="dash-meta" id="dash_meta">VCReady member</div>
     </div>
-    <a href="valuation.html" class="btn-new-val">+ New Valuation</a>
+    <a href="valuation.html" class="btn-new">+ New valuation</a>
   </div>
 
   <!-- STATS -->
   <div class="dash-stats">
     <div class="dash-stat">
-      <div class="dash-stat-num" id="stat_vals">0</div>
-      <div class="dash-stat-lbl">Valuations run</div>
+      <div class="dash-stat-num" id="stat_count">—</div>
+      <div class="dash-stat-lbl">Valuations</div>
     </div>
     <div class="dash-stat">
       <div class="dash-stat-num" id="stat_irr">—</div>
@@ -216,276 +254,311 @@ body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size
     </div>
     <div class="dash-stat">
       <div class="dash-stat-num" id="stat_score">—</div>
-      <div class="dash-stat-lbl">Best investor score</div>
+      <div class="dash-stat-lbl">Best score</div>
     </div>
     <div class="dash-stat">
       <div class="dash-stat-num" id="stat_pv">—</div>
-      <div class="dash-stat-lbl">Highest valuation (PV)</div>
+      <div class="dash-stat-lbl">Highest valuation</div>
     </div>
   </div>
 
   <!-- VALUATIONS -->
   <div class="dash-section">
-    <div class="dash-section-header">
+    <div class="dash-section-hd">
       <span class="dash-section-title">My Valuations</span>
       <a href="valuation.html" class="dash-section-link">Run a new valuation →</a>
     </div>
-    <div class="val-row-head">
+    <div class="val-head">
       <span class="val-col">Date</span>
       <span class="val-col">Startup</span>
       <span class="val-col">IRR</span>
       <span class="val-col">Score</span>
-      <span class="val-col">PV Today</span>
+      <span class="val-col">Valuation</span>
+      <span class="val-col">Stage</span>
       <span></span>
     </div>
-    <div id="val_list">
-      <div class="val-empty">No valuations yet. <a href="valuation.html">Run your first one →</a></div>
-    </div>
+    <div id="val_list"></div>
   </div>
 
-  <!-- PROGRESSION CHART -->
+  <!-- IRR PROGRESSION -->
   <div class="dash-section" id="chart_section" style="display:none">
-    <div class="dash-section-header">
+    <div class="dash-section-hd">
       <span class="dash-section-title">IRR Progression</span>
     </div>
-    <div class="dash-chart-wrap">
-      <div class="dash-chart-header">
-        <span class="dash-chart-title">Your IRR over time</span>
-        <div class="dash-chart-legend">
-          <div class="dash-chart-leg-item"><div class="dash-chart-leg-dot" style="background:var(--navy)"></div> IRR</div>
-          <div class="dash-chart-leg-item"><div class="dash-chart-leg-dot" style="background:var(--green)"></div> VC threshold (25%)</div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <span class="chart-title">Your IRR over time</span>
+        <div class="chart-legend">
+          <div class="chart-leg"><div class="chart-leg-dot" style="background:var(--navy)"></div>Your IRR</div>
+          <div class="chart-leg"><div class="chart-leg-dot" style="background:var(--green)"></div>VC threshold (25%)</div>
         </div>
       </div>
-      <div class="chart-container">
-        <canvas id="irrChart"></canvas>
-      </div>
+      <div class="chart-container"><canvas id="irrChart"></canvas></div>
     </div>
   </div>
 
-  <!-- PROFILE -->
+  <!-- ANALYSIS -->
+  <div class="dash-section" id="analysis_section" style="display:none">
+    <div class="dash-section-hd">
+      <span class="dash-section-title">Key metrics analysis</span>
+    </div>
+    <div class="analysis-grid" id="analysis_grid"></div>
+  </div>
+
+  <!-- INSIGHTS -->
+  <div class="dash-section" id="insights_section" style="display:none">
+    <div class="dash-section-hd">
+      <span class="dash-section-title">Personalized insights</span>
+    </div>
+    <div class="insights-list" id="insights_list"></div>
+  </div>
+
+  <!-- FOUNDER PROFILE -->
   <div class="dash-section">
-    <div class="dash-section-header">
-      <span class="dash-section-title">Founder Profile</span>
+    <div class="dash-section-hd">
+      <span class="dash-section-title">Founder profile</span>
       <a href="valuation.html" class="dash-section-link">Update →</a>
     </div>
     <div class="profile-grid" id="profile_grid">
-      <div class="profile-item">
-        <div class="profile-item-label">Startup</div>
-        <div class="profile-item-val" id="p_startup">—</div>
-      </div>
-      <div class="profile-item">
-        <div class="profile-item-label">Sector</div>
-        <div class="profile-item-val" id="p_sector">—</div>
-      </div>
-      <div class="profile-item">
-        <div class="profile-item-label">Stage</div>
-        <div class="profile-item-val" id="p_stage">—</div>
-      </div>
-      <div class="profile-item">
-        <div class="profile-item-label">Country</div>
-        <div class="profile-item-val" id="p_country">—</div>
-      </div>
+      <div class="profile-item"><div class="profile-item-label">Startup</div><div class="profile-item-val" id="p_startup">—</div></div>
+      <div class="profile-item"><div class="profile-item-label">Sector</div><div class="profile-item-val" id="p_sector">—</div></div>
+      <div class="profile-item"><div class="profile-item-label">Stage</div><div class="profile-item-val" id="p_stage">—</div></div>
+      <div class="profile-item"><div class="profile-item-label">Country</div><div class="profile-item-val" id="p_country">—</div></div>
     </div>
   </div>
 
   <!-- NEXT STEPS -->
   <div class="dash-section">
-    <div class="dash-section-header">
+    <div class="dash-section-hd">
       <span class="dash-section-title">Recommended next steps</span>
     </div>
-    <div class="next-steps" id="next_steps">
-      <!-- Populated by JS -->
-    </div>
+    <div class="next-steps" id="next_steps"></div>
   </div>
 
-</div><!-- /dashboard -->
+</div>
 
 <script>
-// ── SUPABASE CONFIG ──
-const SUPABASE_URL='https://fvbrzttvdvxhbdkjknje.supabase.co';
-const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YnJ6dHR2ZHZ4aGJka2prbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzgwNTAsImV4cCI6MjA5MDcxNDA1MH0.tcE5PlgMsu7suLAzN3uT5VjKnFhc25qkJJMKkbNmtvI';
+const SUPA_URL='https://fvbrzttvdvxhbdkjknje.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YnJ6dHR2ZHZ4aGJka2prbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzgwNTAsImV4cCI6MjA5MDcxNDA1MH0.tcE5PlgMsu7suLAzN3uT5VjKnFhc25qkJJMKkbNmtvI';
 
-// ── SUPABASE CLIENT (lightweight) ──
-const sb={
-  async signInWithOtp(email){
-    return fetch(`${SUPABASE_URL}/auth/v1/otp`,{
-      method:'POST',
-      headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({email,create_user:true})
-    });
-  },
-  async signInWithGoogle(){
-    const res=await fetch(`${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.origin+'/dashboard.html')}`,{
-      headers:{'apikey':SUPABASE_KEY}
-    });
-    return res;
-  },
-  async getSession(){
-    const token=localStorage.getItem('sb_access_token');
-    if(!token) return null;
-    const res=await fetch(`${SUPABASE_URL}/auth/v1/user`,{
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+token}
-    });
-    if(!res.ok){localStorage.removeItem('sb_access_token');return null;}
-    return res.json();
-  },
-  async signOut(){
-    const token=localStorage.getItem('sb_access_token');
-    if(token) await fetch(`${SUPABASE_URL}/auth/v1/logout`,{
-      method:'POST',
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+token}
-    });
-    localStorage.removeItem('sb_access_token');
-    localStorage.removeItem('sb_refresh_token');
-  },
-  async query(table,filter=''){
-    const token=localStorage.getItem('sb_access_token')||SUPABASE_KEY;
-    const res=await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}&order=created_at.desc`,{
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+token}
-    });
-    if(!res.ok) return [];
-    return res.json();
-  }
-};
-
-// ── HANDLE AUTH CALLBACK (magic link / OAuth) ──
-function handleAuthCallback(){
-  const hash=window.location.hash;
-  if(hash.includes('access_token')){
-    const params=new URLSearchParams(hash.substring(1));
-    const token=params.get('access_token');
-    const refresh=params.get('refresh_token');
-    if(token){
-      localStorage.setItem('sb_access_token',token);
-      if(refresh) localStorage.setItem('sb_refresh_token',refresh);
-      window.history.replaceState({},document.title,window.location.pathname);
-    }
-  }
+// ── TOKEN MANAGEMENT ──
+function saveTokens(access,refresh){
+  localStorage.setItem('sb_access',access);
+  if(refresh) localStorage.setItem('sb_refresh',refresh);
+  // Store expiry (1 hour from now)
+  localStorage.setItem('sb_expiry',Date.now()+3500000);
 }
 
-// ── AUTH FUNCTIONS ──
+function getToken(){return localStorage.getItem('sb_access');}
+
+function clearTokens(){
+  localStorage.removeItem('sb_access');
+  localStorage.removeItem('sb_refresh');
+  localStorage.removeItem('sb_expiry');
+}
+
+async function refreshToken(){
+  const refresh=localStorage.getItem('sb_refresh');
+  if(!refresh) return null;
+  try{
+    const res=await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`,{
+      method:'POST',
+      headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({refresh_token:refresh})
+    });
+    if(!res.ok){clearTokens();return null;}
+    const d=await res.json();
+    saveTokens(d.access_token,d.refresh_token);
+    return d.access_token;
+  }catch{clearTokens();return null;}
+}
+
+async function getValidToken(){
+  const expiry=parseInt(localStorage.getItem('sb_expiry')||'0');
+  if(Date.now()>expiry-60000){
+    return await refreshToken();
+  }
+  return getToken();
+}
+
+// ── AUTH CALLBACK — handle magic link & OAuth redirect ──
+function handleCallback(){
+  const hash=window.location.hash;
+  if(hash.includes('access_token')){
+    const p=new URLSearchParams(hash.substring(1));
+    const access=p.get('access_token');
+    const refresh=p.get('refresh_token');
+    if(access){
+      saveTokens(access,refresh);
+      window.history.replaceState({},document.title,window.location.pathname);
+      return true;
+    }
+  }
+  return false;
+}
+
+// ── SUPABASE CALLS ──
+async function getUser(){
+  const token=await getValidToken();
+  if(!token) return null;
+  try{
+    const res=await fetch(`${SUPA_URL}/auth/v1/user`,{
+      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+token}
+    });
+    if(!res.ok){clearTokens();return null;}
+    return res.json();
+  }catch{return null;}
+}
+
+async function dbQuery(table,filter='',limit=50){
+  const token=await getValidToken();
+  const auth=token?'Bearer '+token:'Bearer '+SUPA_KEY;
+  try{
+    const res=await fetch(`${SUPA_URL}/rest/v1/${table}?${filter}&order=created_at.desc&limit=${limit}`,{
+      headers:{'apikey':SUPA_KEY,'Authorization':auth}
+    });
+    if(!res.ok) return[];
+    return res.json();
+  }catch{return[];}
+}
+
+// ── AUTH ACTIONS ──
 async function sendMagicLink(){
   const email=document.getElementById('auth_email').value.trim();
   const err=document.getElementById('auth_err');
   const succ=document.getElementById('auth_success');
-  if(!email||!email.includes('@')){err.textContent='Please enter a valid email.';err.style.display='block';return;}
   err.style.display='none';
+  if(!email||!email.includes('@')){err.textContent='Please enter a valid email.';err.style.display='block';return;}
   try{
-    const res=await sb.signInWithOtp(email);
-    if(res.ok){
-      succ.style.display='block';
-    } else {
-      const d=await res.json();
-      err.textContent=d.msg||'Something went wrong. Try again.';
-      err.style.display='block';
-    }
-  }catch(e){
-    err.textContent='Connection error. Please try again.';
-    err.style.display='block';
-  }
+    const res=await fetch(`${SUPA_URL}/auth/v1/otp`,{
+      method:'POST',
+      headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({email,create_user:true})
+    });
+    succ.style.display='block';
+  }catch(e){err.textContent='Something went wrong. Try again.';err.style.display='block';}
 }
 
-async function signInGoogle(){
-  window.location.href=`${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.origin+'/dashboard.html')}`;
+function signInGoogle(){
+  const redirect=encodeURIComponent(window.location.origin+'/dashboard.html');
+  window.location.href=`${SUPA_URL}/auth/v1/authorize?provider=google&redirect_to=${redirect}`;
 }
 
 async function signOut(){
-  await sb.signOut();
-  document.getElementById('dashboard').style.display='none';
-  document.getElementById('auth-screen').style.display='flex';
+  const token=getToken();
+  if(token){
+    try{await fetch(`${SUPA_URL}/auth/v1/logout`,{method:'POST',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+token}});}catch{}
+  }
+  clearTokens();
+  showAuth();
 }
 
-// ── FORMAT HELPERS ──
-function fmt(n){if(!n&&n!==0)return'—';if(Math.abs(n)>=1000000)return'$'+(n/1000000).toFixed(2)+'M';if(Math.abs(n)>=1000)return'$'+(n/1000).toFixed(1)+'K';return'$'+Math.round(n).toLocaleString();}
-function fmtDate(d){if(!d)return'—';const dt=new Date(d);return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
+// ── UI HELPERS ──
+function fmtN(n){if(!n&&n!==0)return'—';if(Math.abs(n)>=1000000)return'$'+(n/1000000).toFixed(2)+'M';if(Math.abs(n)>=1000)return'$'+(n/1000).toFixed(1)+'K';return'$'+Math.round(n);}
+function fmtD(s){if(!s)return'—';const d=new Date(s);return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
+function cleanName(email){const raw=email.split('@')[0];return raw.replace(/[._-]/g,' ').split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');}
+
+function showAuth(){
+  document.getElementById('loading').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('user-info').style.display='none';
+  document.getElementById('btn_signout').style.display='none';
+}
+
+function showDash(){
+  document.getElementById('loading').style.display='none';
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+  document.getElementById('user-info').style.display='flex';
+  document.getElementById('btn_signout').style.display='block';
+}
 
 // ── LOAD DASHBOARD ──
 async function loadDashboard(user){
-  document.getElementById('auth-screen').style.display='none';
-  document.getElementById('dashboard').style.display='block';
+  showDash();
 
-  // User info
   const email=user.email||'';
-  const rawName=user.user_metadata?.full_name||user.user_metadata?.name||email.split('@')[0]||'Founder';
-  const name=rawName.replace(/[._-]/g,' ').split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
+  const name=user.user_metadata?.full_name||user.user_metadata?.name||cleanName(email);
+  const firstName=name.split(' ')[0];
   const initials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-  document.getElementById('user_avatar').textContent=initials;
-  document.getElementById('user_name').textContent=email;
-  document.getElementById('dash_name').textContent=name.split(' ')[0];
-  document.getElementById('dash_meta').textContent=`Member since ${fmtDate(user.created_at)}`;
 
-  // Load founder data from Supabase
-  let founders=[];
-  try{
-    founders=await sb.query('founders',`email=eq.${encodeURIComponent(email)}`);
-  }catch(e){}
+  document.getElementById('user_avatar').textContent=initials;
+  document.getElementById('user_email').textContent=email;
+  document.getElementById('dash_name').textContent=firstName;
+  document.getElementById('dash_meta').textContent=`Member since ${fmtD(user.created_at)}`;
+
+  // Load data in parallel
+  const [valuations,founders]=await Promise.all([
+    dbQuery('valuations',`user_id=eq.${user.id}`),
+    dbQuery('founders',`email=eq.${encodeURIComponent(email)}`)
+  ]);
 
   // Profile
-  if(founders.length>0){
-    const f=founders[0];
+  const f=founders[0];
+  if(f){
     document.getElementById('p_startup').textContent=f.startup||'—';
     document.getElementById('p_sector').textContent=f.sector||'—';
-    document.getElementById('p_stage').textContent=f.stage||'—';
-    document.getElementById('p_country').textContent=f.country||'—';
+    document.getElementById('p_stage').textContent=f.stade||f.stage||'—';
+    document.getElementById('p_country').textContent=f.country||f.pays||'—';
   }
 
-  // Load saved valuations
-  let valuations=[];
-  try{
-    valuations=await sb.query('valuations',`user_id=eq.${user.id}`);
-  }catch(e){}
-
-  // Stats
-  document.getElementById('stat_vals').textContent=valuations.length||founders.length||0;
-
+  // Render all sections
+  renderStats(valuations);
+  renderValuations(valuations);
+  if(valuations.length>=2) renderChart(valuations);
   if(valuations.length>0){
-    const bestIrr=Math.max(...valuations.map(v=>v.irr||0));
-    const bestScore=Math.max(...valuations.map(v=>v.score||0));
-    const bestPv=Math.max(...valuations.map(v=>v.pv||0));
-    document.getElementById('stat_irr').textContent=bestIrr>0?bestIrr.toFixed(1)+'%':'—';
-    document.getElementById('stat_score').textContent=bestScore>0?bestScore+'/100':'—';
-    document.getElementById('stat_pv').textContent=fmt(bestPv);
-    renderValuations(valuations);
-    renderChart(valuations);
-  } else if(founders.length>0){
-    // Show data from founders table as proxy
-    document.getElementById('stat_vals').textContent=founders.length;
+    renderAnalysis(valuations);
+    renderInsights(valuations,f);
   }
-
-  renderNextSteps(valuations, founders);
+  renderNextSteps(valuations,f);
 }
 
-function renderValuations(valuations){
-  if(!valuations.length){return;}
-  const list=document.getElementById('val_list');
-  list.innerHTML=valuations.map(v=>{
+function renderStats(vals){
+  document.getElementById('stat_count').textContent=vals.length||'0';
+  if(!vals.length) return;
+  const bestIrr=Math.max(...vals.map(v=>v.irr||0));
+  const bestScore=Math.max(...vals.map(v=>v.score||0));
+  const bestPv=Math.max(...vals.map(v=>v.pv||0));
+  const irrEl=document.getElementById('stat_irr');
+  irrEl.textContent=bestIrr>0?bestIrr.toFixed(1)+'%':'—';
+  irrEl.className='dash-stat-num'+(bestIrr>=25?' green':'');
+  document.getElementById('stat_score').textContent=bestScore>0?bestScore+'/100':'—';
+  document.getElementById('stat_pv').textContent=bestPv>0?fmtN(bestPv):'—';
+}
+
+function renderValuations(vals){
+  if(!vals.length){
+    document.getElementById('val_list').innerHTML=`<div class="val-empty">No valuations yet. <a href="valuation.html">Run your first one →</a></div>`;
+    return;
+  }
+  document.getElementById('val_list').innerHTML=vals.map(v=>{
     const irrClass=v.irr>=40?'good':v.irr>=25?'ok':'bad';
-    const scorePct=((v.score||0)/100)*100;
     return`<div class="val-row" onclick="window.location='valuation.html'">
-      <span class="val-date">${fmtDate(v.created_at)}</span>
-      <div><div class="val-startup">${v.startup||'—'}</div><div class="val-sector">${v.sector||''}</div></div>
+      <span class="val-date">${fmtD(v.created_at)}</span>
+      <div><div class="val-name">${v.startup||'—'}</div><div class="val-sector">${v.sector||''}</div></div>
       <span class="val-irr ${irrClass}">${v.irr?v.irr.toFixed(1)+'%':'—'}</span>
-      <div class="val-score"><span class="val-score-num">${v.score||'—'}</span></div>
-      <span class="val-pv">${fmt(v.pv)}</span>
+      <span class="val-score">${v.score||'—'}</span>
+      <span class="val-pv">${fmtN(v.pv)}</span>
+      <span class="val-stage">${v.stade||v.stage||'—'}</span>
       <span class="val-arrow">→</span>
     </div>`;
   }).join('');
 }
 
-function renderChart(valuations){
-  if(valuations.length<2) return;
+let irrChartInst=null;
+function renderChart(vals){
   document.getElementById('chart_section').style.display='block';
-  const sorted=valuations.slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
-  const labels=sorted.map(v=>fmtDate(v.created_at));
-  const data=sorted.map(v=>v.irr||0);
+  const sorted=vals.slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  if(irrChartInst){irrChartInst.destroy();}
   const ctx=document.getElementById('irrChart');
-  new Chart(ctx,{
+  irrChartInst=new Chart(ctx,{
     type:'line',
     data:{
-      labels,
+      labels:sorted.map(v=>fmtD(v.created_at)),
       datasets:[
-        {label:'IRR',data,borderColor:'#12120F',borderWidth:2,pointRadius:4,pointBackgroundColor:'#12120F',fill:false,tension:.3},
-        {label:'VC Threshold',data:data.map(()=>25),borderColor:'#1A6B47',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false}
+        {label:'IRR',data:sorted.map(v=>v.irr||0),borderColor:'#12120F',borderWidth:2,pointRadius:5,pointBackgroundColor:'#12120F',fill:false,tension:.3},
+        {label:'VC threshold',data:sorted.map(()=>25),borderColor:'#1A6B47',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false}
       ]
     },
     options:{
@@ -499,51 +572,122 @@ function renderChart(valuations){
   });
 }
 
-function renderNextSteps(valuations, founders){
+function renderAnalysis(vals){
+  document.getElementById('analysis_section').style.display='block';
+  const latest=vals[0];
+  const best=vals.reduce((b,v)=>(!b||v.irr>b.irr)?v:b,null);
+  const avgIrr=vals.reduce((s,v)=>s+(v.irr||0),0)/vals.length;
+  const avgScore=vals.reduce((s,v)=>s+(v.score||0),0)/vals.length;
+  const trend=vals.length>=2?(vals[0].irr||0)-(vals[vals.length-1].irr||0):null;
+
+  document.getElementById('analysis_grid').innerHTML=`
+    <div class="an-card">
+      <div class="an-card-label">Latest IRR</div>
+      <div class="an-card-val ${(latest?.irr||0)>=25?'green':'warn'}">${latest?.irr?latest.irr.toFixed(1)+'%':'—'}</div>
+      <div class="an-card-desc">${(latest?.irr||0)>=40?'Excellent — top quartile VC return profile.':(latest?.irr||0)>=25?'Above the 25% VC threshold. Solid.':'Below 25% VC threshold. Use the What-If simulator to identify levers.'}</div>
+    </div>
+    <div class="an-card">
+      <div class="an-card-label">Latest Investor Score</div>
+      <div class="an-card-val ${(latest?.score||0)>=70?'green':'warn'}">${latest?.score||'—'}<span style="font-size:14px;color:var(--navy3)">/100</span></div>
+      <div class="an-card-desc">${(latest?.score||0)>=70?'Strong profile — above the 70/100 investor-ready threshold.':(latest?.score||0)>=50?'Approaching investor-ready. Work on CoCa and sector multiple.':'Score needs improvement. Focus on revenue growth and exit multiple.'}</div>
+    </div>
+    <div class="an-card">
+      <div class="an-card-label">Average IRR (all runs)</div>
+      <div class="an-card-val ${avgIrr>=25?'green':'warn'}">${avgIrr.toFixed(1)}%</div>
+      <div class="an-card-desc">Across ${vals.length} valuation${vals.length>1?'s':''}. ${avgIrr>=25?'Consistently above threshold.':'Run the What-If simulator to explore scenarios above 25%.'}</div>
+    </div>
+    <div class="an-card">
+      <div class="an-card-label">IRR trend</div>
+      <div class="an-card-val ${trend===null?'':trend>0?'green':'warn'}">${trend===null?'—':trend>0?'+'+trend.toFixed(1)+'%':trend.toFixed(1)+'%'}</div>
+      <div class="an-card-desc">${trend===null?'Run at least 2 valuations to see your trend.':trend>0?'Your IRR is improving across runs. Keep iterating.':trend===0?'IRR stable across runs.':'IRR declining — revisit your exit assumptions or revenue projections.'}</div>
+    </div>
+    <div class="an-card">
+      <div class="an-card-label">Best CoCa achieved</div>
+      <div class="an-card-val ${(vals.reduce((b,v)=>Math.max(b,v.coc||0),0))>=3?'green':'warn'}">${vals.reduce((b,v)=>Math.max(b,v.coc||0),0).toFixed(1)}×</div>
+      <div class="an-card-desc">VC threshold: 3×. ${vals.reduce((b,v)=>Math.max(b,v.coc||0),0)>=5?'Excellent CoCa — top-tier return profile.':vals.reduce((b,v)=>Math.max(b,v.coc||0),0)>=3?'Above threshold. Solid investor returns.':'Below 3× — increase exit valuation or reduce investment size.'}</div>
+    </div>
+    <div class="an-card">
+      <div class="an-card-label">Highest valuation (PV)</div>
+      <div class="an-card-val">${fmtN(vals.reduce((b,v)=>Math.max(b,v.pv||0),0))}</div>
+      <div class="an-card-desc">Your strongest valuation result. Use the sector comparables to benchmark this against similar companies.</div>
+    </div>`;
+}
+
+function renderInsights(vals,founder){
+  document.getElementById('insights_section').style.display='block';
+  const latest=vals[0];
+  const items=[];
+
+  if((latest?.irr||0)<25)
+    items.push({dot:'warn',text:`<strong>IRR below VC threshold.</strong> Your latest IRR is ${latest?.irr?.toFixed(1)||'—'}%. Use the <a href="valuation.html" style="color:var(--green)">What-If Simulator</a> to test how changing your exit year, revenue projections, or required return impacts your IRR.`});
+  else
+    items.push({dot:'green',text:`<strong>IRR above VC threshold at ${latest?.irr?.toFixed(1)||'—'}%.</strong> You're in a fundable zone. Focus now on strengthening your pitch narrative and data room.`});
+
+  if((latest?.score||0)<60)
+    items.push({dot:'warn',text:`<strong>Investor Score of ${latest?.score||'—'}/100 needs work.</strong> The score weighs IRR (30pts), CoCa (20pts), revenue growth (20pts), sector (10pts), team/stage (10pts), and scenario consistency (10pts). Review each component carefully.`});
+  else
+    items.push({dot:'green',text:`<strong>Investor Score of ${latest?.score||'—'}/100 is solid.</strong> You're above the 60/100 threshold. To push above 80, focus on improving your CoCa multiple and ensuring scenario consistency.`});
+
+  if(vals.length===1)
+    items.push({dot:'neutral',text:`<strong>Run multiple scenarios.</strong> You've done 1 valuation. Run 2-3 more with different assumptions (optimistic, pessimistic, base case) to understand the range of outcomes and identify your key value drivers.`});
+
+  if(!founder||!founder.sector)
+    items.push({dot:'neutral',text:`<strong>Check sector comparables.</strong> Visit the <a href="comparables.html" style="color:var(--green)">Sector Comparables</a> page to benchmark your valuation against real deals in your geography and sector.`});
+
+  items.push({dot:'neutral',text:`<strong>Prepare your data room.</strong> Investors will ask for 35 documents during due diligence. Use the <a href="dataroom.html" style="color:var(--green)">Data Room Checklist</a> to see where you stand.`});
+
+  document.getElementById('insights_list').innerHTML=items.map(i=>`
+    <div class="insight">
+      <div class="insight-dot ${i.dot}"></div>
+      <div class="insight-text">${i.text}</div>
+    </div>`).join('');
+}
+
+function renderNextSteps(vals,founder){
   const steps=[];
-  const lastVal=valuations[0];
-  const founder=founders[0];
-
-  if(!founders.length&&!valuations.length){
-    steps.push({icon:'01',title:'Run your first valuation',desc:'Calculate your IRR, EV, CoCa and Investor Score using the VC method.',link:'valuation.html',linkText:'Start →'});
-    steps.push({icon:'02',title:'Check your metrics',desc:'Get sector-specific KPIs that investors will ask about.',link:'metrics.html',linkText:'Calculate →'});
-    steps.push({icon:'03',title:'Book an expert session',desc:'30 minutes to sharpen your pitch and refine your numbers.',link:'https://calendly.com/yacine-chikhar/30min',linkText:'Book →'});
+  if(!vals.length){
+    steps.push({num:'01',title:'Run your first valuation',desc:'Calculate your IRR, EV, CoCa and Investor Score using the VC method.',link:'valuation.html',linkText:'Start →'});
+    steps.push({num:'02',title:'Check your sector metrics',desc:'Get investor-grade KPIs for your sector.',link:'metrics.html',linkText:'Calculate →'});
+    steps.push({num:'03',title:'Score your pitch',desc:'18 questions, score /100, actionable feedback.',link:'pitch.html',linkText:'Score →'});
+    steps.push({num:'04',title:'Book an expert session',desc:'30 min to sharpen your pitch and refine your numbers.',link:'https://calendly.com/yacine-chikhar/30min',linkText:'Book →'});
   } else {
-    if(lastVal&&lastVal.irr<25){
-      steps.push({icon:'↑',title:'Improve your IRR',desc:`Your last IRR was ${lastVal.irr?.toFixed(1)}% — below the VC threshold of 25%. Focus on increasing revenue projections or adjusting your exit timeline.`,link:'valuation.html',linkText:'Recalculate →'});
-    }
-    if(lastVal&&lastVal.score<50){
-      steps.push({icon:'↑',title:'Improve your Investor Score',desc:`Your score of ${lastVal.score}/100 has room to grow. Check your CoCa, churn rate, and sector multiple.`,link:'valuation.html',linkText:'Simulate →'});
-    }
-    steps.push({icon:'②',title:'Run your sector metrics',desc:'Get unit economics, runway and growth health analysis for your sector.',link:'metrics.html',linkText:'Calculate →'});
-    steps.push({icon:'③',title:'Book an expert session',desc:'Turn your numbers into a compelling investor narrative.',link:'https://calendly.com/yacine-chikhar/30min',linkText:'Book →'});
+    if((vals[0]?.irr||0)<25) steps.push({num:'↑',title:'Improve your IRR',desc:`Your latest IRR is ${vals[0]?.irr?.toFixed(1)||'—'}% — below the VC threshold of 25%. Use the What-If simulator.`,link:'valuation.html',linkText:'Simulate →'});
+    steps.push({num:'②',title:'Score your pitch',desc:'Benchmark your pitch readiness across 6 VC criteria.',link:'pitch.html',linkText:'Score →'});
+    steps.push({num:'③',title:'Check your data room',desc:'35 documents every investor will request. Are you ready?',link:'dataroom.html',linkText:'Check →'});
+    steps.push({num:'④',title:'Browse sector comparables',desc:'Benchmark your valuation against real deals.',link:'comparables.html',linkText:'Browse →'});
+    steps.push({num:'⑤',title:'Book an expert session',desc:'Turn your numbers into a compelling investor narrative.',link:'https://calendly.com/yacine-chikhar/30min',linkText:'Book →'});
   }
-
   document.getElementById('next_steps').innerHTML=steps.map(s=>`
     <div class="next-step">
-      <div class="next-step-icon">${s.icon}</div>
+      <div class="next-step-num">${s.num}</div>
       <div class="next-step-body">
         <div class="next-step-title">${s.title}</div>
         <div class="next-step-desc">${s.desc}</div>
       </div>
-      <a href="${s.link}" class="next-step-action">${s.linkText}</a>
+      <a href="${s.link}" class="next-step-link">${s.linkText}</a>
     </div>`).join('');
 }
 
 // ── INIT ──
 async function init(){
-  handleAuthCallback();
-  try{
-    const user=await sb.getSession();
-    if(user) loadDashboard(user);
-    else {
-      document.getElementById('auth-screen').style.display='flex';
-      document.getElementById('dashboard').style.display='none';
-    }
-  }catch(e){
-    document.getElementById('auth-screen').style.display='flex';
+  // 1. Handle OAuth/magic link callback first
+  handleCallback();
+
+  // 2. Try to get valid session
+  const user=await getUser();
+
+  if(user){
+    loadDashboard(user);
+  } else {
+    showAuth();
   }
 }
+
+// Auto-refresh token every 45 minutes
+setInterval(async()=>{
+  const token=getToken();
+  if(token) await refreshToken();
+},45*60*1000);
 
 init();
 </script>
