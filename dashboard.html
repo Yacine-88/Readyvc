@@ -405,90 +405,11 @@ body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 const SUPA_URL='https://fvbrzttvdvxhbdkjknje.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YnJ6dHR2ZHZ4aGJka2prbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzgwNTAsImV4cCI6MjA5MDcxNDA1MH0.tcE5PlgMsu7suLAzN3uT5VjKnFhc25qkJJMKkbNmtvI';
-
-// ── TOKEN MANAGEMENT ──
-function saveTokens(access,refresh){
-  localStorage.setItem('sb_access',access);
-  if(refresh) localStorage.setItem('sb_refresh',refresh);
-  // Store expiry (1 hour from now)
-  localStorage.setItem('sb_expiry',Date.now()+3500000);
-}
-
-function getToken(){return localStorage.getItem('sb_access');}
-
-function clearTokens(){
-  localStorage.removeItem('sb_access');
-  localStorage.removeItem('sb_refresh');
-  localStorage.removeItem('sb_expiry');
-}
-
-async function refreshToken(){
-  const refresh=localStorage.getItem('sb_refresh');
-  if(!refresh) return null;
-  try{
-    const res=await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`,{
-      method:'POST',
-      headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({refresh_token:refresh})
-    });
-    if(!res.ok){clearTokens();return null;}
-    const d=await res.json();
-    saveTokens(d.access_token,d.refresh_token);
-    return d.access_token;
-  }catch{clearTokens();return null;}
-}
-
-async function getValidToken(){
-  const expiry=parseInt(localStorage.getItem('sb_expiry')||'0');
-  if(Date.now()>expiry-60000){
-    return await refreshToken();
-  }
-  return getToken();
-}
-
-// ── AUTH CALLBACK — handle magic link & OAuth redirect ──
-function handleCallback(){
-  const hash=window.location.hash;
-  if(hash.includes('access_token')){
-    const p=new URLSearchParams(hash.substring(1));
-    const access=p.get('access_token');
-    const refresh=p.get('refresh_token');
-    if(access){
-      saveTokens(access,refresh);
-      window.history.replaceState({},document.title,window.location.pathname);
-      return true;
-    }
-  }
-  return false;
-}
-
-// ── SUPABASE CALLS ──
-async function getUser(){
-  const token=await getValidToken();
-  if(!token) return null;
-  try{
-    const res=await fetch(`${SUPA_URL}/auth/v1/user`,{
-      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+token}
-    });
-    if(!res.ok){clearTokens();return null;}
-    return res.json();
-  }catch{return null;}
-}
-
-async function dbQuery(table,filter='',limit=50){
-  const token=await getValidToken();
-  const auth=token?'Bearer '+token:'Bearer '+SUPA_KEY;
-  try{
-    const res=await fetch(`${SUPA_URL}/rest/v1/${table}?${filter}&order=created_at.desc&limit=${limit}`,{
-      headers:{'apikey':SUPA_KEY,'Authorization':auth}
-    });
-    if(!res.ok) return[];
-    return res.json();
-  }catch{return[];}
-}
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 // ── AUTH ACTIONS ──
 async function sendMagicLink(){
@@ -497,31 +418,23 @@ async function sendMagicLink(){
   const succ=document.getElementById('auth_success');
   err.style.display='none';
   if(!email||!email.includes('@')){err.textContent='Please enter a valid email.';err.style.display='block';return;}
-  try{
-    const res=await fetch(`${SUPA_URL}/auth/v1/otp`,{
-      method:'POST',
-      headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({
-        email,
-        create_user:true,
-        options:{emailRedirectTo:'https://vcready.co/dashboard.html'}
-      })
-    });
-    succ.style.display='block';
-  }catch(e){err.textContent='Something went wrong. Try again.';err.style.display='block';}
+  const {error}=await sb.auth.signInWithOtp({
+    email,
+    options:{emailRedirectTo:'https://vcready.co/dashboard.html'}
+  });
+  if(error){err.textContent='Something went wrong. Try again.';err.style.display='block';}
+  else succ.style.display='block';
 }
 
-function signInGoogle(){
-  const redirect=encodeURIComponent('https://vcready.co/dashboard.html');
-  window.location.href=`${SUPA_URL}/auth/v1/authorize?provider=google&redirect_to=${redirect}`;
+async function signInGoogle(){
+  await sb.auth.signInWithOAuth({
+    provider:'google',
+    options:{redirectTo:'https://vcready.co/dashboard.html'}
+  });
 }
 
 async function signOut(){
-  const token=getToken();
-  if(token){
-    try{await fetch(`${SUPA_URL}/auth/v1/logout`,{method:'POST',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+token}});}catch{}
-  }
-  clearTokens();
+  await sb.auth.signOut();
   showAuth();
 }
 
@@ -546,10 +459,24 @@ function showDash(){
   document.getElementById('btn_signout').style.display='block';
 }
 
+async function dbQuery(table,filter='',limit=50){
+  const {data,error}=await sb.from(table).select('*').order('created_at',{ascending:false}).limit(limit);
+  if(error) return [];
+  if(filter){
+    const [col,op,val]=filter.split(/=eq\.|=/).filter(Boolean);
+    return data.filter(r=>r[filter.split('=eq.')[0]]===filter.split('=eq.')[1]);
+  }
+  return data||[];
+}
+
+async function dbQueryFilter(table,col,val,limit=50){
+  const {data,error}=await sb.from(table).select('*').eq(col,val).order('created_at',{ascending:false}).limit(limit);
+  return data||[];
+}
+
 // ── LOAD DASHBOARD ──
 async function loadDashboard(user){
   showDash();
-
   const email=user.email||'';
   const name=user.user_metadata?.full_name||user.user_metadata?.name||cleanName(email);
   const firstName=name.split(' ')[0];
@@ -560,13 +487,12 @@ async function loadDashboard(user){
   document.getElementById('dash_name').textContent=firstName;
   document.getElementById('dash_meta').textContent=`Member since ${fmtD(user.created_at)}`;
 
-  // Load all data in parallel
   const [valuations,founders,pitchScores,dataroomScores,qaScores]=await Promise.all([
-    dbQuery('valuations',`user_id=eq.${user.id}`),
-    dbQuery('founders',`email=eq.${encodeURIComponent(email)}`),
-    dbQuery('pitch_scores',`user_id=eq.${user.id}`,1),
-    dbQuery('dataroom_scores',`user_id=eq.${user.id}`,1),
-    dbQuery('qa_scores',`user_id=eq.${user.id}`,1)
+    dbQueryFilter('valuations','user_id',user.id),
+    dbQueryFilter('founders','email',email),
+    dbQueryFilter('pitch_scores','user_id',user.id,1),
+    dbQueryFilter('dataroom_scores','user_id',user.id,1),
+    dbQueryFilter('qa_scores','user_id',user.id,1)
   ]);
 
   const f=founders[0];
@@ -574,7 +500,6 @@ async function loadDashboard(user){
   const latestDataroom=dataroomScores[0]||null;
   const latestQA=qaScores[0]||null;
 
-  // Profile
   if(f){
     document.getElementById('p_startup').textContent=f.startup||'—';
     document.getElementById('p_sector').textContent=f.sector||'—';
@@ -582,7 +507,6 @@ async function loadDashboard(user){
     document.getElementById('p_country').textContent=f.country||f.pays||'—';
   }
 
-  // Render all sections
   renderReadinessScore(valuations,latestPitch,latestDataroom,latestQA);
   renderStats(valuations,latestPitch,latestDataroom,latestQA);
   renderValuations(valuations);
@@ -594,72 +518,58 @@ async function loadDashboard(user){
 }
 
 function renderReadinessScore(vals,pitch,dataroom,qa){
-  // Calculate component scores
   const valScore=vals.length>0?Math.min(100,Math.round(((vals[0]?.irr||0)/50)*40+((vals[0]?.score||0)/100)*60)):null;
   const pitchScore=pitch?pitch.score:null;
   const drScore=dataroom?Math.round((dataroom.score/dataroom.total)*100):null;
   const qaScore=qa?Math.round((qa.score/qa.total)*100):null;
-
-  // Global score — weighted average of available scores
-  const scores=[];
-  const weights=[];
+  const scores=[];const weights=[];
   if(valScore!==null){scores.push(valScore);weights.push(35);}
   if(pitchScore!==null){scores.push(pitchScore);weights.push(30);}
   if(drScore!==null){scores.push(drScore);weights.push(20);}
   if(qaScore!==null){scores.push(qaScore);weights.push(15);}
-
   const totalWeight=weights.reduce((s,w)=>s+w,0);
   const global=totalWeight>0?Math.round(scores.reduce((s,sc,i)=>s+sc*weights[i],0)/totalWeight):null;
-
   const level=global===null?null:global>=80?'excellent':global>=60?'good':global>=40?'fair':'weak';
   const verdicts={excellent:'Investor-ready.',good:'Almost ready.',fair:'Needs work.',weak:'Not yet ready.'};
   const descs={
-    excellent:'Your profile is strong across all dimensions. You\'re well-positioned to approach investors. Focus on finalizing your data room and refining your ask.',
-    good:'Good overall readiness. A few gaps remain — address the weak areas below before your next investor meeting.',
-    fair:'Several dimensions need strengthening. Use the toolkit to systematically improve each score before fundraising.',
-    weak:'Significant preparation needed. Start with your valuation and pitch readiness, then work through the full toolkit.'
+    excellent:'Your profile is strong across all dimensions. Focus on finalizing your data room and refining your ask.',
+    good:'Good overall readiness. Address the weak areas below before your next investor meeting.',
+    fair:'Several dimensions need strengthening. Use the toolkit to systematically improve each score.',
+    weak:'Significant preparation needed. Start with your valuation and pitch readiness.'
   };
-
-  const circ=339.3;
-  const pct=global||0;
-
+  const circ=339.3;const pct=global||0;
   const barsHTML=[
-    {label:'Valuation',score:valScore,max:100,link:'valuation.html',color:'#12120F'},
-    {label:'Pitch',score:pitchScore,max:100,link:'pitch.html',color:'#1A6B47'},
-    {label:'Data Room',score:drScore,max:100,link:'dataroom.html',color:'#3A3830'},
-    {label:'Q&A Prep',score:qaScore,max:100,link:'qa.html',color:'#8A8880'},
-  ].map(b=>`
-    <div class="rb-item">
-      <div class="rb-label"><span>${b.label}</span><span class="rb-score">${b.score!==null?b.score+'%':'—'}</span></div>
-      <div class="rb-track"><div class="rb-fill" style="width:${b.score||0}%;background:${b.color}"></div></div>
-      ${b.score!==null?`<a href="${b.link}" class="rb-link">Improve →</a>`:`<a href="${b.link}" class="rb-missing">Not assessed yet →</a>`}
-    </div>`).join('');
-
+    {label:'Valuation',score:valScore,link:'valuation.html',color:'#12120F'},
+    {label:'Pitch',score:pitchScore,link:'pitch.html',color:'#1A6B47'},
+    {label:'Data Room',score:drScore,link:'dataroom.html',color:'#3A3830'},
+    {label:'Q&A Prep',score:qaScore,link:'qa.html',color:'#8A8880'},
+  ].map(b=>`<div class="rb-item">
+    <div class="rb-label"><span>${b.label}</span><span class="rb-score">${b.score!==null?b.score+'%':'—'}</span></div>
+    <div class="rb-track"><div class="rb-fill" style="width:${b.score||0}%;background:${b.color}"></div></div>
+    <a href="${b.link}" class="${b.score!==null?'rb-link':'rb-missing'}">${b.score!==null?'Improve →':'Not assessed yet →'}</a>
+  </div>`).join('');
   document.getElementById('readiness_content').innerHTML=`
     <div class="readiness-wrap">
       <div class="readiness-main">
         <div class="readiness-gauge">
           <svg width="120" height="120" viewBox="0 0 120 120">
             <circle class="rg-bg" cx="60" cy="60" r="54"/>
-            <circle class="rg-fg" id="rg_arc" cx="60" cy="60" r="54"
+            <circle class="rg-fg" cx="60" cy="60" r="54"
               stroke="${level==='excellent'||level==='good'?'#1A6B47':level==='fair'?'#6B6B66':'#9A9892'}"
               stroke-dasharray="${circ}" stroke-dashoffset="${global!==null?circ-(circ*pct/100):circ}"/>
           </svg>
-          <div class="rg-center">
-            <div class="rg-num">${global!==null?global:'—'}</div>
-            <div class="rg-den">/100</div>
-          </div>
+          <div class="rg-center"><div class="rg-num">${global!==null?global:'—'}</div><div class="rg-den">/100</div></div>
         </div>
         <div>
           <div class="readiness-verdict ${level||''}">${global!==null?verdicts[level]:'Complete the tools to get your score.'}</div>
-          <div class="readiness-desc">${global!==null?descs[level]:'Run the Valuation Tool, Pitch Readiness Score, Data Room Checklist, and Investor Q&A to get your global readiness score.'}</div>
+          <div class="readiness-desc">${global!==null?descs[level]:'Run the Valuation Tool, Pitch Readiness, Data Room Checklist, and Investor Q&A to get your global readiness score.'}</div>
         </div>
       </div>
       <div class="readiness-bars">${barsHTML}</div>
     </div>`;
 }
 
-function renderStats(vals,pitch,dataroom,qa){
+function renderStats(vals){
   document.getElementById('stat_count').textContent=vals.length||'0';
   if(!vals.length) return;
   const bestIrr=Math.max(...vals.map(v=>v.irr||0));
@@ -674,73 +584,71 @@ function renderStats(vals,pitch,dataroom,qa){
 
 function renderToolScores(vals,pitch,dataroom,qa){
   document.getElementById('tool_scores_section').style.display='block';
-  const latestVal=vals[0];
+  const lv=vals[0];
   const tools=[
-    {icon:'📊',name:'VC Valuation',score:latestVal?latestVal.score:null,max:100,sub:latestVal?`IRR ${latestVal.irr?.toFixed(1)||'—'}%`:'Not run',link:'valuation.html',color:'#12120F'},
-    {icon:'📈',name:'Pitch Readiness',score:pitch?pitch.score:null,max:100,sub:pitch?`${pitch.score}/100`:'Not assessed',link:'pitch.html',color:'#1A6B47'},
-    {icon:'📁',name:'Data Room',score:dataroom?Math.round((dataroom.score/dataroom.total)*100):null,max:100,sub:dataroom?`${dataroom.score}/${dataroom.total} docs`:'Not checked',link:'dataroom.html',color:'#3A3830'},
-    {icon:'💬',name:'Investor Q&A',score:qa?Math.round((qa.score/qa.total)*100):null,max:100,sub:qa?`${qa.score}/${qa.total} ready`:'Not simulated',link:'qa.html',color:'#6B6B66'},
-    {icon:'🗂️',name:'Cap Table',score:null,max:100,sub:'Simulation tool',link:'captable.html',color:'#8A8880'},
+    {icon:'📊',name:'VC Valuation',score:lv?lv.score:null,sub:lv?`IRR ${lv.irr?.toFixed(1)||'—'}%`:'Not run',link:'valuation.html',color:'#12120F'},
+    {icon:'📈',name:'Pitch Readiness',score:pitch?pitch.score:null,sub:pitch?`${pitch.score}/100`:'Not assessed',link:'pitch.html',color:'#1A6B47'},
+    {icon:'📁',name:'Data Room',score:dataroom?Math.round((dataroom.score/dataroom.total)*100):null,sub:dataroom?`${dataroom.score}/${dataroom.total} docs`:'Not checked',link:'dataroom.html',color:'#3A3830'},
+    {icon:'💬',name:'Investor Q&A',score:qa?Math.round((qa.score/qa.total)*100):null,sub:qa?`${qa.score}/${qa.total} ready`:'Not simulated',link:'qa.html',color:'#6B6B66'},
+    {icon:'🗂️',name:'Cap Table',score:null,sub:'Simulation tool',link:'captable.html',color:'#8A8880'},
   ];
-
-  document.getElementById('tool_scores_content').innerHTML=`
-    <div class="tool-scores-grid">
-      ${tools.map(t=>`
-        <div class="ts-card">
-          <div class="ts-icon">${t.icon}</div>
-          <div class="ts-name">${t.name}</div>
-          <div class="ts-score ${t.score===null?'na':t.score>=70?'green':t.score>=50?'warn':''}">${t.score!==null?t.score+'%':'—'}</div>
-          <div class="ts-sub">${t.sub}</div>
-          <div class="ts-track"><div class="ts-fill" style="width:${t.score||0}%;background:${t.color}"></div></div>
-          <a href="${t.link}" class="ts-action">${t.score!==null?'Improve →':'Start →'}</a>
-        </div>`).join('')}
-    </div>`;
+  document.getElementById('tool_scores_content').innerHTML=`<div class="tool-scores-grid">${tools.map(t=>`
+    <div class="ts-card">
+      <div class="ts-icon">${t.icon}</div>
+      <div class="ts-name">${t.name}</div>
+      <div class="ts-score ${t.score===null?'na':t.score>=70?'green':t.score>=50?'warn':''}">${t.score!==null?t.score+'%':'—'}</div>
+      <div class="ts-sub">${t.sub}</div>
+      <div class="ts-track"><div class="ts-fill" style="width:${t.score||0}%;background:${t.color}"></div></div>
+      <a href="${t.link}" class="ts-action">${t.score!==null?'Improve →':'Start →'}</a>
+    </div>`).join('')}</div>`;
 }
 
 function renderAdvancedAnalysis(vals,pitch,dataroom,qa,founder){
   if(!vals.length&&!pitch&&!dataroom&&!qa) return;
   document.getElementById('analysis_section').style.display='block';
-
   const latest=vals[0];
-  const avgIrr=vals.length?vals.reduce((s,v)=>s+(v.irr||0),0)/vals.length:null;
   const trend=vals.length>=2?(vals[0].irr||0)-(vals[vals.length-1].irr||0):null;
   const bestCoc=vals.length?vals.reduce((b,v)=>Math.max(b,v.coc||0),0):null;
   const drPct=dataroom?Math.round((dataroom.score/dataroom.total)*100):null;
   const qaPct=qa?Math.round((qa.score/qa.total)*100):null;
-
   document.getElementById('analysis_grid').innerHTML=`
-    <div class="an-card">
-      <div class="an-card-label">Latest IRR</div>
+    <div class="an-card"><div class="an-card-label">Latest IRR</div>
       <div class="an-card-val ${(latest?.irr||0)>=25?'green':'warn'}">${latest?.irr?latest.irr.toFixed(1)+'%':'—'}</div>
-      <div class="an-card-desc">${(latest?.irr||0)>=40?'Excellent — top quartile VC return profile. You\'re in a strong negotiating position.':(latest?.irr||0)>=25?'Above the 25% VC threshold — you\'re in a fundable zone. Focus on pitch and data room.':'Below 25% VC threshold. Use the What-If Simulator to identify which lever (exit multiple, timeline, revenue) has the biggest impact.'}</div>
-    </div>
-    <div class="an-card">
-      <div class="an-card-label">Pitch Readiness</div>
-      <div class="an-card-val ${(pitch?.score||0)>=70?'green':(pitch?.score||0)>=50?'warn':'na'}">${pitch?pitch.score+'/100':'Not assessed'}</div>
-      <div class="an-card-desc">${pitch?(pitch.score>=70?'Strong pitch profile. Focus on refining your fundraising ask and exit thesis.':pitch.score>=50?'Approaching investor-ready. Work on the themes with the lowest scores in your pitch assessment.':'Significant pitch gaps. Run the Pitch Readiness assessment and work through the recommended actions.'):'Run the Pitch Readiness Score to get a breakdown of your pitch strength across 6 criteria.'}</div>
-    </div>
-    <div class="an-card">
-      <div class="an-card-label">Data Room</div>
-      <div class="an-card-val ${drPct>=75?'green':drPct>=50?'warn':drPct!==null?'':''}">${drPct!==null?drPct+'% ready':'Not checked'}</div>
-      <div class="an-card-desc">${dataroom?(drPct>=75?`${dataroom.score}/${dataroom.total} documents ready — strong data room. Ensure all critical documents are complete before sharing with investors.`:drPct>=50?`${dataroom.score}/${dataroom.total} documents ready. Focus on the critical documents marked in green on the checklist.`:`Only ${dataroom.score}/${dataroom.total} documents ready. Investors will ask for these in due diligence — start preparing now.`):'Check your data room readiness. Investors will request 35 documents during due diligence.'}</div>
-    </div>
-    <div class="an-card">
-      <div class="an-card-label">Investor Q&A Prep</div>
-      <div class="an-card-val ${qaPct>=75?'green':qaPct>=50?'warn':qaPct!==null?'':''}">${qaPct!==null?qaPct+'% ready':'Not simulated'}</div>
-      <div class="an-card-desc">${qa?(qaPct>=75?`You can confidently answer ${qa.score}/${qa.total} investor questions. Focus on the gaps — especially around financials and risk.`:qaPct>=50?`${qa.score}/${qa.total} questions covered. Review the answer guides for the questions you couldn't answer.`:`Only ${qa.score}/${qa.total} questions ready. Run the full Q&A simulation and study the answer guides for each gap.`):'Simulate a real investor meeting with 40 questions across 8 themes.'}</div>
-    </div>
-    <div class="an-card">
-      <div class="an-card-label">IRR trend</div>
+      <div class="an-card-desc">${(latest?.irr||0)>=40?'Excellent — top quartile VC return profile.':(latest?.irr||0)>=25?'Above the 25% VC threshold — fundable zone.':'Below 25%. Use the What-If Simulator to find your key levers.'}</div></div>
+    <div class="an-card"><div class="an-card-label">Pitch Readiness</div>
+      <div class="an-card-val ${(pitch?.score||0)>=70?'green':(pitch?.score||0)>=50?'warn':''}">${pitch?pitch.score+'/100':'Not assessed'}</div>
+      <div class="an-card-desc">${pitch?(pitch.score>=70?'Strong pitch profile.':pitch.score>=50?'Approaching investor-ready.':'Significant gaps — work through the recommended actions.'):'Run the Pitch Readiness Score to benchmark across 6 criteria.'}</div></div>
+    <div class="an-card"><div class="an-card-label">Data Room</div>
+      <div class="an-card-val ${drPct>=75?'green':drPct>=50?'warn':''}">${drPct!==null?drPct+'% ready':'Not checked'}</div>
+      <div class="an-card-desc">${dataroom?`${dataroom.score}/${dataroom.total} documents ready.${drPct>=75?' Strong data room.':' Focus on critical documents first.'}`:'Investors will request 35 documents during due diligence.'}</div></div>
+    <div class="an-card"><div class="an-card-label">Investor Q&A</div>
+      <div class="an-card-val ${qaPct>=75?'green':qaPct>=50?'warn':''}">${qaPct!==null?qaPct+'% ready':'Not simulated'}</div>
+      <div class="an-card-desc">${qa?`${qa.score}/${qa.total} questions ready.${qaPct>=75?' Focus on financials and risk gaps.':' Review the answer guides for each gap.'}`:'Simulate a real investor meeting with 40 questions across 8 themes.'}</div></div>
+    <div class="an-card"><div class="an-card-label">IRR trend</div>
       <div class="an-card-val ${trend===null?'':trend>0?'green':'warn'}">${trend===null?'—':trend>0?'+'+trend.toFixed(1)+'%':trend.toFixed(1)+'%'}</div>
-      <div class="an-card-desc">${trend===null?'Run at least 2 valuations to track your IRR evolution over time.':trend>0?'Your IRR is improving across runs — you\'re identifying better assumptions. Keep iterating with the What-If Simulator.':trend===0?'IRR stable across runs. Try adjusting your exit multiple or revenue projections to find upside.':'IRR declining — revisit your exit assumptions. Check sector comparables to validate your multiple.'}</div>
-    </div>
-    <div class="an-card">
-      <div class="an-card-label">Best CoCa</div>
+      <div class="an-card-desc">${trend===null?'Run at least 2 valuations to track your IRR evolution.':trend>0?'IRR improving — keep iterating with the What-If Simulator.':'IRR declining — revisit your exit assumptions and sector comparables.'}</div></div>
+    <div class="an-card"><div class="an-card-label">Best CoCa</div>
       <div class="an-card-val ${(bestCoc||0)>=3?'green':'warn'}">${bestCoc?bestCoc.toFixed(1)+'×':'—'}</div>
-      <div class="an-card-desc">${(bestCoc||0)>=5?'Excellent CoCa — above 5×. Top-tier return profile that attracts institutional investors.':(bestCoc||0)>=3?'Above the 3× VC threshold. Solid investor returns. Push toward 5× by increasing exit valuation or reducing dilution.':'Below 3× VC threshold. Increase your exit valuation, reduce the required investment, or extend your exit timeline to improve CoCa.'}</div>
-    </div>`;
+      <div class="an-card-desc">${(bestCoc||0)>=5?'Excellent CoCa — top-tier return profile.':(bestCoc||0)>=3?'Above the 3× VC threshold.':'Below 3×. Increase exit valuation or reduce investment size.'}</div></div>`;
 }
 
+function renderInsights(vals,founder){
+  document.getElementById('insights_section').style.display='block';
+  const latest=vals[0];const items=[];
+  if((latest?.irr||0)<25)
+    items.push({dot:'warn',text:`<strong>IRR below VC threshold.</strong> Your latest IRR is ${latest?.irr?.toFixed(1)||'—'}%. Use the <a href="valuation.html" style="color:var(--green)">What-If Simulator</a> to improve it.`});
+  else
+    items.push({dot:'green',text:`<strong>IRR above threshold at ${latest?.irr?.toFixed(1)||'—'}%.</strong> You're in a fundable zone. Strengthen your pitch narrative and data room.`});
+  if((latest?.score||0)<60)
+    items.push({dot:'warn',text:`<strong>Investor Score of ${latest?.score||'—'}/100 needs work.</strong> IRR (30pts), CoCa (20pts), revenue growth (20pts), sector (10pts), team/stage (10pts), consistency (10pts).`});
+  else
+    items.push({dot:'green',text:`<strong>Investor Score of ${latest?.score||'—'}/100 is solid.</strong> Push above 80 by improving your CoCa and scenario consistency.`});
+  if(vals.length===1)
+    items.push({dot:'neutral',text:`<strong>Run multiple scenarios.</strong> 1 valuation done. Run 2-3 more with different assumptions to understand your range of outcomes.`});
+  items.push({dot:'neutral',text:`<strong>Check sector comparables.</strong> <a href="comparables.html" style="color:var(--green)">Browse 61 deals</a> to benchmark your valuation against similar companies.`});
+  document.getElementById('insights_list').innerHTML=items.map(i=>`
+    <div class="insight"><div class="insight-dot ${i.dot}"></div><div class="insight-text">${i.text}</div></div>`).join('');
+}
 
 function renderValuations(vals){
   if(!vals.length){
@@ -766,110 +674,54 @@ function renderChart(vals){
   document.getElementById('chart_section').style.display='block';
   const sorted=vals.slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
   if(irrChartInst){irrChartInst.destroy();}
-  const ctx=document.getElementById('irrChart');
-  irrChartInst=new Chart(ctx,{
+  irrChartInst=new Chart(document.getElementById('irrChart'),{
     type:'line',
-    data:{
-      labels:sorted.map(v=>fmtD(v.created_at)),
-      datasets:[
-        {label:'IRR',data:sorted.map(v=>v.irr||0),borderColor:'#12120F',borderWidth:2,pointRadius:5,pointBackgroundColor:'#12120F',fill:false,tension:.3},
-        {label:'VC threshold',data:sorted.map(()=>25),borderColor:'#1A6B47',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false}
-      ]
-    },
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
-      scales:{
-        x:{grid:{display:false},ticks:{font:{size:10},color:'#8A8880'}},
-        y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{callback:v=>v+'%',font:{size:10},color:'#8A8880'},min:0}
-      }
-    }
+    data:{labels:sorted.map(v=>fmtD(v.created_at)),datasets:[
+      {label:'IRR',data:sorted.map(v=>v.irr||0),borderColor:'#12120F',borderWidth:2,pointRadius:5,pointBackgroundColor:'#12120F',fill:false,tension:.3},
+      {label:'VC threshold',data:sorted.map(()=>25),borderColor:'#1A6B47',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10},color:'#8A8880'}},
+        y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{callback:v=>v+'%',font:{size:10},color:'#8A8880'},min:0}}}
   });
 }
 
-function renderInsights(vals,founder){
-  document.getElementById('insights_section').style.display='block';
-  const latest=vals[0];
-  const items=[];
-
-  if((latest?.irr||0)<25)
-    items.push({dot:'warn',text:`<strong>IRR below VC threshold.</strong> Your latest IRR is ${latest?.irr?.toFixed(1)||'—'}%. Use the <a href="valuation.html" style="color:var(--green)">What-If Simulator</a> to test how changing your exit year, revenue projections, or required return impacts your IRR.`});
-  else
-    items.push({dot:'green',text:`<strong>IRR above VC threshold at ${latest?.irr?.toFixed(1)||'—'}%.</strong> You're in a fundable zone. Focus now on strengthening your pitch narrative and data room.`});
-
-  if((latest?.score||0)<60)
-    items.push({dot:'warn',text:`<strong>Investor Score of ${latest?.score||'—'}/100 needs work.</strong> The score weighs IRR (30pts), CoCa (20pts), revenue growth (20pts), sector (10pts), team/stage (10pts), and scenario consistency (10pts). Review each component carefully.`});
-  else
-    items.push({dot:'green',text:`<strong>Investor Score of ${latest?.score||'—'}/100 is solid.</strong> You're above the 60/100 threshold. To push above 80, focus on improving your CoCa multiple and ensuring scenario consistency.`});
-
-  if(vals.length===1)
-    items.push({dot:'neutral',text:`<strong>Run multiple scenarios.</strong> You've done 1 valuation. Run 2-3 more with different assumptions (optimistic, pessimistic, base case) to understand the range of outcomes and identify your key value drivers.`});
-
-  if(!founder||!founder.sector)
-    items.push({dot:'neutral',text:`<strong>Check sector comparables.</strong> Visit the <a href="comparables.html" style="color:var(--green)">Sector Comparables</a> page to benchmark your valuation against real deals in your geography and sector.`});
-
-  items.push({dot:'neutral',text:`<strong>Prepare your data room.</strong> Investors will ask for 35 documents during due diligence. Use the <a href="dataroom.html" style="color:var(--green)">Data Room Checklist</a> to see where you stand.`});
-
-  document.getElementById('insights_list').innerHTML=items.map(i=>`
-    <div class="insight">
-      <div class="insight-dot ${i.dot}"></div>
-      <div class="insight-text">${i.text}</div>
-    </div>`).join('');
-}
-
 function renderNextSteps(vals,pitch,dataroom,qa,founder){
-  const steps=[];
-  const latest=vals[0];
-
-  if(!vals.length){
-    steps.push({num:'01',title:'Run your first valuation',desc:'Calculate your IRR, EV, CoCa and Investor Score.',link:'valuation.html',linkText:'Start →'});
-  } else if((latest?.irr||0)<25){
-    steps.push({num:'↑',title:'Improve your IRR',desc:`Latest IRR: ${latest?.irr?.toFixed(1)||'—'}% — below the 25% VC threshold. Use the What-If Simulator.`,link:'valuation.html',linkText:'Simulate →'});
-  }
-  if(!pitch) steps.push({num:'②',title:'Score your pitch',desc:'18 questions, score /100, feedback per VC criterion.',link:'pitch.html',linkText:'Assess →'});
-  else if(pitch.score<60) steps.push({num:'↑',title:'Improve your pitch score',desc:`Current score: ${pitch.score}/100. Work through the recommended actions.`,link:'pitch.html',linkText:'Improve →'});
-
-  if(!dataroom) steps.push({num:'③',title:'Check your data room',desc:'35 documents every investor will request. Are you ready?',link:'dataroom.html',linkText:'Check →'});
-  else if((dataroom.score/dataroom.total)<0.75) steps.push({num:'↑',title:'Complete your data room',desc:`${dataroom.score}/${dataroom.total} documents ready. Focus on critical documents first.`,link:'dataroom.html',linkText:'Continue →'});
-
-  if(!qa) steps.push({num:'④',title:'Simulate investor Q&A',desc:'40 questions VCs ask — see where you\'re prepared.',link:'qa.html',linkText:'Simulate →'});
-
-  steps.push({num:'★',title:'Browse sector comparables',desc:'Benchmark your valuation against 61 real deals.',link:'comparables.html',linkText:'Browse →'});
+  const steps=[];const latest=vals[0];
+  if(!vals.length) steps.push({num:'01',title:'Run your first valuation',desc:'Calculate your IRR, EV, CoCa and Investor Score.',link:'valuation.html',linkText:'Start →'});
+  else if((latest?.irr||0)<25) steps.push({num:'↑',title:'Improve your IRR',desc:`Latest: ${latest?.irr?.toFixed(1)||'—'}% — below 25% VC threshold.`,link:'valuation.html',linkText:'Simulate →'});
+  if(!pitch) steps.push({num:'②',title:'Score your pitch',desc:'18 questions, score /100, feedback per criterion.',link:'pitch.html',linkText:'Assess →'});
+  else if(pitch.score<60) steps.push({num:'↑',title:'Improve pitch score',desc:`Current: ${pitch.score}/100.`,link:'pitch.html',linkText:'Improve →'});
+  if(!dataroom) steps.push({num:'③',title:'Check your data room',desc:'35 documents every investor will request.',link:'dataroom.html',linkText:'Check →'});
+  else if((dataroom.score/dataroom.total)<0.75) steps.push({num:'↑',title:'Complete data room',desc:`${dataroom.score}/${dataroom.total} ready.`,link:'dataroom.html',linkText:'Continue →'});
+  if(!qa) steps.push({num:'④',title:'Simulate investor Q&A',desc:'40 questions VCs ask.',link:'qa.html',linkText:'Simulate →'});
+  steps.push({num:'★',title:'Browse comparables',desc:'61 real deals across Africa, MENA and Europe.',link:'comparables.html',linkText:'Browse →'});
   steps.push({num:'📅',title:'Book an expert session',desc:'Turn your scores into a funded pitch.',link:'https://calendly.com/yacine-chikhar/30min',linkText:'Book →'});
-
   document.getElementById('next_steps').innerHTML=steps.map(s=>`
     <div class="next-step">
       <div class="next-step-num">${s.num}</div>
-      <div class="next-step-body">
-        <div class="next-step-title">${s.title}</div>
-        <div class="next-step-desc">${s.desc}</div>
-      </div>
+      <div class="next-step-body"><div class="next-step-title">${s.title}</div><div class="next-step-desc">${s.desc}</div></div>
       <a href="${s.link}" class="next-step-link">${s.linkText}</a>
     </div>`).join('');
 }
 
 // ── INIT ──
 async function init(){
-  // 1. Handle OAuth/magic link callback first
-  handleCallback();
-
-  // 2. Try to get valid session
-  const user=await getUser();
-
-  if(user){
-    loadDashboard(user);
-  } else {
-    showAuth();
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){
+    loadDashboard(session.user);
+    return;
   }
+  // Listen for auth state changes (handles OAuth + magic link redirects)
+  sb.auth.onAuthStateChange((event,session)=>{
+    if(session){
+      loadDashboard(session.user);
+    } else {
+      showAuth();
+    }
+  });
+  showAuth();
 }
-
-// Auto-refresh token every 45 minutes
-setInterval(async()=>{
-  const token=getToken();
-  if(token) await refreshToken();
-},45*60*1000);
 
 init();
 </script>
-</body>
-</html>
