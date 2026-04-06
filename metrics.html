@@ -133,6 +133,17 @@ footer a{color:var(--green);text-decoration:none}
   .topbar{padding:0 24px;flex-wrap:wrap;height:auto;padding-top:12px;padding-bottom:12px;gap:8px}
   .topbar-nav{flex-wrap:wrap}
 }
+
+/* ── MOBILE TOPBAR ── */
+@media(max-width:768px){
+  .topbar{padding:0 20px;height:52px}
+  .topbar-nav{display:none !important}
+  .lang-toggle{display:none !important}
+  .topbar-cta{display:none !important}
+  .topbar-right{gap:8px}
+  .btn-signout{padding:5px 10px;font-size:10px}
+  [id="nav_login"]{padding:7px 14px !important;font-size:11px !important;white-space:nowrap}
+}
 </style>
 </head>
 <body>
