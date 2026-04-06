@@ -604,7 +604,7 @@ const T={
 const SUPABASE_URL='https://fvbrzttvdvxhbdkjknje.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YnJ6dHR2ZHZ4aGJka2prbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzgwNTAsImV4cCI6MjA5MDcxNDA1MH0.tcE5PlgMsu7suLAzN3uT5VjKnFhc25qkJJMKkbNmtvI';
 
-// Intercept auth token if redirected here from magic link
+// Intercept auth token if redirected here from magic link or OAuth
 (function(){
   const hash=window.location.hash;
   if(hash.includes('access_token')){
@@ -612,8 +612,9 @@ const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
     const token=params.get('access_token');
     const refresh=params.get('refresh_token');
     if(token){
-      localStorage.setItem('sb_access_token',token);
-      if(refresh) localStorage.setItem('sb_refresh_token',refresh);
+      localStorage.setItem('sb_access',token);
+      if(refresh) localStorage.setItem('sb_refresh',refresh);
+      localStorage.setItem('sb_expiry',Date.now()+3500000);
       window.location.href='dashboard.html';
     }
   }
