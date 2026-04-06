@@ -512,7 +512,7 @@ async function sendMagicLink(){
 }
 
 function signInGoogle(){
-  const redirect=encodeURIComponent(window.location.origin+'/dashboard.html');
+  const redirect=encodeURIComponent('https://vcready.co/dashboard.html');
   window.location.href=`${SUPA_URL}/auth/v1/authorize?provider=google&redirect_to=${redirect}`;
 }
 
