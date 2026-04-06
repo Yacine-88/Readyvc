@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VCReady — Sector Comparables</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7BRPFG4JQL"></script>
+<script>
+window.dataLayer=window.dataLayer||[];
+function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());
+gtag('config','G-7BRPFG4JQL');
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+:root{
+  --cream:#F5F2EC;--navy:#12120F;--navy2:#3A3830;--navy3:#8A8880;
+  --line:#D8D4CC;--green:#1A6B47;--green-bg:#E8F5EE;--green-border:#A8D5BC;
+  --amber:#A16207;--amber-bg:#FEF3C7;--amber-border:#FCD34D;
+  --blue:#1D4ED8;--blue-bg:#DBEAFE;--blue-border:#93C5FD;
+  --font:'DM Sans',sans-serif;--font-serif:'DM Serif Display',serif;--font-mono:'JetBrains Mono',monospace;
+}
+body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1px solid var(--line);height:60px;padding:0 48px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--font-serif);font-size:20px;color:var(--navy);letter-spacing:-.03em;text-decoration:none}
+.logo span{color:var(--green)}
+.topbar-nav{display:flex;align-items:center}
+.nav-link{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);text-decoration:none;padding:0 12px;height:60px;display:flex;align-items:center;border-bottom:2px solid transparent;transition:all .15s}
+.nav-link:hover{color:var(--navy)}
+.nav-link.active{color:var(--navy);border-bottom-color:var(--navy)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.lang-toggle{display:flex;border:1px solid var(--line)}
+.lang-btn{padding:6px 12px;font-size:11px;font-weight:500;background:transparent;border:none;color:var(--navy3);cursor:pointer;font-family:var(--font);letter-spacing:.04em;transition:all .15s}
+.lang-btn.active{background:var(--navy);color:var(--cream)}
+
+/* CONTAINER */
+.container{max-width:1280px;margin:0 auto;padding:0 48px}
+
+/* PAGE HEADER */
+.page-header{padding:60px 0 40px;border-bottom:1px solid var(--line)}
+.page-tag{font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--navy3);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.page-tag::before{content:'';display:block;width:24px;height:1px;background:var(--navy3)}
+.header-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:end}
+.page-header h1{font-family:var(--font-serif);font-size:44px;color:var(--navy);letter-spacing:-.04em;line-height:1.05;font-weight:400;margin-bottom:12px}
+.page-header p{font-size:14px;color:var(--navy2);line-height:1.75;max-width:520px}
+.header-stats{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line)}
+.hstat{padding:16px 20px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.hstat:nth-child(2n){border-right:none}
+.hstat:nth-last-child(-n+2){border-bottom:none}
+.hstat-num{font-family:var(--font-serif);font-size:28px;color:var(--navy);letter-spacing:-.03em;font-weight:400}
+.hstat-lbl{font-size:11px;color:var(--navy3);margin-top:2px}
+
+/* FILTERS */
+.filters-bar{padding:24px 0;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:60px;background:var(--cream);z-index:50}
+.filter-group{display:flex;align-items:center;gap:0;margin-right:18px;flex-wrap:wrap}
+.filter-label{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy3);margin-right:10px;white-space:nowrap}
+.filter-btn{font-size:11px;font-weight:500;padding:6px 14px;border:1px solid var(--line);background:transparent;color:var(--navy3);cursor:pointer;font-family:var(--font);transition:all .15s;margin-right:-1px}
+.filter-btn:hover{color:var(--navy);border-color:var(--navy);z-index:1}
+.filter-btn.active{background:var(--navy);color:var(--cream);border-color:var(--navy);z-index:1}
+.filter-count{margin-left:auto;font-size:11px;font-family:var(--font-mono);color:var(--navy3)}
+
+/* BENCHMARK BAR */
+.benchmark-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:0;border:1px solid var(--line);border-bottom:none;margin-top:32px}
+.bm-cell{padding:14px 16px;border-right:1px solid var(--line)}
+.bm-cell:last-child{border-right:none}
+.bm-label{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);margin-bottom:4px}
+.bm-val{font-family:var(--font-serif);font-size:18px;color:var(--navy);letter-spacing:-.02em;font-weight:400}
+.bm-sub{font-size:10px;color:var(--navy3);margin-top:2px}
+
+/* TABLE */
+.table-wrap{margin-top:0;overflow-x:auto;padding-bottom:80px}
+.comp-table{width:100%;border-collapse:collapse;font-size:13px}
+.comp-table th{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);padding:12px 16px;border-bottom:2px solid var(--navy);text-align:left;white-space:nowrap;cursor:pointer;user-select:none;background:var(--cream)}
+.comp-table th:hover{color:var(--navy)}
+.comp-table th .sort-arrow{font-size:9px;margin-left:4px;opacity:.4}
+.comp-table th.sorted .sort-arrow{opacity:1;color:var(--green)}
+.comp-table td{padding:14px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+.comp-table tr:hover td{background:var(--green-bg)}
+.company-cell{display:flex;align-items:flex-start;gap:12px;min-width:260px}
+.company-flag{font-size:16px;flex-shrink:0;margin-top:1px}
+.company-name{font-weight:600;color:var(--navy);font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.company-sub{font-size:11px;color:var(--navy3);margin-top:2px;line-height:1.5}
+.stage-badge{display:inline-block;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border:1px solid}
+.stage-badge.preseed{border-color:#D8D4CC;color:#8A8880}
+.stage-badge.seed{border-color:#3A3830;color:#3A3830}
+.stage-badge.seriesA{border-color:#1A6B47;color:#1A6B47;background:var(--green-bg)}
+.stage-badge.seriesB{border-color:#12120F;color:#12120F}
+.stage-badge.seriesC,.stage-badge.seriesD,.stage-badge.seriesE,.stage-badge.seriesF{border-color:#12120F;color:var(--cream);background:#12120F}
+.stage-badge.ipo{border-color:#1A6B47;color:#FFF;background:#1A6B47}
+.geo-badge{display:inline-block;font-size:9px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border:1px solid var(--line);color:var(--navy3)}
+.geo-badge.africa{border-color:var(--green-border);color:var(--green);background:var(--green-bg)}
+.geo-badge.mena{border-color:#D8D4CC;color:#6B6B66}
+.geo-badge.europe{border-color:#3A3830;color:#3A3830}
+.mult-cell{font-family:var(--font-mono);font-size:12px;color:var(--navy)}
+.mult-cell.na{color:var(--navy3);font-style:italic}
+.val-cell{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--navy)}
+.year-cell{font-family:var(--font-mono);font-size:11px;color:var(--navy3)}
+.source-link{font-size:10px;color:var(--green);text-decoration:none;opacity:.8}
+.source-link:hover{opacity:1}
+.source-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border:1px solid}
+.source-badge.verified{color:var(--green);border-color:var(--green-border);background:var(--green-bg)}
+.source-badge.estimated{color:var(--amber);border-color:var(--amber-border);background:var(--amber-bg)}
+.source-badge.user{color:var(--blue);border-color:var(--blue-border);background:var(--blue-bg)}
+.no-results{padding:60px 16px;text-align:center;font-size:13px;color:var(--navy3);border-bottom:1px solid var(--line)}
+
+/* DISCLAIMER */
+.disclaimer{padding:20px 0;font-size:11px;color:var(--navy3);line-height:1.6;border-top:1px solid var(--line);margin-top:-1px}
+
+/* CTA */
+.cta-section{background:var(--navy);padding:48px;margin-bottom:0}
+.cta-inner{display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap}
+.cta-title{font-family:var(--font-serif);font-size:26px;color:#FFF;letter-spacing:-.03em;font-weight:400;margin-bottom:6px}
+.cta-sub{font-size:13px;color:rgba(255,255,255,.6)}
+.cta-btn{background:#FFF;color:var(--navy);padding:12px 24px;font-size:12px;font-weight:500;letter-spacing:.04em;text-decoration:none;white-space:nowrap;transition:all .15s;flex-shrink:0}
+.cta-btn:hover{background:var(--green);color:#FFF}
+
+footer{border-top:1px solid var(--line);padding:24px 48px;font-size:11px;color:var(--navy3);letter-spacing:.06em;text-transform:uppercase;display:flex;justify-content:space-between}
+footer a{color:var(--green);text-decoration:none}
+
+@media(max-width:900px){
+  .container,.topbar,footer,.cta-section{padding-left:24px;padding-right:24px}
+  .header-grid{grid-template-columns:1fr;gap:32px}
+  .page-header h1{font-size:32px}
+  .topbar-nav{display:none}
+  .benchmark-bar{grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line)}
+  .bm-cell{border-bottom:1px solid var(--line)}
+  .cta-inner{flex-direction:column}
+  .filters-bar{gap:8px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="index.html" class="logo">VC<span>Ready</span></a>
+  <nav class="topbar-nav">
+    <a href="index.html" class="nav-link">Home</a>
+    <a href="valuation.html" class="nav-link">Valuation</a>
+    <a href="metrics.html" class="nav-link">Metrics</a>
+    <a href="pitch.html" class="nav-link">Pitch</a>
+    <a href="dataroom.html" class="nav-link">Data Room</a>
+    <a href="captable.html" class="nav-link">Cap Table</a>
+    <a href="comparables.html" class="nav-link active">Comparables</a>
+  </nav>
+  <div class="topbar-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('fr')">FR</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-header">
+    <div class="page-tag" id="pg_tag">Sector Comparables</div>
+    <div class="header-grid">
+      <div>
+        <h1 id="pg_h1">Know where you<br>stand.</h1>
+        <p id="pg_p">A curated database of funding rounds across Africa, MENA, and Europe. Use it to benchmark your valuation, build your comparable analysis, and justify your multiple to investors.</p>
+      </div>
+      <div class="header-stats">
+        <div class="hstat">
+          <div class="hstat-num" id="total_deals">0</div>
+          <div class="hstat-lbl" id="lbl_deals">deals tracked</div>
+        </div>
+        <div class="hstat">
+          <div class="hstat-num">3</div>
+          <div class="hstat-lbl" id="lbl_geos">geographies</div>
+        </div>
+        <div class="hstat">
+          <div class="hstat-num">8</div>
+          <div class="hstat-lbl" id="lbl_sectors">sectors</div>
+        </div>
+        <div class="hstat">
+          <div class="hstat-num">2026</div>
+          <div class="hstat-lbl" id="lbl_updated">last updated</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="filters-bar">
+    <div class="filter-group">
+      <span class="filter-label" id="lbl_geo">Geo</span>
+      <button class="filter-btn active" onclick="setFilter('geo','all')" id="fg_all">All</button>
+      <button class="filter-btn" onclick="setFilter('geo','africa')" id="fg_africa">Africa</button>
+      <button class="filter-btn" onclick="setFilter('geo','mena')" id="fg_mena">MENA</button>
+      <button class="filter-btn" onclick="setFilter('geo','europe')" id="fg_europe">Europe</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label" id="lbl_sector">Sector</span>
+      <button class="filter-btn active" onclick="setFilter('sector','all')" id="fs_all">All</button>
+      <button class="filter-btn" onclick="setFilter('sector','fintech')" id="fs_fintech">Fintech</button>
+      <button class="filter-btn" onclick="setFilter('sector','saas')" id="fs_saas">SaaS</button>
+      <button class="filter-btn" onclick="setFilter('sector','marketplace')" id="fs_marketplace">Marketplace</button>
+      <button class="filter-btn" onclick="setFilter('sector','agritech')" id="fs_agritech">AgriTech</button>
+      <button class="filter-btn" onclick="setFilter('sector','healthtech')" id="fs_healthtech">Healthtech</button>
+      <button class="filter-btn" onclick="setFilter('sector','logistics')" id="fs_logistics">Logistics</button>
+      <button class="filter-btn" onclick="setFilter('sector','edtech')" id="fs_edtech">Edtech</button>
+      <button class="filter-btn" onclick="setFilter('sector','cleantech')" id="fs_cleantech">Cleantech</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label" id="lbl_stage">Stage</span>
+      <button class="filter-btn active" onclick="setFilter('stage','all')" id="fst_all">All</button>
+      <button class="filter-btn" onclick="setFilter('stage','seed')" id="fst_seed">Seed</button>
+      <button class="filter-btn" onclick="setFilter('stage','seriesA')" id="fst_a">Series A</button>
+      <button class="filter-btn" onclick="setFilter('stage','seriesB')" id="fst_b">Series B</button>
+      <button class="filter-btn" onclick="setFilter('stage','seriesC')" id="fst_c">Series C+</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label" id="lbl_year">Year</span>
+      <button class="filter-btn active" onclick="setFilter('year','all')" id="fy_all">All</button>
+      <button class="filter-btn" onclick="setFilter('year',2025)" id="fy_2025">2025</button>
+      <button class="filter-btn" onclick="setFilter('year',2024)" id="fy_2024">2024</button>
+      <button class="filter-btn" onclick="setFilter('year',2023)" id="fy_2023">2023</button>
+      <button class="filter-btn" onclick="setFilter('year',2022)" id="fy_2022">2022</button>
+      <button class="filter-btn" onclick="setFilter('year','pre2022')" id="fy_pre2022">≤2021</button>
+    </div>
+    <span class="filter-count" id="filter_count">0 deals</span>
+  </div>
+
+  <div class="benchmark-bar" id="benchmark-bar"></div>
+
+  <div class="table-wrap">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th onclick="sortBy('name')" id="th_company">Company <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('geo')" id="th_geo">Geography <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('sector')" id="th_sector">Sector <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('stage')" id="th_stage">Stage <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('raised')" id="th_raised">Amount Raised <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('valuation')" id="th_val">Valuation <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('multiple')" id="th_mult">EV/Rev Multiple <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('year')" id="th_year">Year <span class="sort-arrow">↕</span></th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div class="disclaimer" id="disclaimer">
+      ⚠ Data sourced from public announcements, Crunchbase, press reports, and selected ecosystem sources. Valuations and multiples are estimates where not publicly disclosed. This database is for reference only — not financial advice. Last updated April 2026.
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="cta-section">
+    <div class="cta-inner">
+      <div>
+        <div class="cta-title" id="cta_title">Build your comparable analysis.</div>
+        <div class="cta-sub" id="cta_sub">Book a session to position your valuation against the right benchmarks and build a defensible investor narrative.</div>
+      </div>
+      <a href="https://calendly.com/yacine-chikhar/30min" target="_blank" class="cta-btn" id="cta_btn">Book your session →</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>VCReady · by <strong>Yacine CHIKHAR</strong> · © 2026</span>
+  <a href="index.html">← Back to toolkit</a>
+</footer>
+
+<script>
+let currentLang='en';
+let activeFilters={geo:'all',sector:'all',stage:'all',year:'all'};
+let sortCol='year', sortDir=-1;
+
+const DEALS=[
+  // ── AFRICA — FINTECH ──
+  {name:'Wave',country:'Senegal',flag:'🇸🇳',geo:'africa',sector:'fintech',stage:'seriesC',raised:200,valuation:1700,multiple:null,year:2021,note:'Mobile money, West Africa',source:null,quality:'estimated'},
+  {name:'Flutterwave',country:'Nigeria',flag:'🇳🇬',geo:'africa',sector:'fintech',stage:'seriesD',raised:250,valuation:3000,multiple:null,year:2022,note:'Payment infrastructure',source:null,quality:'estimated'},
+  {name:'Chipper Cash',country:'Ghana',flag:'🇬🇭',geo:'africa',sector:'fintech',stage:'seriesC',raised:150,valuation:2000,multiple:null,year:2022,note:'Cross-border payments',source:null,quality:'estimated'},
+  {name:'OPay',country:'Nigeria',flag:'🇳🇬',geo:'africa',sector:'fintech',stage:'seriesC',raised:400,valuation:2000,multiple:null,year:2021,note:'Super-app fintech',source:null,quality:'estimated'},
+  {name:'MNT-Halan',country:'Egypt',flag:'🇪🇬',geo:'africa',sector:'fintech',stage:'seriesC',raised:400,valuation:1000,multiple:null,year:2022,note:'Consumer fintech',source:null,quality:'estimated'},
+  {name:'Djamo',country:"Côte d'Ivoire",flag:'🇨🇮',geo:'africa',sector:'fintech',stage:'seriesA',raised:14,valuation:60,multiple:null,year:2023,note:'Digital banking, WAEMU',source:null,quality:'estimated'},
+  {name:'Kuda Bank',country:'Nigeria',flag:'🇳🇬',geo:'africa',sector:'fintech',stage:'seriesB',raised:55,valuation:500,multiple:null,year:2021,note:'Neobank',source:null,quality:'estimated'},
+  {name:'Numida',country:'Uganda',flag:'🇺🇬',geo:'africa',sector:'fintech',stage:'seriesA',raised:12.3,valuation:null,multiple:null,year:2023,note:'SMB lending',source:null,quality:'estimated'},
+  {name:'Nala',country:'Tanzania',flag:'🇹🇿',geo:'africa',sector:'fintech',stage:'seriesA',raised:40,valuation:null,multiple:null,year:2023,note:'Remittances',source:null,quality:'estimated'},
+  {name:'Payd',country:'Kenya',flag:'🇰🇪',geo:'africa',sector:'fintech',stage:'seed',raised:3,valuation:null,multiple:null,year:2023,note:'Earned wage access',source:null,quality:'estimated'},
+
+  // ── AFRICA — SAAS/B2B ──
+  {name:'Yassir',country:'Algeria',flag:'🇩🇿',geo:'africa',sector:'saas',stage:'seriesB',raised:150,valuation:700,multiple:null,year:2023,note:'Super-app, North Africa',source:null,quality:'estimated'},
+  {name:'Wasoko',country:'Kenya',flag:'🇰🇪',geo:'africa',sector:'saas',stage:'seriesB',raised:125,valuation:625,multiple:null,year:2022,note:'B2B e-commerce SaaS',source:null,quality:'estimated'},
+  {name:'Chari',country:'Morocco',flag:'🇲🇦',geo:'africa',sector:'saas',stage:'seriesA',raised:5,valuation:25,multiple:null,year:2022,note:'FMCG distribution SaaS',source:null,quality:'estimated'},
+  {name:'TradeDepot',country:'Nigeria',flag:'🇳🇬',geo:'africa',sector:'saas',stage:'seriesB',raised:110,valuation:null,multiple:null,year:2022,note:'B2B trade platform',source:null,quality:'estimated'},
+  {name:'Omnibiz',country:'Nigeria',flag:'🇳🇬',geo:'africa',sector:'saas',stage:'seriesA',raised:15,valuation:null,multiple:null,year:2022,note:'FMCG B2B SaaS',source:null,quality:'estimated'},
+  {name:'Rekki',country:'UK/Africa',flag:'🇬🇧',geo:'africa',sector:'saas',stage:'seriesA',raised:8,valuation:null,multiple:null,year:2023,note:'Restaurant ordering SaaS',source:null,quality:'estimated'},
+
+  // ── AFRICA — AGRITECH ──
+  {name:'Twiga Foods',country:'Kenya',flag:'🇰🇪',geo:'africa',sector:'agritech',stage:'seriesC',raised:50,valuation:null,multiple:null,year:2022,note:'Agricultural supply chain',source:null,quality:'estimated'},
+  {name:'Apollo Agriculture',country:'Kenya',flag:'🇰🇪',geo:'africa',sector:'agritech',stage:'seriesB',raised:40,valuation:null,multiple:null,year:2022,note:'Smallholder farmer fintech',source:null,quality:'estimated'},
+  {name:'Tulaa',country:'Kenya',flag:'🇰🇪',geo:'africa',sector:'agritech',stage:'seriesA',raised:3,valuation:null,multiple:null,year:2022,note:'AgriTech marketplace',source:null,quality:'estimated'},
+  {name:'Hello Tractor',country:'Nigeria',flag:'🇳🇬',geo:'africa',sector:'agritech',stage:'seriesA',raised:8,valuation:null,multiple:null,year:2021,note:'AgriTech marketplace',source:null,quality:'estimated'},
+  {name:'Releaf',country:'Nigeria',flag:'🇳🇬',geo:'africa',sector:'agritech',stage:'seriesA',raised:4.2,valuation:null,multiple:null,year:2022,note:'Agricultural processing',source:null,quality:'estimated'},
+
+  // ── AFRICA — HEALTHTECH ──
+  {name:'mPharma',country:'Ghana',flag:'🇬🇭',geo:'africa',sector:'healthtech',stage:'seriesD',raised:30,valuation:null,multiple:null,year:2022,note:'Pharmacy management SaaS',source:null,quality:'estimated'},
+  {name:'Zipline',country:'Rwanda',flag:'🇷🇼',geo:'africa',sector:'healthtech',stage:'seriesE',raised:130,valuation:2750,multiple:null,year:2022,note:'Drone medical delivery',source:null,quality:'estimated'},
+  {name:'54gene',country:'Nigeria',flag:'🇳🇬',geo:'africa',sector:'healthtech',stage:'seriesB',raised:45,valuation:null,multiple:null,year:2021,note:'Genomics research',source:null,quality:'estimated'},
+  {name:'Vezeeta',country:'Egypt',flag:'🇪🇬',geo:'africa',sector:'healthtech',stage:'seriesD',raised:40,valuation:null,multiple:null,year:2021,note:'Digital health platform',source:null,quality:'estimated'},
+
+  // ── AFRICA — LOGISTICS ──
+  {name:'Lori Systems',country:'Kenya',flag:'🇰🇪',geo:'africa',sector:'logistics',stage:'seriesB',raised:30,valuation:null,multiple:null,year:2021,note:'Freight logistics',source:null,quality:'estimated'},
+  {name:'Kobo360',country:'Nigeria',flag:'🇳🇬',geo:'africa',sector:'logistics',stage:'seriesA',raised:20,valuation:null,multiple:null,year:2019,note:'Truck logistics platform',source:null,quality:'estimated'},
+  {name:'Sendy',country:'Kenya',flag:'🇰🇪',geo:'africa',sector:'logistics',stage:'seriesB',raised:20,valuation:null,multiple:null,year:2021,note:'Last-mile logistics',source:null,quality:'estimated'},
+
+  // ── AFRICA — EDTECH ──
+  {name:'uLesson',country:'Nigeria',flag:'🇳🇬',geo:'africa',sector:'edtech',stage:'seriesB',raised:15,valuation:null,multiple:null,year:2022,note:'K-12 edtech',source:null,quality:'estimated'},
+  {name:'Andela',country:'Nigeria',flag:'🇳🇬',geo:'africa',sector:'edtech',stage:'seriesE',raised:200,valuation:1500,multiple:null,year:2021,note:'Developer talent platform',source:null,quality:'estimated'},
+  {name:'Moringa School',country:'Kenya',flag:'🇰🇪',geo:'africa',sector:'edtech',stage:'seriesA',raised:10,valuation:null,multiple:null,year:2022,note:'Tech bootcamp',source:null,quality:'estimated'},
+
+  // ── MENA — FINTECH ──
+  {name:'Tamara',country:'Saudi Arabia',flag:'🇸🇦',geo:'mena',sector:'fintech',stage:'seriesC',raised:340,valuation:1000,multiple:null,year:2023,note:'BNPL, Saudi Arabia',source:null,quality:'estimated'},
+  {name:'Tabby',country:'UAE',flag:'🇦🇪',geo:'mena',sector:'fintech',stage:'seriesD',raised:200,valuation:660,multiple:null,year:2023,note:'BNPL, GCC',source:null,quality:'estimated'},
+  {name:'Lean Technologies',country:'Saudi Arabia',flag:'🇸🇦',geo:'mena',sector:'fintech',stage:'seriesA',raised:33,valuation:null,multiple:null,year:2022,note:'Open banking API',source:null,quality:'estimated'},
+  {name:'Paymob',country:'Egypt',flag:'🇪🇬',geo:'mena',sector:'fintech',stage:'seriesB',raised:50,valuation:null,multiple:null,year:2022,note:'Payment gateway',source:null,quality:'estimated'},
+  {name:'Telda',country:'Egypt',flag:'🇪🇬',geo:'mena',sector:'fintech',stage:'seriesA',raised:20,valuation:null,multiple:null,year:2022,note:'Digital banking',source:null,quality:'estimated'},
+  {name:'Rain',country:'Bahrain',flag:'🇧🇭',geo:'mena',sector:'fintech',stage:'seriesB',raised:110,valuation:null,multiple:null,year:2022,note:'Crypto exchange, MENA',source:null,quality:'estimated'},
+  {name:'Cashew',country:'UAE',flag:'🇦🇪',geo:'mena',sector:'fintech',stage:'seriesA',raised:10,valuation:null,multiple:null,year:2022,note:'BNPL, UAE',source:null,quality:'estimated'},
+
+  // ── MENA — SAAS ──
+  {name:'Foodics',country:'Saudi Arabia',flag:'🇸🇦',geo:'mena',sector:'saas',stage:'seriesC',raised:170,valuation:null,multiple:14,year:2022,note:'Restaurant management SaaS',source:null,quality:'estimated'},
+  {name:'Salla',country:'Saudi Arabia',flag:'🇸🇦',geo:'mena',sector:'saas',stage:'seriesB',raised:130,valuation:null,multiple:null,year:2022,note:'E-commerce SaaS platform',source:null,quality:'estimated'},
+  {name:'Cartlow',country:'UAE',flag:'🇦🇪',geo:'mena',sector:'saas',stage:'seriesB',raised:18,valuation:null,multiple:null,year:2022,note:'Re-commerce platform',source:null,quality:'estimated'},
+  {name:'Rewaa',country:'Saudi Arabia',flag:'🇸🇦',geo:'mena',sector:'saas',stage:'seriesA',raised:26,valuation:null,multiple:null,year:2022,note:'Retail SaaS',source:null,quality:'estimated'},
+  {name:'Zid',country:'Saudi Arabia',flag:'🇸🇦',geo:'mena',sector:'saas',stage:'seriesA',raised:16,valuation:null,multiple:null,year:2021,note:'E-commerce SaaS',source:null,quality:'estimated'},
+
+  // ── MENA — MARKETPLACE / LOGISTICS ──
+  {name:'Anghami',country:'UAE',flag:'🇦🇪',geo:'mena',sector:'marketplace',stage:'ipo',raised:null,valuation:220,multiple:null,year:2022,note:'Music streaming, IPO NASDAQ',source:null,quality:'estimated'},
+  {name:'Trella',country:'Egypt',flag:'🇪🇬',geo:'mena',sector:'logistics',stage:'seriesA',raised:42,valuation:null,multiple:null,year:2021,note:'Freight marketplace',source:null,quality:'estimated'},
+
+  // ── EUROPE — FINTECH ──
+  {name:'Qonto',country:'France',flag:'🇫🇷',geo:'europe',sector:'fintech',stage:'seriesD',raised:552,valuation:5000,multiple:25,year:2022,note:'SMB banking, France',source:null,quality:'estimated'},
+  {name:'Alan',country:'France',flag:'🇫🇷',geo:'europe',sector:'fintech',stage:'seriesE',raised:220,valuation:2600,multiple:null,year:2022,note:'Digital health insurance',source:null,quality:'estimated'},
+  {name:'Pennylane',country:'France',flag:'🇫🇷',geo:'europe',sector:'fintech',stage:'seriesC',raised:40,valuation:400,multiple:null,year:2023,note:'Accounting SaaS, SMBs',source:null,quality:'estimated'},
+  {name:'Lydia',country:'France',flag:'🇫🇷',geo:'europe',sector:'fintech',stage:'seriesC',raised:100,valuation:null,multiple:null,year:2021,note:'Mobile payments',source:null,quality:'estimated'},
+  {name:'Alma',country:'France',flag:'🇫🇷',geo:'europe',sector:'fintech',stage:'seriesC',raised:130,valuation:null,multiple:null,year:2022,note:'BNPL for merchants',source:null,quality:'estimated'},
+  {name:'Younited Credit',country:'France',flag:'🇫🇷',geo:'europe',sector:'fintech',stage:'seriesE',raised:170,valuation:null,multiple:null,year:2021,note:'Consumer lending platform',source:null,quality:'estimated'},
+
+  // ── EUROPE — SAAS ──
+  {name:'Spendesk',country:'France',flag:'🇫🇷',geo:'europe',sector:'saas',stage:'seriesC',raised:100,valuation:null,multiple:null,year:2022,note:'Spend management SaaS',source:null,quality:'estimated'},
+  {name:'Payfit',country:'France',flag:'🇫🇷',geo:'europe',sector:'saas',stage:'seriesE',raised:99,valuation:680,multiple:null,year:2022,note:'HR & payroll SaaS',source:null,quality:'estimated'},
+  {name:'Doctolib',country:'France',flag:'🇫🇷',geo:'europe',sector:'saas',stage:'seriesF',raised:500,valuation:5800,multiple:null,year:2021,note:'Healthcare SaaS',source:null,quality:'estimated'},
+  {name:'Contentsquare',country:'France',flag:'🇫🇷',geo:'europe',sector:'saas',stage:'seriesF',raised:600,valuation:3200,multiple:12,year:2022,note:'Digital experience SaaS',source:null,quality:'estimated'},
+  {name:'Mirakl',country:'France',flag:'🇫🇷',geo:'europe',sector:'saas',stage:'seriesD',raised:555,valuation:3500,multiple:null,year:2021,note:'Marketplace SaaS platform',source:null,quality:'estimated'},
+  {name:'Back Market',country:'France',flag:'🇫🇷',geo:'europe',sector:'marketplace',stage:'seriesD',raised:510,valuation:5700,multiple:null,year:2022,note:'Refurbished tech marketplace',source:null,quality:'estimated'},
+  {name:'Swile',country:'France',flag:'🇫🇷',geo:'europe',sector:'saas',stage:'seriesC',raised:175,valuation:1000,multiple:null,year:2022,note:'Employee benefits SaaS',source:null,quality:'estimated'},
+
+  // ── EUROPE — CLEANTECH ──
+  {name:'Carbonfact',country:'France',flag:'🇫🇷',geo:'europe',sector:'cleantech',stage:'seriesA',raised:15,valuation:null,multiple:null,year:2023,note:'Carbon footprint SaaS',source:null,quality:'estimated'},
+  {name:'Sweep',country:'France',flag:'🇫🇷',geo:'europe',sector:'cleantech',stage:'seriesB',raised:73,valuation:null,multiple:null,year:2022,note:'ESG & carbon SaaS',source:null,quality:'estimated'},
+
+  // ── AFRICA / MENA / EUROPE — VERIFIED 2024–2025 ──
+  {name:'Moniepoint',country:'Nigeria',flag:'🇳🇬',geo:'africa',sector:'fintech',stage:'seriesC',raised:110,valuation:null,multiple:null,year:2024,note:'Business banking & payments',source:'https://techcrunch.com/2024/10/29/google-dpi-backs-moniepoint-in-110m-round/',quality:'verified'},
+  {name:'Tyme',country:'South Africa',flag:'🇿🇦',geo:'africa',sector:'fintech',stage:'seriesD',raised:250,valuation:1500,multiple:null,year:2024,note:'Digital bank',source:'https://techcrunch.com/2024/12/16/nubank-leads-250m-round-in-african-digital-bank-tyme-at-1-5b-valuation/',quality:'verified'},
+  {name:'Moove',country:'Nigeria',flag:'🇳🇬',geo:'africa',sector:'fintech',stage:'seriesB',raised:100,valuation:750,multiple:null,year:2024,note:'Mobility fintech / vehicle financing',source:'https://techcrunch.com/2024/03/19/uber-leads-100m-investment-in-african-mobility-fintech-moove-as-valuation-hits-750m/',quality:'verified'},
+  {name:'Djamo',country:"Côte d'Ivoire",flag:'🇨🇮',geo:'africa',sector:'fintech',stage:'seriesA',raised:17,valuation:null,multiple:null,year:2025,note:'Consumer banking, Francophone Africa',source:'https://techcrunch.com/2025/04/03/djamo-raises-17m-and-has-1m-users-across-francophone-africa/',quality:'verified'},
+  {name:'Raenest',country:'Nigeria',flag:'🇳🇬',geo:'africa',sector:'fintech',stage:'seriesA',raised:11,valuation:null,multiple:null,year:2025,note:'Cross-border accounts for Africans',source:'https://techcrunch.com/2025/02/11/qed-leads-11m-investment-in-nigerian-fintech-raenest/',quality:'verified'},
+
+  {name:'Tabby',country:'UAE',flag:'🇦🇪',geo:'mena',sector:'fintech',stage:'seriesE',raised:160,valuation:3300,multiple:null,year:2025,note:'BNPL & financial services',source:'https://techcrunch.com/2025/02/11/tabby-lands-160m-at-a-3-3b-valuation-as-it-expands-beyond-bnpl/',quality:'verified'},
+  {name:'MoneyHash',country:'Egypt',flag:'🇪🇬',geo:'mena',sector:'fintech',stage:'seriesA',raised:5.2,valuation:null,multiple:null,year:2025,note:'Payment orchestration',source:'https://techcrunch.com/2025/01/21/moneyhash-provides-single-access-to-payment-services-in-mena/',quality:'verified'},
+  {name:'Ziina',country:'UAE',flag:'🇦🇪',geo:'mena',sector:'fintech',stage:'seriesA',raised:22,valuation:null,multiple:null,year:2024,note:'SMB payments & wallet',source:'https://techcrunch.com/2024/09/02/ziina-banks-22m-as-growth-explodes-for-the-uae-based-fintech-for-small-businesses/',quality:'verified'},
+  {name:'ClearGrid',country:'UAE',flag:'🇦🇪',geo:'mena',sector:'fintech',stage:'seed',raised:10,valuation:null,multiple:null,year:2025,note:'AI debt collection infrastructure',source:'https://techcrunch.com/2025/03/19/cleargrid-armed-with-10m-uses-ai-to-fix-debt-collection-in-mena/',quality:'verified'},
+  {name:'qeen.ai',country:'UAE',flag:'🇦🇪',geo:'mena',sector:'saas',stage:'seed',raised:10,valuation:null,multiple:null,year:2025,note:'AI agents for e-commerce merchants',source:'https://techcrunch.com/2025/02/04/google-and-deepmind-alums-raises-10m-for-qee/',quality:'verified'},
+  {name:'Ninja',country:'Saudi Arabia',flag:'🇸🇦',geo:'mena',sector:'logistics',stage:'seriesC',raised:250,valuation:1500,multiple:null,year:2025,note:'Quick-commerce platform',source:'https://www.wamda.com/2025/07/saudi-q-commerce-ninja-raises-250-million-hits-unicorn-valuation-ahead-planned-ipo',quality:'verified'},
+
+  {name:'Pennylane',country:'France',flag:'🇫🇷',geo:'europe',sector:'fintech',stage:'seriesC',raised:43,valuation:1080,multiple:null,year:2024,note:'Accounting & finance software',source:'https://techcrunch.com/2024/02/07/accounting-software-startup-pennylane-becomes-frances-latest-unicorn/',quality:'verified'},
+  {name:'Swan',country:'France',flag:'🇫🇷',geo:'europe',sector:'fintech',stage:'seriesB',raised:44,valuation:null,multiple:null,year:2025,note:'Embedded banking infrastructure',source:'https://techcrunch.com/2025/01/29/european-embedded-banking-startup-swan-adds-another-44-million-to-its-series-b/',quality:'verified'},
+  {name:'Karmen',country:'France',flag:'🇫🇷',geo:'europe',sector:'fintech',stage:'seriesA',raised:9.4,valuation:null,multiple:null,year:2025,note:'Revenue-based financing / SME lending',source:'https://techcrunch.com/2025/01/20/karmen-secures-94-million-for-its-revenue-based-financing-products/',quality:'verified'},
+  {name:'Neko Health',country:'Sweden',flag:'🇸🇪',geo:'europe',sector:'healthtech',stage:'seriesB',raised:260,valuation:1800,multiple:null,year:2025,note:'Preventive health diagnostics',source:'https://techcrunch.com/2025/01/22/neko-the-body-scanning-startup-co-founded-by-spotifys-daniel-ek-snaps-up-260m-at-a-1-8b-valuation/',quality:'verified'},
+  {name:'Cast AI',country:'Lithuania',flag:'🇱🇹',geo:'europe',sector:'saas',stage:'seriesC',raised:108,valuation:null,multiple:null,year:2025,note:'Cloud optimization / AI infrastructure',source:'https://techcrunch.com/2025/04/30/cast-ai-raises-108m-to-get-the-max-out-of-ai-kubernetes-and-other-workloads/',quality:'verified'},
+  {name:'Aletiq',country:'France',flag:'🇫🇷',geo:'europe',sector:'saas',stage:'seed',raised:6.5,valuation:null,multiple:null,year:2025,note:'PLM software for manufacturers',source:'https://techcrunch.com/2025/03/19/aletiq-secures-65m-for-its-saas-tool-focused-on-product-lifecycle-management/',quality:'verified'},
+
+  // ── ALGERIA — ADDED 2025 ──
+  {name:'Völz',country:'Algeria',flag:'🇩🇿',geo:'africa',sector:'traveltech',stage:'seriesA',raised:5,valuation:null,multiple:null,year:2025,note:'Travel-tech / online travel agency',source:'https://waya.media/algerias-volz-raises-usd-5m-to-scale-travel-platform/',quality:'verified'},
+  {name:'Qareeb',country:'Algeria',flag:'🇩🇿',geo:'africa',sector:'agritech',stage:'seriesA',raised:2.0,valuation:null,multiple:null,year:2025,note:'Embedded AI / edge computing',source:'https://www.elmoudjahid.dz/fr/actualite/la-start-up-qareeb-reussit-une-levee-de-fonds-de-2-millions-de-dollars-americains-deuxieme-sortie-de-l-asf-reussie-244678',quality:'verified'}
+];
+
+const STAGE_ORDER={preseed:0,seed:1,seriesA:2,seriesB:3,seriesC:4,seriesD:5,seriesE:6,seriesF:7,ipo:8};
+const STAGE_LABELS={
+  en:{preseed:'Pre-Seed',seed:'Seed',seriesA:'Series A',seriesB:'Series B',seriesC:'Series C',seriesD:'Series D',seriesE:'Series E',seriesF:'Series F',ipo:'IPO'},
+  fr:{preseed:'Pré-Seed',seed:'Seed',seriesA:'Série A',seriesB:'Série B',seriesC:'Série C',seriesD:'Série D',seriesE:'Série E',seriesF:'Série F',ipo:'IPO'}
+};
+const GEO_LABELS={en:{africa:'Africa',mena:'MENA',europe:'Europe'},fr:{africa:'Afrique',mena:'MENA',europe:'Europe'}};
+const SECTOR_LABELS={
+  en:{fintech:'Fintech',saas:'SaaS',agritech:'AgriTech',healthtech:'Healthtech',logistics:'Logistics',edtech:'Edtech',marketplace:'Marketplace',cleantech:'Cleantech'},
+  fr:{fintech:'Fintech',saas:'SaaS',agritech:'AgriTech',healthtech:'Healthtech',logistics:'Logistique',edtech:'Edtech',marketplace:'Marketplace',cleantech:'Cleantech'}
+};
+const QUALITY_LABELS={
+  en:{verified:'Verified',estimated:'Estimated',user:'User input'},
+  fr:{verified:'Vérifié',estimated:'Estimé',user:'Saisie utilisateur'}
+};
+
+function fmtV(n){if(n===null||n===undefined)return'—';if(n>=1000)return'$'+(n/1000).toFixed(1)+'B';return'$'+n+'M';}
+function fmtR(n){if(n===null||n===undefined)return'—';return'$'+n+'M';}
+function fmtM(n){if(n===null||n===undefined)return'<span class="mult-cell na">n/a</span>';return'<span class="mult-cell">'+n+'×</span>';}
+function stageBucket(stage){
+  if(stage==='seed'||stage==='preseed')return'seed';
+  if(stage==='seriesA')return'seriesA';
+  if(stage==='seriesB')return'seriesB';
+  if(['seriesC','seriesD','seriesE','seriesF','ipo'].includes(stage))return'seriesC';
+  return'other';
+}
+function qualityBadge(q,lang){
+  if(!q)return'';
+  return `<span class="source-badge ${q}">${QUALITY_LABELS[lang][q]||q}</span>`;
+}
+function yearPass(dYear,filterYear){
+  if(filterYear==='all') return true;
+  if(filterYear==='pre2022') return dYear<=2021;
+  return dYear===filterYear;
+}
+
+function filtered(){
+  return DEALS.filter(d=>{
+    if(activeFilters.geo!=='all'&&d.geo!==activeFilters.geo)return false;
+    if(activeFilters.sector!=='all'&&d.sector!==activeFilters.sector)return false;
+    if(activeFilters.stage!=='all'){
+      const sc={
+        seed:['preseed','seed'],
+        seriesA:['seriesA'],
+        seriesB:['seriesB'],
+        seriesC:['seriesC','seriesD','seriesE','seriesF','ipo']
+      };
+      if(!sc[activeFilters.stage]?.includes(d.stage))return false;
+    }
+    if(!yearPass(d.year,activeFilters.year))return false;
+    return true;
+  }).sort((a,b)=>{
+    let va=a[sortCol],vb=b[sortCol];
+    if(sortCol==='stage'){va=STAGE_ORDER[a.stage]||0;vb=STAGE_ORDER[b.stage]||0;}
+    if(sortCol==='name'||sortCol==='geo'||sortCol==='sector'){va=va||'';vb=vb||'';}
+    if(va===null||va===undefined)va=sortDir>0?Infinity:-Infinity;
+    if(vb===null||vb===undefined)vb=sortDir>0?Infinity:-Infinity;
+    if(typeof va==='string') return sortDir*(va.localeCompare(vb));
+    return sortDir*(vb-va);
+  });
+}
+
+function setFilter(type,val){
+  activeFilters[type]=val;
+
+  document.querySelectorAll('[id^="fg_"]').forEach(b=>{
+    b.classList.toggle('active',b.id==='fg_'+activeFilters.geo);
+  });
+  document.querySelectorAll('[id^="fs_"]').forEach(b=>{
+    b.classList.toggle('active',b.id==='fs_'+activeFilters.sector);
+  });
+  const stageMap={all:'fst_all',seed:'fst_seed',seriesA:'fst_a',seriesB:'fst_b',seriesC:'fst_c'};
+  document.querySelectorAll('[id^="fst_"]').forEach(b=>{
+    b.classList.toggle('active',b.id===stageMap[activeFilters.stage]);
+  });
+  const yearMap={all:'fy_all',2025:'fy_2025',2024:'fy_2024',2023:'fy_2023',2022:'fy_2022',pre2022:'fy_pre2022'};
+  document.querySelectorAll('[id^="fy_"]').forEach(b=>{
+    b.classList.toggle('active',b.id===yearMap[activeFilters.year]);
+  });
+
+  render();
+}
+
+function sortBy(col){
+  if(sortCol===col)sortDir*=-1;
+  else{sortCol=col;sortDir=-1;}
+  document.querySelectorAll('.comp-table th').forEach(th=>th.classList.remove('sorted'));
+  const map={name:'th_company',geo:'th_geo',sector:'th_sector',stage:'th_stage',raised:'th_raised',valuation:'th_val',multiple:'th_mult',year:'th_year'};
+  if(map[col])document.getElementById(map[col])?.classList.add('sorted');
+  render();
+}
+
+function render(){
+  const lang=currentLang;
+  const data=filtered();
+
+  document.getElementById('filter_count').textContent=data.length+(lang==='fr'?' deals':' deals');
+  document.getElementById('total_deals').textContent=data.length;
+
+  const withVal=data.filter(d=>d.valuation!==null&&d.valuation!==undefined);
+  const withMult=data.filter(d=>d.multiple!==null&&d.multiple!==undefined);
+  const medVal=withVal.length?withVal.map(d=>d.valuation).sort((a,b)=>a-b)[Math.floor(withVal.length/2)]:null;
+  const medMult=withMult.length?withMult.map(d=>d.multiple).sort((a,b)=>a-b)[Math.floor(withMult.length/2)]:null;
+  const totalRaised=data.reduce((s,d)=>s+(d.raised||0),0);
+
+  const bucketLabels={en:{seed:'Seed',seriesA:'Series A',seriesB:'Series B',seriesC:'Series C+'},fr:{seed:'Seed',seriesA:'Série A',seriesB:'Série B',seriesC:'Série C+'}};
+  const stageCounts={seed:0,seriesA:0,seriesB:0,seriesC:0};
+  data.forEach(d=>{const b=stageBucket(d.stage);if(stageCounts[b]!==undefined)stageCounts[b]++;});
+  const topStage=Object.entries(stageCounts).sort((a,b)=>b[1]-a[1])[0];
+
+  const bmLabels=lang==='fr'
+    ?['Deals filtrés','Médiane valo','Multiple médian','Total levé','Stade dominant','Géo principale']
+    :['Filtered deals','Median valuation','Median multiple','Total raised','Top stage','Top geo'];
+
+  const geoCount={africa:0,mena:0,europe:0};
+  data.forEach(d=>geoCount[d.geo]++);
+  const topGeo=Object.entries(geoCount).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
+
+  document.getElementById('benchmark-bar').innerHTML=`
+    <div class="bm-cell"><div class="bm-label">${bmLabels[0]}</div><div class="bm-val">${data.length}</div><div class="bm-sub">${lang==='fr'?'entreprises':'companies'}</div></div>
+    <div class="bm-cell"><div class="bm-label">${bmLabels[1]}</div><div class="bm-val">${medVal!==null?fmtV(medVal):'—'}</div><div class="bm-sub">${lang==='fr'?'post-money':'post-money'}</div></div>
+    <div class="bm-cell"><div class="bm-label">${bmLabels[2]}</div><div class="bm-val">${medMult!==null?medMult+'×':'—'}</div><div class="bm-sub">EV/Revenue</div></div>
+    <div class="bm-cell"><div class="bm-label">${bmLabels[3]}</div><div class="bm-val">$${(totalRaised/1000).toFixed(1)}B</div><div class="bm-sub">${lang==='fr'?'levés':'raised'}</div></div>
+    <div class="bm-cell"><div class="bm-label">${bmLabels[4]}</div><div class="bm-val">${topStage?bucketLabels[lang][topStage[0]]:'—'}</div><div class="bm-sub">${topStage?.[1]||0} ${lang==='fr'?'deals':'deals'}</div></div>
+    <div class="bm-cell"><div class="bm-label">${bmLabels[5]}</div><div class="bm-val">${GEO_LABELS[lang][topGeo]||'—'}</div><div class="bm-sub">${geoCount[topGeo]||0} ${lang==='fr'?'deals':'deals'}</div></div>`;
+
+  if(!data.length){
+    document.getElementById('table-body').innerHTML=`<tr><td colspan="8"><div class="no-results">${lang==='fr'?'Aucun deal trouvé pour ces filtres.':'No deals found for these filters.'}</div></td></tr>`;
+    return;
+  }
+
+  document.getElementById('table-body').innerHTML=data.map(d=>`
+    <tr>
+      <td>
+        <div class="company-cell">
+          <span class="company-flag">${d.flag}</span>
+          <div>
+            <div class="company-name">
+              ${d.name}
+              ${qualityBadge(d.quality,lang)}
+            </div>
+            <div class="company-sub">
+              ${d.country} · ${d.note}
+              ${d.source ? ` · <a class="source-link" href="${d.source}" target="_blank" rel="noopener">source</a>` : ''}
+            </div>
+          </div>
+        </div>
+      </td>
+      <td><span class="geo-badge ${d.geo}">${GEO_LABELS[lang][d.geo]}</span></td>
+      <td>${SECTOR_LABELS[lang][d.sector]||d.sector}</td>
+      <td><span class="stage-badge ${d.stage}">${STAGE_LABELS[lang][d.stage]||d.stage}</span></td>
+      <td class="val-cell">${fmtR(d.raised)}</td>
+      <td class="val-cell">${fmtV(d.valuation)}</td>
+      <td>${fmtM(d.multiple)}</td>
+      <td class="year-cell">${d.year}</td>
+    </tr>
+  `).join('');
+}
+
+function setLang(l){
+  currentLang=l;
+  document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',['en','fr'][i]===l));
+  const s=(id,v)=>{const el=document.getElementById(id);if(el)el.innerHTML=v;};
+
+  if(l==='fr'){
+    s('pg_tag','Comparables Sectoriels');
+    s('pg_h1','Sachez où<br>vous vous situez.');
+    s('pg_p','Une base de données de tours de financement en Afrique, MENA et Europe. Utilisez-la pour benchmarker votre valorisation, construire votre analyse de comparables et justifier votre multiple auprès des investisseurs.');
+    s('lbl_deals','deals suivis');
+    s('lbl_geos','géographies');
+    s('lbl_sectors','secteurs');
+    s('lbl_updated','dernière mise à jour');
+    s('lbl_geo','Géo');
+    s('lbl_sector','Secteur');
+    s('lbl_stage','Stade');
+    s('lbl_year','Année');
+    s('fg_all','Tout');
+    s('fs_all','Tout');
+    s('fst_all','Tout');
+    s('fst_a','Série A');
+    s('fst_b','Série B');
+    s('fst_c','Série C+');
+    s('fy_all','Tout');
+    s('fy_pre2022','≤2021');
+    s('th_company','Entreprise <span class="sort-arrow">↕</span>');
+    s('th_geo','Géographie <span class="sort-arrow">↕</span>');
+    s('th_sector','Secteur <span class="sort-arrow">↕</span>');
+    s('th_stage','Stade <span class="sort-arrow">↕</span>');
+    s('th_raised','Montant levé <span class="sort-arrow">↕</span>');
+    s('th_val','Valorisation <span class="sort-arrow">↕</span>');
+    s('th_mult','Multiple EV/Rev <span class="sort-arrow">↕</span>');
+    s('th_year','Année <span class="sort-arrow">↕</span>');
+    s('disclaimer','⚠ Données issues d’annonces publiques, de Crunchbase, d’articles de presse et de certaines sources d’écosystème. Les valorisations et multiples sont des estimations lorsqu’ils ne sont pas divulgués publiquement. Cette base est à titre de référence uniquement — pas un conseil financier. Dernière mise à jour avril 2026.');
+    s('cta_title','Construisez votre analyse de comparables.');
+    s('cta_sub','Réservez une session pour positionner votre valorisation face aux bons benchmarks et construire une narrative investisseur défendable.');
+    s('cta_btn','Réserver votre session →');
+  } else {
+    s('pg_tag','Sector Comparables');
+    s('pg_h1','Know where you<br>stand.');
+    s('pg_p','A curated database of funding rounds across Africa, MENA, and Europe. Use it to benchmark your valuation, build your comparable analysis, and justify your multiple to investors.');
+    s('lbl_deals','deals tracked');
+    s('lbl_geos','geographies');
+    s('lbl_sectors','sectors');
+    s('lbl_updated','last updated');
+    s('lbl_geo','Geo');
+    s('lbl_sector','Sector');
+    s('lbl_stage','Stage');
+    s('lbl_year','Year');
+    s('fg_all','All');
+    s('fs_all','All');
+    s('fst_all','All');
+    s('fst_a','Series A');
+    s('fst_b','Series B');
+    s('fst_c','Series C+');
+    s('fy_all','All');
+    s('fy_pre2022','≤2021');
+    s('th_company','Company <span class="sort-arrow">↕</span>');
+    s('th_geo','Geography <span class="sort-arrow">↕</span>');
+    s('th_sector','Sector <span class="sort-arrow">↕</span>');
+    s('th_stage','Stage <span class="sort-arrow">↕</span>');
+    s('th_raised','Amount Raised <span class="sort-arrow">↕</span>');
+    s('th_val','Valuation <span class="sort-arrow">↕</span>');
+    s('th_mult','EV/Rev Multiple <span class="sort-arrow">↕</span>');
+    s('th_year','Year <span class="sort-arrow">↕</span>');
+    s('disclaimer','⚠ Data sourced from public announcements, Crunchbase, press reports, and selected ecosystem sources. Valuations and multiples are estimates where not publicly disclosed. This database is for reference only — not financial advice. Last updated April 2026.');
+    s('cta_title','Build your comparable analysis.');
+    s('cta_sub','Book a session to position your valuation against the right benchmarks and build a defensible investor narrative.');
+    s('cta_btn','Book your session →');
+  }
+  render();
+}
+
+document.getElementById('th_year')?.classList.add('sorted');
+render();
+</script>
+</body>
+</html>
