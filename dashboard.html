@@ -426,7 +426,7 @@ async function sendMagicLink(){
   if(!email||!email.includes('@')){err.textContent='Please enter a valid email.';err.style.display='block';return;}
   const {error}=await sb.auth.signInWithOtp({
     email,
-    options:{emailRedirectTo:'https://vcready.co/dashboard.html'}
+    options:{emailRedirectTo:'https://vcready.co/callback.html'}
   });
   if(error){err.textContent='Something went wrong. Try again.';err.style.display='block';}
   else succ.style.display='block';
@@ -435,7 +435,7 @@ async function sendMagicLink(){
 async function signInGoogle(){
   await sb.auth.signInWithOAuth({
     provider:'google',
-    options:{redirectTo:'https://vcready.co/dashboard.html'}
+    options:{redirectTo:'https://vcready.co/callback.html'}
   });
 }
 
