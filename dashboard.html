@@ -409,7 +409,13 @@ body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size
 <script>
 const SUPA_URL='https://fvbrzttvdvxhbdkjknje.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YnJ6dHR2ZHZ4aGJka2prbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzgwNTAsImV4cCI6MjA5MDcxNDA1MH0.tcE5PlgMsu7suLAzN3uT5VjKnFhc25qkJJMKkbNmtvI';
-const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
+  auth:{
+    detectSessionInUrl:true,
+    persistSession:true,
+    autoRefreshToken:true
+  }
+});
 
 // ── AUTH ACTIONS ──
 async function sendMagicLink(){
@@ -707,20 +713,23 @@ function renderNextSteps(vals,pitch,dataroom,qa,founder){
 
 // ── INIT ──
 async function init(){
-  const {data:{session}}=await sb.auth.getSession();
-  if(session){
-    loadDashboard(session.user);
-    return;
-  }
-  // Listen for auth state changes (handles OAuth + magic link redirects)
+  // Register listener BEFORE getSession — SDK will fire SIGNED_IN if token is in URL
   sb.auth.onAuthStateChange((event,session)=>{
-    if(session){
+    if(event==='SIGNED_IN'&&session){
       loadDashboard(session.user);
-    } else {
+    } else if(event==='SIGNED_OUT'){
       showAuth();
     }
   });
-  showAuth();
+
+  // Check for existing session
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){
+    loadDashboard(session.user);
+  } else {
+    // No session and no URL token — show login
+    showAuth();
+  }
 }
 
 init();
