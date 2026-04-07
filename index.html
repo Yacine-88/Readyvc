@@ -1,448 +1,1180 @@
-export default function Home() {
-  const modules = [
-    {
-      title: "Valuation modeling",
-      desc: "Estimate valuation through a venture lens using assumptions investors actually care about.",
-    },
-    {
-      title: "Metrics tracking",
-      desc: "Track the operating signals that shape investor confidence before the first meeting.",
-    },
-    {
-      title: "Pitch readiness",
-      desc: "Assess whether the quality of your story matches the quality of the business.",
-    },
-    {
-      title: "Data room readiness",
-      desc: "Identify missing materials before diligence turns into friction.",
-    },
-    {
-      title: "Investor Q&A",
-      desc: "Pressure-test your answers before investors do it live.",
-    },
-    {
-      title: "Sector comparables",
-      desc: "Benchmark your startup against real fundraising outcomes across markets.",
-    },
-  ];
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7BRPFG4JQL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-7BRPFG4JQL');
+  </script>
 
-  const pains = [
-    {
-      title: "Founders raise too early",
-      desc: "Most startups enter fundraising with incomplete preparation and weak diagnostic clarity.",
-    },
-    {
-      title: "Metrics stay fragmented",
-      desc: "Financials, traction, narrative, and documentation are rarely aligned in one workflow.",
-    },
-    {
-      title: "Strong businesses get poorly translated",
-      desc: "A weak pitch can destroy credibility even when the underlying business is solid.",
-    },
-    {
-      title: "Diligence becomes a bottleneck",
-      desc: "Missing documents and unclear assumptions slow momentum when timing matters most.",
-    },
-  ];
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VCReady — Measure your readiness before you raise.</title>
+  <meta name="description" content="VCReady helps founders measure, benchmark and improve the signals that matter to investors before fundraising starts.">
 
-  const outputs = [
-    {
-      title: "Global readiness score",
-      desc: "A structured signal of how prepared your startup is before fundraising.",
-    },
-    {
-      title: "Prioritized recommendations",
-      desc: "Know what to fix first, what matters most, and what can wait.",
-    },
-    {
-      title: "Benchmark context",
-      desc: "Anchor your expectations in market reality rather than intuition.",
-    },
-    {
-      title: "Founder report",
-      desc: "Export a decision-grade summary of your readiness and next steps.",
-      soon: true,
-    },
-  ];
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  return (
-    <main className="min-h-screen bg-[#f7f7f5] text-[#0e0e0c]">
-      <section className="border-b border-black/10 bg-white/70 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-          <div className="flex items-center gap-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-black text-sm font-extrabold tracking-tight">
-              VC
-            </div>
-            <div className="text-xl font-semibold tracking-tight">Ready</div>
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    :root{
+      --bg:#F7F7F5;
+      --panel:#FFFFFF;
+      --ink:#0E0E0C;
+      --ink-2:#2B2B27;
+      --muted:#6F6E66;
+      --muted-2:#99978E;
+      --line:#E7E3DA;
+      --line-2:#D8D4CB;
+      --soft:#F2F0EA;
+      --soft-2:#FBFBF9;
+      --success:#0F6A46;
+      --success-bg:#EAF6F0;
+      --success-line:#B6DEC8;
+      --warn:#8A6B1F;
+      --warn-bg:#F8F3E6;
+      --warn-line:#E7D5A7;
+      --danger:#8C4343;
+      --danger-bg:#FAECEC;
+      --danger-line:#E8C0C0;
+      --container:1240px;
+      --radius:24px;
+      --radius-sm:18px;
+      --shadow:0 12px 34px rgba(0,0,0,.045);
+      --font:'Inter',sans-serif;
+    }
+
+    html{scroll-behavior:smooth}
+
+    body{
+      background:var(--bg);
+      color:var(--ink);
+      font-family:var(--font);
+      font-size:14px;
+      line-height:1.6;
+      min-height:100vh;
+    }
+
+    a{color:inherit;text-decoration:none}
+
+    .container{
+      width:100%;
+      max-width:var(--container);
+      margin:0 auto;
+      padding:0 32px;
+    }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:100;
+      height:72px;
+      border-bottom:1px solid rgba(216,212,203,.85);
+      backdrop-filter:blur(16px);
+      background:rgba(247,247,245,.88);
+    }
+
+    .topbar-inner{
+      height:72px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:20px;
+    }
+
+    .logo{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      flex-shrink:0;
+    }
+
+    .logo-mark{
+      width:42px;
+      height:42px;
+      border:1.5px solid var(--ink);
+      border-radius:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:17px;
+      font-weight:800;
+      letter-spacing:-.05em;
+      line-height:1;
+      background:#FFF;
+    }
+
+    .logo-word{
+      font-size:20px;
+      font-weight:700;
+      letter-spacing:-.045em;
+    }
+
+    .topbar-nav{
+      display:flex;
+      align-items:center;
+      gap:28px;
+    }
+
+    .nav-link{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      transition:.18s ease;
+    }
+
+    .nav-link:hover{color:var(--ink)}
+
+    .topbar-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-shrink:0;
+    }
+
+    .btn,
+    .btn-secondary{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      border:none;
+      font-family:var(--font);
+      cursor:pointer;
+      transition:.18s ease;
+      white-space:nowrap;
+      border-radius:14px;
+    }
+
+    .btn{
+      height:44px;
+      padding:0 18px;
+      background:var(--ink);
+      color:#FFF;
+      font-size:13px;
+      font-weight:700;
+      letter-spacing:-.01em;
+    }
+
+    .btn:hover{
+      background:#000;
+      transform:translateY(-1px);
+    }
+
+    .btn-secondary{
+      height:44px;
+      padding:0 18px;
+      background:#FFF;
+      color:var(--ink);
+      border:1px solid var(--line-2);
+      font-size:13px;
+      font-weight:700;
+      letter-spacing:-.01em;
+    }
+
+    .btn-secondary:hover{
+      border-color:var(--ink);
+      transform:translateY(-1px);
+    }
+
+    .section{
+      border-bottom:1px solid var(--line);
+    }
+
+    .hero{
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hero:before{
+      content:'';
+      position:absolute;
+      inset:0;
+      background:radial-gradient(circle at top, rgba(0,0,0,.045), transparent 40%);
+      pointer-events:none;
+    }
+
+    .hero-inner{
+      position:relative;
+      z-index:1;
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      gap:56px;
+      align-items:center;
+      padding:84px 0 82px;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      color:var(--muted);
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:.13em;
+      text-transform:uppercase;
+      margin-bottom:22px;
+    }
+
+    .eyebrow:before{
+      content:'';
+      width:24px;
+      height:1px;
+      background:var(--line-2);
+      display:block;
+    }
+
+    .hero-title{
+      font-size:72px;
+      line-height:.95;
+      letter-spacing:-.075em;
+      font-weight:800;
+      max-width:760px;
+      margin-bottom:20px;
+    }
+
+    .hero-title .muted{color:var(--muted)}
+
+    .hero-text{
+      font-size:17px;
+      color:var(--ink-2);
+      line-height:1.8;
+      max-width:620px;
+      margin-bottom:30px;
+    }
+
+    .hero-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-bottom:20px;
+    }
+
+    .hero-meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:18px;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:600;
+    }
+
+    .hero-meta span{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .hero-meta span:before{
+      content:'';
+      width:5px;
+      height:5px;
+      border-radius:50%;
+      background:var(--muted-2);
+      display:block;
+    }
+
+    .hero-card{
+      border:1px solid var(--line);
+      border-radius:28px;
+      background:#FFF;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .hero-card-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:18px 22px;
+      border-bottom:1px solid var(--line);
+      background:#FCFCFA;
+    }
+
+    .hero-card-kicker{
+      color:var(--muted);
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      margin-bottom:5px;
+    }
+
+    .hero-card-title{
+      font-size:14px;
+      font-weight:800;
+      letter-spacing:-.02em;
+    }
+
+    .pill{
+      border:1px solid var(--success-line);
+      background:var(--success-bg);
+      color:var(--success);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:11px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .hero-card-body{
+      padding:22px;
+      display:grid;
+      gap:16px;
+    }
+
+    .preview-grid{
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      gap:16px;
+    }
+
+    .preview-big,
+    .preview-small,
+    .preview-bottom,
+    .metric-card{
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:var(--soft-2);
+    }
+
+    .preview-big{
+      padding:22px;
+    }
+
+    .preview-label{
+      color:var(--muted);
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      margin-bottom:8px;
+    }
+
+    .preview-score{
+      font-size:72px;
+      line-height:.92;
+      letter-spacing:-.08em;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+
+    .preview-desc{
+      color:var(--ink-2);
+      font-size:13px;
+      line-height:1.75;
+      max-width:320px;
+    }
+
+    .preview-side{
+      display:grid;
+      gap:16px;
+    }
+
+    .preview-small{
+      padding:18px;
+      background:#FFF;
+    }
+
+    .preview-small-title{
+      font-size:22px;
+      line-height:1.05;
+      letter-spacing:-.04em;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+
+    .preview-small-text{
+      color:var(--ink-2);
+      font-size:12px;
+      line-height:1.7;
+    }
+
+    .metric-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:16px;
+    }
+
+    .metric-card{
+      padding:16px;
+    }
+
+    .metric-name{
+      color:var(--muted);
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      margin-bottom:8px;
+    }
+
+    .metric-value{
+      font-size:28px;
+      line-height:1;
+      letter-spacing:-.06em;
+      font-weight:800;
+    }
+
+    .preview-bottom{
+      padding:18px;
+      background:#FFF;
+    }
+
+    .preview-bottom-text{
+      color:var(--ink-2);
+      font-size:13px;
+      line-height:1.8;
+    }
+
+    .stats-strip{
+      padding:22px 0;
+      border-top:1px solid var(--line);
+      border-bottom:1px solid var(--line);
+      background:#FFF;
+    }
+
+    .stats-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:16px;
+    }
+
+    .stat-card{
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:var(--soft-2);
+      padding:18px;
+    }
+
+    .stat-label{
+      color:var(--muted);
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      margin-bottom:8px;
+    }
+
+    .stat-value{
+      font-size:36px;
+      line-height:1;
+      letter-spacing:-.06em;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+
+    .stat-text{
+      color:var(--ink-2);
+      font-size:12px;
+      line-height:1.75;
+    }
+
+    .content-section{
+      padding:88px 0;
+    }
+
+    .section-grid{
+      display:grid;
+      grid-template-columns:260px 1fr;
+      gap:44px;
+      align-items:start;
+    }
+
+    .section-kicker{
+      padding-top:6px;
+      color:var(--muted);
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:.13em;
+      text-transform:uppercase;
+    }
+
+    .section-title{
+      font-size:48px;
+      line-height:1.02;
+      letter-spacing:-.07em;
+      font-weight:800;
+      max-width:820px;
+      margin-bottom:16px;
+    }
+
+    .section-text{
+      max-width:760px;
+      color:var(--ink-2);
+      font-size:17px;
+      line-height:1.85;
+    }
+
+    .cards-3{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+      margin-top:34px;
+    }
+
+    .cards-2{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:18px;
+      margin-top:34px;
+    }
+
+    .card{
+      border:1px solid var(--line);
+      border-radius:24px;
+      background:#FFF;
+      padding:24px;
+      transition:.18s ease;
+    }
+
+    .card.soft{background:var(--soft-2)}
+    .card:hover{
+      transform:translateY(-2px);
+      border-color:rgba(14,14,12,.18);
+    }
+
+    .step-badge{
+      width:40px;
+      height:40px;
+      border-radius:50%;
+      border:1px solid var(--line-2);
+      background:var(--soft);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:13px;
+      font-weight:800;
+      margin-bottom:20px;
+    }
+
+    .card-title{
+      font-size:28px;
+      line-height:1.06;
+      letter-spacing:-.05em;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+
+    .card-text{
+      color:var(--ink-2);
+      font-size:14px;
+      line-height:1.8;
+    }
+
+    .modules-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+      margin-top:34px;
+    }
+
+    .module-card{
+      border:1px solid var(--line);
+      border-radius:24px;
+      background:var(--soft-2);
+      padding:22px;
+      transition:.18s ease;
+    }
+
+    .module-card:hover{
+      transform:translateY(-2px);
+      border-color:rgba(14,14,12,.18);
+      background:#FFF;
+    }
+
+    .module-title{
+      font-size:22px;
+      line-height:1.08;
+      letter-spacing:-.04em;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+
+    .module-text{
+      color:var(--ink-2);
+      font-size:13px;
+      line-height:1.8;
+    }
+
+    .output-head{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+
+    .mini-pill{
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#FFF;
+      color:var(--muted);
+      font-size:10px;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      padding:5px 9px;
+    }
+
+    .final-cta{
+      background:var(--ink);
+      color:#FFF;
+      border-bottom:none;
+    }
+
+    .final-cta .content-section{
+      padding:88px 0;
+    }
+
+    .final-grid{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:44px;
+      align-items:end;
+    }
+
+    .final-kicker{
+      color:rgba(255,255,255,.42);
+      font-size:11px;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:.13em;
+      margin-bottom:14px;
+    }
+
+    .final-title{
+      font-size:52px;
+      line-height:1.02;
+      letter-spacing:-.07em;
+      font-weight:800;
+      max-width:760px;
+      margin-bottom:16px;
+    }
+
+    .final-text{
+      max-width:700px;
+      color:rgba(255,255,255,.68);
+      font-size:17px;
+      line-height:1.85;
+    }
+
+    .final-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      justify-content:flex-start;
+    }
+
+    .final-actions .btn{
+      background:#FFF;
+      color:var(--ink);
+    }
+
+    .final-actions .btn:hover{
+      background:#F0F0EC;
+    }
+
+    .final-actions .btn-secondary{
+      background:transparent;
+      color:#FFF;
+      border-color:rgba(255,255,255,.18);
+    }
+
+    .final-actions .btn-secondary:hover{
+      border-color:#FFF;
+      background:transparent;
+    }
+
+    footer{
+      background:var(--ink);
+      color:rgba(255,255,255,.46);
+      padding:0 0 28px;
+    }
+
+    .footer-inner{
+      border-top:1px solid rgba(255,255,255,.1);
+      padding-top:20px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:20px;
+      font-size:12px;
+    }
+
+    .footer-inner a{
+      color:#FFF;
+      font-weight:700;
+    }
+
+    @media(max-width:1120px){
+      .hero-inner,
+      .final-grid,
+      .section-grid{
+        grid-template-columns:1fr;
+      }
+
+      .cards-3,
+      .modules-grid,
+      .stats-grid{
+        grid-template-columns:1fr 1fr;
+      }
+
+      .preview-grid,
+      .cards-2{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media(max-width:820px){
+      .container{padding:0 18px}
+      .topbar{height:64px}
+      .topbar-inner{height:64px}
+      .topbar-nav{display:none}
+      .topbar-actions .btn-secondary{display:none}
+
+      .hero-inner{
+        padding:48px 0 52px;
+        gap:32px;
+      }
+
+      .hero-title{font-size:46px}
+      .hero-text,
+      .section-text,
+      .final-text{font-size:15px}
+      .section-title{font-size:36px}
+      .final-title{font-size:40px}
+
+      .cards-3,
+      .cards-2,
+      .modules-grid,
+      .stats-grid,
+      .metric-grid{
+        grid-template-columns:1fr;
+      }
+
+      .footer-inner{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="container">
+      <div class="topbar-inner">
+        <a href="index.html" class="logo">
+          <span class="logo-mark">VC</span>
+          <span class="logo-word">Ready</span>
+        </a>
+
+        <nav class="topbar-nav">
+          <a href="#how" class="nav-link">How it works</a>
+          <a href="#modules" class="nav-link">Modules</a>
+          <a href="#why" class="nav-link">Why it matters</a>
+          <a href="#outputs" class="nav-link">Outputs</a>
+        </nav>
+
+        <div class="topbar-actions">
+          <a href="dashboard.html" class="btn-secondary">Sign in</a>
+          <a href="dashboard.html" class="btn">Get started →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="section hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div>
+          <div class="eyebrow">Investor readiness, measured</div>
+
+          <h1 class="hero-title">
+            Measure your startup’s readiness
+            <span class="muted">before you raise.</span>
+          </h1>
+
+          <p class="hero-text">
+            VCReady helps founders track, benchmark, and improve the signals that matter
+            to investors — before fundraising starts costing time, momentum, and credibility.
+          </p>
+
+          <div class="hero-actions">
+            <a href="dashboard.html" class="btn">Get your readiness score →</a>
+            <a href="#modules" class="btn-secondary">Explore platform</a>
           </div>
 
-          <div className="hidden items-center gap-8 md:flex">
-            <a href="#how" className="text-sm font-medium text-black/60 transition hover:text-black">
-              How it works
-            </a>
-            <a href="#modules" className="text-sm font-medium text-black/60 transition hover:text-black">
-              Modules
-            </a>
-            <a href="#why" className="text-sm font-medium text-black/60 transition hover:text-black">
-              Why it matters
-            </a>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button className="hidden rounded-xl border border-black/15 bg-white px-4 py-2.5 text-sm font-semibold transition hover:border-black md:inline-flex">
-              Sign in
-            </button>
-            <button className="rounded-xl bg-black px-4 py-2.5 text-sm font-semibold text-white transition hover:translate-y-[-1px] hover:bg-black/90">
-              Get started
-            </button>
+          <div class="hero-meta">
+            <span>Founder-focused</span>
+            <span>No fluff</span>
+            <span>Structured before fundraising</span>
           </div>
         </div>
-      </section>
 
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,0,0,0.04),transparent_40%)]" />
-        <div className="mx-auto grid max-w-7xl gap-16 px-6 py-24 md:grid-cols-[1.05fr_.95fr] md:py-28">
-          <div className="relative z-10">
-            <div className="mb-6 inline-flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.14em] text-black/45">
-              <span className="block h-px w-6 bg-black/20" />
-              Investor readiness, measured
+        <div class="hero-card">
+          <div class="hero-card-head">
+            <div>
+              <div class="hero-card-kicker">VCReady dashboard</div>
+              <div class="hero-card-title">Readiness snapshot</div>
             </div>
-
-            <h1 className="max-w-4xl text-5xl font-semibold leading-[0.95] tracking-[-0.07em] md:text-7xl">
-              Measure your startup’s readiness{" "}
-              <span className="text-black/45">before you raise.</span>
-            </h1>
-
-            <p className="mt-7 max-w-2xl text-lg leading-8 text-black/65">
-              VCReady helps founders track, benchmark, and improve the signals
-              that matter to investors — before fundraising starts costing time,
-              momentum, and credibility.
-            </p>
-
-            <div className="mt-9 flex flex-wrap items-center gap-4">
-              <button className="rounded-2xl bg-black px-6 py-3.5 text-sm font-semibold text-white transition hover:translate-y-[-1px] hover:bg-black/90">
-                Get your readiness score
-              </button>
-              <button className="rounded-2xl border border-black/15 bg-white px-6 py-3.5 text-sm font-semibold transition hover:border-black">
-                Explore platform
-              </button>
-            </div>
-
-            <div className="mt-8 flex flex-wrap gap-5 text-sm text-black/45">
-              <span>Founder-focused</span>
-              <span>No fluff</span>
-              <span>Structured before fundraising</span>
-            </div>
+            <div class="pill">Live score</div>
           </div>
 
-          <div className="relative">
-            <div className="rounded-[28px] border border-black/10 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.06)]">
-              <div className="flex items-center justify-between border-b border-black/10 px-6 py-4">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-black/40">
-                    VCReady dashboard
-                  </p>
-                  <h2 className="mt-1 text-sm font-semibold">Readiness snapshot</h2>
-                </div>
-                <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-700">
-                  Live score
+          <div class="hero-card-body">
+            <div class="preview-grid">
+              <div class="preview-big">
+                <div class="preview-label">Overall readiness</div>
+                <div class="preview-score">74</div>
+                <div class="preview-desc">
+                  Strong operating discipline. The business looks better than the current fundraising narrative communicates.
                 </div>
               </div>
 
-              <div className="space-y-5 p-6">
-                <div className="grid gap-5 md:grid-cols-[1.05fr_.95fr]">
-                  <div className="rounded-3xl border border-black/10 bg-[#fbfbf9] p-6">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-black/40">
-                      Overall readiness
-                    </p>
-                    <div className="mt-3 text-7xl font-semibold tracking-[-0.08em]">
-                      74
-                    </div>
-                    <p className="mt-4 max-w-xs text-sm leading-7 text-black/60">
-                      Strong operating discipline. The business looks better than
-                      the current fundraising narrative communicates.
-                    </p>
+              <div class="preview-side">
+                <div class="preview-small">
+                  <div class="preview-label">Strongest area</div>
+                  <div class="preview-small-title">Metrics quality</div>
+                  <div class="preview-small-text">
+                    Healthy operating signal and credible fundamentals.
                   </div>
+                </div>
 
-                  <div className="space-y-5">
-                    <div className="rounded-3xl border border-black/10 bg-white p-5">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-black/40">
-                        Strongest area
-                      </p>
-                      <div className="mt-2 text-2xl font-semibold tracking-tight">
-                        Metrics quality
-                      </div>
-                      <p className="mt-2 text-sm leading-7 text-black/60">
-                        Healthy operating signal and credible fundamentals.
-                      </p>
-                    </div>
-
-                    <div className="rounded-3xl border border-black/10 bg-white p-5">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-black/40">
-                        Top priority
-                      </p>
-                      <div className="mt-2 text-2xl font-semibold tracking-tight">
-                        Improve pitch clarity
-                      </div>
-                      <p className="mt-2 text-sm leading-7 text-black/60">
-                        The narrative still underperforms against the business.
-                      </p>
-                    </div>
+                <div class="preview-small">
+                  <div class="preview-label">Top priority</div>
+                  <div class="preview-small-title">Improve pitch clarity</div>
+                  <div class="preview-small-text">
+                    The narrative still underperforms against the business.
                   </div>
                 </div>
+              </div>
+            </div>
 
-                <div className="grid gap-4 md:grid-cols-4">
-                  {[
-                    { label: "Metrics", value: "81%" },
-                    { label: "Pitch", value: "67%" },
-                    { label: "Data room", value: "82%" },
-                    { label: "Q&A", value: "72%" },
-                  ].map((item) => (
-                    <div
-                      key={item.label}
-                      className="rounded-2xl border border-black/10 bg-[#fbfbf9] p-4"
-                    >
-                      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-black/40">
-                        {item.label}
-                      </p>
-                      <p className="mt-2 text-2xl font-semibold tracking-tight">
-                        {item.value}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+            <div class="metric-grid">
+              <div class="metric-card">
+                <div class="metric-name">Metrics</div>
+                <div class="metric-value">81%</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-name">Pitch</div>
+                <div class="metric-value">67%</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-name">Data room</div>
+                <div class="metric-value">82%</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-name">Q&amp;A</div>
+                <div class="metric-value">72%</div>
+              </div>
+            </div>
 
-                <div className="rounded-3xl border border-black/10 bg-white p-5">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-black/40">
-                    Key insight
-                  </p>
-                  <p className="mt-3 text-sm leading-7 text-black/65">
-                    Your strongest asset is operating discipline. Your weakest
-                    point is translation: the business is performing better than
-                    the pitch communicates. Tighten market framing, sharpen the
-                    ask, and the profile becomes materially more investable.
-                  </p>
-                </div>
+            <div class="preview-bottom">
+              <div class="preview-label">Key insight</div>
+              <div class="preview-bottom-text">
+                Your strongest asset is operating discipline. Your weakest point is translation:
+                the business is performing better than the pitch communicates. Tighten market framing,
+                sharpen the ask, and the profile becomes materially more investable.
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </div>
+  </section>
 
-      <section className="border-y border-black/10 bg-white">
-        <div className="mx-auto grid max-w-7xl gap-4 px-6 py-8 md:grid-cols-4">
-          {[
-            {
-              label: "Platform scope",
-              value: "7",
-              text: "Integrated modules covering valuation, readiness, and investor-facing preparation.",
-            },
-            {
-              label: "Coverage",
-              value: "26",
-              text: "Sector assumptions and benchmarks designed around fundraising use cases.",
-            },
-            {
-              label: "Founder usage",
-              value: "100+",
-              text: "Profiles assessed through tools, advisory work, and readiness workflows.",
-            },
-            {
-              label: "Core promise",
-              value: "1",
-              text: "One operating layer to help founders understand how investors will read the company.",
-            },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="rounded-3xl border border-black/10 bg-[#fbfbf9] p-6"
-            >
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-black/40">
-                {item.label}
-              </p>
-              <div className="mt-3 text-4xl font-semibold tracking-[-0.06em]">
-                {item.value}
-              </div>
-              <p className="mt-3 text-sm leading-7 text-black/60">{item.text}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section id="how" className="mx-auto max-w-7xl px-6 py-24">
-        <div className="grid gap-10 md:grid-cols-[260px_1fr]">
-          <div className="pt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-black/40">
-            How it works
+  <section class="stats-strip">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Platform scope</div>
+          <div class="stat-value">7</div>
+          <div class="stat-text">
+            Integrated modules covering valuation, readiness, and investor-facing preparation.
           </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Coverage</div>
+          <div class="stat-value">26</div>
+          <div class="stat-text">
+            Sector assumptions and benchmarks designed around fundraising use cases.
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Founder usage</div>
+          <div class="stat-value">100+</div>
+          <div class="stat-text">
+            Profiles assessed through tools, advisory work, and readiness workflows.
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">Core promise</div>
+          <div class="stat-value">1</div>
+          <div class="stat-text">
+            One operating layer to help founders understand how investors will read the company.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="how">
+    <div class="container">
+      <div class="content-section">
+        <div class="section-grid">
+          <div class="section-kicker">How it works</div>
+
           <div>
-            <h2 className="max-w-3xl text-4xl font-semibold tracking-[-0.06em] md:text-5xl">
-              A better way to prepare for fundraising.
-            </h2>
-            <p className="mt-5 max-w-3xl text-lg leading-8 text-black/65">
-              Most founders prepare too late and too loosely. VCReady creates
-              structure before the process becomes expensive.
+            <h2 class="section-title">A better way to prepare for fundraising.</h2>
+            <p class="section-text">
+              Most founders prepare too late and too loosely. VCReady creates structure
+              before the process becomes expensive.
             </p>
 
-            <div className="mt-12 grid gap-6 md:grid-cols-3">
-              {[
-                {
-                  step: "01",
-                  title: "Input the fundamentals",
-                  desc: "Start with valuation logic, operating metrics, deck quality, and readiness materials.",
-                },
-                {
-                  step: "02",
-                  title: "Get a structured readout",
-                  desc: "Turn scattered information into a clear readiness signal with strengths and weaknesses.",
-                },
-                {
-                  step: "03",
-                  title: "Improve before the market does",
-                  desc: "Fix what most affects investor perception before entering live conversations.",
-                },
-              ].map((item) => (
-                <div
-                  key={item.step}
-                  className="rounded-3xl border border-black/10 bg-white p-7"
-                >
-                  <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-[#f7f7f5] text-sm font-bold">
-                    {item.step}
-                  </div>
-                  <h3 className="text-2xl font-semibold tracking-tight">{item.title}</h3>
-                  <p className="mt-4 text-sm leading-7 text-black/60">{item.desc}</p>
+            <div class="cards-3">
+              <div class="card">
+                <div class="step-badge">01</div>
+                <div class="card-title">Input the fundamentals</div>
+                <div class="card-text">
+                  Start with valuation logic, operating metrics, deck quality, and readiness materials.
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+              </div>
 
-      <section id="modules" className="border-y border-black/10 bg-white">
-        <div className="mx-auto max-w-7xl px-6 py-24">
-          <div className="grid gap-10 md:grid-cols-[260px_1fr]">
-            <div className="pt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-black/40">
-              Core modules
-            </div>
-            <div>
-              <h2 className="max-w-3xl text-4xl font-semibold tracking-[-0.06em] md:text-5xl">
-                Built around how investors actually think.
-              </h2>
-              <p className="mt-5 max-w-3xl text-lg leading-8 text-black/65">
-                Each module is useful on its own. Together, they create a much
-                stronger product story: not isolated tools, but one coherent
-                investor-readiness system.
-              </p>
+              <div class="card">
+                <div class="step-badge">02</div>
+                <div class="card-title">Get a structured readout</div>
+                <div class="card-text">
+                  Turn scattered information into a clear readiness signal with strengths and weaknesses.
+                </div>
+              </div>
 
-              <div className="mt-12 grid gap-5 md:grid-cols-3">
-                {modules.map((item) => (
-                  <div
-                    key={item.title}
-                    className="rounded-3xl border border-black/10 bg-[#fbfbf9] p-6 transition duration-200 hover:translate-y-[-2px] hover:border-black/20"
-                  >
-                    <h3 className="text-xl font-semibold tracking-tight">{item.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-black/60">{item.desc}</p>
-                  </div>
-                ))}
+              <div class="card">
+                <div class="step-badge">03</div>
+                <div class="card-title">Improve before the market does</div>
+                <div class="card-text">
+                  Fix what most affects investor perception before entering live conversations.
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </div>
+  </section>
 
-      <section id="why" className="mx-auto max-w-7xl px-6 py-24">
-        <div className="grid gap-10 md:grid-cols-[260px_1fr]">
-          <div className="pt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-black/40">
-            Why it matters
-          </div>
+  <section class="section" id="modules" style="background:#fff">
+    <div class="container">
+      <div class="content-section">
+        <div class="section-grid">
+          <div class="section-kicker">Core modules</div>
+
           <div>
-            <h2 className="max-w-3xl text-4xl font-semibold tracking-[-0.06em] md:text-5xl">
-              Fundraising breaks when readiness stays fragmented.
-            </h2>
-            <p className="mt-5 max-w-3xl text-lg leading-8 text-black/65">
-              The issue is rarely effort. It is usually structure, interpretation,
-              and timing.
+            <h2 class="section-title">Built around how investors actually think.</h2>
+            <p class="section-text">
+              Each module is useful on its own. Together, they create a much stronger product story:
+              not isolated tools, but one coherent investor-readiness system.
             </p>
 
-            <div className="mt-12 grid gap-5 md:grid-cols-2">
-              {pains.map((item) => (
-                <div
-                  key={item.title}
-                  className="rounded-3xl border border-black/10 bg-white p-7"
-                >
-                  <h3 className="text-2xl font-semibold tracking-tight">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-black/60">{item.desc}</p>
+            <div class="modules-grid">
+              <div class="module-card">
+                <div class="module-title">Valuation modeling</div>
+                <div class="module-text">
+                  Estimate valuation through a venture lens using assumptions investors actually care about.
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+              </div>
 
-      <section className="border-y border-black/10 bg-white">
-        <div className="mx-auto max-w-7xl px-6 py-24">
-          <div className="grid gap-10 md:grid-cols-[260px_1fr]">
-            <div className="pt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-black/40">
-              What you get
-            </div>
-            <div>
-              <h2 className="max-w-3xl text-4xl font-semibold tracking-[-0.06em] md:text-5xl">
-                Clear outputs. Better decisions.
-              </h2>
-              <p className="mt-5 max-w-3xl text-lg leading-8 text-black/65">
-                The value is not just in calculating. It is in knowing what to do
-                with the signal.
-              </p>
+              <div class="module-card">
+                <div class="module-title">Metrics tracking</div>
+                <div class="module-text">
+                  Track the operating signals that shape investor confidence before the first meeting.
+                </div>
+              </div>
 
-              <div className="mt-12 grid gap-5 md:grid-cols-2">
-                {outputs.map((item) => (
-                  <div
-                    key={item.title}
-                    className="rounded-3xl border border-black/10 bg-[#fbfbf9] p-7"
-                  >
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-2xl font-semibold tracking-tight">{item.title}</h3>
-                      {item.soon && (
-                        <span className="rounded-full border border-black/10 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-black/45">
-                          Coming soon
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-3 text-sm leading-7 text-black/60">{item.desc}</p>
-                  </div>
-                ))}
+              <div class="module-card">
+                <div class="module-title">Pitch readiness</div>
+                <div class="module-text">
+                  Assess whether the quality of your story matches the quality of the business.
+                </div>
+              </div>
+
+              <div class="module-card">
+                <div class="module-title">Data room readiness</div>
+                <div class="module-text">
+                  Identify missing materials before diligence turns into friction.
+                </div>
+              </div>
+
+              <div class="module-card">
+                <div class="module-title">Investor Q&amp;A</div>
+                <div class="module-text">
+                  Pressure-test your answers before investors do it live.
+                </div>
+              </div>
+
+              <div class="module-card">
+                <div class="module-title">Sector comparables</div>
+                <div class="module-text">
+                  Benchmark your startup against real fundraising outcomes across markets.
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </div>
+  </section>
 
-      <section className="bg-[#0e0e0c] text-white">
-        <div className="mx-auto max-w-7xl px-6 py-24">
-          <div className="grid gap-10 md:grid-cols-[1fr_auto] md:items-end">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/40">
-                Final call
-              </p>
-              <h2 className="mt-4 max-w-3xl text-4xl font-semibold tracking-[-0.06em] md:text-5xl">
-                If you’re not ready, don’t raise.
-              </h2>
-              <p className="mt-5 max-w-2xl text-lg leading-8 text-white/65">
-                Fix your fundamentals before entering fundraising. It is cheaper,
-                faster, and far more credible than correcting the story mid-process.
-              </p>
-            </div>
+  <section class="section" id="why">
+    <div class="container">
+      <div class="content-section">
+        <div class="section-grid">
+          <div class="section-kicker">Why it matters</div>
 
-            <div className="flex flex-wrap gap-4">
-              <button className="rounded-2xl bg-white px-6 py-3.5 text-sm font-semibold text-black transition hover:translate-y-[-1px] hover:bg-white/90">
-                Get started
-              </button>
-              <button className="rounded-2xl border border-white/15 px-6 py-3.5 text-sm font-semibold text-white transition hover:border-white">
-                Book a session
-              </button>
+          <div>
+            <h2 class="section-title">Fundraising breaks when readiness stays fragmented.</h2>
+            <p class="section-text">
+              The issue is rarely effort. It is usually structure, interpretation, and timing.
+            </p>
+
+            <div class="cards-2">
+              <div class="card">
+                <div class="card-title">Founders raise too early</div>
+                <div class="card-text">
+                  Most startups enter fundraising with incomplete preparation and weak diagnostic clarity.
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-title">Metrics stay fragmented</div>
+                <div class="card-text">
+                  Financials, traction, narrative, and documentation are rarely aligned in one workflow.
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-title">Strong businesses get poorly translated</div>
+                <div class="card-text">
+                  A weak pitch can destroy credibility even when the underlying business is solid.
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-title">Diligence becomes a bottleneck</div>
+                <div class="card-text">
+                  Missing documents and unclear assumptions slow momentum when timing matters most.
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </section>
-    </main>
-  );
-}
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="outputs" style="background:#fff">
+    <div class="container">
+      <div class="content-section">
+        <div class="section-grid">
+          <div class="section-kicker">What you get</div>
+
+          <div>
+            <h2 class="section-title">Clear outputs. Better decisions.</h2>
+            <p class="section-text">
+              The value is not just in calculating. It is in knowing what to do with the signal.
+            </p>
+
+            <div class="cards-2">
+              <div class="card soft">
+                <div class="output-head">
+                  <div class="card-title" style="margin-bottom:0">Global readiness score</div>
+                </div>
+                <div class="card-text">
+                  A structured signal of how prepared your startup is before fundraising.
+                </div>
+              </div>
+
+              <div class="card soft">
+                <div class="output-head">
+                  <div class="card-title" style="margin-bottom:0">Prioritized recommendations</div>
+                </div>
+                <div class="card-text">
+                  Know what to fix first, what matters most, and what can wait.
+                </div>
+              </div>
+
+              <div class="card soft">
+                <div class="output-head">
+                  <div class="card-title" style="margin-bottom:0">Benchmark context</div>
+                </div>
+                <div class="card-text">
+                  Anchor your expectations in market reality rather than intuition.
+                </div>
+              </div>
+
+              <div class="card soft">
+                <div class="output-head">
+                  <div class="card-title" style="margin-bottom:0">Founder report</div>
+                  <span class="mini-pill">Coming soon</span>
+                </div>
+                <div class="card-text">
+                  Export a decision-grade summary of your readiness and next steps.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="final-cta">
+    <div class="container">
+      <div class="content-section">
+        <div class="final-grid">
+          <div>
+            <div class="final-kicker">Final call</div>
+            <h2 class="final-title">If you’re not ready, don’t raise.</h2>
+            <div class="final-text">
+              Fix your fundamentals before entering fundraising. It is cheaper, faster,
+              and far more credible than correcting the story mid-process.
+            </div>
+          </div>
+
+          <div class="final-actions">
+            <a href="dashboard.html" class="btn">Get started →</a>
+            <a href="https://calendly.com/yacine-chikhar/30min" target="_blank" class="btn-secondary">Book a session</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="container">
+        <div class="footer-inner">
+          <div>VCReady · by <strong>Yacine CHIKHAR</strong> · © 2026</div>
+          <a href="dashboard.html">Open dashboard →</a>
+        </div>
+      </div>
+    </footer>
+  </section>
+
+</body>
+</html>
