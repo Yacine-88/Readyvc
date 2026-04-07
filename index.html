@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-7BRPFG4JQL"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -28,6 +29,7 @@
     }
 
     :root{
+      /* COLOR SYSTEM */
       --bg:#F7F7F5;
       --panel:#FFFFFF;
       --ink:#0E0E0C;
@@ -40,12 +42,21 @@
       --accent:#0F6A46;
       --accent-bg:#EAF6F0;
       --accent-line:#B6DEC8;
-      --shadow:0 10px 26px rgba(0,0,0,.04);
-      --shadow-strong:0 14px 34px rgba(0,0,0,.075);
+
+      /* TYPOGRAPHY */
+      --font:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+      /* RADII */
       --radius:24px;
       --radius-sm:18px;
+      --radius-btn:14px;
+
+      /* SHADOWS */
+      --shadow:0 10px 26px rgba(0,0,0,.04);
+      --shadow-strong:0 14px 34px rgba(0,0,0,.075);
+
+      /* LAYOUT */
       --container:1240px;
-      --font:'Inter',sans-serif;
     }
 
     html{scroll-behavior:smooth}
@@ -55,7 +66,7 @@
       color:var(--ink);
       font-family:var(--font);
       font-size:14px;
-      line-height:1.6;
+      line-height:1.75;
       min-height:100vh;
     }
 
@@ -71,6 +82,84 @@
       padding:0 32px;
     }
 
+    /* ─────────────────────────────
+       TYPOGRAPHY SYSTEM
+    ───────────────────────────── */
+    .eyebrow,
+    .metric-name,
+    .stat-label,
+    .preview-label,
+    .section-kicker,
+    .tool-number,
+    .hero-card-kicker,
+    .newsletter-card-issue,
+    .nl-field label{
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+
+    .hero-title{
+      font-size:68px;
+      line-height:1.05;
+      letter-spacing:-0.045em;
+      font-weight:700;
+    }
+
+    .section-title{
+      font-size:44px;
+      line-height:1.12;
+      letter-spacing:-0.035em;
+      font-weight:650;
+    }
+
+    .final-title{
+      font-size:52px;
+      line-height:1.1;
+      letter-spacing:-0.035em;
+      font-weight:700;
+    }
+
+    .card-title,
+    .tool-title{
+      font-size:22px;
+      line-height:1.22;
+      letter-spacing:-0.02em;
+      font-weight:600;
+    }
+
+    .preview-small-title{
+      font-size:20px;
+      line-height:1.25;
+      letter-spacing:-0.015em;
+      font-weight:600;
+    }
+
+    .hero-text,
+    .section-text,
+    .final-text{
+      font-size:16px;
+      line-height:1.75;
+      letter-spacing:-0.005em;
+      color:var(--ink-2);
+    }
+
+    .card-text,
+    .tool-text,
+    .preview-desc,
+    .preview-bottom-text,
+    .newsletter-item span,
+    .newsletter-form-text{
+      font-size:13px;
+      line-height:1.75;
+      color:var(--muted);
+    }
+
+    /* ─────────────────────────────
+       TOPBAR
+    ───────────────────────────── */
     .topbar{
       position:sticky;
       top:0;
@@ -170,6 +259,9 @@
       color:#FFF;
     }
 
+    /* ─────────────────────────────
+       BUTTONS
+    ───────────────────────────── */
     .btn,
     .btn-secondary{
       display:inline-flex;
@@ -181,7 +273,10 @@
       cursor:pointer;
       transition:.18s ease;
       white-space:nowrap;
-      border-radius:14px;
+      border-radius:var(--radius-btn);
+      font-size:13px;
+      font-weight:700;
+      letter-spacing:-0.01em;
     }
 
     .btn{
@@ -189,9 +284,6 @@
       padding:0 18px;
       background:var(--ink);
       color:#FFF;
-      font-size:13px;
-      font-weight:700;
-      letter-spacing:-.01em;
     }
 
     .btn:hover{
@@ -205,9 +297,6 @@
       background:#FFF;
       color:var(--ink);
       border:1px solid var(--line-2);
-      font-size:13px;
-      font-weight:700;
-      letter-spacing:-.01em;
     }
 
     .btn-secondary:hover{
@@ -215,10 +304,101 @@
       transform:translateY(-1px);
     }
 
+    .pill{
+      border:1px solid var(--accent-line);
+      background:var(--accent-bg);
+      color:var(--accent);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:11px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .mini-pill{
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#FFF;
+      color:var(--muted);
+      font-size:10px;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      padding:5px 9px;
+    }
+
+    /* ─────────────────────────────
+       GENERIC SECTION
+    ───────────────────────────── */
     .section{
       border-bottom:1px solid var(--line);
     }
 
+    .content-section{
+      padding:86px 0;
+    }
+
+    .section-grid{
+      display:grid;
+      grid-template-columns:260px 1fr;
+      gap:44px;
+      align-items:start;
+    }
+
+    .section-kicker{
+      padding-top:6px;
+    }
+
+    .section-text{
+      max-width:760px;
+    }
+
+    .cards-3{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+      margin-top:34px;
+    }
+
+    .cards-2{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:18px;
+      margin-top:34px;
+    }
+
+    .card{
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      background:#FFF;
+      padding:24px;
+      transition:.18s ease;
+    }
+
+    .card.soft{background:var(--soft)}
+
+    .card:hover{
+      transform:translateY(-2px);
+      border-color:rgba(14,14,12,.18);
+    }
+
+    .step-badge{
+      width:40px;
+      height:40px;
+      border-radius:50%;
+      border:1px solid var(--line-2);
+      background:var(--soft);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:13px;
+      font-weight:800;
+      margin-bottom:20px;
+    }
+
+    /* ─────────────────────────────
+       HERO
+    ───────────────────────────── */
     .hero{
       position:relative;
       overflow:hidden;
@@ -246,11 +426,6 @@
       display:inline-flex;
       align-items:center;
       gap:10px;
-      color:var(--muted);
-      font-size:11px;
-      font-weight:700;
-      letter-spacing:.13em;
-      text-transform:uppercase;
       margin-bottom:22px;
     }
 
@@ -263,10 +438,6 @@
     }
 
     .hero-title{
-      font-size:72px;
-      line-height:.95;
-      letter-spacing:-0.045em;
-      font-weight:800;
       max-width:760px;
       margin-bottom:20px;
     }
@@ -274,9 +445,6 @@
     .hero-title .muted{color:var(--muted)}
 
     .hero-text{
-      font-size:17px;
-      color:var(--ink-2);
-      line-height:1.8;
       max-width:620px;
       margin-bottom:30px;
     }
@@ -312,6 +480,9 @@
       display:block;
     }
 
+    /* ─────────────────────────────
+       HERO PREVIEW CARD
+    ───────────────────────────── */
     .hero-card{
       border:1px solid var(--line);
       border-radius:28px;
@@ -331,11 +502,6 @@
     }
 
     .hero-card-kicker{
-      color:var(--muted);
-      font-size:10px;
-      font-weight:700;
-      letter-spacing:.12em;
-      text-transform:uppercase;
       margin-bottom:5px;
     }
 
@@ -343,17 +509,6 @@
       font-size:14px;
       font-weight:800;
       letter-spacing:-.02em;
-    }
-
-    .pill{
-      border:1px solid var(--accent-line);
-      background:var(--accent-bg);
-      color:var(--accent);
-      border-radius:999px;
-      padding:6px 10px;
-      font-size:11px;
-      font-weight:700;
-      white-space:nowrap;
     }
 
     .hero-card-body{
@@ -381,27 +536,15 @@
       padding:22px;
     }
 
-    .preview-label{
-      color:var(--muted);
-      font-size:10px;
-      font-weight:700;
-      letter-spacing:.12em;
-      text-transform:uppercase;
-      margin-bottom:8px;
-    }
-
     .preview-score{
       font-size:72px;
       line-height:.92;
       letter-spacing:-.08em;
-      font-weight:800;
+      font-weight:700;
       margin-bottom:10px;
     }
 
     .preview-desc{
-      color:var(--ink-2);
-      font-size:13px;
-      line-height:1.75;
       max-width:320px;
     }
 
@@ -415,16 +558,8 @@
       background:#FFF;
     }
 
-    .preview-small-title{
-      font-size:22px;
-      line-height:1.05;
-      letter-spacing:-.04em;
-      font-weight:800;
-      margin-bottom:8px;
-    }
-
     .preview-small-text{
-      color:var(--ink-2);
+      color:var(--muted);
       font-size:12px;
       line-height:1.7;
     }
@@ -440,20 +575,11 @@
       background:#FFF;
     }
 
-    .metric-name{
-      color:var(--muted);
-      font-size:10px;
-      font-weight:700;
-      letter-spacing:.12em;
-      text-transform:uppercase;
-      margin-bottom:8px;
-    }
-
     .metric-value{
       font-size:28px;
       line-height:1;
       letter-spacing:-.06em;
-      font-weight:800;
+      font-weight:700;
     }
 
     .preview-bottom{
@@ -461,12 +587,9 @@
       background:#FFF;
     }
 
-    .preview-bottom-text{
-      color:var(--ink-2);
-      font-size:13px;
-      line-height:1.8;
-    }
-
+    /* ─────────────────────────────
+       STATS STRIP
+    ───────────────────────────── */
     .stats-strip{
       padding:22px 0;
       border-top:1px solid var(--line);
@@ -487,123 +610,23 @@
       padding:18px;
     }
 
-    .stat-label{
-      color:var(--muted);
-      font-size:10px;
-      font-weight:700;
-      letter-spacing:.12em;
-      text-transform:uppercase;
-      margin-bottom:8px;
-    }
-
     .stat-value{
       font-size:36px;
       line-height:1;
       letter-spacing:-.06em;
-      font-weight:800;
+      font-weight:700;
       margin-bottom:8px;
     }
 
     .stat-text{
-      color:var(--ink-2);
+      color:var(--muted);
       font-size:12px;
       line-height:1.75;
     }
 
-    .content-section{
-      padding:86px 0;
-    }
-
-    .section-grid{
-      display:grid;
-      grid-template-columns:260px 1fr;
-      gap:44px;
-      align-items:start;
-    }
-
-    .section-kicker{
-      padding-top:6px;
-      color:var(--muted);
-      font-size:11px;
-      font-weight:700;
-      letter-spacing:.13em;
-      text-transform:uppercase;
-    }
-
-    .section-title{
-      font-size:48px;
-      line-height:1.02;
-      letter-spacing:-0.04em;
-      font-weight:800;
-      max-width:820px;
-      margin-bottom:16px;
-    }
-
-    .section-text{
-      max-width:760px;
-      color:var(--ink-2);
-      font-size:17px;
-      line-height:1.85;
-    }
-
-    .cards-3{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:18px;
-      margin-top:34px;
-    }
-
-    .cards-2{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:18px;
-      margin-top:34px;
-    }
-
-    .card{
-      border:1px solid var(--line);
-      border-radius:24px;
-      background:#FFF;
-      padding:24px;
-      transition:.18s ease;
-    }
-
-    .card.soft{background:var(--soft)}
-
-    .card:hover{
-      transform:translateY(-2px);
-      border-color:rgba(14,14,12,.18);
-    }
-
-    .step-badge{
-      width:40px;
-      height:40px;
-      border-radius:50%;
-      border:1px solid var(--line-2);
-      background:var(--soft);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:13px;
-      font-weight:800;
-      margin-bottom:20px;
-    }
-
-    .card-title{
-      font-size:28px;
-      line-height:1.06;
-      letter-spacing:-.05em;
-      font-weight:800;
-      margin-bottom:10px;
-    }
-
-    .card-text{
-      color:var(--ink-2);
-      font-size:14px;
-      line-height:1.8;
-    }
-
-    /* TOOLS CLEAN */
+    /* ─────────────────────────────
+       TOOLS
+    ───────────────────────────── */
     .tools-grid{
       display:grid;
       grid-template-columns:repeat(3,1fr);
@@ -615,7 +638,7 @@
       position:relative;
       display:block;
       border:1px solid var(--line);
-      border-radius:24px;
+      border-radius:var(--radius);
       background:#FFF;
       padding:22px 22px 52px;
       min-height:230px;
@@ -656,10 +679,6 @@
     }
 
     .tool-number{
-      font-size:11px;
-      font-weight:800;
-      letter-spacing:.12em;
-      text-transform:uppercase;
       color:var(--muted);
     }
 
@@ -675,18 +694,7 @@
       border:1px solid var(--accent-line);
     }
 
-    .tool-title{
-      font-size:24px;
-      line-height:1.08;
-      letter-spacing:-.04em;
-      font-weight:800;
-      margin-bottom:10px;
-    }
-
     .tool-text{
-      color:var(--ink-2);
-      font-size:13px;
-      line-height:1.8;
       margin-bottom:16px;
       max-width:95%;
     }
@@ -718,26 +726,9 @@
       color:var(--ink);
     }
 
-    .output-head{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:10px;
-    }
-
-    .mini-pill{
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:#FFF;
-      color:var(--muted);
-      font-size:10px;
-      font-weight:700;
-      text-transform:uppercase;
-      letter-spacing:.12em;
-      padding:5px 9px;
-    }
-
+    /* ─────────────────────────────
+       NEWSLETTER
+    ───────────────────────────── */
     .newsletter-grid{
       display:grid;
       grid-template-columns:1fr 1fr;
@@ -749,7 +740,7 @@
     .newsletter-card,
     .newsletter-form{
       border:1px solid var(--line);
-      border-radius:24px;
+      border-radius:var(--radius);
       background:#FFF;
       overflow:hidden;
       box-shadow:var(--shadow);
@@ -771,14 +762,6 @@
       letter-spacing:-.02em;
     }
 
-    .newsletter-card-issue{
-      color:var(--muted);
-      font-size:10px;
-      font-weight:700;
-      letter-spacing:.12em;
-      text-transform:uppercase;
-    }
-
     .newsletter-items{
       padding:6px 22px;
     }
@@ -797,44 +780,24 @@
       margin-bottom:6px;
     }
 
-    .newsletter-item span{
-      display:block;
-      color:var(--ink-2);
-      font-size:13px;
-      line-height:1.75;
-    }
-
     .newsletter-form-body{
       padding:22px;
     }
 
     .newsletter-form-title{
       font-size:28px;
-      line-height:1.05;
-      letter-spacing:-.05em;
-      font-weight:800;
+      line-height:1.08;
+      letter-spacing:-.03em;
+      font-weight:700;
       margin-bottom:10px;
     }
 
     .newsletter-form-text{
-      color:var(--ink-2);
-      font-size:14px;
-      line-height:1.8;
       margin-bottom:20px;
     }
 
     .nl-field{
       margin-bottom:12px;
-    }
-
-    .nl-field label{
-      display:block;
-      margin-bottom:8px;
-      color:var(--muted);
-      font-size:10px;
-      font-weight:800;
-      letter-spacing:.12em;
-      text-transform:uppercase;
     }
 
     .nl-field input,
@@ -900,6 +863,9 @@
       font-weight:600;
     }
 
+    /* ─────────────────────────────
+       FINAL CTA + FOOTER
+    ───────────────────────────── */
     .final-cta{
       background:var(--ink);
       color:#FFF;
@@ -927,10 +893,6 @@
     }
 
     .final-title{
-      font-size:52px;
-      line-height:1.02;
-      letter-spacing:-0.035em;
-      font-weight:800;
       max-width:760px;
       margin-bottom:16px;
     }
@@ -938,8 +900,6 @@
     .final-text{
       max-width:700px;
       color:rgba(255,255,255,.68);
-      font-size:17px;
-      line-height:1.85;
     }
 
     .final-actions{
@@ -990,6 +950,9 @@
       font-weight:700;
     }
 
+    /* ─────────────────────────────
+       RESPONSIVE
+    ───────────────────────────── */
     @media(max-width:1120px){
       .hero-inner,
       .final-grid,
@@ -1024,11 +987,12 @@
       }
 
       .hero-title{font-size:46px}
+      .section-title{font-size:36px}
+      .final-title{font-size:40px}
+
       .hero-text,
       .section-text,
       .final-text{font-size:15px}
-      .section-title{font-size:36px}
-      .final-title{font-size:40px}
 
       .cards-3,
       .cards-2,
@@ -1181,16 +1145,19 @@
           <div class="stat-value">7</div>
           <div class="stat-text" id="stat1_text">Integrated modules covering valuation, readiness, and investor-facing preparation.</div>
         </div>
+
         <div class="stat-card">
           <div class="stat-label" id="stat2_label">Coverage</div>
           <div class="stat-value">26</div>
           <div class="stat-text" id="stat2_text">Sector assumptions and benchmarks designed around fundraising use cases.</div>
         </div>
+
         <div class="stat-card">
           <div class="stat-label" id="stat3_label">Founder usage</div>
           <div class="stat-value">100+</div>
           <div class="stat-text" id="stat3_text">Profiles assessed through tools, advisory work, and readiness workflows.</div>
         </div>
+
         <div class="stat-card">
           <div class="stat-label" id="stat4_label">Core promise</div>
           <div class="stat-value">1</div>
@@ -1205,6 +1172,7 @@
       <div class="content-section">
         <div class="section-grid">
           <div class="section-kicker" id="how_kicker">How it works</div>
+
           <div>
             <h2 class="section-title" id="how_title">A better way to prepare for fundraising.</h2>
             <p class="section-text" id="how_text">Most founders prepare too late and too loosely. VCReady creates structure before the process becomes expensive.</p>
@@ -1215,11 +1183,13 @@
                 <div class="card-title" id="step1_title">Input the fundamentals</div>
                 <div class="card-text" id="step1_text">Start with valuation logic, operating metrics, deck quality, and readiness materials.</div>
               </div>
+
               <div class="card">
                 <div class="step-badge">02</div>
                 <div class="card-title" id="step2_title">Get a structured readout</div>
                 <div class="card-text" id="step2_text">Turn scattered information into a clear readiness signal with strengths and weaknesses.</div>
               </div>
+
               <div class="card">
                 <div class="step-badge">03</div>
                 <div class="card-title" id="step3_title">Improve before the market does</div>
@@ -1237,6 +1207,7 @@
       <div class="content-section">
         <div class="section-grid">
           <div class="section-kicker" id="tools_kicker">Tools</div>
+
           <div>
             <h2 class="section-title" id="tools_title">Clear, premium, and obviously actionable.</h2>
             <p class="section-text" id="tools_text">Each module is a direct entry point into the platform. The visual signal is stronger, but still restrained.</p>
@@ -1343,6 +1314,7 @@
       <div class="content-section">
         <div class="section-grid">
           <div class="section-kicker" id="why_kicker">Why it matters</div>
+
           <div>
             <h2 class="section-title" id="why_title">Fundraising breaks when readiness stays fragmented.</h2>
             <p class="section-text" id="why_text">The issue is rarely effort. It is usually structure, interpretation, and timing.</p>
@@ -1352,14 +1324,17 @@
                 <div class="card-title" id="pain1_title">Founders raise too early</div>
                 <div class="card-text" id="pain1_text">Most startups enter fundraising with incomplete preparation and weak diagnostic clarity.</div>
               </div>
+
               <div class="card">
                 <div class="card-title" id="pain2_title">Metrics stay fragmented</div>
                 <div class="card-text" id="pain2_text">Financials, traction, narrative, and documentation are rarely aligned in one workflow.</div>
               </div>
+
               <div class="card">
                 <div class="card-title" id="pain3_title">Strong businesses get poorly translated</div>
                 <div class="card-text" id="pain3_text">A weak pitch can destroy credibility even when the underlying business is solid.</div>
               </div>
+
               <div class="card">
                 <div class="card-title" id="pain4_title">Diligence becomes a bottleneck</div>
                 <div class="card-text" id="pain4_text">Missing documents and unclear assumptions slow momentum when timing matters most.</div>
@@ -1376,23 +1351,33 @@
       <div class="content-section">
         <div class="section-grid">
           <div class="section-kicker" id="outputs_kicker">What you get</div>
+
           <div>
             <h2 class="section-title" id="outputs_title">Clear outputs. Better decisions.</h2>
             <p class="section-text" id="outputs_text">The value is not just in calculating. It is in knowing what to do with the signal.</p>
 
             <div class="cards-2">
               <div class="card soft">
-                <div class="output-head"><div class="card-title" style="margin-bottom:0" id="output1_title">Global readiness score</div></div>
+                <div class="output-head">
+                  <div class="card-title" style="margin-bottom:0" id="output1_title">Global readiness score</div>
+                </div>
                 <div class="card-text" id="output1_text">A structured signal of how prepared your startup is before fundraising.</div>
               </div>
+
               <div class="card soft">
-                <div class="output-head"><div class="card-title" style="margin-bottom:0" id="output2_title">Prioritized recommendations</div></div>
+                <div class="output-head">
+                  <div class="card-title" style="margin-bottom:0" id="output2_title">Prioritized recommendations</div>
+                </div>
                 <div class="card-text" id="output2_text">Know what to fix first, what matters most, and what can wait.</div>
               </div>
+
               <div class="card soft">
-                <div class="output-head"><div class="card-title" style="margin-bottom:0" id="output3_title">Benchmark context</div></div>
+                <div class="output-head">
+                  <div class="card-title" style="margin-bottom:0" id="output3_title">Benchmark context</div>
+                </div>
                 <div class="card-text" id="output3_text">Anchor your expectations in market reality rather than intuition.</div>
               </div>
+
               <div class="card soft">
                 <div class="output-head">
                   <div class="card-title" style="margin-bottom:0" id="output4_title">Founder report</div>
@@ -1412,6 +1397,7 @@
       <div class="content-section">
         <div class="section-grid">
           <div class="section-kicker" id="newsletter_kicker">Newsletter</div>
+
           <div>
             <h2 class="section-title" id="newsletter_title">Sharp signal. Low noise.</h2>
             <p class="section-text" id="newsletter_text">A monthly note for founders preparing to raise: one real deal, one investor-relevant metric, one concrete action.</p>
@@ -1422,6 +1408,7 @@
                   <div class="newsletter-card-title" id="nl_preview_title">VCReady Monthly</div>
                   <div class="newsletter-card-issue" id="nl_preview_issue">Issue #01 · April 2026</div>
                 </div>
+
                 <div class="newsletter-items">
                   <div class="newsletter-item">
                     <strong id="nl_item1_title">Deal of the month</strong>
@@ -1679,14 +1666,15 @@
       s('output3_title', t.output3Title); s('output3_text', t.output3Text); s('output4_title', t.output4Title); s('output4_pill', t.output4Pill); s('output4_text', t.output4Text);
       s('newsletter_kicker', t.newsletterKicker); s('newsletter_title', t.newsletterTitle); s('newsletter_text', t.newsletterText);
       s('nl_preview_title', t.nlPreviewTitle); s('nl_preview_issue', t.nlPreviewIssue);
-      s('nl_item1_title', t.nlItem1Title); s('nl_item1_text', t.nlItem1Text); s('nl_item2_title', t.nlItem2Title); s('nl_item2_text', t.nlItem2Text); s('nl_item3_title', t.nlItem3Title); s('nl_item3_text', t.nlItem3Text);
+      s('nl_item1_title', t.nlItem1Title); s('nl_item1_text', t.nlItem1Text);
+      s('nl_item2_title', t.nlItem2Title); s('nl_item2_text', t.nlItem2Text);
+      s('nl_item3_title', t.nlItem3Title); s('nl_item3_text', t.nlItem3Text);
       s('nl_form_title', t.nlFormTitle); s('nl_form_text', t.nlFormText);
       s('nl_label_name', t.nlLabelName); s('nl_label_email', t.nlLabelEmail); s('nl_label_sector', t.nlLabelSector);
       s('nl_sector_default', t.nlSectorDefault); s('nl_sector_other', t.nlSectorOther);
       s('nl_btn', t.nlBtn);
-      const err = document.getElementById('nl_err'); const success = document.getElementById('nl_success');
-      if(err) err.textContent = t.nlErr;
-      if(success) success.textContent = t.nlSuccess;
+      document.getElementById('nl_err').textContent = t.nlErr;
+      document.getElementById('nl_success').textContent = t.nlSuccess;
       s('final_kicker', t.finalKicker); s('final_title', t.finalTitle); s('final_text', t.finalText);
       s('final_cta1', t.finalCta1); s('final_cta2', t.finalCta2);
       s('footer_copy', t.footerCopy); s('footer_link', t.footerLink);
