@@ -39,19 +39,36 @@
       --line-2:#D8D4CB;
       --soft:#F2F0EA;
       --soft-2:#FBFBF9;
+
       --success:#0F6A46;
       --success-bg:#EAF6F0;
       --success-line:#B6DEC8;
-      --warn:#8A6B1F;
-      --warn-bg:#F8F3E6;
-      --warn-line:#E7D5A7;
-      --danger:#8C4343;
-      --danger-bg:#FAECEC;
-      --danger-line:#E8C0C0;
-      --container:1240px;
+
+      --blue:#1E4ED8;
+      --blue-bg:#EEF4FF;
+      --blue-line:#C8D8FF;
+
+      --purple:#6D28D9;
+      --purple-bg:#F4EEFF;
+      --purple-line:#DCCBFF;
+
+      --amber:#9A6700;
+      --amber-bg:#FFF7E8;
+      --amber-line:#F0D9A5;
+
+      --red:#A63D40;
+      --red-bg:#FFF0F0;
+      --red-line:#F0C7C9;
+
+      --teal:#0F766E;
+      --teal-bg:#ECFEFF;
+      --teal-line:#B8ECE8;
+
+      --shadow:0 12px 34px rgba(0,0,0,.045);
+      --shadow-strong:0 16px 40px rgba(0,0,0,.08);
       --radius:24px;
       --radius-sm:18px;
-      --shadow:0 12px 34px rgba(0,0,0,.045);
+      --container:1240px;
       --font:'Inter',sans-serif;
     }
 
@@ -66,7 +83,10 @@
       min-height:100vh;
     }
 
-    a{color:inherit;text-decoration:none}
+    a{
+      color:inherit;
+      text-decoration:none;
+    }
 
     .container{
       width:100%;
@@ -143,6 +163,35 @@
       align-items:center;
       gap:10px;
       flex-shrink:0;
+    }
+
+    .lang-toggle{
+      display:flex;
+      border:1px solid var(--line-2);
+      border-radius:12px;
+      overflow:hidden;
+      background:#FFF;
+    }
+
+    .lang-btn{
+      border:none;
+      background:transparent;
+      color:var(--muted);
+      height:40px;
+      min-width:46px;
+      padding:0 12px;
+      font-family:var(--font);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+
+    .lang-btn.active{
+      background:var(--ink);
+      color:#FFF;
     }
 
     .btn,
@@ -543,6 +592,7 @@
     }
 
     .card.soft{background:var(--soft-2)}
+
     .card:hover{
       transform:translateY(-2px);
       border-color:rgba(14,14,12,.18);
@@ -576,39 +626,146 @@
       line-height:1.8;
     }
 
-    .modules-grid{
+    /* TOOLS */
+    .tools-wrap{
       display:grid;
       grid-template-columns:repeat(3,1fr);
       gap:18px;
       margin-top:34px;
     }
 
-    .module-card{
-      border:1px solid var(--line);
+    .tool-card{
+      position:relative;
+      display:block;
       border-radius:24px;
-      background:var(--soft-2);
       padding:22px;
-      transition:.18s ease;
+      min-height:240px;
+      border:1.5px solid transparent;
+      box-shadow:0 0 0 rgba(0,0,0,0);
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      overflow:hidden;
     }
 
-    .module-card:hover{
-      transform:translateY(-2px);
-      border-color:rgba(14,14,12,.18);
+    .tool-card:hover{
+      transform:translateY(-4px);
+      box-shadow:var(--shadow-strong);
+    }
+
+    .tool-card:after{
+      content:'→';
+      position:absolute;
+      right:20px;
+      bottom:18px;
+      font-size:20px;
+      font-weight:800;
+      opacity:.75;
+      transition:transform .18s ease, opacity .18s ease;
+    }
+
+    .tool-card:hover:after{
+      transform:translateX(4px);
+      opacity:1;
+    }
+
+    .tool-card.blue{
+      background:var(--blue-bg);
+      border-color:var(--blue-line);
+    }
+
+    .tool-card.purple{
+      background:var(--purple-bg);
+      border-color:var(--purple-line);
+    }
+
+    .tool-card.green{
+      background:var(--success-bg);
+      border-color:var(--success-line);
+    }
+
+    .tool-card.amber{
+      background:var(--amber-bg);
+      border-color:var(--amber-line);
+    }
+
+    .tool-card.red{
+      background:var(--red-bg);
+      border-color:var(--red-line);
+    }
+
+    .tool-card.teal{
+      background:var(--teal-bg);
+      border-color:var(--teal-line);
+    }
+
+    .tool-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:16px;
+    }
+
+    .tool-number{
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:rgba(14,14,12,.55);
+    }
+
+    .tool-badge{
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:10px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.08em;
       background:#FFF;
+      color:var(--ink);
+      border:1px solid rgba(14,14,12,.08);
+      box-shadow:0 1px 0 rgba(0,0,0,.03);
     }
 
-    .module-title{
-      font-size:22px;
+    .tool-title{
+      font-size:24px;
       line-height:1.08;
       letter-spacing:-.04em;
       font-weight:800;
       margin-bottom:10px;
     }
 
-    .module-text{
-      color:var(--ink-2);
+    .tool-text{
+      color:rgba(14,14,12,.72);
       font-size:13px;
       line-height:1.8;
+      margin-bottom:16px;
+    }
+
+    .tool-tags{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .tool-tag{
+      border-radius:999px;
+      padding:5px 9px;
+      font-size:10px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      background:rgba(255,255,255,.7);
+      color:rgba(14,14,12,.68);
+      border:1px solid rgba(14,14,12,.08);
+    }
+
+    .tool-cta{
+      position:absolute;
+      left:22px;
+      bottom:18px;
+      font-size:12px;
+      font-weight:800;
+      color:rgba(14,14,12,.78);
     }
 
     .output-head{
@@ -629,6 +786,169 @@
       text-transform:uppercase;
       letter-spacing:.12em;
       padding:5px 9px;
+    }
+
+    /* NEWSLETTER */
+    .newsletter-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:22px;
+      margin-top:34px;
+      align-items:start;
+    }
+
+    .newsletter-card,
+    .newsletter-form{
+      border:1px solid var(--line);
+      border-radius:24px;
+      background:#FFF;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+    }
+
+    .newsletter-card-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:18px 22px;
+      border-bottom:1px solid var(--line);
+      background:#FCFCFA;
+    }
+
+    .newsletter-card-title{
+      font-size:14px;
+      font-weight:800;
+      letter-spacing:-.02em;
+    }
+
+    .newsletter-card-issue{
+      color:var(--muted);
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+    }
+
+    .newsletter-items{
+      padding:6px 22px;
+    }
+
+    .newsletter-item{
+      padding:16px 0;
+      border-bottom:1px solid var(--line);
+    }
+
+    .newsletter-item:last-child{border-bottom:none}
+
+    .newsletter-item strong{
+      display:block;
+      font-size:13px;
+      font-weight:800;
+      margin-bottom:6px;
+    }
+
+    .newsletter-item span{
+      display:block;
+      color:var(--ink-2);
+      font-size:13px;
+      line-height:1.75;
+    }
+
+    .newsletter-form-body{
+      padding:22px;
+    }
+
+    .newsletter-form-title{
+      font-size:28px;
+      line-height:1.05;
+      letter-spacing:-.05em;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+
+    .newsletter-form-text{
+      color:var(--ink-2);
+      font-size:14px;
+      line-height:1.8;
+      margin-bottom:20px;
+    }
+
+    .nl-field{
+      margin-bottom:12px;
+    }
+
+    .nl-field label{
+      display:block;
+      margin-bottom:8px;
+      color:var(--muted);
+      font-size:10px;
+      font-weight:800;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+    }
+
+    .nl-field input,
+    .nl-field select{
+      width:100%;
+      height:48px;
+      border-radius:14px;
+      border:1px solid var(--line-2);
+      background:#FFF;
+      padding:0 14px;
+      font-size:14px;
+      color:var(--ink);
+      outline:none;
+      font-family:var(--font);
+    }
+
+    .nl-field input:focus,
+    .nl-field select:focus{
+      border-color:var(--ink);
+    }
+
+    .nl-submit{
+      width:100%;
+      height:50px;
+      border:none;
+      border-radius:14px;
+      background:var(--ink);
+      color:#FFF;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+      font-family:var(--font);
+      transition:.18s ease;
+      margin-top:4px;
+    }
+
+    .nl-submit:hover{
+      background:#000;
+      transform:translateY(-1px);
+    }
+
+    .nl-err,
+    .nl-success{
+      display:none;
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:12px;
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .nl-err{
+      background:var(--danger-bg);
+      border:1px solid var(--danger-line);
+      color:var(--danger);
+      font-weight:600;
+    }
+
+    .nl-success{
+      background:var(--success-bg);
+      border:1px solid var(--success-line);
+      color:var(--success);
+      font-weight:600;
     }
 
     .final-cta{
@@ -729,13 +1049,14 @@
       }
 
       .cards-3,
-      .modules-grid,
+      .tools-wrap,
       .stats-grid{
         grid-template-columns:1fr 1fr;
       }
 
       .preview-grid,
-      .cards-2{
+      .cards-2,
+      .newsletter-grid{
         grid-template-columns:1fr;
       }
     }
@@ -746,6 +1067,7 @@
       .topbar-inner{height:64px}
       .topbar-nav{display:none}
       .topbar-actions .btn-secondary{display:none}
+      .lang-toggle{display:none}
 
       .hero-inner{
         padding:48px 0 52px;
@@ -761,7 +1083,7 @@
 
       .cards-3,
       .cards-2,
-      .modules-grid,
+      .tools-wrap,
       .stats-grid,
       .metric-grid{
         grid-template-columns:1fr;
@@ -785,15 +1107,19 @@
         </a>
 
         <nav class="topbar-nav">
-          <a href="#how" class="nav-link">How it works</a>
-          <a href="#modules" class="nav-link">Modules</a>
-          <a href="#why" class="nav-link">Why it matters</a>
-          <a href="#outputs" class="nav-link">Outputs</a>
+          <a href="#how" class="nav-link" id="nav_how">How it works</a>
+          <a href="#tools" class="nav-link" id="nav_tools">Tools</a>
+          <a href="#why" class="nav-link" id="nav_why">Why it matters</a>
+          <a href="#newsletter" class="nav-link" id="nav_newsletter">Newsletter</a>
         </nav>
 
         <div class="topbar-actions">
-          <a href="dashboard.html" class="btn-secondary">Sign in</a>
-          <a href="dashboard.html" class="btn">Get started →</a>
+          <div class="lang-toggle">
+            <button class="lang-btn active" onclick="setLang('en')">EN</button>
+            <button class="lang-btn" onclick="setLang('fr')">FR</button>
+          </div>
+          <a href="dashboard.html" class="btn-secondary" id="nav_signin">Sign in</a>
+          <a href="dashboard.html" class="btn" id="nav_cta">Get started →</a>
         </div>
       </div>
     </div>
@@ -803,62 +1129,62 @@
     <div class="container">
       <div class="hero-inner">
         <div>
-          <div class="eyebrow">Investor readiness, measured</div>
+          <div class="eyebrow" id="hero_eyebrow">Investor readiness, measured</div>
 
-          <h1 class="hero-title">
+          <h1 class="hero-title" id="hero_title">
             Measure your startup’s readiness
             <span class="muted">before you raise.</span>
           </h1>
 
-          <p class="hero-text">
+          <p class="hero-text" id="hero_text">
             VCReady helps founders track, benchmark, and improve the signals that matter
             to investors — before fundraising starts costing time, momentum, and credibility.
           </p>
 
           <div class="hero-actions">
-            <a href="dashboard.html" class="btn">Get your readiness score →</a>
-            <a href="#modules" class="btn-secondary">Explore platform</a>
+            <a href="dashboard.html" class="btn" id="hero_cta1">Get your readiness score →</a>
+            <a href="#tools" class="btn-secondary" id="hero_cta2">Explore platform</a>
           </div>
 
           <div class="hero-meta">
-            <span>Founder-focused</span>
-            <span>No fluff</span>
-            <span>Structured before fundraising</span>
+            <span id="hero_meta1">Founder-focused</span>
+            <span id="hero_meta2">No fluff</span>
+            <span id="hero_meta3">Structured before fundraising</span>
           </div>
         </div>
 
         <div class="hero-card">
           <div class="hero-card-head">
             <div>
-              <div class="hero-card-kicker">VCReady dashboard</div>
-              <div class="hero-card-title">Readiness snapshot</div>
+              <div class="hero-card-kicker" id="preview_kicker">VCReady dashboard</div>
+              <div class="hero-card-title" id="preview_title">Readiness snapshot</div>
             </div>
-            <div class="pill">Live score</div>
+            <div class="pill" id="preview_pill">Live score</div>
           </div>
 
           <div class="hero-card-body">
             <div class="preview-grid">
               <div class="preview-big">
-                <div class="preview-label">Overall readiness</div>
+                <div class="preview-label" id="preview_score_label">Overall readiness</div>
                 <div class="preview-score">74</div>
-                <div class="preview-desc">
+                <div class="preview-desc" id="preview_score_text">
                   Strong operating discipline. The business looks better than the current fundraising narrative communicates.
                 </div>
               </div>
 
               <div class="preview-side">
                 <div class="preview-small">
-                  <div class="preview-label">Strongest area</div>
-                  <div class="preview-small-title">Metrics quality</div>
-                  <div class="preview-small-text">
+                  <div class="preview-label" id="preview_strength_label">Strongest area</div>
+                  <div class="preview-small-title" id="preview_strength_title">Metrics quality</div>
+                  <div class="preview-small-text" id="preview_strength_text">
                     Healthy operating signal and credible fundamentals.
                   </div>
                 </div>
 
                 <div class="preview-small">
-                  <div class="preview-label">Top priority</div>
-                  <div class="preview-small-title">Improve pitch clarity</div>
-                  <div class="preview-small-text">
+                  <div class="preview-label" id="preview_priority_label">Top priority</div>
+                  <div class="preview-small-title" id="preview_priority_title">Improve pitch clarity</div>
+                  <div class="preview-small-text" id="preview_priority_text">
                     The narrative still underperforms against the business.
                   </div>
                 </div>
@@ -867,26 +1193,26 @@
 
             <div class="metric-grid">
               <div class="metric-card">
-                <div class="metric-name">Metrics</div>
+                <div class="metric-name" id="metric1_name">Metrics</div>
                 <div class="metric-value">81%</div>
               </div>
               <div class="metric-card">
-                <div class="metric-name">Pitch</div>
+                <div class="metric-name" id="metric2_name">Pitch</div>
                 <div class="metric-value">67%</div>
               </div>
               <div class="metric-card">
-                <div class="metric-name">Data room</div>
+                <div class="metric-name" id="metric3_name">Data room</div>
                 <div class="metric-value">82%</div>
               </div>
               <div class="metric-card">
-                <div class="metric-name">Q&amp;A</div>
+                <div class="metric-name" id="metric4_name">Q&amp;A</div>
                 <div class="metric-value">72%</div>
               </div>
             </div>
 
             <div class="preview-bottom">
-              <div class="preview-label">Key insight</div>
-              <div class="preview-bottom-text">
+              <div class="preview-label" id="preview_insight_label">Key insight</div>
+              <div class="preview-bottom-text" id="preview_insight_text">
                 Your strongest asset is operating discipline. Your weakest point is translation:
                 the business is performing better than the pitch communicates. Tighten market framing,
                 sharpen the ask, and the profile becomes materially more investable.
@@ -902,33 +1228,33 @@
     <div class="container">
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-label">Platform scope</div>
+          <div class="stat-label" id="stat1_label">Platform scope</div>
           <div class="stat-value">7</div>
-          <div class="stat-text">
+          <div class="stat-text" id="stat1_text">
             Integrated modules covering valuation, readiness, and investor-facing preparation.
           </div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-label">Coverage</div>
+          <div class="stat-label" id="stat2_label">Coverage</div>
           <div class="stat-value">26</div>
-          <div class="stat-text">
+          <div class="stat-text" id="stat2_text">
             Sector assumptions and benchmarks designed around fundraising use cases.
           </div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-label">Founder usage</div>
+          <div class="stat-label" id="stat3_label">Founder usage</div>
           <div class="stat-value">100+</div>
-          <div class="stat-text">
+          <div class="stat-text" id="stat3_text">
             Profiles assessed through tools, advisory work, and readiness workflows.
           </div>
         </div>
 
         <div class="stat-card">
-          <div class="stat-label">Core promise</div>
+          <div class="stat-label" id="stat4_label">Core promise</div>
           <div class="stat-value">1</div>
-          <div class="stat-text">
+          <div class="stat-text" id="stat4_text">
             One operating layer to help founders understand how investors will read the company.
           </div>
         </div>
@@ -940,11 +1266,11 @@
     <div class="container">
       <div class="content-section">
         <div class="section-grid">
-          <div class="section-kicker">How it works</div>
+          <div class="section-kicker" id="how_kicker">How it works</div>
 
           <div>
-            <h2 class="section-title">A better way to prepare for fundraising.</h2>
-            <p class="section-text">
+            <h2 class="section-title" id="how_title">A better way to prepare for fundraising.</h2>
+            <p class="section-text" id="how_text">
               Most founders prepare too late and too loosely. VCReady creates structure
               before the process becomes expensive.
             </p>
@@ -952,24 +1278,24 @@
             <div class="cards-3">
               <div class="card">
                 <div class="step-badge">01</div>
-                <div class="card-title">Input the fundamentals</div>
-                <div class="card-text">
+                <div class="card-title" id="step1_title">Input the fundamentals</div>
+                <div class="card-text" id="step1_text">
                   Start with valuation logic, operating metrics, deck quality, and readiness materials.
                 </div>
               </div>
 
               <div class="card">
                 <div class="step-badge">02</div>
-                <div class="card-title">Get a structured readout</div>
-                <div class="card-text">
+                <div class="card-title" id="step2_title">Get a structured readout</div>
+                <div class="card-text" id="step2_text">
                   Turn scattered information into a clear readiness signal with strengths and weaknesses.
                 </div>
               </div>
 
               <div class="card">
                 <div class="step-badge">03</div>
-                <div class="card-title">Improve before the market does</div>
-                <div class="card-text">
+                <div class="card-title" id="step3_title">Improve before the market does</div>
+                <div class="card-text" id="step3_text">
                   Fix what most affects investor perception before entering live conversations.
                 </div>
               </div>
@@ -980,61 +1306,121 @@
     </div>
   </section>
 
-  <section class="section" id="modules" style="background:#fff">
+  <section class="section" id="tools" style="background:#fff">
     <div class="container">
       <div class="content-section">
         <div class="section-grid">
-          <div class="section-kicker">Core modules</div>
+          <div class="section-kicker" id="tools_kicker">Tools</div>
 
           <div>
-            <h2 class="section-title">Built around how investors actually think.</h2>
-            <p class="section-text">
-              Each module is useful on its own. Together, they create a much stronger product story:
-              not isolated tools, but one coherent investor-readiness system.
+            <h2 class="section-title" id="tools_title">Clearly actionable. Visibly clickable.</h2>
+            <p class="section-text" id="tools_text">
+              Each module is a direct entry point into the platform. Stronger visual distinction,
+              stronger product signal, and a clearer path for the founder.
             </p>
 
-            <div class="modules-grid">
-              <div class="module-card">
-                <div class="module-title">Valuation modeling</div>
-                <div class="module-text">
-                  Estimate valuation through a venture lens using assumptions investors actually care about.
+            <div class="tools-wrap">
+              <a href="valuation.html" class="tool-card blue">
+                <div class="tool-top">
+                  <div class="tool-number">01</div>
+                  <div class="tool-badge" id="tool1_badge">Live</div>
                 </div>
-              </div>
+                <div class="tool-title" id="tool1_title">VC Valuation</div>
+                <div class="tool-text" id="tool1_text">
+                  Estimate valuation through a venture lens using investor-grade assumptions.
+                </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">IRR</span>
+                  <span class="tool-tag">EV</span>
+                  <span class="tool-tag">Scenarios</span>
+                </div>
+                <div class="tool-cta" id="tool1_cta">Open tool</div>
+              </a>
 
-              <div class="module-card">
-                <div class="module-title">Metrics tracking</div>
-                <div class="module-text">
+              <a href="metrics.html" class="tool-card green">
+                <div class="tool-top">
+                  <div class="tool-number">02</div>
+                  <div class="tool-badge" id="tool2_badge">Live</div>
+                </div>
+                <div class="tool-title" id="tool2_title">Metrics Calculator</div>
+                <div class="tool-text" id="tool2_text">
                   Track the operating signals that shape investor confidence before the first meeting.
                 </div>
-              </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">CAC</span>
+                  <span class="tool-tag">LTV</span>
+                  <span class="tool-tag">Runway</span>
+                </div>
+                <div class="tool-cta" id="tool2_cta">Open tool</div>
+              </a>
 
-              <div class="module-card">
-                <div class="module-title">Pitch readiness</div>
-                <div class="module-text">
+              <a href="pitch.html" class="tool-card purple">
+                <div class="tool-top">
+                  <div class="tool-number">03</div>
+                  <div class="tool-badge" id="tool3_badge">Live</div>
+                </div>
+                <div class="tool-title" id="tool3_title">Pitch Readiness</div>
+                <div class="tool-text" id="tool3_text">
                   Assess whether the quality of your story matches the quality of the business.
                 </div>
-              </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">Score</span>
+                  <span class="tool-tag">Narrative</span>
+                  <span class="tool-tag">Feedback</span>
+                </div>
+                <div class="tool-cta" id="tool3_cta">Open tool</div>
+              </a>
 
-              <div class="module-card">
-                <div class="module-title">Data room readiness</div>
-                <div class="module-text">
+              <a href="dataroom.html" class="tool-card amber">
+                <div class="tool-top">
+                  <div class="tool-number">04</div>
+                  <div class="tool-badge" id="tool4_badge">Live</div>
+                </div>
+                <div class="tool-title" id="tool4_title">Data Room Checklist</div>
+                <div class="tool-text" id="tool4_text">
                   Identify missing materials before diligence turns into friction.
                 </div>
-              </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">Documents</span>
+                  <span class="tool-tag">Checklist</span>
+                  <span class="tool-tag">Readiness</span>
+                </div>
+                <div class="tool-cta" id="tool4_cta">Open tool</div>
+              </a>
 
-              <div class="module-card">
-                <div class="module-title">Investor Q&amp;A</div>
-                <div class="module-text">
+              <a href="qa.html" class="tool-card red">
+                <div class="tool-top">
+                  <div class="tool-number">05</div>
+                  <div class="tool-badge" id="tool5_badge">Live</div>
+                </div>
+                <div class="tool-title" id="tool5_title">Investor Q&amp;A</div>
+                <div class="tool-text" id="tool5_text">
                   Pressure-test your answers before investors do it live.
                 </div>
-              </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">Questions</span>
+                  <span class="tool-tag">Prep</span>
+                  <span class="tool-tag">Simulation</span>
+                </div>
+                <div class="tool-cta" id="tool5_cta">Open tool</div>
+              </a>
 
-              <div class="module-card">
-                <div class="module-title">Sector comparables</div>
-                <div class="module-text">
+              <a href="comparables.html" class="tool-card teal">
+                <div class="tool-top">
+                  <div class="tool-number">06</div>
+                  <div class="tool-badge" id="tool6_badge">Live</div>
+                </div>
+                <div class="tool-title" id="tool6_title">Sector Comparables</div>
+                <div class="tool-text" id="tool6_text">
                   Benchmark your startup against real fundraising outcomes across markets.
                 </div>
-              </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">Deals</span>
+                  <span class="tool-tag">Markets</span>
+                  <span class="tool-tag">Benchmark</span>
+                </div>
+                <div class="tool-cta" id="tool6_cta">Open tool</div>
+              </a>
             </div>
           </div>
         </div>
@@ -1046,39 +1432,39 @@
     <div class="container">
       <div class="content-section">
         <div class="section-grid">
-          <div class="section-kicker">Why it matters</div>
+          <div class="section-kicker" id="why_kicker">Why it matters</div>
 
           <div>
-            <h2 class="section-title">Fundraising breaks when readiness stays fragmented.</h2>
-            <p class="section-text">
+            <h2 class="section-title" id="why_title">Fundraising breaks when readiness stays fragmented.</h2>
+            <p class="section-text" id="why_text">
               The issue is rarely effort. It is usually structure, interpretation, and timing.
             </p>
 
             <div class="cards-2">
               <div class="card">
-                <div class="card-title">Founders raise too early</div>
-                <div class="card-text">
+                <div class="card-title" id="pain1_title">Founders raise too early</div>
+                <div class="card-text" id="pain1_text">
                   Most startups enter fundraising with incomplete preparation and weak diagnostic clarity.
                 </div>
               </div>
 
               <div class="card">
-                <div class="card-title">Metrics stay fragmented</div>
-                <div class="card-text">
+                <div class="card-title" id="pain2_title">Metrics stay fragmented</div>
+                <div class="card-text" id="pain2_text">
                   Financials, traction, narrative, and documentation are rarely aligned in one workflow.
                 </div>
               </div>
 
               <div class="card">
-                <div class="card-title">Strong businesses get poorly translated</div>
-                <div class="card-text">
+                <div class="card-title" id="pain3_title">Strong businesses get poorly translated</div>
+                <div class="card-text" id="pain3_text">
                   A weak pitch can destroy credibility even when the underlying business is solid.
                 </div>
               </div>
 
               <div class="card">
-                <div class="card-title">Diligence becomes a bottleneck</div>
-                <div class="card-text">
+                <div class="card-title" id="pain4_title">Diligence becomes a bottleneck</div>
+                <div class="card-text" id="pain4_text">
                   Missing documents and unclear assumptions slow momentum when timing matters most.
                 </div>
               </div>
@@ -1093,52 +1479,133 @@
     <div class="container">
       <div class="content-section">
         <div class="section-grid">
-          <div class="section-kicker">What you get</div>
+          <div class="section-kicker" id="outputs_kicker">What you get</div>
 
           <div>
-            <h2 class="section-title">Clear outputs. Better decisions.</h2>
-            <p class="section-text">
+            <h2 class="section-title" id="outputs_title">Clear outputs. Better decisions.</h2>
+            <p class="section-text" id="outputs_text">
               The value is not just in calculating. It is in knowing what to do with the signal.
             </p>
 
             <div class="cards-2">
               <div class="card soft">
                 <div class="output-head">
-                  <div class="card-title" style="margin-bottom:0">Global readiness score</div>
+                  <div class="card-title" style="margin-bottom:0" id="output1_title">Global readiness score</div>
                 </div>
-                <div class="card-text">
+                <div class="card-text" id="output1_text">
                   A structured signal of how prepared your startup is before fundraising.
                 </div>
               </div>
 
               <div class="card soft">
                 <div class="output-head">
-                  <div class="card-title" style="margin-bottom:0">Prioritized recommendations</div>
+                  <div class="card-title" style="margin-bottom:0" id="output2_title">Prioritized recommendations</div>
                 </div>
-                <div class="card-text">
+                <div class="card-text" id="output2_text">
                   Know what to fix first, what matters most, and what can wait.
                 </div>
               </div>
 
               <div class="card soft">
                 <div class="output-head">
-                  <div class="card-title" style="margin-bottom:0">Benchmark context</div>
+                  <div class="card-title" style="margin-bottom:0" id="output3_title">Benchmark context</div>
                 </div>
-                <div class="card-text">
+                <div class="card-text" id="output3_text">
                   Anchor your expectations in market reality rather than intuition.
                 </div>
               </div>
 
               <div class="card soft">
                 <div class="output-head">
-                  <div class="card-title" style="margin-bottom:0">Founder report</div>
-                  <span class="mini-pill">Coming soon</span>
+                  <div class="card-title" style="margin-bottom:0" id="output4_title">Founder report</div>
+                  <span class="mini-pill" id="output4_pill">Coming soon</span>
                 </div>
-                <div class="card-text">
+                <div class="card-text" id="output4_text">
                   Export a decision-grade summary of your readiness and next steps.
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="newsletter">
+    <div class="container">
+      <div class="content-section">
+        <div class="section-grid">
+          <div class="section-kicker" id="newsletter_kicker">Newsletter</div>
+
+          <div>
+            <h2 class="section-title" id="newsletter_title">Sharp signal. Low noise.</h2>
+            <p class="section-text" id="newsletter_text">
+              A monthly note for founders preparing to raise: one real deal, one investor-relevant metric, one concrete action.
+            </p>
+
+            <div class="newsletter-grid">
+              <div class="newsletter-card">
+                <div class="newsletter-card-head">
+                  <div class="newsletter-card-title" id="nl_preview_title">VCReady Monthly</div>
+                  <div class="newsletter-card-issue" id="nl_preview_issue">Issue #01 · April 2026</div>
+                </div>
+
+                <div class="newsletter-items">
+                  <div class="newsletter-item">
+                    <strong id="nl_item1_title">Deal of the month</strong>
+                    <span id="nl_item1_text">Wave raises $200M Series C. What founders can actually learn from the shape of the round, not just the headline.</span>
+                  </div>
+                  <div class="newsletter-item">
+                    <strong id="nl_item2_title">Metric of the month</strong>
+                    <span id="nl_item2_text">Why LTV/CAC is still misunderstood, what investors really look for, and how to improve the ratio without gaming it.</span>
+                  </div>
+                  <div class="newsletter-item">
+                    <strong id="nl_item3_title">Practical note</strong>
+                    <span id="nl_item3_text">How to justify valuation discipline in three slides without overselling the business or weakening the narrative.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="newsletter-form">
+                <div class="newsletter-form-body">
+                  <div class="newsletter-form-title" id="nl_form_title">Subscribe</div>
+                  <div class="newsletter-form-text" id="nl_form_text">
+                    One concise email per month. No spam, no recycled content, no filler.
+                  </div>
+
+                  <div class="nl-field">
+                    <label for="nl_prenom" id="nl_label_name">First name</label>
+                    <input type="text" id="nl_prenom" placeholder="Yacine">
+                  </div>
+
+                  <div class="nl-field">
+                    <label for="nl_email" id="nl_label_email">Email</label>
+                    <input type="email" id="nl_email" placeholder="you@startup.com">
+                  </div>
+
+                  <div class="nl-field">
+                    <label for="nl_sector" id="nl_label_sector">Sector</label>
+                    <select id="nl_sector">
+                      <option value="" id="nl_sector_default">Select sector</option>
+                      <option value="saas">SaaS</option>
+                      <option value="fintech">Fintech</option>
+                      <option value="marketplace">Marketplace</option>
+                      <option value="healthtech">Healthtech</option>
+                      <option value="edtech">Edtech</option>
+                      <option value="agritech">AgriTech</option>
+                      <option value="deeptech">Deeptech</option>
+                      <option value="ai">AI & Machine Learning</option>
+                      <option value="other" id="nl_sector_other">Other</option>
+                    </select>
+                  </div>
+
+                  <button class="nl-submit" id="nl_btn" onclick="subscribeNewsletter()">Subscribe — it’s free</button>
+                  <div class="nl-err" id="nl_err">Please enter your first name and email.</div>
+                  <div class="nl-success" id="nl_success">You’re in. The first issue lands next month.</div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -1150,17 +1617,17 @@
       <div class="content-section">
         <div class="final-grid">
           <div>
-            <div class="final-kicker">Final call</div>
-            <h2 class="final-title">If you’re not ready, don’t raise.</h2>
-            <div class="final-text">
+            <div class="final-kicker" id="final_kicker">Final call</div>
+            <h2 class="final-title" id="final_title">If you’re not ready, don’t raise.</h2>
+            <div class="final-text" id="final_text">
               Fix your fundamentals before entering fundraising. It is cheaper, faster,
               and far more credible than correcting the story mid-process.
             </div>
           </div>
 
           <div class="final-actions">
-            <a href="dashboard.html" class="btn">Get started →</a>
-            <a href="https://calendly.com/yacine-chikhar/30min" target="_blank" class="btn-secondary">Book a session</a>
+            <a href="dashboard.html" class="btn" id="final_cta1">Get started →</a>
+            <a href="https://calendly.com/yacine-chikhar/30min" target="_blank" class="btn-secondary" id="final_cta2">Book a session</a>
           </div>
         </div>
       </div>
@@ -1169,12 +1636,493 @@
     <footer>
       <div class="container">
         <div class="footer-inner">
-          <div>VCReady · by <strong>Yacine CHIKHAR</strong> · © 2026</div>
-          <a href="dashboard.html">Open dashboard →</a>
+          <div id="footer_copy">VCReady · by <strong>Yacine CHIKHAR</strong> · © 2026</div>
+          <a href="dashboard.html" id="footer_link">Open dashboard →</a>
         </div>
       </div>
     </footer>
   </section>
 
+  <script>
+    const SUPABASE_URL = 'https://fvbrzttvdvxhbdkjknje.supabase.co';
+    const SUPABASE_KEY = 'YOUR_PUBLIC_ANON_KEY';
+
+    let lang = 'en';
+
+    const T = {
+      en: {
+        navHow: 'How it works',
+        navTools: 'Tools',
+        navWhy: 'Why it matters',
+        navNewsletter: 'Newsletter',
+        navSignin: 'Sign in',
+        navCta: 'Get started →',
+
+        heroEyebrow: 'Investor readiness, measured',
+        heroTitle: 'Measure your startup’s readiness <span class="muted">before you raise.</span>',
+        heroText: 'VCReady helps founders track, benchmark, and improve the signals that matter to investors — before fundraising starts costing time, momentum, and credibility.',
+        heroCta1: 'Get your readiness score →',
+        heroCta2: 'Explore platform',
+        heroMeta1: 'Founder-focused',
+        heroMeta2: 'No fluff',
+        heroMeta3: 'Structured before fundraising',
+
+        previewKicker: 'VCReady dashboard',
+        previewTitle: 'Readiness snapshot',
+        previewPill: 'Live score',
+        previewScoreLabel: 'Overall readiness',
+        previewScoreText: 'Strong operating discipline. The business looks better than the current fundraising narrative communicates.',
+        previewStrengthLabel: 'Strongest area',
+        previewStrengthTitle: 'Metrics quality',
+        previewStrengthText: 'Healthy operating signal and credible fundamentals.',
+        previewPriorityLabel: 'Top priority',
+        previewPriorityTitle: 'Improve pitch clarity',
+        previewPriorityText: 'The narrative still underperforms against the business.',
+        metric1Name: 'Metrics',
+        metric2Name: 'Pitch',
+        metric3Name: 'Data room',
+        metric4Name: 'Q&A',
+        previewInsightLabel: 'Key insight',
+        previewInsightText: 'Your strongest asset is operating discipline. Your weakest point is translation: the business is performing better than the pitch communicates. Tighten market framing, sharpen the ask, and the profile becomes materially more investable.',
+
+        stat1Label: 'Platform scope',
+        stat1Text: 'Integrated modules covering valuation, readiness, and investor-facing preparation.',
+        stat2Label: 'Coverage',
+        stat2Text: 'Sector assumptions and benchmarks designed around fundraising use cases.',
+        stat3Label: 'Founder usage',
+        stat3Text: 'Profiles assessed through tools, advisory work, and readiness workflows.',
+        stat4Label: 'Core promise',
+        stat4Text: 'One operating layer to help founders understand how investors will read the company.',
+
+        howKicker: 'How it works',
+        howTitle: 'A better way to prepare for fundraising.',
+        howText: 'Most founders prepare too late and too loosely. VCReady creates structure before the process becomes expensive.',
+        step1Title: 'Input the fundamentals',
+        step1Text: 'Start with valuation logic, operating metrics, deck quality, and readiness materials.',
+        step2Title: 'Get a structured readout',
+        step2Text: 'Turn scattered information into a clear readiness signal with strengths and weaknesses.',
+        step3Title: 'Improve before the market does',
+        step3Text: 'Fix what most affects investor perception before entering live conversations.',
+
+        toolsKicker: 'Tools',
+        toolsTitle: 'Clearly actionable. Visibly clickable.',
+        toolsText: 'Each module is a direct entry point into the platform. Stronger visual distinction, stronger product signal, and a clearer path for the founder.',
+        live: 'Live',
+        tool1Title: 'VC Valuation',
+        tool1Text: 'Estimate valuation through a venture lens using investor-grade assumptions.',
+        tool1Cta: 'Open tool',
+        tool2Title: 'Metrics Calculator',
+        tool2Text: 'Track the operating signals that shape investor confidence before the first meeting.',
+        tool2Cta: 'Open tool',
+        tool3Title: 'Pitch Readiness',
+        tool3Text: 'Assess whether the quality of your story matches the quality of the business.',
+        tool3Cta: 'Open tool',
+        tool4Title: 'Data Room Checklist',
+        tool4Text: 'Identify missing materials before diligence turns into friction.',
+        tool4Cta: 'Open tool',
+        tool5Title: 'Investor Q&A',
+        tool5Text: 'Pressure-test your answers before investors do it live.',
+        tool5Cta: 'Open tool',
+        tool6Title: 'Sector Comparables',
+        tool6Text: 'Benchmark your startup against real fundraising outcomes across markets.',
+        tool6Cta: 'Open tool',
+
+        whyKicker: 'Why it matters',
+        whyTitle: 'Fundraising breaks when readiness stays fragmented.',
+        whyText: 'The issue is rarely effort. It is usually structure, interpretation, and timing.',
+        pain1Title: 'Founders raise too early',
+        pain1Text: 'Most startups enter fundraising with incomplete preparation and weak diagnostic clarity.',
+        pain2Title: 'Metrics stay fragmented',
+        pain2Text: 'Financials, traction, narrative, and documentation are rarely aligned in one workflow.',
+        pain3Title: 'Strong businesses get poorly translated',
+        pain3Text: 'A weak pitch can destroy credibility even when the underlying business is solid.',
+        pain4Title: 'Diligence becomes a bottleneck',
+        pain4Text: 'Missing documents and unclear assumptions slow momentum when timing matters most.',
+
+        outputsKicker: 'What you get',
+        outputsTitle: 'Clear outputs. Better decisions.',
+        outputsText: 'The value is not just in calculating. It is in knowing what to do with the signal.',
+        output1Title: 'Global readiness score',
+        output1Text: 'A structured signal of how prepared your startup is before fundraising.',
+        output2Title: 'Prioritized recommendations',
+        output2Text: 'Know what to fix first, what matters most, and what can wait.',
+        output3Title: 'Benchmark context',
+        output3Text: 'Anchor your expectations in market reality rather than intuition.',
+        output4Title: 'Founder report',
+        output4Pill: 'Coming soon',
+        output4Text: 'Export a decision-grade summary of your readiness and next steps.',
+
+        newsletterKicker: 'Newsletter',
+        newsletterTitle: 'Sharp signal. Low noise.',
+        newsletterText: 'A monthly note for founders preparing to raise: one real deal, one investor-relevant metric, one concrete action.',
+        nlPreviewTitle: 'VCReady Monthly',
+        nlPreviewIssue: 'Issue #01 · April 2026',
+        nlItem1Title: 'Deal of the month',
+        nlItem1Text: 'Wave raises $200M Series C. What founders can actually learn from the shape of the round, not just the headline.',
+        nlItem2Title: 'Metric of the month',
+        nlItem2Text: 'Why LTV/CAC is still misunderstood, what investors really look for, and how to improve the ratio without gaming it.',
+        nlItem3Title: 'Practical note',
+        nlItem3Text: 'How to justify valuation discipline in three slides without overselling the business or weakening the narrative.',
+        nlFormTitle: 'Subscribe',
+        nlFormText: 'One concise email per month. No spam, no recycled content, no filler.',
+        nlLabelName: 'First name',
+        nlLabelEmail: 'Email',
+        nlLabelSector: 'Sector',
+        nlSectorDefault: 'Select sector',
+        nlSectorOther: 'Other',
+        nlBtn: 'Subscribe — it’s free',
+        nlErr: 'Please enter your first name and email.',
+        nlSuccess: 'You’re in. The first issue lands next month.',
+
+        finalKicker: 'Final call',
+        finalTitle: 'If you’re not ready, don’t raise.',
+        finalText: 'Fix your fundamentals before entering fundraising. It is cheaper, faster, and far more credible than correcting the story mid-process.',
+        finalCta1: 'Get started →',
+        finalCta2: 'Book a session',
+        footerCopy: 'VCReady · by <strong>Yacine CHIKHAR</strong> · © 2026',
+        footerLink: 'Open dashboard →'
+      },
+
+      fr: {
+        navHow: 'Fonctionnement',
+        navTools: 'Outils',
+        navWhy: 'Pourquoi c’est important',
+        navNewsletter: 'Newsletter',
+        navSignin: 'Connexion',
+        navCta: 'Commencer →',
+
+        heroEyebrow: 'Readiness investisseur, mesurée',
+        heroTitle: 'Mesurez le niveau de préparation de votre startup <span class="muted">avant de lever.</span>',
+        heroText: 'VCReady aide les founders à suivre, benchmarker et améliorer les signaux qui comptent pour les investisseurs — avant que la levée ne coûte du temps, de l’élan et de la crédibilité.',
+        heroCta1: 'Obtenir votre readiness score →',
+        heroCta2: 'Explorer la plateforme',
+        heroMeta1: 'Pensé pour les founders',
+        heroMeta2: 'Sans blabla',
+        heroMeta3: 'Structuré avant la levée',
+
+        previewKicker: 'Dashboard VCReady',
+        previewTitle: 'Snapshot de readiness',
+        previewPill: 'Score live',
+        previewScoreLabel: 'Readiness globale',
+        previewScoreText: 'Bonne discipline opérationnelle. Le business paraît plus solide que ce que raconte actuellement le narratif de levée.',
+        previewStrengthLabel: 'Point fort',
+        previewStrengthTitle: 'Qualité des métriques',
+        previewStrengthText: 'Signal opérationnel sain et fondamentaux crédibles.',
+        previewPriorityLabel: 'Priorité',
+        previewPriorityTitle: 'Améliorer la clarté du pitch',
+        previewPriorityText: 'Le narratif sous-performe encore par rapport au business.',
+        metric1Name: 'Métriques',
+        metric2Name: 'Pitch',
+        metric3Name: 'Data room',
+        metric4Name: 'Q&R',
+        previewInsightLabel: 'Insight clé',
+        previewInsightText: 'Votre principal atout est la discipline opérationnelle. Votre principal point faible est la traduction : le business performe mieux que ce que le pitch communique. Clarifiez le framing marché, affinez le ask, et le profil devient nettement plus investissable.',
+
+        stat1Label: 'Périmètre',
+        stat1Text: 'Modules intégrés couvrant valorisation, readiness et préparation investisseur.',
+        stat2Label: 'Couverture',
+        stat2Text: 'Hypothèses sectorielles et benchmarks conçus pour des cas concrets de levée.',
+        stat3Label: 'Utilisation',
+        stat3Text: 'Profils analysés à travers les outils, l’advisory et les workflows de préparation.',
+        stat4Label: 'Promesse',
+        stat4Text: 'Une seule couche opérationnelle pour comprendre comment les investisseurs liront votre startup.',
+
+        howKicker: 'Fonctionnement',
+        howTitle: 'Une meilleure façon de se préparer à la levée.',
+        howText: 'La plupart des founders se préparent trop tard et de manière trop floue. VCReady apporte de la structure avant que le process ne devienne coûteux.',
+        step1Title: 'Entrer les fondamentaux',
+        step1Text: 'Commencez par la logique de valorisation, les métriques, la qualité du deck et les éléments de préparation.',
+        step2Title: 'Obtenir une lecture structurée',
+        step2Text: 'Transformez des informations dispersées en un signal clair avec forces et faiblesses.',
+        step3Title: 'Corriger avant le marché',
+        step3Text: 'Travaillez ce qui impacte le plus la perception investisseur avant les rendez-vous.',
+
+        toolsKicker: 'Outils',
+        toolsTitle: 'Clair, actionnable, visiblement cliquable.',
+        toolsText: 'Chaque module est un point d’entrée direct dans la plateforme. Plus de distinction visuelle, plus de signal produit, et un chemin plus clair pour le founder.',
+        live: 'Disponible',
+        tool1Title: 'Valorisation VC',
+        tool1Text: 'Estimez votre valorisation avec une logique réellement alignée sur la lecture investisseur.',
+        tool1Cta: 'Ouvrir l’outil',
+        tool2Title: 'Calculateur de métriques',
+        tool2Text: 'Suivez les signaux opérationnels qui façonnent la confiance investisseur.',
+        tool2Cta: 'Ouvrir l’outil',
+        tool3Title: 'Pitch Readiness',
+        tool3Text: 'Évaluez si la qualité de votre histoire correspond à la qualité du business.',
+        tool3Cta: 'Ouvrir l’outil',
+        tool4Title: 'Checklist Data Room',
+        tool4Text: 'Identifiez les éléments manquants avant que la due diligence ne devienne un frein.',
+        tool4Cta: 'Ouvrir l’outil',
+        tool5Title: 'Q&R Investisseur',
+        tool5Text: 'Testez vos réponses avant que les investisseurs ne le fassent en direct.',
+        tool5Cta: 'Ouvrir l’outil',
+        tool6Title: 'Comparables sectoriels',
+        tool6Text: 'Benchmarkez votre startup sur des levées réelles à travers différents marchés.',
+        tool6Cta: 'Ouvrir l’outil',
+
+        whyKicker: 'Pourquoi c’est important',
+        whyTitle: 'La levée se casse quand la préparation reste fragmentée.',
+        whyText: 'Le problème n’est rarement l’effort. C’est surtout une question de structure, d’interprétation et de timing.',
+        pain1Title: 'Les founders lèvent trop tôt',
+        pain1Text: 'La plupart des startups entrent en levée avec une préparation incomplète et un diagnostic flou.',
+        pain2Title: 'Les métriques restent dispersées',
+        pain2Text: 'Finances, traction, narratif et documentation sont rarement alignés dans un même workflow.',
+        pain3Title: 'De bons business sont mal traduits',
+        pain3Text: 'Un mauvais pitch peut détruire la crédibilité même avec un business solide derrière.',
+        pain4Title: 'La due diligence devient un frein',
+        pain4Text: 'Des documents manquants et des hypothèses floues ralentissent la dynamique quand le timing compte le plus.',
+
+        outputsKicker: 'Ce que vous obtenez',
+        outputsTitle: 'Des outputs clairs. De meilleures décisions.',
+        outputsText: 'La valeur ne réside pas seulement dans le calcul. Elle réside dans la capacité à savoir quoi faire du signal.',
+        output1Title: 'Score global de readiness',
+        output1Text: 'Un signal structuré de votre niveau de préparation avant la levée.',
+        output2Title: 'Recommandations priorisées',
+        output2Text: 'Sachez quoi corriger d’abord, ce qui compte vraiment, et ce qui peut attendre.',
+        output3Title: 'Contexte de benchmark',
+        output3Text: 'Ancrez vos attentes dans la réalité du marché plutôt que dans l’intuition.',
+        output4Title: 'Founder report',
+        output4Pill: 'Bientôt',
+        output4Text: 'Exportez une synthèse exploitable de votre readiness et de vos prochaines actions.',
+
+        newsletterKicker: 'Newsletter',
+        newsletterTitle: 'Du signal. Peu de bruit.',
+        newsletterText: 'Une note mensuelle pour les founders en préparation de levée : un deal réel, une métrique investisseur, une action concrète.',
+        nlPreviewTitle: 'VCReady Monthly',
+        nlPreviewIssue: 'Numéro #01 · Avril 2026',
+        nlItem1Title: 'Deal du mois',
+        nlItem1Text: 'Wave lève $200M en Série C. Ce que les founders peuvent réellement apprendre de la structure du tour, pas seulement du titre.',
+        nlItem2Title: 'Métrique du mois',
+        nlItem2Text: 'Pourquoi le LTV/CAC reste mal compris, ce que les investisseurs regardent vraiment, et comment améliorer le ratio sans le biaiser.',
+        nlItem3Title: 'Note pratique',
+        nlItem3Text: 'Comment défendre une discipline de valorisation en trois slides sans sur-vendre le business.',
+        nlFormTitle: 'S’abonner',
+        nlFormText: 'Un email concis par mois. Pas de spam, pas de contenu recyclé, pas de remplissage.',
+        nlLabelName: 'Prénom',
+        nlLabelEmail: 'Email',
+        nlLabelSector: 'Secteur',
+        nlSectorDefault: 'Choisir un secteur',
+        nlSectorOther: 'Autre',
+        nlBtn: 'S’abonner — c’est gratuit',
+        nlErr: 'Veuillez renseigner votre prénom et votre email.',
+        nlSuccess: 'C’est enregistré. Le premier numéro arrive le mois prochain.',
+
+        finalKicker: 'Dernier point',
+        finalTitle: 'Si vous n’êtes pas prêt, ne levez pas.',
+        finalText: 'Travaillez vos fondamentaux avant d’entrer en levée. C’est moins coûteux, plus rapide, et beaucoup plus crédible que de corriger votre story en plein process.',
+        finalCta1: 'Commencer →',
+        finalCta2: 'Réserver une session',
+        footerCopy: 'VCReady · by <strong>Yacine CHIKHAR</strong> · © 2026',
+        footerLink: 'Ouvrir le dashboard →'
+      }
+    };
+
+    function setLang(l){
+      lang = l;
+      document.querySelectorAll('.lang-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', ['en','fr'][i] === l);
+      });
+
+      const t = T[l];
+      const s = (id, value) => {
+        const el = document.getElementById(id);
+        if(el) el.innerHTML = value;
+      };
+
+      s('nav_how', t.navHow);
+      s('nav_tools', t.navTools);
+      s('nav_why', t.navWhy);
+      s('nav_newsletter', t.navNewsletter);
+      s('nav_signin', t.navSignin);
+      s('nav_cta', t.navCta);
+
+      s('hero_eyebrow', t.heroEyebrow);
+      s('hero_title', t.heroTitle);
+      s('hero_text', t.heroText);
+      s('hero_cta1', t.heroCta1);
+      s('hero_cta2', t.heroCta2);
+      s('hero_meta1', t.heroMeta1);
+      s('hero_meta2', t.heroMeta2);
+      s('hero_meta3', t.heroMeta3);
+
+      s('preview_kicker', t.previewKicker);
+      s('preview_title', t.previewTitle);
+      s('preview_pill', t.previewPill);
+      s('preview_score_label', t.previewScoreLabel);
+      s('preview_score_text', t.previewScoreText);
+      s('preview_strength_label', t.previewStrengthLabel);
+      s('preview_strength_title', t.previewStrengthTitle);
+      s('preview_strength_text', t.previewStrengthText);
+      s('preview_priority_label', t.previewPriorityLabel);
+      s('preview_priority_title', t.previewPriorityTitle);
+      s('preview_priority_text', t.previewPriorityText);
+      s('metric1_name', t.metric1Name);
+      s('metric2_name', t.metric2Name);
+      s('metric3_name', t.metric3Name);
+      s('metric4_name', t.metric4Name);
+      s('preview_insight_label', t.previewInsightLabel);
+      s('preview_insight_text', t.previewInsightText);
+
+      s('stat1_label', t.stat1Label);
+      s('stat1_text', t.stat1Text);
+      s('stat2_label', t.stat2Label);
+      s('stat2_text', t.stat2Text);
+      s('stat3_label', t.stat3Label);
+      s('stat3_text', t.stat3Text);
+      s('stat4_label', t.stat4Label);
+      s('stat4_text', t.stat4Text);
+
+      s('how_kicker', t.howKicker);
+      s('how_title', t.howTitle);
+      s('how_text', t.howText);
+      s('step1_title', t.step1Title);
+      s('step1_text', t.step1Text);
+      s('step2_title', t.step2Title);
+      s('step2_text', t.step2Text);
+      s('step3_title', t.step3Title);
+      s('step3_text', t.step3Text);
+
+      s('tools_kicker', t.toolsKicker);
+      s('tools_title', t.toolsTitle);
+      s('tools_text', t.toolsText);
+      s('tool1_badge', t.live);
+      s('tool2_badge', t.live);
+      s('tool3_badge', t.live);
+      s('tool4_badge', t.live);
+      s('tool5_badge', t.live);
+      s('tool6_badge', t.live);
+      s('tool1_title', t.tool1Title);
+      s('tool1_text', t.tool1Text);
+      s('tool1_cta', t.tool1Cta);
+      s('tool2_title', t.tool2Title);
+      s('tool2_text', t.tool2Text);
+      s('tool2_cta', t.tool2Cta);
+      s('tool3_title', t.tool3Title);
+      s('tool3_text', t.tool3Text);
+      s('tool3_cta', t.tool3Cta);
+      s('tool4_title', t.tool4Title);
+      s('tool4_text', t.tool4Text);
+      s('tool4_cta', t.tool4Cta);
+      s('tool5_title', t.tool5Title);
+      s('tool5_text', t.tool5Text);
+      s('tool5_cta', t.tool5Cta);
+      s('tool6_title', t.tool6Title);
+      s('tool6_text', t.tool6Text);
+      s('tool6_cta', t.tool6Cta);
+
+      s('why_kicker', t.whyKicker);
+      s('why_title', t.whyTitle);
+      s('why_text', t.whyText);
+      s('pain1_title', t.pain1Title);
+      s('pain1_text', t.pain1Text);
+      s('pain2_title', t.pain2Title);
+      s('pain2_text', t.pain2Text);
+      s('pain3_title', t.pain3Title);
+      s('pain3_text', t.pain3Text);
+      s('pain4_title', t.pain4Title);
+      s('pain4_text', t.pain4Text);
+
+      s('outputs_kicker', t.outputsKicker);
+      s('outputs_title', t.outputsTitle);
+      s('outputs_text', t.outputsText);
+      s('output1_title', t.output1Title);
+      s('output1_text', t.output1Text);
+      s('output2_title', t.output2Title);
+      s('output2_text', t.output2Text);
+      s('output3_title', t.output3Title);
+      s('output3_text', t.output3Text);
+      s('output4_title', t.output4Title);
+      s('output4_pill', t.output4Pill);
+      s('output4_text', t.output4Text);
+
+      s('newsletter_kicker', t.newsletterKicker);
+      s('newsletter_title', t.newsletterTitle);
+      s('newsletter_text', t.newsletterText);
+      s('nl_preview_title', t.nlPreviewTitle);
+      s('nl_preview_issue', t.nlPreviewIssue);
+      s('nl_item1_title', t.nlItem1Title);
+      s('nl_item1_text', t.nlItem1Text);
+      s('nl_item2_title', t.nlItem2Title);
+      s('nl_item2_text', t.nlItem2Text);
+      s('nl_item3_title', t.nlItem3Title);
+      s('nl_item3_text', t.nlItem3Text);
+      s('nl_form_title', t.nlFormTitle);
+      s('nl_form_text', t.nlFormText);
+      s('nl_label_name', t.nlLabelName);
+      s('nl_label_email', t.nlLabelEmail);
+      s('nl_label_sector', t.nlLabelSector);
+      s('nl_sector_default', t.nlSectorDefault);
+      s('nl_sector_other', t.nlSectorOther);
+      s('nl_btn', t.nlBtn);
+
+      const err = document.getElementById('nl_err');
+      const success = document.getElementById('nl_success');
+      if(err) err.textContent = t.nlErr;
+      if(success) success.textContent = t.nlSuccess;
+
+      s('final_kicker', t.finalKicker);
+      s('final_title', t.finalTitle);
+      s('final_text', t.finalText);
+      s('final_cta1', t.finalCta1);
+      s('final_cta2', t.finalCta2);
+      s('footer_copy', t.footerCopy);
+      s('footer_link', t.footerLink);
+    }
+
+    async function subscribeNewsletter(){
+      const prenom = document.getElementById('nl_prenom').value.trim();
+      const email = document.getElementById('nl_email').value.trim();
+      const sector = document.getElementById('nl_sector').value;
+      const err = document.getElementById('nl_err');
+      const success = document.getElementById('nl_success');
+      const btn = document.getElementById('nl_btn');
+
+      err.style.display = 'none';
+      success.style.display = 'none';
+
+      if(!prenom || !email){
+        err.textContent = T[lang].nlErr;
+        err.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = lang === 'fr' ? 'Inscription...' : 'Subscribing...';
+
+      try{
+        await fetch(`${SUPABASE_URL}/rest/v1/newsletter`,{
+          method:'POST',
+          headers:{
+            'apikey':SUPABASE_KEY,
+            'Authorization':'Bearer ' + SUPABASE_KEY,
+            'Content-Type':'application/json',
+            'Prefer':'return=minimal'
+          },
+          body:JSON.stringify({
+            first_name:prenom,
+            email:email,
+            sector:sector || '',
+            language:lang
+          })
+        });
+
+        document.getElementById('nl_prenom').value = '';
+        document.getElementById('nl_email').value = '';
+        document.getElementById('nl_sector').value = '';
+        success.textContent = T[lang].nlSuccess;
+        success.style.display = 'block';
+      }catch(e){
+        err.textContent = lang === 'fr'
+          ? 'Une erreur est survenue. Réessayez.'
+          : 'Something went wrong. Please try again.';
+        err.style.display = 'block';
+      }finally{
+        btn.disabled = false;
+        btn.textContent = T[lang].nlBtn;
+      }
+    }
+
+    setLang('en');
+  </script>
 </body>
 </html>
