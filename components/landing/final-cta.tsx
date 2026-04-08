@@ -1,6 +1,11 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 
 export function FinalCTA() {
+  const { t } = useI18n();
+  
   return (
     <section className="bg-ink text-white">
       <div className="max-w-[var(--container-max)] mx-auto px-6 py-20">
@@ -8,34 +13,33 @@ export function FinalCTA() {
           {/* Content */}
           <div className="max-w-2xl">
             <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-4">
-              Ready to raise?
+              {t("cta.eyebrow")}
             </p>
             <h2 className="font-serif text-4xl md:text-5xl font-medium tracking-tight leading-tight mb-4 text-balance">
-              Know your position before the first meeting.
+              {t("cta.title")}
             </h2>
             <p className="text-white/65 text-base leading-relaxed max-w-lg text-pretty">
-              VCReady gives you the tools and insights to walk into investor meetings
-              with confidence. Stop guessing, start knowing.
+              {t("cta.subtitle")}
             </p>
           </div>
 
-          {/* Actions */}
+          {/* Actions - Fixed contrast: primary button is now clearly visible */}
           <div className="flex flex-wrap gap-3">
             <Button
               href="/dashboard"
-              className="bg-white text-ink hover:bg-white/90 border-transparent"
               size="lg"
+              className="bg-accent text-white hover:bg-accent/90 border-accent"
             >
-              Get started
+              {t("cta.primary")}
               <span aria-hidden="true">&rarr;</span>
             </Button>
             <Button
               href="/valuation"
               variant="secondary"
-              className="bg-transparent text-white border-white/20 hover:border-white hover:bg-transparent"
+              className="bg-transparent text-white border-white/30 hover:border-white hover:bg-white/5"
               size="lg"
             >
-              Try a tool first
+              {t("cta.secondary")}
             </Button>
           </div>
         </div>

@@ -1,32 +1,37 @@
+"use client";
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-const priorities = [
-  {
-    priority: "high",
-    title: "Complete Data Room",
-    description: "Upload term sheet, cap table, and 3-year financial projections.",
-    category: "Data Room",
-  },
-  {
-    priority: "medium",
-    title: "Update Pitch Deck",
-    description: "Add traction slide with latest MRR and growth metrics.",
-    category: "Pitch",
-  },
-  {
-    priority: "low",
-    title: "Review Q&A Answers",
-    description: "Refresh answers to competitive landscape questions.",
-    category: "Q&A",
-  },
-];
+import { useI18n } from "@/lib/i18n";
 
 export function PriorityActions() {
+  const { t } = useI18n();
+  
+  const priorities = [
+    {
+      priority: "high" as const,
+      title: "Complete Data Room",
+      description: "Upload term sheet, cap table, and 3-year financial projections.",
+      category: t("nav.dataroom"),
+    },
+    {
+      priority: "medium" as const,
+      title: "Update Pitch Deck",
+      description: "Add traction slide with latest MRR and growth metrics.",
+      category: t("nav.pitch"),
+    },
+    {
+      priority: "low" as const,
+      title: "Review Q&A Answers",
+      description: "Refresh answers to competitive landscape questions.",
+      category: t("nav.qa"),
+    },
+  ];
+
   return (
     <Card padding="sm">
       <CardHeader>
-        <CardTitle kicker="Action Items">Priority Tasks</CardTitle>
+        <CardTitle kicker="Action Items">{t("dashboard.actions.title")}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">

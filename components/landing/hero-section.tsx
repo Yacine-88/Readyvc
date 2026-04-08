@@ -1,8 +1,13 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Section, Container } from "@/components/layout/section";
 import { HeroPreviewCard } from "./hero-preview-card";
+import { useI18n } from "@/lib/i18n";
 
 export function HeroSection() {
+  const { t } = useI18n();
+  
   return (
     <Section bordered={true} padding="lg" className="relative overflow-hidden">
       {/* Subtle radial gradient overlay */}
@@ -20,26 +25,24 @@ export function HeroSection() {
           <div>
             <p className="eyebrow inline-flex items-center gap-2.5 mb-5">
               <span className="w-6 h-px bg-border-strong" aria-hidden="true" />
-              Investor Readiness Platform
+              {t("hero.eyebrow")}
             </p>
 
             <h1 className="heading-display text-5xl md:text-6xl lg:text-[68px] text-balance mb-5">
-              Measure your readiness{" "}
-              <span className="text-muted">before you raise.</span>
+              {t("hero.title")}
             </h1>
 
             <p className="text-ink-secondary text-base md:text-lg leading-relaxed max-w-xl mb-8 text-pretty">
-              VCReady helps founders measure, benchmark and improve the signals that
-              matter to investors before fundraising starts.
+              {t("hero.subtitle")}
             </p>
 
             <div className="flex flex-wrap gap-3 mb-6">
               <Button href="/dashboard" size="lg">
-                Get started
+                {t("hero.cta.primary")}
                 <span aria-hidden="true">&rarr;</span>
               </Button>
-              <Button href="/valuation" variant="secondary" size="lg">
-                Try valuation tool
+              <Button href="#how-it-works" variant="secondary" size="lg">
+                {t("hero.cta.secondary")}
               </Button>
             </div>
 

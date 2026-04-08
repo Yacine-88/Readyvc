@@ -1,15 +1,20 @@
+"use client";
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import Link from "next/link";
-
-const categories = [
-  { label: "Metrics", score: 85, status: "good" as const },
-  { label: "Valuation", score: 70, status: "good" as const },
-  { label: "Data Room", score: 45, status: "warning" as const },
-  { label: "Pitch", score: 60, status: "neutral" as const },
-];
+import { useI18n } from "@/lib/i18n";
 
 export function ReadinessScore() {
+  const { t } = useI18n();
+  
+  const categories = [
+    { label: t("nav.metrics"), score: 85, status: "good" as const, href: "/metrics" },
+    { label: t("nav.valuation"), score: 70, status: "good" as const, href: "/valuation" },
+    { label: t("nav.dataroom"), score: 45, status: "warning" as const, href: "/dataroom" },
+    { label: t("nav.pitch"), score: 60, status: "neutral" as const, href: "/pitch" },
+  ];
+  
   const overallScore = 72;
   const getVerdict = (score: number) => {
     if (score >= 80) return { text: "Excellent", className: "text-success" };
@@ -23,9 +28,9 @@ export function ReadinessScore() {
   return (
     <Card padding="sm">
       <CardHeader>
-        <CardTitle kicker="Investor Readiness">Your Score</CardTitle>
+        <CardTitle kicker="Investor Readiness">{t("dashboard.score.title")}</CardTitle>
         <Link href="/readiness" className="text-xs font-semibold text-ink hover:text-accent transition-colors">
-          Full report &rarr;
+          {t("common.viewAll")} &rarr;
         </Link>
       </CardHeader>
       <CardContent>
@@ -54,7 +59,7 @@ export function ReadinessScore() {
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-4xl font-extrabold tracking-tight">{overallScore}</span>
+              <span className="text-4xl font-extrabold tracking-tight font-mono">{overallScore}</span>
               <span className="text-xs font-semibold text-muted tracking-wide">/100</span>
             </div>
           </div>
@@ -80,14 +85,14 @@ export function ReadinessScore() {
             >
               <div className="flex items-center justify-between gap-2 mb-2">
                 <span className="eyebrow text-[10px]">{cat.label}</span>
-                <span className="text-xs font-bold">{cat.score}%</span>
+                <span className="text-xs font-bold font-mono">{cat.score}%</span>
               </div>
               <ProgressBar value={cat.score} status={cat.status} size="sm" />
               <Link
-                href={`/${cat.label.toLowerCase().replace(" ", "")}`}
+                href={cat.href}
                 className="text-[11px] font-semibold text-accent mt-2 block"
               >
-                Improve &rarr;
+                {t("common.explore")} &rarr;
               </Link>
             </div>
           ))}

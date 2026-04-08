@@ -1,51 +1,56 @@
+"use client";
+
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ArrowRight, Calculator, BarChart3, FileText, FolderOpen, HelpCircle, Target } from "lucide-react";
-
-const tools = [
-  {
-    href: "/valuation",
-    icon: Calculator,
-    title: "Valuation",
-    description: "VC method calculator",
-  },
-  {
-    href: "/metrics",
-    icon: BarChart3,
-    title: "Metrics",
-    description: "KPI dashboard",
-  },
-  {
-    href: "/pitch",
-    icon: FileText,
-    title: "Pitch",
-    description: "Deck analyzer",
-  },
-  {
-    href: "/dataroom",
-    icon: FolderOpen,
-    title: "Data Room",
-    description: "Document checklist",
-  },
-  {
-    href: "/qa",
-    icon: HelpCircle,
-    title: "Q&A Prep",
-    description: "Investor questions",
-  },
-  {
-    href: "/readiness",
-    icon: Target,
-    title: "Readiness",
-    description: "Full assessment",
-  },
-];
+import { useI18n } from "@/lib/i18n";
 
 export function QuickLinks() {
+  const { t } = useI18n();
+  
+  const tools = [
+    {
+      href: "/valuation",
+      icon: Calculator,
+      title: t("nav.valuation"),
+      description: t("tool.valuation.desc").slice(0, 40) + "...",
+    },
+    {
+      href: "/metrics",
+      icon: BarChart3,
+      title: t("nav.metrics"),
+      description: t("tool.metrics.desc").slice(0, 40) + "...",
+    },
+    {
+      href: "/pitch",
+      icon: FileText,
+      title: t("nav.pitch"),
+      description: t("tool.pitch.desc").slice(0, 40) + "...",
+    },
+    {
+      href: "/dataroom",
+      icon: FolderOpen,
+      title: t("nav.dataroom"),
+      description: t("tool.dataroom.desc").slice(0, 40) + "...",
+    },
+    {
+      href: "/qa",
+      icon: HelpCircle,
+      title: t("nav.qa"),
+      description: t("tool.qa.desc").slice(0, 40) + "...",
+    },
+    {
+      href: "/readiness",
+      icon: Target,
+      title: t("nav.readiness"),
+      description: t("tool.readiness.desc").slice(0, 40) + "...",
+    },
+  ];
+
   return (
     <Card padding="sm">
       <CardHeader>
-        <CardTitle kicker="Tools">Quick Access</CardTitle>
+        <CardTitle kicker="Tools">{t("dashboard.quicklinks.title")}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -82,7 +87,7 @@ function ToolLink({
           aria-hidden="true"
         />
       </div>
-      <span className="text-[11px] text-muted">{description}</span>
+      <span className="text-[11px] text-muted line-clamp-2">{description}</span>
     </Link>
   );
 }

@@ -1,5 +1,8 @@
+"use client";
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n";
 
 const metrics = [
   { label: "MRR", value: "$18,400", change: "+12%", status: "good" as const },
@@ -9,12 +12,14 @@ const metrics = [
 ];
 
 export function ExecutiveSummary() {
+  const { t } = useI18n();
+  
   return (
     <Card padding="sm">
       <CardHeader>
-        <CardTitle kicker="Overview">Executive Summary</CardTitle>
+        <CardTitle kicker="Overview">{t("dashboard.summary.title")}</CardTitle>
         <Link href="/metrics" className="text-xs font-semibold text-ink hover:text-accent transition-colors">
-          View all metrics &rarr;
+          {t("common.viewAll")} &rarr;
         </Link>
       </CardHeader>
       <CardContent>
@@ -49,7 +54,7 @@ function MetricCard({
   return (
     <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
       <p className="eyebrow mb-2">{label}</p>
-      <p className={`text-2xl font-extrabold tracking-tight leading-none mb-1 ${statusColors[status]}`}>
+      <p className={`text-2xl font-extrabold tracking-tight leading-none mb-1 font-mono ${statusColors[status]}`}>
         {value}
       </p>
       <p className="text-xs text-muted">{change}</p>
