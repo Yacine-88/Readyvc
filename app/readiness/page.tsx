@@ -252,21 +252,26 @@ export default function ReadinessPage() {
             <BookSessionCTA />
           </div>
 
-          {/* CTA */}
-          <div className="mt-5 flex items-center justify-between bg-ink text-white rounded-[var(--radius-lg)] p-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-1">Ready to improve your score?</h3>
-              <p className="text-white/60 text-sm">
-                Complete the priority actions to increase your investor readiness.
-              </p>
+          {/* Priority CTA - Prominent and Visible */}
+          <div className="mt-8 bg-gradient-to-r from-accent to-accent/80 rounded-[var(--radius-lg)] p-8 md:p-10 shadow-lg">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
+                  Boost Your Readiness Score
+                </h3>
+                <p className="text-white/90 leading-relaxed max-w-lg">
+                  Start with your Data Room. Upload key documents, cap table, and financial statements to increase investor confidence.
+                </p>
+              </div>
+              <Button
+                href="/dataroom"
+                className="bg-white text-accent hover:bg-white/95 border-transparent font-semibold gap-2 shrink-0"
+                size="lg"
+              >
+                Start with Data Room
+                <ArrowRight className="w-5 h-5" />
+              </Button>
             </div>
-            <Button
-              href="/dataroom"
-              className="bg-white text-ink hover:bg-white/90 border-transparent"
-            >
-              Start with Data Room
-              <ArrowRight className="w-4 h-4" />
-            </Button>
           </div>
         </Container>
       </main>
