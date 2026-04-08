@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/ui/logo";
 import { useI18n, LanguageSwitcher } from "@/lib/i18n";
 
 export function Navbar() {
@@ -26,8 +26,15 @@ export function Navbar() {
     <header className="sticky top-0 z-50 h-[72px] border-b border-border-strong/80 backdrop-blur-md bg-background/90">
       <div className="max-w-[var(--container-max)] mx-auto px-6 h-full flex items-center justify-between gap-5">
         {/* Logo */}
-        <Link href="/" className="shrink-0">
-          <Logo variant="dark" className="h-7 w-auto" />
+        <Link href="/" className="shrink-0 flex items-center">
+          <Image
+            src="/logo-black.png"
+            alt="VCReady"
+            width={120}
+            height={24}
+            className="h-6 w-auto"
+            priority
+          />
         </Link>
 
         {/* Navigation - only show on non-landing pages */}

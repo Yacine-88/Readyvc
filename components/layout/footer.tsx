@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Logo } from "@/components/ui/logo";
+import Image from "next/image";
 import { useI18n } from "@/lib/i18n";
 
 export function Footer() {
@@ -12,7 +12,13 @@ export function Footer() {
       <div className="max-w-[var(--container-max)] mx-auto px-6 py-6">
         <div className="border-t border-white/10 pt-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Logo variant="light" className="h-5 w-auto opacity-80" />
+            <Image
+              src="/logo-white.png"
+              alt="VCReady"
+              width={100}
+              height={20}
+              className="h-5 w-auto opacity-80"
+            />
             <p className="text-xs">
               {t("footer.by")} <span className="text-white/80 font-medium">Yacine CHIKHAR</span>{" "}
               &middot; &copy; {new Date().getFullYear()}
