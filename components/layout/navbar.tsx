@@ -19,6 +19,7 @@ export function Navbar() {
     { href: "/dataroom", label: t("nav.dataroom") },
     { href: "/qa", label: t("nav.qa") },
     { href: "/captable", label: t("nav.captable") },
+    { href: "/comparables", label: t("nav.comparables") },
   ];
 
   const isToolActive = toolLinks.some((link) => pathname === link.href);
