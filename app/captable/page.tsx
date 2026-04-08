@@ -235,7 +235,7 @@ export default function CapTablePage() {
           {/* Add Shareholder Form */}
           <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
             <h4 className="font-semibold text-sm mb-3">Add Shareholder</h4>
-            <FormGrid columns={2}>
+            <FormGrid cols={2}>
               <InputField
                 label="Name"
                 placeholder="e.g., New Investor"
@@ -282,7 +282,7 @@ export default function CapTablePage() {
         <p className="text-sm text-ink-secondary mb-4">
           Model the impact of a new funding round
         </p>
-        <FormGrid columns={3}>
+        <FormGrid cols={3}>
           <InputField
             label="Investment Amount"
             type="number"
@@ -293,7 +293,7 @@ export default function CapTablePage() {
                 investmentAmount: parseFloat(e.target.value) || 0,
               }))
             }
-            help="New investment size in dollars"
+            hint="New investment size in dollars"
           />
           <InputField
             label="Pre-Money Valuation"
@@ -305,7 +305,7 @@ export default function CapTablePage() {
                 preMoneyValuation: parseFloat(e.target.value) || 0,
               }))
             }
-            help="Company value before investment"
+            hint="Company value before investment"
           />
           <InputField
             label="New ESOP %"
@@ -317,7 +317,7 @@ export default function CapTablePage() {
                 newEsopPercentage: parseFloat(e.target.value) || 0,
               }))
             }
-            help="Option pool to reserve for employees"
+            hint="Option pool to reserve for employees"
           />
         </FormGrid>
       </ToolSection>
