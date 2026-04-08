@@ -135,14 +135,27 @@ function calculateDataroomScore(documents: any[]): number {
 }
 
 /**
- * Calculate overall investor readiness (0-100)
- * Weighted combination of all scores
+ * Calculate overall investor readiness score (0-100)
+ * Gracefully handles unauthenticated users by returning zero scores
  */
 export async function calculateReadinessScore(): Promise<ReadinessScoreData> {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
-  if (!user) throw new Error('User not authenticated')
+  // Return default scores if user is not authenticated
+  if (!user) {
+    console.log("[v0] Readiness score not calculated - user not authenticated")
+    return {
+      overall_score: 0,
+      metrics_score: 0,
+      valuation_score: 0,
+      qa_score: 0,
+      cap_table_score: 0,
+      pitch_score: 0,
+      dataroom_score: 0,
+      investor_readiness_percentage: 0,
+    }
+  }
 
   // Fetch latest data from each tool
   const [metricsData, valuationData, qaData, capTableData, pitchData, dataroomData] = await Promise.all([

@@ -19,7 +19,11 @@ export async function saveCapTable(data: CapTableData) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
-  if (!user) throw new Error('User not authenticated')
+  // Silently skip saving if user is not authenticated
+  if (!user) {
+    console.log("[v0] Cap table not saved - user not authenticated")
+    return null
+  }
 
   const { data: result, error } = await supabase
     .from('cap_tables')
@@ -39,7 +43,11 @@ export async function getCapTable(name?: string) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
-  if (!user) throw new Error('User not authenticated')
+  // Return empty array if user is not authenticated
+  if (!user) {
+    console.log("[v0] Cap table not retrieved - user not authenticated")
+    return []
+  }
 
   let query = supabase
     .from('cap_tables')
