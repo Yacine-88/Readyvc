@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+/*
+  VCReady Design System
+  Ultra minimal, investor-grade aesthetic
+  Inspired by: 500 Global, Stripe, Linear, Notion
+*/
+
+@theme inline {
+  /* Color System - Ultra minimal palette */
+  --color-background: #F7F7F5;
+  --color-foreground: #0E0E0C;
+  --color-card: #FFFFFF;
+  --color-card-foreground: #0E0E0C;
+  
+  /* Text hierarchy */
+  --color-ink: #0E0E0C;
+  --color-ink-secondary: #2B2B27;
+  --color-muted: #6F6E66;
+  --color-muted-foreground: #99978E;
+  
+  /* Borders and lines */
+  --color-border: #E7E3DA;
+  --color-border-strong: #D8D4CB;
+  
+  /* Subtle backgrounds */
+  --color-soft: #FBFBF9;
+  --color-soft-muted: #F2F0EA;
+  
+  /* Accent - subtle dark green */
+  --color-accent: #0F6A46;
+  --color-accent-foreground: #FFFFFF;
+  --color-accent-soft: #EAF6F0;
+  --color-accent-border: #B6DEC8;
+  
+  /* Status colors */
+  --color-success: #0F6A46;
+  --color-success-soft: #EAF6F0;
+  --color-success-border: #B6DEC8;
+  
+  --color-warning: #8A6B1F;
+  --color-warning-soft: #F8F3E6;
+  --color-warning-border: #E7D5A7;
+  
+  --color-danger: #8C4343;
+  --color-danger-soft: #FAECEC;
+  --color-danger-border: #E8C0C0;
+  
+  /* Border radius */
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.5rem;
+  
+  /* Container */
+  --container-max: 1240px;
+  --container-narrow: 960px;
+}
+
+/* Base styles */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.75;
+  min-height: 100vh;
+}
+
+/* Typography classes */
+.text-balance {
+  text-wrap: balance;
+}
+
+.text-pretty {
+  text-wrap: pretty;
+}
+
+/* Headlines use serif */
+.heading-display {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+}
+
+.heading-section {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+}
+
+/* Eyebrow/kicker text */
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
