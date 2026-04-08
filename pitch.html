@@ -1,692 +1,418 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VCReady — Pitch Readiness Score</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-7BRPFG4JQL"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-7BRPFG4JQL');
-</script>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
-:root{
-  --cream:#F5F2EC;--navy:#12120F;--navy2:#3A3830;--navy3:#8A8880;
-  --line:#D8D4CC;--green:#1A6B47;--green-bg:#E8F5EE;--green-border:#A8D5BC;
-  --font:'DM Sans',sans-serif;--font-serif:'DM Serif Display',serif;
-  --font-mono:'JetBrains Mono',monospace;
-}
-html{scroll-behavior:smooth}
-body{background:var(--cream);color:var(--navy);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VCReady — Pitch Readiness Score</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7BRPFG4JQL"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-7BRPFG4JQL');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
+    :root{
+      --bg:#F7F7F5;--ink:#0E0E0C;--ink-2:#2B2B27;--muted:#6F6E66;--muted-2:#99978E;
+      --line:#E7E3DA;--line-2:#D8D4CB;--soft:#FBFBF9;
+      --accent:#0F6A46;--accent-bg:#EAF6F0;--accent-line:#B6DEC8;
+      --font:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+      --radius:20px;--radius-sm:14px;--radius-btn:12px;
+      --container:840px;
+    }
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.75;min-height:100vh;}
+    a{color:inherit;text-decoration:none;}
+    .container{width:100%;max-width:var(--container);margin:0 auto;padding:0 32px;}
 
-/* ── TOPBAR ── */
-.topbar{position:sticky;top:0;z-index:100;background:var(--cream);border-bottom:1px solid var(--line);height:60px;padding:0 48px;display:flex;align-items:center;justify-content:space-between}
-.logo{font-family:var(--font-serif);font-size:20px;color:var(--navy);letter-spacing:-.03em;text-decoration:none}
-.logo span{color:var(--green)}
-.topbar-nav{display:flex;align-items:center;gap:0}
-.nav-link{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--navy3);text-decoration:none;padding:0 16px;height:60px;display:flex;align-items:center;border-bottom:2px solid transparent;transition:all .15s}
-.nav-link:hover{color:var(--navy)}
-.nav-link.active{color:var(--navy);border-bottom-color:var(--navy)}
-.topbar-right{display:flex;align-items:center;gap:12px}
-.lang-toggle{display:flex;border:1px solid var(--line)}
-.lang-btn{padding:6px 12px;font-size:11px;font-weight:500;background:transparent;border:none;color:var(--navy3);cursor:pointer;font-family:var(--font);letter-spacing:.04em;transition:all .15s}
-.lang-btn.active{background:var(--navy);color:var(--cream)}
+    /* TOPBAR */
+    .topbar{position:sticky;top:0;z-index:100;height:68px;border-bottom:1px solid rgba(216,212,203,.85);backdrop-filter:blur(14px);background:rgba(247,247,245,.92);}
+    .topbar-inner{height:68px;display:flex;align-items:center;justify-content:space-between;gap:20px;max-width:1200px;margin:0 auto;padding:0 32px;}
+    .logo{display:flex;align-items:center;gap:10px;}
+    .logo-mark{width:40px;height:40px;border:1.5px solid var(--ink);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;letter-spacing:-.04em;background:#fff;}
+    .logo-word{font-size:19px;font-weight:700;letter-spacing:-.04em;}
+    .topbar-nav{display:flex;align-items:center;gap:22px;}
+    .nav-link{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;transition:.15s;}
+    .nav-link:hover,.nav-link.active{color:var(--ink);}
+    .topbar-actions{display:flex;align-items:center;gap:10px;}
+    .lang-toggle{display:flex;border:1px solid var(--line-2);border-radius:10px;overflow:hidden;background:#fff;}
+    .lang-btn{border:none;background:transparent;color:var(--muted);height:36px;min-width:42px;padding:0 10px;font-family:var(--font);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:.15s;}
+    .lang-btn.active{background:var(--ink);color:#fff;}
+    .btn{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 16px;background:var(--ink);color:#fff;border:none;border-radius:var(--radius-btn);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap;}
+    .btn:hover{background:#000;}
+    .btn-sec{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 16px;background:#fff;color:var(--ink);border:1px solid var(--line-2);border-radius:var(--radius-btn);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:.15s;text-decoration:none;}
+    .btn-sec:hover{border-color:var(--ink);}
 
-/* ── CONTAINER ── */
-.container{max-width:900px;margin:0 auto;padding:0 48px}
+    /* PAGE HEADER */
+    .page-header{padding:52px 0 40px;border-bottom:1px solid var(--line);}
+    .page-eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:inline-flex;align-items:center;gap:10px;margin-bottom:12px;}
+    .page-eyebrow:before{content:'';width:20px;height:1px;background:var(--line-2);display:block;}
+    .page-title{font-size:42px;line-height:1.06;letter-spacing:-0.04em;font-weight:800;margin-bottom:10px;}
+    .page-desc{font-size:15px;line-height:1.75;color:var(--ink-2);max-width:540px;}
 
-/* ── PAGE HEADER ── */
-.page-header{padding:60px 0 48px;border-bottom:1px solid var(--line);margin-bottom:0}
-.page-tag{font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--navy3);margin-bottom:20px;display:flex;align-items:center;gap:10px}
-.page-tag::before{content:'';display:block;width:24px;height:1px;background:var(--navy3)}
-.page-header h1{font-family:var(--font-serif);font-size:44px;color:var(--navy);letter-spacing:-.04em;line-height:1.05;font-weight:400;margin-bottom:12px}
-.page-header p{font-size:14px;color:var(--navy2);line-height:1.75;max-width:560px}
+    /* PROGRESS BAR */
+    .progress-wrap{position:sticky;top:68px;z-index:50;background:rgba(247,247,245,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:16px 0;}
+    .progress-inner{display:flex;align-items:center;gap:16px;}
+    .progress-track{flex:1;background:var(--line);height:3px;border-radius:999px;}
+    .progress-fill{height:100%;background:var(--ink);border-radius:999px;transition:width .4s ease;}
+    .progress-label{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;}
 
-/* ── PROGRESS ── */
-.progress-wrap{padding:24px 0;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:20px;position:sticky;top:60px;background:var(--cream);z-index:50}
-.progress-track{flex:1;background:var(--line);height:2px}
-.progress-fill{height:100%;background:var(--navy);transition:width .4s ease}
-.progress-label{font-size:11px;font-weight:500;letter-spacing:.06em;color:var(--navy3);font-family:var(--font-mono);white-space:nowrap}
-.criteria-tabs{display:flex;gap:0;border-bottom:1px solid var(--line)}
-.criteria-tab{flex:1;padding:12px 8px;font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--navy3);text-align:center;border-bottom:2px solid transparent;transition:all .15s;cursor:default}
-.criteria-tab.active{color:var(--navy);border-bottom-color:var(--navy)}
-.criteria-tab.done{color:var(--green);border-bottom-color:var(--green)}
+    /* CRITERIA TABS */
+    .criteria-tabs{display:flex;gap:0;overflow-x:auto;border-bottom:1px solid var(--line);margin-top:0;scrollbar-width:none;}
+    .criteria-tabs::-webkit-scrollbar{display:none;}
+    .ctab{flex:1;min-width:80px;padding:10px 8px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:center;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.15s;cursor:default;white-space:nowrap;}
+    .ctab.active{color:var(--ink);border-bottom-color:var(--ink);}
+    .ctab.done{color:var(--accent);border-bottom-color:var(--accent);}
 
-/* ── QUESTION PANEL ── */
-.question-panel{padding:48px 0;min-height:400px}
-.criteria-label{font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--green);margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.criteria-label::before{content:'';display:block;width:16px;height:1px;background:var(--green)}
-.question-num{font-size:11px;color:var(--navy3);font-family:var(--font-mono);margin-bottom:12px}
-.question-text{font-family:var(--font-serif);font-size:26px;color:var(--navy);letter-spacing:-.02em;font-weight:400;line-height:1.2;margin-bottom:36px;max-width:680px}
-.options-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:40px}
-.option{display:flex;align-items:flex-start;gap:14px;padding:16px 20px;border:1px solid var(--line);cursor:pointer;transition:all .15s;background:transparent}
-.option:hover{border-color:var(--navy);background:transparent}
-.option.selected{border-color:var(--navy);background:var(--navy)}
-.option.selected .opt-letter{background:var(--cream);color:var(--navy)}
-.option.selected .opt-text{color:var(--cream)}
-.opt-letter{width:24px;height:24px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;font-family:var(--font-mono);color:var(--navy3);flex-shrink:0;transition:all .15s}
-.option:hover .opt-letter{border-color:var(--navy);color:var(--navy)}
-.opt-text{font-size:13px;color:var(--navy2);line-height:1.5;padding-top:3px;transition:color .15s}
-.option:hover .opt-text{color:var(--navy)}
+    /* QUESTION PANEL */
+    .q-panel{padding:48px 0;min-height:420px;}
+    .q-criteria{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);display:inline-flex;align-items:center;gap:8px;margin-bottom:14px;}
+    .q-criteria:before{content:'';width:16px;height:1px;background:var(--accent);display:block;}
+    .q-num{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:10px;}
+    .q-text{font-size:26px;line-height:1.22;letter-spacing:-.025em;font-weight:700;color:var(--ink);margin-bottom:36px;max-width:660px;}
+    .options{display:flex;flex-direction:column;gap:10px;margin-bottom:40px;}
+    .option{display:flex;align-items:flex-start;gap:14px;padding:16px 20px;border:1px solid var(--line);border-radius:var(--radius-sm);cursor:pointer;transition:.15s;background:#fff;}
+    .option:hover{border-color:var(--line-2);}
+    .option.selected{border-color:var(--ink);background:var(--ink);}
+    .option.selected .opt-letter{background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.2);}
+    .option.selected .opt-text{color:#fff;}
+    .opt-letter{width:26px;height:26px;border:1px solid var(--line-2);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--muted);flex-shrink:0;transition:.15s;}
+    .option:hover:not(.selected) .opt-letter{border-color:var(--line);color:var(--ink);}
+    .opt-text{font-size:13px;color:var(--ink-2);line-height:1.6;padding-top:2px;transition:.15s;}
+    .option:hover:not(.selected) .opt-text{color:var(--ink);}
 
-/* ── NAV BUTTONS ── */
-.question-nav{display:flex;align-items:center;justify-content:space-between;padding-top:24px;border-top:1px solid var(--line)}
-.btn-prev{background:transparent;border:1px solid var(--line);color:var(--navy2);padding:10px 20px;font-size:12px;font-weight:500;letter-spacing:.04em;cursor:pointer;font-family:var(--font);transition:all .15s}
-.btn-prev:hover{border-color:var(--navy);color:var(--navy)}
-.btn-prev:disabled{opacity:.3;cursor:default}
-.btn-next{background:var(--navy);border:none;color:var(--cream);padding:10px 24px;font-size:12px;font-weight:500;letter-spacing:.04em;cursor:pointer;font-family:var(--font);transition:background .15s}
-.btn-next:hover{background:var(--green)}
-.btn-next:disabled{opacity:.3;cursor:default;background:var(--navy)}
-.nav-hint{font-size:11px;color:var(--navy3)}
+    /* NAV */
+    .q-nav{display:flex;align-items:center;justify-content:space-between;padding-top:24px;border-top:1px solid var(--line);}
+    .btn-prev{height:40px;padding:0 16px;background:#fff;color:var(--ink-2);border:1px solid var(--line-2);border-radius:var(--radius-btn);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:.15s;}
+    .btn-prev:hover:not(:disabled){border-color:var(--ink);color:var(--ink);}
+    .btn-prev:disabled{opacity:.3;cursor:default;}
+    .btn-next{height:40px;padding:0 20px;background:var(--ink);color:#fff;border:none;border-radius:var(--radius-btn);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:.15s;}
+    .btn-next:hover:not(:disabled){background:var(--accent);}
+    .btn-next:disabled{opacity:.35;cursor:default;}
+    .nav-hint{font-size:12px;color:var(--muted);}
 
-/* ── RESULTS ── */
-.results{display:none;padding:60px 0 80px}
-.results-header{display:grid;grid-template-columns:auto 1fr;gap:48px;align-items:center;padding-bottom:48px;border-bottom:1px solid var(--line);margin-bottom:48px}
-.score-circle{position:relative;width:140px;height:140px;flex-shrink:0}
-.score-circle svg{transform:rotate(-90deg)}
-.score-bg{fill:none;stroke:var(--line);stroke-width:8}
-.score-fg{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1)}
-.score-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
-.score-num{font-family:var(--font-serif);font-size:36px;color:var(--navy);letter-spacing:-.04em;font-weight:400;line-height:1}
-.score-den{font-size:10px;color:var(--navy3);letter-spacing:.06em;text-transform:uppercase}
-.score-right{}
-.score-verdict{font-family:var(--font-serif);font-size:28px;color:var(--navy);letter-spacing:-.03em;font-weight:400;margin-bottom:8px}
-.score-verdict.excellent{color:var(--green)}
-.score-verdict.good{color:var(--green)}
-.score-verdict.fair{color:#6B6B66}
-.score-verdict.weak{color:#9A9892}
-.score-sub{font-size:13px;color:var(--navy2);line-height:1.6;max-width:480px}
+    /* RESULTS */
+    .results{display:none;padding:52px 0 80px;}
+    .results-header{display:grid;grid-template-columns:auto 1fr;gap:40px;align-items:center;padding-bottom:40px;border-bottom:1px solid var(--line);margin-bottom:40px;}
+    .score-ring{position:relative;width:130px;height:130px;flex-shrink:0;}
+    .score-ring svg{transform:rotate(-90deg);}
+    .ring-bg{fill:none;stroke:var(--line);stroke-width:8;}
+    .ring-fg{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1);}
+    .score-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    .score-num{font-size:36px;font-weight:800;letter-spacing:-.06em;line-height:1;}
+    .score-den{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-top:2px;}
+    .score-verdict{font-size:28px;font-weight:800;letter-spacing:-.04em;margin-bottom:8px;}
+    .score-verdict.excellent,.score-verdict.good{color:var(--accent);}
+    .score-verdict.fair{color:#92631A;}
+    .score-verdict.weak{color:#9A3B3B;}
+    .score-sub{font-size:14px;color:var(--ink-2);line-height:1.7;max-width:440px;margin-bottom:16px;}
+    .btn-restart{height:36px;padding:0 14px;background:#fff;color:var(--muted);border:1px solid var(--line-2);border-radius:var(--radius-btn);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:.15s;}
+    .btn-restart:hover{border-color:var(--ink);color:var(--ink);}
 
-/* CRITERIA BREAKDOWN */
-.breakdown{margin-bottom:48px}
-.breakdown-title{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);padding-bottom:12px;border-bottom:2px solid var(--navy);margin-bottom:0}
-.breakdown-rows{display:flex;flex-direction:column}
-.breakdown-row{display:grid;grid-template-columns:160px 1fr 60px;gap:16px;align-items:center;padding:16px 0;border-bottom:1px solid var(--line)}
-.breakdown-row:last-child{border-bottom:none}
-.breakdown-name{font-size:12px;font-weight:500;color:var(--navy)}
-.breakdown-bar-wrap{background:var(--line);height:4px}
-.breakdown-bar{height:100%;transition:width .6s ease}
-.breakdown-score{font-size:12px;font-family:var(--font-mono);color:var(--navy);text-align:right}
+    /* BREAKDOWN */
+    .section-hd{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);padding-bottom:14px;border-bottom:2px solid var(--ink);margin-bottom:0;}
+    .breakdown-row{display:grid;grid-template-columns:150px 1fr 56px;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);}
+    .breakdown-row:last-child{border-bottom:none;}
+    .breakdown-name{font-size:12px;font-weight:600;color:var(--ink);}
+    .breakdown-track{background:var(--line);height:4px;border-radius:999px;}
+    .breakdown-fill{height:100%;border-radius:999px;transition:width .6s ease;}
+    .breakdown-score{font-size:12px;font-weight:700;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;}
 
-/* FEEDBACK */
-.feedback-section{margin-bottom:48px}
-.feedback-title{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);padding-bottom:12px;border-bottom:2px solid var(--navy);margin-bottom:0}
-.feedback-items{display:flex;flex-direction:column}
-.feedback-item{padding:24px 0;border-bottom:1px solid var(--line)}
-.feedback-item:last-child{border-bottom:none}
-.feedback-item-header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-.feedback-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;font-family:var(--font-mono);flex-shrink:0}
-.feedback-icon.strong{background:var(--green);color:#FFF}
-.feedback-icon.improve{background:var(--line);color:var(--navy)}
-.feedback-item-name{font-size:13px;font-weight:600;color:var(--navy)}
-.feedback-item-score{font-size:11px;color:var(--navy3);font-family:var(--font-mono);margin-left:auto}
-.feedback-text{font-size:13px;color:var(--navy2);line-height:1.7;margin-bottom:12px}
-.feedback-reco{background:transparent;border-left:2px solid var(--green);padding:10px 14px;font-size:12px;color:var(--navy2);line-height:1.6}
-.feedback-reco strong{color:var(--navy)}
+    /* FEEDBACK */
+    .feedback-item{padding:24px 0;border-bottom:1px solid var(--line);}
+    .feedback-item:last-child{border-bottom:none;padding-bottom:0;}
+    .feedback-hd{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+    .feedback-badge{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
+    .feedback-badge.strong{background:var(--accent-bg);color:var(--accent);}
+    .feedback-badge.improve{background:var(--soft);border:1px solid var(--line-2);color:var(--muted);}
+    .feedback-name{font-size:13px;font-weight:700;color:var(--ink);}
+    .feedback-pct{font-size:11px;color:var(--muted);font-weight:700;margin-left:auto;}
+    .feedback-text{font-size:13px;color:var(--ink-2);line-height:1.75;margin-bottom:12px;}
+    .feedback-action{background:var(--soft);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:12px 16px;font-size:12px;color:var(--ink-2);line-height:1.65;}
+    .feedback-action strong{color:var(--ink);}
 
-/* CTA */
-.results-cta{background:var(--navy);padding:32px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
-.results-cta-text{}
-.results-cta-title{font-family:var(--font-serif);font-size:22px;color:#FFF;letter-spacing:-.02em;font-weight:400;margin-bottom:4px}
-.results-cta-sub{font-size:13px;color:rgba(255,255,255,.6)}
-.results-cta-btn{background:#FFF;color:var(--navy);padding:12px 24px;font-size:12px;font-weight:500;letter-spacing:.04em;text-decoration:none;white-space:nowrap;transition:all .15s;flex-shrink:0}
-.results-cta-btn:hover{background:var(--green);color:#FFF}
-.btn-restart{background:transparent;border:1px solid var(--line);color:var(--navy2);padding:10px 20px;font-size:12px;cursor:pointer;font-family:var(--font);transition:all .15s;margin-top:16px}
-.btn-restart:hover{border-color:var(--navy);color:var(--navy)}
+    /* RESULTS CTA */
+    .results-cta{background:var(--ink);border-radius:var(--radius);padding:32px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-top:40px;}
+    .cta-title{font-size:20px;font-weight:700;letter-spacing:-.03em;color:#fff;margin-bottom:4px;}
+    .cta-sub{font-size:13px;color:rgba(255,255,255,.6);}
+    .cta-btn{background:#fff;color:var(--ink);padding:12px 22px;border-radius:var(--radius-btn);font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;transition:.15s;flex-shrink:0;display:inline-block;}
+    .cta-btn:hover{background:var(--accent-bg);}
 
-/* RESPONSIVE */
-@media(max-width:768px){
-  .container,.topbar{padding-left:24px;padding-right:24px}
-  .page-header h1{font-size:32px}
-  .question-text{font-size:20px}
-  .results-header{grid-template-columns:1fr;gap:24px}
-  .breakdown-row{grid-template-columns:120px 1fr 50px}
-  .criteria-tab{font-size:9px;padding:10px 4px}
-  .results-cta{flex-direction:column;gap:16px}
-}
+    /* FOOTER */
+    footer{background:var(--ink);color:rgba(255,255,255,.46);padding:0 0 28px;margin-top:80px;}
+    .footer-inner{border-top:1px solid rgba(255,255,255,.1);padding-top:20px;display:flex;align-items:center;justify-content:space-between;gap:20px;font-size:12px;}
+    .footer-inner a{color:#fff;font-weight:700;}
 
-/* ── MOBILE TOPBAR ── */
-@media(max-width:768px){
-  .topbar{padding:0 20px;height:52px}
-  .topbar-nav{display:none !important}
-  .lang-toggle{display:none !important}
-  .topbar-cta{display:none !important}
-  .topbar-right{gap:8px}
-  .btn-signout{padding:5px 10px;font-size:10px}
-  [id="nav_login"]{padding:7px 14px !important;font-size:11px !important;white-space:nowrap}
-}
-</style>
+    @media(max-width:820px){
+      .topbar-inner{padding-left:18px;padding-right:18px;}
+      .container{padding-left:18px;padding-right:18px;}
+      .topbar-nav{display:none;}.lang-toggle{display:none;}
+      .topbar-actions .btn-sec{display:none;}
+      .page-title{font-size:30px;}
+      .q-text{font-size:20px;}
+      .results-header{grid-template-columns:1fr;gap:24px;}
+      .breakdown-row{grid-template-columns:110px 1fr 46px;}
+      .results-cta{flex-direction:column;}
+    }
+  </style>
 </head>
 <body>
 
-<!-- TOPBAR -->
 <div class="topbar">
-  <a href="index.html" class="logo">VC<span>Ready</span></a>
-  <nav class="topbar-nav">
-    <a href="index.html" class="nav-link">Home</a>
-    <a href="valuation.html" class="nav-link">Valuation</a>
-    <a href="metrics.html" class="nav-link">Metrics</a>
-    <a href="pitch.html" class="nav-link active">Pitch</a>
-  </nav>
-  <div class="topbar-right">
-    <div class="lang-toggle">
-      <button class="lang-btn active" onclick="setLang('en')">EN</button>
-      <button class="lang-btn" onclick="setLang('fr')">FR</button>
+  <div class="topbar-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-mark">VC</span>
+      <span class="logo-word">Ready</span>
+    </a>
+    <nav class="topbar-nav">
+      <a href="valuation.html" class="nav-link">Valuation</a>
+      <a href="metrics.html" class="nav-link">Metrics</a>
+      <a href="pitch.html" class="nav-link active">Pitch</a>
+      <a href="dataroom.html" class="nav-link">Data Room</a>
+      <a href="qa.html" class="nav-link">Q&amp;A</a>
+      <a href="comparables.html" class="nav-link">Comparables</a>
+      <a href="captable.html" class="nav-link">Cap Table</a>
+    </nav>
+    <div class="topbar-actions">
+      <div class="lang-toggle">
+        <button class="lang-btn" onclick="setLang('fr')">FR</button>
+        <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      </div>
+      <a href="dashboard.html" class="btn-sec">Sign in</a>
+      <a href="dashboard.html" class="btn">Dashboard →</a>
     </div>
   </div>
 </div>
 
 <div class="container">
 
-  <!-- PAGE HEADER -->
   <div class="page-header">
-    <div class="page-tag" id="pg_tag">Pitch Readiness</div>
-    <h1 id="pg_h1">Is your pitch<br>investor-ready?</h1>
-    <p id="pg_p">18 questions across 6 criteria. Get your score /100, feedback on each dimension, and actionable recommendations before your next investor meeting.</p>
+    <div class="page-eyebrow" id="pg_eyebrow">Pitch Readiness</div>
+    <h1 class="page-title" id="pg_title">Is your pitch investor-ready?</h1>
+    <p class="page-desc" id="pg_desc">18 questions across 6 criteria. Get your score /100, feedback on each dimension, and actionable recommendations before your next investor meeting.</p>
   </div>
 
-  <!-- PROGRESS -->
   <div class="progress-wrap">
-    <div class="criteria-tabs" style="flex:1;border-bottom:none">
-      <div class="criteria-tab active" id="ctab_0" id="ctab_team">Team</div>
-      <div class="criteria-tab" id="ctab_1">Market</div>
-      <div class="criteria-tab" id="ctab_2">Traction</div>
-      <div class="criteria-tab" id="ctab_3">Product</div>
-      <div class="criteria-tab" id="ctab_4">Business Model</div>
-      <div class="criteria-tab" id="ctab_5">Ask</div>
+    <div class="container" style="padding:0 32px">
+      <div class="criteria-tabs" id="criteria_tabs"></div>
+      <div class="progress-inner" style="margin-top:14px;">
+        <div class="progress-track"><div class="progress-fill" id="prog_fill" style="width:0%"></div></div>
+        <div class="progress-label" id="prog_label">1 / 18</div>
+      </div>
     </div>
-    <div class="progress-label" id="progress_label">1 / 18</div>
   </div>
 
-  <!-- QUESTION PANEL -->
-  <div class="question-panel" id="question-panel">
-    <div class="criteria-label" id="q_criteria">Team</div>
-    <div class="question-num" id="q_num">Question 01</div>
-    <div class="question-text" id="q_text">Loading...</div>
-    <div class="options-grid" id="q_options"></div>
-    <div class="question-nav">
+  <div class="q-panel" id="q_panel">
+    <div class="q-criteria" id="q_criteria">Team</div>
+    <div class="q-num" id="q_num">Question 01</div>
+    <div class="q-text" id="q_text"></div>
+    <div class="options" id="q_options"></div>
+    <div class="q-nav">
       <button class="btn-prev" id="btn_prev" onclick="prevQ()" disabled>← Back</button>
       <span class="nav-hint" id="nav_hint">Select an answer to continue</span>
       <button class="btn-next" id="btn_next" onclick="nextQ()" disabled>Next →</button>
     </div>
   </div>
 
-  <!-- RESULTS -->
   <div class="results" id="results">
     <div class="results-header">
-      <div class="score-circle">
-        <svg width="140" height="140" viewBox="0 0 140 140">
-          <circle class="score-bg" cx="70" cy="70" r="58"/>
-          <circle class="score-fg" id="score-arc" cx="70" cy="70" r="58"
-            stroke="#12120F"
-            stroke-dasharray="364.4"
-            stroke-dashoffset="364.4"/>
+      <div class="score-ring">
+        <svg width="130" height="130" viewBox="0 0 130 130">
+          <circle class="ring-bg" cx="65" cy="65" r="54"/>
+          <circle class="ring-fg" id="ring_arc" cx="65" cy="65" r="54"
+            stroke="var(--ink)" stroke-dasharray="339.3" stroke-dashoffset="339.3"/>
         </svg>
-        <div class="score-text">
+        <div class="score-center">
           <div class="score-num" id="res_score">0</div>
           <div class="score-den">/ 100</div>
         </div>
       </div>
-      <div class="score-right">
+      <div>
         <div class="score-verdict" id="res_verdict">—</div>
-        <div class="score-sub" id="res_sub">—</div>
-        <button class="btn-restart" onclick="restart()" id="btn_restart">↺ Retake the assessment</button>
+        <div class="score-sub" id="res_sub"></div>
+        <button class="btn-restart" id="btn_restart" onclick="restart()">&#8635; Retake assessment</button>
       </div>
     </div>
 
-    <!-- BREAKDOWN -->
-    <div class="breakdown">
-      <div class="breakdown-title" id="breakdown_title">Score by criteria</div>
-      <div class="breakdown-rows" id="breakdown-rows"></div>
+    <div style="margin-bottom:36px">
+      <div class="section-hd" id="breakdown_title">Score by criteria</div>
+      <div id="breakdown_rows"></div>
     </div>
 
-    <!-- FEEDBACK -->
-    <div class="feedback-section">
-      <div class="feedback-title" id="feedback_title">Feedback & recommendations</div>
-      <div class="feedback-items" id="feedback-items"></div>
+    <div style="margin-bottom:0">
+      <div class="section-hd" id="feedback_title">Feedback &amp; recommendations</div>
+      <div id="feedback_items"></div>
     </div>
 
-    <!-- CTA -->
     <div class="results-cta">
-      <div class="results-cta-text">
-        <div class="results-cta-title" id="cta_title">Turn your score into a funded pitch.</div>
-        <div class="results-cta-sub" id="cta_sub">Book a 30-min session to work on your weak points with an expert.</div>
+      <div>
+        <div class="cta-title" id="cta_title">Turn your score into a funded pitch.</div>
+        <div class="cta-sub" id="cta_sub">Book a 30-min session to work on your weak points with an expert.</div>
       </div>
-      <a href="https://calendly.com/yacine-chikhar/30min" target="_blank" class="results-cta-btn" id="cta_btn">Book your session →</a>
+      <a href="https://calendly.com/yacine-chikhar/30min" target="_blank" class="cta-btn" id="cta_btn">Book your session →</a>
     </div>
   </div>
 
-</div><!-- /container -->
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div>VCReady · by <strong style="color:rgba(255,255,255,.8)">Yacine CHIKHAR</strong> · © 2026</div>
+      <a href="dashboard.html">Open dashboard →</a>
+    </div>
+  </div>
+</footer>
 
 <script>
-let currentLang='en', currentQ=0, answers=new Array(18).fill(null);
-
-// ── QUESTIONS DATA ──
-const QUESTIONS={
-  en:[
-    // TEAM (0-2)
-    {c:'Team',w:20,q:'How complementary is your founding team?',opts:[
-      {t:'Solo founder with no co-founder',s:0},{t:'Team exists but skills overlap significantly',s:1},
-      {t:'2-3 founders with complementary skills (tech + business)',s:3},{t:'Full team: tech, business, domain expert — all covered',s:4}]},
-    {c:'Team',w:20,q:'Does your team have relevant domain expertise?',opts:[
-      {t:'No prior experience in this sector',s:0},{t:'Some exposure but not deep expertise',s:1},
-      {t:'1+ founder with direct sector experience',s:3},{t:'Team has built or operated in this sector before',s:4}]},
-    {c:'Team',w:20,q:'What is your team\'s track record?',opts:[
-      {t:'First-time founders, no notable achievements',s:0},{t:'Some academic or early career achievements',s:1},
-      {t:'Previous startup experience or strong corporate track record',s:3},{t:'Previous exit, top-tier school, or recognized industry achievement',s:4}]},
-    // MARKET (3-5)
-    {c:'Market',w:15,q:'How large is your Total Addressable Market (TAM)?',opts:[
-      {t:'Under $100M — niche or local market',s:0},{t:'$100M–$500M — significant but limited',s:1},
-      {t:'$500M–$5B — large regional or vertical market',s:3},{t:'$5B+ — massive global market opportunity',s:4}]},
-    {c:'Market',w:15,q:'How do you justify the timing of your opportunity (why now)?',opts:[
-      {t:'No clear timing rationale',s:0},{t:'General market growth trend',s:1},
-      {t:'Specific regulatory, tech, or behavioral shift identified',s:3},{t:'Clear inflection point with data to back it up',s:4}]},
-    {c:'Market',w:15,q:'How well do you know your competition?',opts:[
-      {t:'Haven\'t mapped competitors yet',s:0},{t:'Aware of main players but no detailed analysis',s:1},
-      {t:'Mapped competitors with clear differentiation articulated',s:3},{t:'Full competitive landscape with defensible moat identified',s:4}]},
-    // TRACTION (6-8)
-    {c:'Traction',w:20,q:'What is your current revenue status?',opts:[
-      {t:'No revenue — pre-product or ideation stage',s:0},{t:'Pilot or PoC with no commercial revenue',s:1},
-      {t:'First revenues — $1K–$50K ARR',s:3},{t:'Proven revenue — $50K+ ARR with growth trend',s:4}]},
-    {c:'Traction',w:20,q:'How strong is your user/customer growth?',opts:[
-      {t:'No users or customers yet',s:0},{t:'Less than 100 users / customers',s:1},
-      {t:'100–1,000 users with measurable retention',s:3},{t:'1,000+ users, strong retention, organic growth',s:4}]},
-    {c:'Traction',w:20,q:'Do you have social proof or external validation?',opts:[
-      {t:'None yet',s:0},{t:'Friends & family users, no external validation',s:1},
-      {t:'Paying customers, LOIs, or accelerator acceptance',s:3},{t:'Named enterprise clients, press coverage, or strong investor interest',s:4}]},
-    // PRODUCT (4-11)
-    {c:'Product',w:15,q:'How clearly defined is your core value proposition?',opts:[
-      {t:'Still figuring out what problem we solve',s:0},{t:'Problem is clear but solution is still evolving',s:1},
-      {t:'Clear problem/solution with validated product-market fit signals',s:3},{t:'Strong PMF evidence: NPS >50, retention, referrals',s:4}]},
-    {c:'Product',w:15,q:'What is the status of your product?',opts:[
-      {t:'Idea or concept only — nothing built',s:0},{t:'Prototype or MVP in development',s:1},
-      {t:'Working product with active users',s:3},{t:'Mature product, v2+, with roadmap and paying users',s:4}]},
-    {c:'Product',w:15,q:'How defensible is your product?',opts:[
-      {t:'No technical or product differentiation',s:0},{t:'Some differentiation but easily replicated',s:1},
-      {t:'Proprietary tech, data advantage, or strong UX moat',s:3},{t:'Patents, network effects, or switching costs — hard to replicate',s:4}]},
-    // BUSINESS MODEL (10-12)
-    {c:'Business Model',w:15,q:'How clear and proven is your monetization model?',opts:[
-      {t:'No monetization model defined yet',s:0},{t:'Model exists but not tested with paying customers',s:1},
-      {t:'Tested model with paying customers and clear pricing',s:3},{t:'Proven model, predictable revenue, clear path to unit economics',s:4}]},
-    {c:'Business Model',w:15,q:'What are your unit economics?',opts:[
-      {t:'Haven\'t calculated CAC or LTV yet',s:0},{t:'Rough estimates — LTV/CAC below 1×',s:1},
-      {t:'LTV/CAC between 1–3× — acceptable',s:3},{t:'LTV/CAC 3× or higher — strong unit economics',s:4}]},
-    {c:'Business Model',w:15,q:'What is your path to profitability?',opts:[
-      {t:'No clear path or timeline to profitability',s:0},{t:'Vague — "we\'ll figure it out at scale"',s:1},
-      {t:'Clear plan with milestones and assumptions',s:3},{t:'Detailed model with breakeven point defined and achievable',s:4}]},
-    // ASK (13-15)
-    {c:'Ask',w:15,q:'How specific is your fundraising ask?',opts:[
-      {t:'No clear amount or use of funds defined',s:0},{t:'General range — "looking for $500K–$2M"',s:1},
-      {t:'Specific amount with general use of funds',s:3},{t:'Specific amount, detailed use of funds, and milestone-tied',s:4}]},
-    {c:'Ask',w:15,q:'What milestone does this round fund?',opts:[
-      {t:'No specific milestone defined',s:0},{t:'Vague milestone — "grow the team"',s:1},
-      {t:'Clear operational milestone (e.g., reach $500K ARR)',s:3},{t:'Fundable milestone that triggers the next round — clearly articulated',s:4}]},
-    {c:'Ask',w:15,q:'What is your investor value proposition?',opts:[
-      {t:'No IRR or return analysis done',s:0},{t:'Basic narrative — "big market, great team"',s:1},
-      {t:'IRR modeled, sector comparable, defensible valuation',s:3},{t:'Full VC method valuation, IRR >25%, clear exit thesis',s:4}]},
-  ],
-  fr:[
-    // ÉQUIPE (0-2)
-    {c:'Équipe',w:20,q:'À quel point votre équipe fondatrice est-elle complémentaire ?',opts:[
-      {t:'Fondateur solo, pas de co-fondateur',s:0},{t:'Équipe existante mais compétences très similaires',s:1},
-      {t:'2-3 fondateurs aux compétences complémentaires (tech + business)',s:3},{t:'Équipe complète : tech, business, expert domaine — tout couvert',s:4}]},
-    {c:'Équipe',w:20,q:'Votre équipe a-t-elle une expertise sectorielle pertinente ?',opts:[
-      {t:'Aucune expérience préalable dans ce secteur',s:0},{t:'Quelques notions mais pas d\'expertise profonde',s:1},
-      {t:'1+ fondateur avec expérience directe dans le secteur',s:3},{t:'L\'équipe a déjà construit ou opéré dans ce secteur',s:4}]},
-    {c:'Équipe',w:20,q:'Quel est le track record de votre équipe ?',opts:[
-      {t:'Premiers fondateurs, aucune réalisation notable',s:0},{t:'Quelques réalisations académiques ou de début de carrière',s:1},
-      {t:'Expérience startup précédente ou solide parcours corporate',s:3},{t:'Exit précédent, grande école, ou reconnaissance sectorielle',s:4}]},
-    // MARCHÉ (3-5)
-    {c:'Marché',w:15,q:'Quelle est la taille de votre marché adressable total (TAM) ?',opts:[
-      {t:'Moins de $100M — marché de niche ou local',s:0},{t:'$100M–$500M — significatif mais limité',s:1},
-      {t:'$500M–$5B — grand marché régional ou vertical',s:3},{t:'$5B+ — opportunité de marché mondial massive',s:4}]},
-    {c:'Marché',w:15,q:'Comment justifiez-vous le timing de votre opportunité ?',opts:[
-      {t:'Pas de rationale de timing claire',s:0},{t:'Tendance générale de croissance de marché',s:1},
-      {t:'Changement réglementaire, technologique ou comportemental identifié',s:3},{t:'Point d\'inflexion clair avec données à l\'appui',s:4}]},
-    {c:'Marché',w:15,q:'À quel point connaissez-vous bien votre concurrence ?',opts:[
-      {t:'Concurrents pas encore cartographiés',s:0},{t:'Conscience des acteurs principaux sans analyse détaillée',s:1},
-      {t:'Concurrents mappés avec différenciation claire articulée',s:3},{t:'Paysage concurrentiel complet avec moat défendable identifié',s:4}]},
-    // TRACTION (6-8)
-    {c:'Traction',w:20,q:'Quel est votre statut de revenus actuel ?',opts:[
-      {t:'Pas de revenus — pré-produit ou idéation',s:0},{t:'Pilote ou PoC sans revenu commercial',s:1},
-      {t:'Premiers revenus — $1K–$50K ARR',s:3},{t:'Revenus prouvés — $50K+ ARR avec tendance de croissance',s:4}]},
-    {c:'Traction',w:20,q:'Quelle est la force de votre croissance utilisateurs/clients ?',opts:[
-      {t:'Pas encore d\'utilisateurs ou clients',s:0},{t:'Moins de 100 utilisateurs / clients',s:1},
-      {t:'100–1 000 utilisateurs avec rétention mesurable',s:3},{t:'1 000+ utilisateurs, forte rétention, croissance organique',s:4}]},
-    {c:'Traction',w:20,q:'Avez-vous de la preuve sociale ou validation externe ?',opts:[
-      {t:'Aucune pour l\'instant',s:0},{t:'Utilisateurs amis/famille, pas de validation externe',s:1},
-      {t:'Clients payants, LOIs ou acceptation accélérateur',s:3},{t:'Clients entreprise nommés, couverture presse, ou fort intérêt investisseurs',s:4}]},
-    // PRODUIT (9-11)
-    {c:'Produit',w:15,q:'À quel point votre proposition de valeur est-elle bien définie ?',opts:[
-      {t:'On cherche encore quel problème on résout',s:0},{t:'Problème clair mais solution encore en évolution',s:1},
-      {t:'Problème/solution clairs avec signaux de product-market fit validés',s:3},{t:'Forte preuve de PMF : NPS >50, rétention, recommandations',s:4}]},
-    {c:'Produit',w:15,q:'Quel est le statut de votre produit ?',opts:[
-      {t:'Idée ou concept seulement — rien de construit',s:0},{t:'Prototype ou MVP en développement',s:1},
-      {t:'Produit fonctionnel avec utilisateurs actifs',s:3},{t:'Produit mature, v2+, avec roadmap et utilisateurs payants',s:4}]},
-    {c:'Produit',w:15,q:'À quel point votre produit est-il défendable ?',opts:[
-      {t:'Aucune différenciation technique ou produit',s:0},{t:'Quelques différenciations mais facilement réplicables',s:1},
-      {t:'Tech propriétaire, avantage data, ou fort moat UX',s:3},{t:'Brevets, effets réseau, ou switching costs — difficile à répliquer',s:4}]},
-    // MODÈLE ÉCONOMIQUE (12-14)
-    {c:'Modèle Éco.',w:15,q:'Votre modèle de monétisation est-il clair et prouvé ?',opts:[
-      {t:'Aucun modèle de monétisation défini',s:0},{t:'Modèle existe mais non testé avec clients payants',s:1},
-      {t:'Modèle testé avec clients payants et pricing clair',s:3},{t:'Modèle prouvé, revenus prévisibles, chemin vers unit economics clair',s:4}]},
-    {c:'Modèle Éco.',w:15,q:'Quelles sont vos unit economics ?',opts:[
-      {t:'LTV/CAC pas encore calculé',s:0},{t:'Estimations grossières — LTV/CAC sous 1×',s:1},
-      {t:'LTV/CAC entre 1–3× — acceptable',s:3},{t:'LTV/CAC 3× ou plus — solides unit economics',s:4}]},
-    {c:'Modèle Éco.',w:15,q:'Quel est votre chemin vers la rentabilité ?',opts:[
-      {t:'Pas de chemin ou timeline vers la rentabilité',s:0},{t:'Vague — "on verra à l\'échelle"',s:1},
-      {t:'Plan clair avec jalons et hypothèses',s:3},{t:'Modèle détaillé avec point mort défini et atteignable',s:4}]},
-    // ASK (15-17)
-    {c:'Ask',w:15,q:'À quel point votre demande de financement est-elle spécifique ?',opts:[
-      {t:'Pas de montant ni d\'utilisation des fonds définis',s:0},{t:'Fourchette générale — "on cherche $500K–$2M"',s:1},
-      {t:'Montant spécifique avec utilisation générale des fonds',s:3},{t:'Montant spécifique, utilisation détaillée et lié à des milestones',s:4}]},
-    {c:'Ask',w:15,q:'Quel milestone ce tour finance-t-il ?',opts:[
-      {t:'Pas de milestone spécifique défini',s:0},{t:'Milestone vague — "développer l\'équipe"',s:1},
-      {t:'Milestone opérationnel clair (ex: atteindre $500K ARR)',s:3},{t:'Milestone finançable qui déclenche le tour suivant — clairement articulé',s:4}]},
-    {c:'Ask',w:15,q:'Quelle est votre proposition de valeur pour l\'investisseur ?',opts:[
-      {t:'Pas d\'analyse IRR ou de retour sur investissement',s:0},{t:'Narrative basique — "grand marché, super équipe"',s:1},
-      {t:'IRR modélisé, comparable sectoriel, valorisation défendable',s:3},{t:'Valorisation méthode VC complète, IRR >25%, thèse de sortie claire',s:4}]},
-  ]
-};
-
-// Criteria structure
-const CRITERIA={
-  en:['Team','Market','Traction','Product','Business Model','Ask'],
-  fr:['Équipe','Marché','Traction','Produit','Modèle Éco.','Ask']
-};
-const WEIGHTS=[20,15,20,15,15,15]; // % weight per criteria
-
-// ── HELPERS ──
-function q(){return QUESTIONS[currentLang];}
-function getCriteriaIndex(qIdx){
-  if(qIdx<3) return 0;
-  if(qIdx<6) return 1;
-  if(qIdx<9) return 2;
-  if(qIdx<12) return 3;
-  if(qIdx<15) return 4;
-  return 5;
+let currentLang='en',currentQ=0,answers=new Array(18).fill(null);
+const QUESTIONS={en:[
+{c:'Team',w:20,q:'How complementary is your founding team?',opts:[{t:'Solo founder, no co-founder',s:0},{t:'Team exists but skills overlap significantly',s:1},{t:'2-3 founders with complementary skills (tech + business)',s:3},{t:'Full team: tech, business, domain expert all covered',s:4}]},
+{c:'Team',w:20,q:'Does your team have relevant domain expertise?',opts:[{t:'No prior experience in this sector',s:0},{t:'Some exposure but not deep expertise',s:1},{t:'1+ founder with direct sector experience',s:3},{t:'Team has built or operated in this sector before',s:4}]},
+{c:'Team',w:20,q:'What is your team track record?',opts:[{t:'First-time founders, no notable achievements',s:0},{t:'Some academic or early career achievements',s:1},{t:'Previous startup experience or strong corporate track record',s:3},{t:'Previous exit, top-tier school, or recognized industry achievement',s:4}]},
+{c:'Market',w:15,q:'How large is your Total Addressable Market (TAM)?',opts:[{t:'Under $100M niche or local market',s:0},{t:'$100M-$500M significant but limited',s:1},{t:'$500M-$5B large regional or vertical market',s:3},{t:'$5B+ massive global market opportunity',s:4}]},
+{c:'Market',w:15,q:'How do you justify the timing of your opportunity?',opts:[{t:'No clear timing rationale',s:0},{t:'General market growth trend',s:1},{t:'Specific regulatory tech or behavioral shift identified',s:3},{t:'Clear inflection point with data to back it up',s:4}]},
+{c:'Market',w:15,q:'How well do you know your competition?',opts:[{t:'Have not mapped competitors yet',s:0},{t:'Aware of main players but no detailed analysis',s:1},{t:'Mapped competitors with clear differentiation articulated',s:3},{t:'Full competitive landscape with defensible moat identified',s:4}]},
+{c:'Traction',w:20,q:'What is your current revenue status?',opts:[{t:'No revenue pre-product or ideation stage',s:0},{t:'Pilot or PoC with no commercial revenue',s:1},{t:'First revenues $1K-$50K ARR',s:3},{t:'Proven revenue $50K+ ARR with growth trend',s:4}]},
+{c:'Traction',w:20,q:'How strong is your user and customer growth?',opts:[{t:'No users or customers yet',s:0},{t:'Less than 100 users or customers',s:1},{t:'100-1000 users with measurable retention',s:3},{t:'1000+ users strong retention organic growth',s:4}]},
+{c:'Traction',w:20,q:'Do you have social proof or external validation?',opts:[{t:'None yet',s:0},{t:'Friends and family users no external validation',s:1},{t:'Paying customers LOIs or accelerator acceptance',s:3},{t:'Named enterprise clients press coverage or strong investor interest',s:4}]},
+{c:'Product',w:15,q:'How clearly defined is your core value proposition?',opts:[{t:'Still figuring out what problem we solve',s:0},{t:'Problem is clear but solution is still evolving',s:1},{t:'Clear problem and solution with validated PMF signals',s:3},{t:'Strong PMF evidence NPS above 50 retention referrals',s:4}]},
+{c:'Product',w:15,q:'What is the status of your product?',opts:[{t:'Idea or concept only nothing built',s:0},{t:'Prototype or MVP in development',s:1},{t:'Working product with active users',s:3},{t:'Mature product v2+ with roadmap and paying users',s:4}]},
+{c:'Product',w:15,q:'How defensible is your product?',opts:[{t:'No technical or product differentiation',s:0},{t:'Some differentiation but easily replicated',s:1},{t:'Proprietary tech data advantage or strong UX moat',s:3},{t:'Patents network effects or switching costs hard to replicate',s:4}]},
+{c:'Business Model',w:15,q:'How clear and proven is your monetization model?',opts:[{t:'No monetization model defined yet',s:0},{t:'Model exists but not tested with paying customers',s:1},{t:'Tested model with paying customers and clear pricing',s:3},{t:'Proven model predictable revenue clear path to unit economics',s:4}]},
+{c:'Business Model',w:15,q:'What are your unit economics?',opts:[{t:'Have not calculated CAC or LTV yet',s:0},{t:'Rough estimates LTV/CAC below 1x',s:1},{t:'LTV/CAC between 1-3x acceptable',s:3},{t:'LTV/CAC 3x or higher strong unit economics',s:4}]},
+{c:'Business Model',w:15,q:'What is your path to profitability?',opts:[{t:'No clear path or timeline to profitability',s:0},{t:'Vague will figure it out at scale',s:1},{t:'Clear plan with milestones and assumptions',s:3},{t:'Detailed model with breakeven point defined and achievable',s:4}]},
+{c:'Ask',w:15,q:'How specific is your fundraising ask?',opts:[{t:'No clear amount or use of funds defined',s:0},{t:'General range looking for $500K-$2M',s:1},{t:'Specific amount with general use of funds',s:3},{t:'Specific amount detailed use of funds and milestone-tied',s:4}]},
+{c:'Ask',w:15,q:'What milestone does this round fund?',opts:[{t:'No specific milestone defined',s:0},{t:'Vague milestone grow the team',s:1},{t:'Clear operational milestone e.g. reach $500K ARR',s:3},{t:'Fundable milestone that triggers the next round clearly articulated',s:4}]},
+{c:'Ask',w:15,q:'What is your investor value proposition',opts:[{t:'No IRR or return analysis done',s:0},{t:'Basic narrative big market great team',s:1},{t:'IRR modeled sector comparable defensible valuation',s:3},{t:'Full VC method valuation IRR above 25% clear exit thesis',s:4}]}
+],
+fr:[
+{c:'Equipe',w:20,q:"A quel point votre equipe fondatrice est-elle complementaire?",opts:[{t:'Fondateur solo pas de co-fondateur',s:0},{t:"Equipe existante mais competences tres similaires",s:1},{t:'2-3 fondateurs aux competences complementaires tech et business',s:3},{t:"Equipe complete tech business expert domaine tout couvert",s:4}]},
+{c:'Equipe',w:20,q:"Votre equipe a-t-elle une expertise sectorielle pertinente?",opts:[{t:'Aucune experience prealable dans ce secteur',s:0},{t:"Quelques notions mais pas d expertise profonde",s:1},{t:"Un fondateur ou plus avec experience directe dans le secteur",s:3},{t:"L equipe a deja construit ou opere dans ce secteur",s:4}]},
+{c:'Equipe',w:20,q:"Quel est le track record de votre equipe?",opts:[{t:'Premiers fondateurs aucune realisation notable',s:0},{t:"Quelques realisations academiques ou de debut de carriere",s:1},{t:"Experience startup precedente ou solide parcours corporate",s:3},{t:"Exit precedent grande ecole ou reconnaissance sectorielle",s:4}]},
+{c:'Marche',w:15,q:"Quelle est la taille de votre marche adressable total TAM?",opts:[{t:'Moins de 100M niche ou local',s:0},{t:'100M-500M significatif mais limite',s:1},{t:'500M-5B grand marche regional ou vertical',s:3},{t:'5B+ opportunite de marche mondial massive',s:4}]},
+{c:'Marche',w:15,q:"Comment justifiez-vous le timing de votre opportunite?",opts:[{t:'Pas de rationale de timing clair',s:0},{t:'Tendance generale de croissance de marche',s:1},{t:'Changement reglementaire technologique ou comportemental identifie',s:3},{t:"Point d inflexion clair avec donnees a l appui",s:4}]},
+{c:'Marche',w:15,q:"A quel point connaissez-vous bien votre concurrence?",opts:[{t:'Concurrents pas encore cartographies',s:0},{t:'Conscience des acteurs principaux sans analyse detaillee',s:1},{t:'Concurrents mappes avec differenciation claire articulee',s:3},{t:'Paysage concurrentiel complet avec moat defendable identifie',s:4}]},
+{c:'Traction',w:20,q:"Quel est votre statut de revenus actuel?",opts:[{t:'Pas de revenus pre-produit ou ideation',s:0},{t:'Pilote ou PoC sans revenu commercial',s:1},{t:'Premiers revenus $1K-$50K ARR',s:3},{t:'Revenus prouves $50K+ ARR avec tendance de croissance',s:4}]},
+{c:'Traction',w:20,q:"Quelle est la force de votre croissance utilisateurs clients?",opts:[{t:"Pas encore d utilisateurs ou clients",s:0},{t:'Moins de 100 utilisateurs ou clients',s:1},{t:'100-1000 utilisateurs avec retention mesurable',s:3},{t:'1000+ utilisateurs forte retention croissance organique',s:4}]},
+{c:'Traction',w:20,q:"Avez-vous de la preuve sociale ou validation externe?",opts:[{t:'Aucune pour instant',s:0},{t:'Utilisateurs amis famille pas de validation externe',s:1},{t:'Clients payants LOIs ou acceptation accelerateur',s:3},{t:'Clients entreprise nommes couverture presse ou fort interet investisseurs',s:4}]},
+{c:'Produit',w:15,q:"A quel point votre proposition de valeur est-elle bien definie?",opts:[{t:'On cherche encore quel probleme on resout',s:0},{t:'Probleme clair mais solution encore en evolution',s:1},{t:'Probleme et solution clairs avec signaux PMF valides',s:3},{t:'Forte preuve PMF NPS sup 50 retention recommandations',s:4}]},
+{c:'Produit',w:15,q:"Quel est le statut de votre produit?",opts:[{t:'Idee ou concept seulement rien de construit',s:0},{t:'Prototype ou MVP en developpement',s:1},{t:'Produit fonctionnel avec utilisateurs actifs',s:3},{t:'Produit mature v2+ avec roadmap et utilisateurs payants',s:4}]},
+{c:'Produit',w:15,q:"A quel point votre produit est-il defendable?",opts:[{t:'Aucune differenciation technique ou produit',s:0},{t:'Quelques differenciations mais facilement replicables',s:1},{t:'Tech proprietaire avantage data ou fort moat UX',s:3},{t:'Brevets effets reseau ou switching costs difficile a repliquer',s:4}]},
+{c:'Modele Eco.',w:15,q:"Votre modele de monetisation est-il clair et prouve?",opts:[{t:'Aucun modele de monetisation defini',s:0},{t:'Modele existe mais non teste avec clients payants',s:1},{t:'Modele teste avec clients payants et pricing clair',s:3},{t:'Modele prouve revenus previsibles chemin vers unit economics clair',s:4}]},
+{c:'Modele Eco.',w:15,q:"Quelles sont vos unit economics?",opts:[{t:'LTV/CAC pas encore calcule',s:0},{t:'Estimations grossieres LTV/CAC sous 1x',s:1},{t:'LTV/CAC entre 1-3x acceptable',s:3},{t:'LTV/CAC 3x ou plus solides unit economics',s:4}]},
+{c:'Modele Eco.',w:15,q:"Quel est votre chemin vers la rentabilite?",opts:[{t:"Pas de chemin ou timeline vers la rentabilite",s:0},{t:"Vague on verra a l echelle",s:1},{t:'Plan clair avec jalons et hypotheses',s:3},{t:'Modele detaille avec point mort defini et atteignable',s:4}]},
+{c:'Ask',w:15,q:"A quel point votre demande de financement est-elle specifique?",opts:[{t:"Pas de montant ni d utilisation des fonds definis",s:0},{t:'Fourchette generale on cherche $500K-$2M',s:1},{t:'Montant specifique avec utilisation generale des fonds',s:3},{t:'Montant specifique utilisation detaillee et lie a des milestones',s:4}]},
+{c:'Ask',w:15,q:"Quel milestone ce tour finance-t-il?",opts:[{t:'Pas de milestone specifique defini',s:0},{t:"Milestone vague developper l equipe",s:1},{t:'Milestone operationnel clair ex atteindre $500K ARR',s:3},{t:'Milestone finançable qui declenche le tour suivant clairement articule',s:4}]},
+{c:'Ask',w:15,q:"Quelle est votre proposition de valeur pour l investisseur",opts:[{t:'Pas de TRI ou analyse de retour',s:0},{t:'Narrative basique grand marche super equipe',s:1},{t:'IRR modelise comparable sectoriel valorisation defendable',s:3},{t:'Valorisation methode VC complete IRR sup 25% these de sortie claire',s:4}]}
+]};
+const CRITERIA={en:['Team','Market','Traction','Product','Business Model','Ask'],fr:['Equipe','Marche','Traction','Produit','Modele Eco.','Ask']};
+const WEIGHTS=[20,15,20,15,15,15];
+function getCIdx(i){if(i<3)return 0;if(i<6)return 1;if(i<9)return 2;if(i<12)return 3;if(i<15)return 4;return 5;}
+function renderCriteriaTabs(){
+  const cr=CRITERIA[currentLang];const ci=getCIdx(currentQ);
+  document.getElementById('criteria_tabs').innerHTML=cr.map((c,i)=>{
+    const done=answers[i*3]!==null&&answers[i*3+1]!==null&&answers[i*3+2]!==null;
+    return '<div class="ctab'+(i===ci?' active':done?' done':'')+'">'+c+'</div>';
+  }).join('');
 }
-
-// ── RENDER QUESTION ──
 function renderQ(){
-  const qs=q();
-  const qi=qs[currentQ];
-  const cIdx=getCriteriaIndex(currentQ);
-  const criteria=CRITERIA[currentLang];
-
-  // Update criteria tabs
-  criteria.forEach((c,i)=>{
-    const tab=document.getElementById('ctab_'+i);
-    if(!tab) return;
-    tab.textContent=c;
-    tab.className='criteria-tab'+(i===cIdx?' active':answers[i*3]!==null&&answers[i*3+1]!==null&&answers[i*3+2]!==null?' done':'');
-  });
-
+  const qs=QUESTIONS[currentLang];const qi=qs[currentQ];
+  renderCriteriaTabs();
   document.getElementById('q_criteria').textContent=qi.c;
-  document.getElementById('q_num').textContent=`Question ${String(currentQ+1).padStart(2,'0')}`;
+  document.getElementById('q_num').textContent='Question '+String(currentQ+1).padStart(2,'0');
   document.getElementById('q_text').textContent=qi.q;
-  document.getElementById('progress_label').textContent=`${currentQ+1} / 18`;
-
-  // Options
+  document.getElementById('prog_fill').style.width=((currentQ+1)/18*100)+'%';
+  document.getElementById('prog_label').textContent=(currentQ+1)+' / 18';
   const letters=['A','B','C','D'];
-  document.getElementById('q_options').innerHTML=qi.opts.map((o,i)=>`
-    <div class="option${answers[currentQ]===i?' selected':''}" onclick="selectOpt(${i})">
-      <div class="opt-letter">${letters[i]}</div>
-      <div class="opt-text">${o.t}</div>
-    </div>`).join('');
-
-  // Nav
+  document.getElementById('q_options').innerHTML=qi.opts.map((o,i)=>'<div class="option'+(answers[currentQ]===i?' selected':'')+'" onclick="selectOpt('+i+')">'+'<div class="opt-letter">'+letters[i]+'</div>'+'<div class="opt-text">'+o.t+'</div></div>').join('');
   document.getElementById('btn_prev').disabled=currentQ===0;
   document.getElementById('btn_next').disabled=answers[currentQ]===null;
-  document.getElementById('btn_next').textContent=currentQ===17
-    ?(currentLang==='fr'?'Voir mon score →':'See my score →')
-    :(currentLang==='fr'?'Suivant →':'Next →');
-  document.getElementById('nav_hint').textContent=answers[currentQ]!==null?'':
-    (currentLang==='fr'?'Sélectionnez une réponse pour continuer':'Select an answer to continue');
+  const fr=currentLang==='fr';
+  document.getElementById('btn_next').textContent=currentQ===17?(fr?'Voir mon score →':'See my score →'):(fr?'Suivant →':'Next →');
+  document.getElementById('nav_hint').textContent=answers[currentQ]!==null?'':(fr?'Selectionnez une reponse pour continuer':'Select an answer to continue');
 }
-
-function selectOpt(i){
-  answers[currentQ]=i;
-  renderQ();
-}
-
-function nextQ(){
-  if(answers[currentQ]===null) return;
-  if(currentQ===17){showResults();return;}
-  currentQ++;
-  renderQ();
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function prevQ(){
-  if(currentQ===0) return;
-  currentQ--;
-  renderQ();
-}
-
-// ── CALCULATE & SHOW RESULTS ──
+function selectOpt(i){answers[currentQ]=i;renderQ();}
+function nextQ(){if(answers[currentQ]===null)return;if(currentQ===17){showResults();return;}currentQ++;renderQ();window.scrollTo({top:0,behavior:'smooth'});}
+function prevQ(){if(currentQ===0)return;currentQ--;renderQ();}
 function calcScore(){
-  const qs=q();
-  const criteriaScores=[0,0,0,0,0,0];
-  const criteriaMax=[0,0,0,0,0,0];
-
-  qs.forEach((qi,i)=>{
-    const cIdx=getCriteriaIndex(i);
-    const ans=answers[i];
-    if(ans!==null) criteriaScores[cIdx]+=qi.opts[ans].s;
-    criteriaMax[cIdx]+=4; // max per question
-  });
-
-  // Convert to weighted score /100
-  let total=0;
-  const criteriaPercents=criteriaScores.map((s,i)=>criteriaMax[i]>0?s/criteriaMax[i]:0);
-  WEIGHTS.forEach((w,i)=>total+=criteriaPercents[i]*(w));
-
-  return{total:Math.round(total),criteriaPercents,criteriaScores,criteriaMax};
+  const qs=QUESTIONS[currentLang];
+  const cS=[0,0,0,0,0,0],cM=[0,0,0,0,0,0];
+  qs.forEach((qi,i)=>{const ci=getCIdx(i);if(answers[i]!==null)cS[ci]+=qi.opts[answers[i]].s;cM[ci]+=4;});
+  const cP=cS.map((s,i)=>cM[i]>0?s/cM[i]:0);
+  let total=0;WEIGHTS.forEach((w,i)=>total+=cP[i]*w);
+  return{total:Math.round(total),cP};
 }
-
 function showResults(){
-  document.getElementById('question-panel').style.display='none';
+  document.getElementById('q_panel').style.display='none';
   document.getElementById('results').style.display='block';
-
-  const {total,criteriaPercents,criteriaScores,criteriaMax}=calcScore();
-  const lang=currentLang;
-  const criteria=CRITERIA[lang];
-
-  // Score circle animation
-  const circ=364.4;
+  const{total,cP}=calcScore();const fr=currentLang==='fr';const cr=CRITERIA[currentLang];
+  const circ=339.3;
   document.getElementById('res_score').textContent=total;
   setTimeout(()=>{
-    document.getElementById('score-arc').style.strokeDashoffset=circ-(circ*total/100);
-    const colors={excellent:'#1A6B47',good:'#1A6B47',fair:'#6B6B66',weak:'#9A9892'};
     const level=total>=75?'excellent':total>=55?'good':total>=35?'fair':'weak';
-    document.getElementById('score-arc').style.stroke=colors[level];
+    const colors={excellent:'#0F6A46',good:'#0F6A46',fair:'#D4913A',weak:'#C0504D'};
+    const arc=document.getElementById('ring_arc');
+    arc.style.strokeDashoffset=circ-(circ*total/100);arc.style.stroke=colors[level];
+    const v=document.getElementById('res_verdict');v.className='score-verdict '+level;
+    const vd={en:{excellent:'Pitch-ready.',good:'Almost there.',fair:'Needs work.',weak:'Not yet.'},fr:{excellent:'Pret a pitcher.',good:'Presque pret.',fair:'A ameliorer.',weak:'Pas encore.'}};
+    const sb={en:{excellent:'Strong score of '+total+'/100. Your pitch covers the fundamentals well. Focus on sharpening your ask and exit thesis before your next investor meeting.',good:'Good score of '+total+'/100. A few gaps to address. Work on the areas highlighted below to significantly improve your chances.',fair:'Score of '+total+'/100. Several dimensions need strengthening before approaching VCs. Use the recommendations below to prioritize your prep.',weak:'Score of '+total+'/100. Significant gaps remain. Focus on team, traction, and market before entering fundraising conversations.'},fr:{excellent:'Bon score de '+total+'/100. Votre pitch couvre bien les fondamentaux. Concentrez-vous sur affiner votre ask et votre these de sortie.',good:'Bon score de '+total+'/100. Quelques lacunes a combler. Travaillez les domaines mis en evidence ci-dessous.',fair:'Score de '+total+'/100. Plusieurs dimensions necessitent un renforcement avant VCs.',weak:'Score de '+total+'/100. Des lacunes importantes subsistent. Concentrez-vous sur equipe traction et marche.'}};
+    v.textContent=vd[fr?'fr':'en'][level];
+    document.getElementById('res_sub').textContent=sb[fr?'fr':'en'][level];
   },100);
-
-  // Verdict
-  const verdicts={
-    en:{excellent:'Pitch-ready.',good:'Almost there.',fair:'Needs work.',weak:'Not yet.'},
-    fr:{excellent:'Prêt à pitcher.',good:'Presque prêt.',fair:'À améliorer.',weak:'Pas encore.'}
-  };
-  const subs={
-    en:{
-      excellent:`Strong score of ${total}/100. Your pitch covers the fundamentals well. Focus on sharpening your ask and exit thesis before your next investor meeting.`,
-      good:`Good score of ${total}/100. A few gaps to address before pitching. Work on the areas highlighted below to significantly improve your chances.`,
-      fair:`Score of ${total}/100. Several dimensions need strengthening before approaching VCs. Use the recommendations below to prioritize your prep.`,
-      weak:`Score of ${total}/100. Significant gaps remain. Focus on the fundamentals — team, traction, and market — before entering fundraising conversations.`
-    },
-    fr:{
-      excellent:`Bon score de ${total}/100. Votre pitch couvre bien les fondamentaux. Concentrez-vous sur affiner votre ask et votre thèse de sortie avant votre prochain rendez-vous investisseur.`,
-      good:`Bon score de ${total}/100. Quelques lacunes à combler avant de pitcher. Travaillez les domaines mis en évidence ci-dessous pour améliorer significativement vos chances.`,
-      fair:`Score de ${total}/100. Plusieurs dimensions nécessitent un renforcement avant d'approcher des VCs. Utilisez les recommandations ci-dessous pour prioriser votre préparation.`,
-      weak:`Score de ${total}/100. Des lacunes importantes subsistent. Concentrez-vous sur les fondamentaux — équipe, traction et marché — avant d'entrer en conversation de levée.`
-    }
-  };
-  const level=total>=75?'excellent':total>=55?'good':total>=35?'fair':'weak';
-  const verdict=document.getElementById('res_verdict');
-  verdict.textContent=verdicts[lang][level];
-  verdict.className='score-verdict '+level;
-  document.getElementById('res_sub').textContent=subs[lang][level];
-
-  // Breakdown bars
-  document.getElementById('breakdown-rows').innerHTML=criteriaPercents.map((pct,i)=>{
+  document.getElementById('breakdown_rows').innerHTML=cP.map((pct,i)=>{
     const score=Math.round(pct*WEIGHTS[i]);
-    const barColor=pct>=0.75?'#1A6B47':pct>=0.5?'#6B6B66':'#9A9892';
-    return`<div class="breakdown-row">
-      <div class="breakdown-name">${criteria[i]}</div>
-      <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${pct*100}%;background:${barColor}"></div></div>
-      <div class="breakdown-score">${score}/${WEIGHTS[i]}</div>
-    </div>`;
+    const color=pct>=0.75?'#0F6A46':pct>=0.5?'#D4913A':'#C0504D';
+    return '<div class="breakdown-row"><div class="breakdown-name">'+cr[i]+'</div><div class="breakdown-track"><div class="breakdown-fill" style="width:'+(pct*100)+'%;background:'+color+'"></div></div><div class="breakdown-score">'+score+'/'+WEIGHTS[i]+'</div></div>';
   }).join('');
-
-  // Feedback per criteria
-  const feedbackData=getFeedback(criteriaPercents, lang);
-  document.getElementById('feedback-items').innerHTML=feedbackData.map((f,i)=>{
-    const isStrong=criteriaPercents[i]>=0.65;
-    return`<div class="feedback-item">
-      <div class="feedback-item-header">
-        <div class="feedback-icon ${isStrong?'strong':'improve'}">${isStrong?'✓':'↑'}</div>
-        <div class="feedback-item-name">${criteria[i]}</div>
-        <div class="feedback-item-score">${Math.round(criteriaPercents[i]*100)}%</div>
-      </div>
-      <div class="feedback-text">${f.text}</div>
-      <div class="feedback-reco"><strong>${lang==='fr'?'Action :':'Action:'}</strong> ${f.reco}</div>
-    </div>`;
+  document.getElementById('feedback_items').innerHTML=getFeedback(cP,currentLang).map((f,i)=>{
+    const strong=cP[i]>=0.65;
+    return '<div class="feedback-item"><div class="feedback-hd"><div class="feedback-badge '+(strong?'strong':'improve')+'">'+(strong?'✓':'↑')+'</div><div class="feedback-name">'+cr[i]+'</div><div class="feedback-pct">'+Math.round(cP[i]*100)+'%</div></div><div class="feedback-text">'+f.text+'</div><div class="feedback-action"><strong>'+(fr?'Action :':'Action:')+'</strong> '+f.reco+'</div></div>';
   }).join('');
-
+  _saveScore('pitch_scores',{score:total,criteria:JSON.stringify(cP)});
   window.scrollTo({top:0,behavior:'smooth'});
 }
-
-function getFeedback(percents, lang){
-  const en=[
-    // Team
-    {
-      text:percents[0]>=0.75?'Your team profile is strong. Complementary skills, relevant expertise, and track record are the top signals VCs look for in early-stage investments.':'Your team profile needs strengthening. VCs invest in people first — team quality is often the deciding factor at early stage.',
-      reco:percents[0]>=0.75?'Highlight each founder\'s specific contribution and unfair advantage in your pitch deck Team slide.':'Identify skill gaps and either hire, find a co-founder, or bring on an advisor with the missing expertise before pitching.'
-    },
-    // Market
-    {
-      text:percents[1]>=0.75?'You have a clear market thesis with compelling timing. Investors will appreciate a well-articulated TAM and defensible market positioning.':'Your market narrative needs clarity. VCs need to believe in the size and timing of the opportunity before investing.',
-      reco:percents[1]>=0.75?'Build a bottom-up TAM calculation alongside your top-down figure — it\'s more credible.':'Research your TAM using a bottom-up approach and identify the specific "why now" trigger — regulation, tech shift, or behavioral change.'
-    },
-    // Traction
-    {
-      text:percents[2]>=0.75?'Strong traction signals. Revenue and user growth are the most compelling proof points for any investor pitch.':'Traction is the weakest signal in your pitch. Investors want to see evidence that the market wants your product.',
-      reco:percents[2]>=0.75?'Show your growth curve — month-over-month growth rate is more compelling than absolute numbers.':'Focus on getting 10 paying customers before fundraising. Even small revenue validates the model.'
-    },
-    // Product
-    {
-      text:percents[3]>=0.75?'Your product positioning is solid. Clear PMF signals and a defensible product are key differentiators.':'Your product story needs sharpening. Investors need to understand what makes your product hard to replicate.',
-      reco:percents[3]>=0.75?'Quantify your product moat — show NPS, retention curves, or engagement metrics that prove stickiness.':'Run structured customer interviews to validate your value proposition and identify your core differentiator.'
-    },
-    // Business Model
-    {
-      text:percents[4]>=0.75?'Your business model is well-defined with solid unit economics. This gives investors confidence in the path to profitability.':'Your business model needs more rigor. Investors will probe unit economics hard — you need defensible numbers.',
-      reco:percents[4]>=0.75?'Build a detailed 3-year P&L model with clearly stated assumptions — it demonstrates financial maturity.':'Calculate your CAC and LTV from real data, even if limited. Estimate conservatively and show sensitivity analysis.'
-    },
-    // Ask
-    {
-      text:percents[5]>=0.75?'Your ask is specific and milestone-tied. This is exactly what experienced investors expect — clarity on what you\'re raising and why.':'Your fundraising ask lacks precision. Vague asks signal unpreparedness and reduce investor confidence.',
-      reco:percents[5]>=0.75?'Add a clear use of funds breakdown (hiring 40%, product 30%, marketing 30%) to your pitch deck.':'Define one specific milestone this round funds and how it sets up the next raise. Then use the VCReady Valuation Tool to model your IRR.'
-    }
+function getFeedback(p,lang){
+  const fr=lang==='fr';
+  return[
+    {text:p[0]>=0.75?(fr?"Profil d equipe solide. Des competences complementaires et un track record sont les signaux prioritaires qu un VC recherche en early-stage.":'Your team profile is strong. Complementary skills, relevant expertise, and track record are the top signals VCs look for.'):(fr?"Profil d equipe a renforcer. Les VCs investissent d abord dans les personnes — la qualite de l equipe est souvent le facteur decisif.":'Your team profile needs strengthening. VCs invest in people first — team quality is often the deciding factor.'),reco:p[0]>=0.75?(fr?"Mettez en avant la contribution specifique et l avantage injuste de chaque fondateur dans votre slide Equipe.":'Highlight each founders specific contribution and unfair advantage in your Team slide.'):(fr?"Identifiez les lacunes de competences et recrutez ou ajoutez un advisor avec l expertise manquante avant de pitcher.":'Identify skill gaps and find a co-founder or advisor with the missing expertise before pitching.')},
+    {text:p[1]>=0.75?(fr?"Vous avez une these de marche claire. Les investisseurs apprecieront un TAM bien articule et un positionnement defendable.":'You have a clear market thesis. Investors will appreciate a well-articulated TAM and defensible market positioning.'):(fr?"Votre narrative de marche manque de clarte. Les VCs doivent croire en la taille et le timing de l opportunite avant d investir.":'Your market narrative needs clarity. VCs need to believe in the size and timing of the opportunity before investing.'),reco:p[1]>=0.75?(fr?"Construisez un calcul TAM bottom-up en complement du top-down — c est plus credible.":'Build a bottom-up TAM calculation alongside your top-down figure — it is more credible.'):(fr?"Calculez votre TAM avec une approche bottom-up et identifiez le declencheur pourquoi maintenant.":'Research your TAM using a bottom-up approach and identify the specific "why now" trigger.')},
+    {text:p[2]>=0.75?(fr?"Forte traction. Les revenus et la croissance utilisateurs sont les preuves les plus convaincantes dans un pitch investisseur.":'Strong traction signals. Revenue and user growth are the most compelling proof points for any investor pitch.'):(fr?"La traction est le signal le plus faible de votre pitch. Les investisseurs veulent voir des preuves que le marche veut votre produit.":'Traction is the weakest signal in your pitch. Investors want to see evidence that the market wants your product.'),reco:p[2]>=0.75?(fr?"Montrez votre courbe de croissance — le taux mois sur mois est plus convaincant que les chiffres absolus.":'Show your growth curve — month-over-month growth rate is more compelling than absolute numbers.'):(fr?"Concentrez-vous sur 10 clients payants avant de lever. Meme un petit revenu valide le modele.":'Focus on getting 10 paying customers before fundraising. Even small revenue validates the model.')},
+    {text:p[3]>=0.75?(fr?"Votre positionnement produit est solide. Des signaux PMF clairs et un produit defendable sont des differenciateurs cles.":'Your product positioning is solid. Clear PMF signals and a defensible product are key differentiators.'):(fr?"Votre histoire produit doit etre affinee. Les investisseurs doivent comprendre ce qui rend votre produit difficile a repliquer.":'Your product story needs sharpening. Investors need to understand what makes your product hard to replicate.'),reco:p[3]>=0.75?(fr?"Quantifiez votre moat — montrez NPS courbes de retention ou metriques d engagement qui prouvent la stickiness.":'Quantify your product moat — show NPS, retention curves, or engagement metrics that prove stickiness.'):(fr?"Conduisez des interviews clients structures pour valider votre proposition de valeur et identifier votre differenciateur principal.":'Run structured customer interviews to validate your value proposition and identify your core differentiator.')},
+    {text:p[4]>=0.75?(fr?"Votre modele economique est bien defini avec des unit economics solides.":'Your business model is well-defined with solid unit economics. This gives investors confidence in the path to profitability.'):(fr?"Votre modele economique necessite plus de rigueur. Les investisseurs vont challenger les unit economics.":'Your business model needs more rigor. Investors will probe unit economics hard — you need defensible numbers.'),reco:p[4]>=0.75?(fr?"Construisez un modele P&L detaille sur 3 ans avec des hypotheses clairement enoncees.":'Build a detailed 3-year P&L model with clearly stated assumptions — it demonstrates financial maturity.'):(fr?"Calculez votre CAC et LTV a partir de donnees reelles meme limitees.":'Calculate your CAC and LTV from real data, even if limited. Show sensitivity analysis.')},
+    {text:p[5]>=0.75?(fr?"Votre ask est specifique et lie a des milestones — exactement ce qu attendent les investisseurs experimentes.":'Your ask is specific and milestone-tied. This is exactly what experienced investors expect — clarity on what you are raising and why.'):(fr?"Votre demande de financement manque de precision. Un ask vague signale un manque de preparation.":'Your fundraising ask lacks precision. Vague asks signal unpreparedness and reduce investor confidence.'),reco:p[5]>=0.75?(fr?"Ajoutez une repartition detaillee de l utilisation des fonds recrutement 40% produit 30% marketing 30% a votre deck.":'Add a clear use of funds breakdown (hiring 40%, product 30%, marketing 30%) to your pitch deck.'):(fr?"Definissez un milestone specifique que ce tour finance et comment il prepare la prochaine levee. Utilisez l outil Valorisation pour modeliser votre IRR.":'Define one specific milestone this round funds and how it sets up the next raise. Use the VCReady Valuation Tool to model your IRR.')}
   ];
-  const fr=[
-    {
-      text:percents[0]>=0.75?'Votre profil d\'équipe est solide. Des compétences complémentaires, une expertise pertinente et un track record sont les signaux prioritaires qu\'un VC recherche en early-stage.':'Votre profil d\'équipe nécessite un renforcement. Les VCs investissent d\'abord dans les personnes — la qualité de l\'équipe est souvent le facteur décisif.',
-      reco:percents[0]>=0.75?'Mettez en avant la contribution spécifique et l\'avantage injuste de chaque fondateur dans votre slide Équipe.':'Identifiez les lacunes de compétences et recrutez, trouvez un co-fondateur, ou ajoutez un advisor avec l\'expertise manquante avant de pitcher.'
-    },
-    {
-      text:percents[1]>=0.75?'Vous avez une thèse de marché claire avec un timing convaincant. Les investisseurs apprécieront un TAM bien articulé et un positionnement défendable.':'Votre narrative de marché manque de clarté. Les VCs doivent croire en la taille et le timing de l\'opportunité avant d\'investir.',
-      reco:percents[1]>=0.75?'Construisez un calcul TAM bottom-up en complément de votre chiffre top-down — c\'est plus crédible.':'Calculez votre TAM avec une approche bottom-up et identifiez le déclencheur "pourquoi maintenant" — réglementation, changement tech, ou comportemental.'
-    },
-    {
-      text:percents[2]>=0.75?'Forte traction. Les revenus et la croissance utilisateurs sont les preuves les plus convaincantes dans un pitch investisseur.':'La traction est le signal le plus faible de votre pitch. Les investisseurs veulent voir des preuves que le marché veut votre produit.',
-      reco:percents[2]>=0.75?'Montrez votre courbe de croissance — le taux de croissance mois sur mois est plus convaincant que les chiffres absolus.':'Concentrez-vous sur l\'obtention de 10 clients payants avant de lever. Même un petit revenu valide le modèle.'
-    },
-    {
-      text:percents[3]>=0.75?'Votre positionnement produit est solide. Des signaux PMF clairs et un produit défendable sont des différenciateurs clés.':'Votre histoire produit doit être affinée. Les investisseurs doivent comprendre ce qui rend votre produit difficile à répliquer.',
-      reco:percents[3]>=0.75?'Quantifiez votre moat — montrez NPS, courbes de rétention, ou métriques d\'engagement qui prouvent la stickiness.':'Conduisez des interviews clients structurées pour valider votre proposition de valeur et identifier votre différenciateur principal.'
-    },
-    {
-      text:percents[4]>=0.75?'Votre modèle économique est bien défini avec des unit economics solides. Cela donne aux investisseurs confiance dans le chemin vers la rentabilité.':'Votre modèle économique nécessite plus de rigueur. Les investisseurs vont challenger les unit economics — vous avez besoin de chiffres défendables.',
-      reco:percents[4]>=0.75?'Construisez un modèle P&L détaillé sur 3 ans avec des hypothèses clairement énoncées — cela démontre la maturité financière.':'Calculez votre CAC et LTV à partir de données réelles, même limitées. Estimez de manière conservatrice et montrez une analyse de sensibilité.'
-    },
-    {
-      text:percents[5]>=0.75?'Votre ask est spécifique et lié à des milestones. C\'est exactement ce qu\'attendent les investisseurs expérimentés — clarté sur ce que vous levez et pourquoi.':'Votre demande de financement manque de précision. Un ask vague signale un manque de préparation et réduit la confiance des investisseurs.',
-      reco:percents[5]>=0.75?'Ajoutez une répartition détaillée de l\'utilisation des fonds (recrutement 40%, produit 30%, marketing 30%) à votre deck.':'Définissez un milestone spécifique que ce tour finance et comment il prépare la prochaine levée. Utilisez l\'outil Valorisation VCReady pour modéliser votre IRR.'
-    }
-  ];
-  return lang==='fr'?fr:en;
 }
-
-function restart(){
-  answers=new Array(18).fill(null);
-  currentQ=0;
-  document.getElementById('results').style.display='none';
-  document.getElementById('question-panel').style.display='block';
-  renderQ();
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-// ── TRANSLATIONS ──
+function restart(){answers=new Array(18).fill(null);currentQ=0;document.getElementById('results').style.display='none';document.getElementById('q_panel').style.display='block';renderQ();window.scrollTo({top:0,behavior:'smooth'});}
 function setLang(l){
   currentLang=l;
-  document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',['en','fr'][i]===l));
-  const s=(id,v)=>{const el=document.getElementById(id);if(el)el.innerHTML=v;};
-  if(l==='fr'){
-    s('pg_tag','Pitch Readiness');
-    s('pg_h1','Votre pitch est-il<br>prêt pour les investisseurs ?');
-    s('pg_p','18 questions sur 6 critères. Obtenez votre score /100, un feedback par dimension et des recommandations actionnables avant votre prochain rendez-vous investisseur.');
-    s('btn_restart','↺ Refaire l\'évaluation');
-    s('breakdown_title','Score par critère');
-    s('feedback_title','Feedback & recommandations');
-    s('cta_title','Transformez votre score en levée réussie.');
-    s('cta_sub','Réservez 30 min pour travailler sur vos points faibles avec un expert.');
-    s('cta_btn','Réserver votre session →');
-  } else {
-    s('pg_tag','Pitch Readiness');
-    s('pg_h1','Is your pitch<br>investor-ready?');
-    s('pg_p','18 questions across 6 criteria. Get your score /100, feedback on each dimension, and actionable recommendations before your next investor meeting.');
-    s('btn_restart','↺ Retake the assessment');
-    s('breakdown_title','Score by criteria');
-    s('feedback_title','Feedback & recommendations');
-    s('cta_title','Turn your score into a funded pitch.');
-    s('cta_sub','Book a 30-min session to work on your weak points with an expert.');
-    s('cta_btn','Book your session →');
-  }
+  document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',['fr','en'][i]===l));
+  const fr=l==='fr';
+  document.getElementById('pg_eyebrow').textContent='Pitch Readiness';
+  document.getElementById('pg_title').textContent=fr?"Votre pitch est-il pret pour les investisseurs ?":'Is your pitch investor-ready?';
+  document.getElementById('pg_desc').textContent=fr?"18 questions sur 6 criteres. Obtenez votre score sur 100, un feedback par dimension et des recommandations actionnables.":'18 questions across 6 criteria. Get your score /100, feedback on each dimension, and actionable recommendations.';
+  document.getElementById('btn_restart').textContent=fr?'Refaire evaluation':'Retake assessment';
+  document.getElementById('breakdown_title').textContent=fr?'Score par critere':'Score by criteria';
+  document.getElementById('feedback_title').textContent=fr?'Feedback & recommandations':'Feedback & recommendations';
+  document.getElementById('cta_title').textContent=fr?'Transformez votre score en levee reussie.':'Turn your score into a funded pitch.';
+  document.getElementById('cta_sub').textContent=fr?'Reservez 30 min pour travailler sur vos points faibles avec un expert.':'Book a 30-min session to work on your weak points with an expert.';
+  document.getElementById('cta_btn').textContent=fr?'Reserver votre session':'Book your session';
   renderQ();
 }
-
-
-// ── SAVE TO DASHBOARD ──
-const _SU='https://fvbrzttvdvxhbdkjknje.supabase.co';const _SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YnJ6dHR2ZHZ4aGJka2prbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzgwNTAsImV4cCI6MjA5MDcxNDA1MH0.tcE5PlgMsu7suLAzN3uT5VjKnFhc25qkJJMKkbNmtvI';
+const _SU='https://fvbrzttvdvxhbdkjknje.supabase.co';
+const _SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YnJ6dHR2ZHZ4aGJka2prbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzgwNTAsImV4cCI6MjA5MDcxNDA1MH0.tcE5PlgMsu7suLAzN3uT5VjKnFhc25qkJJMKkbNmtvI';
 async function _saveScore(table,data){
-  const token=localStorage.getItem('sb_access');
-  if(!token) return;
+  const token=localStorage.getItem('sb_access');if(!token)return;
   try{
-    const user=await (await fetch(`${_SU}/auth/v1/user`,{headers:{'apikey':_SK,'Authorization':'Bearer '+token}})).json();
-    if(!user?.id) return;
-    await fetch(`${_SU}/rest/v1/${table}`,{
-      method:'POST',
-      headers:{'apikey':_SK,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify({...data,user_id:user.id})
-    });
+    const user=await(await fetch(_SU+'/auth/v1/user',{headers:{'apikey':_SK,'Authorization':'Bearer '+token}})).json();
+    if(!user?.id)return;
+    await fetch(_SU+'/rest/v1/'+table,{method:'POST',headers:{'apikey':_SK,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({...data,user_id:user.id})});
     const el=document.createElement('div');
-    el.style.cssText='position:fixed;bottom:24px;right:24px;background:#1A6B47;color:#FFF;padding:12px 18px;font-size:12px;font-family:DM Sans,sans-serif;z-index:9999;transition:opacity .5s';
-    el.textContent='✓ Score saved to your dashboard';
+    el.style.cssText='position:fixed;bottom:24px;right:24px;background:#0F6A46;color:#fff;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:700;font-family:Inter,sans-serif;z-index:9999;transition:opacity .5s';
+    el.textContent='Score saved to dashboard';
     document.body.appendChild(el);
     setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),500);},3000);
   }catch{}
 }
-
-// Init
 renderQ();
 </script>
 </body>
