@@ -75,36 +75,7 @@ export default function ValuationPage() {
     setSaved(false);
   }, []);
 
-  const handleSave = useCallback(async () => {
-    try {
-      await saveValuation({
-        name: formData.startupName || `valuation_${new Date().toISOString()}`,
-        current_revenue: formData.currentRevenue,
-        growth_rate: calculations.impliedGrowthRate,
-        revenue_multiple: formData.evMultiple,
-        estimated_valuation: calculations.preMoney,
-        valuation_low: calculations.bearCase.preMoney,
-        valuation_high: calculations.bullCase.preMoney,
-        stage: formData.stage,
-      });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch (error) {
-      console.error("[v0] Error saving valuation:", error);
-      // Fallback to localStorage if Supabase fails
-      const savedResults = JSON.parse(localStorage.getItem("vcready_valuation") || "[]");
-      savedResults.push({
-        ...formData,
-        timestamp: new Date().toISOString(),
-        results: calculations,
-      });
-      localStorage.setItem("vcready_valuation", JSON.stringify(savedResults.slice(-10)));
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    }
-  }, [formData, calculations]);
-
-  // Core calculations
+  // Core calculations - MUST be defined before useCallback that uses it
   const calculations = useMemo(() => {
     const { 
       sector, stage, exitYear, revenueAtExit, evMultiple, 
@@ -206,6 +177,27 @@ export default function ValuationPage() {
       bullCase,
     };
   }, [formData]);
+
+  const handleSave = useCallback(async () => {
+    try {
+      await saveValuation({
+        name: formData.startupName || `valuation_${new Date().toISOString()}`,
+        current_revenue: formData.currentRevenue,
+        growth_rate: calculations.impliedGrowthRate,
+        revenue_multiple: formData.evMultiple,
+        estimated_valuation: calculations.preMoney,
+        valuation_low: calculations.bearCase.preMoney,
+        valuation_high: calculations.bullCase.preMoney,
+        stage: formData.stage,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (error) {
+      console.error("[v0] Error saving valuation:", error);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    }
+  }, [formData, calculations]);
 
   const formatCurrency = (value: number) => {
     const symbol = formData.currency === "USD" ? "$" : "EUR";

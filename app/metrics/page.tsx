@@ -165,29 +165,7 @@ export default function MetricsPage() {
     setSaved(false);
   }, []);
 
-  const handleSave = useCallback(async () => {
-    try {
-      await saveMetrics({
-        name: `${sector}_metrics_${new Date().toISOString()}`,
-        monthly_revenue: formData.mrr,
-        monthly_growth_rate: calculations.mrrGrowth,
-        customer_acquisition_cost: calculations.cac,
-        lifetime_value: calculations.ltv,
-        monthly_churn_rate: calculations.churnRate,
-        magic_number: calculations.magicNumber,
-        payback_period: Math.round(calculations.cacPayback),
-        rule_of_40_score: calculations.mrrGrowth + (calculations.churnRate > 0 ? 40 - calculations.churnRate : 40),
-      });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch (error) {
-      console.error("[v0] Error saving metrics:", error);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    }
-  }, [formData, sector, calculations]);
-
-  // Core calculations for SaaS (primary sector)
+  // Core calculations for SaaS (primary sector) - MUST be defined before handleSave
   const calculations = useMemo(() => {
     const { mrr, newCustomers, churnedCustomers, cacSpend, totalCustomers, grossMargin, avgRevenuePerCustomer, cashBalance, monthlyBurn } = formData;
 
@@ -261,6 +239,28 @@ export default function MetricsPage() {
       avgLifetime,
     };
   }, [formData]);
+
+  const handleSave = useCallback(async () => {
+    try {
+      await saveMetrics({
+        name: `${sector}_metrics_${new Date().toISOString()}`,
+        monthly_revenue: formData.mrr,
+        monthly_growth_rate: calculations.mrrGrowth,
+        customer_acquisition_cost: calculations.cac,
+        lifetime_value: calculations.ltv,
+        monthly_churn_rate: calculations.churnRate,
+        magic_number: calculations.magicNumber,
+        payback_period: Math.round(calculations.cacPayback),
+        rule_of_40_score: calculations.mrrGrowth + (calculations.churnRate > 0 ? 40 - calculations.churnRate : 40),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (error) {
+      console.error("[v0] Error saving metrics:", error);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    }
+  }, [formData, sector, calculations]);
 
   const getStatus = (value: number, benchmark: { good: number; great: number; inverted?: boolean }): "good" | "warning" | "danger" => {
     if (benchmark.inverted) {
