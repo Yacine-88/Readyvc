@@ -454,6 +454,11 @@
         <div class="sliders-grid" id="wi_sliders"></div>
       </div>
 
+      <!-- METHODOLOGY & SOURCES -->
+      <div id="methodology_card" style="border:1px solid var(--line);border-radius:var(--radius);background:#fff;padding:24px;margin-bottom:20px">
+        <div id="methodology_content"></div>
+      </div>
+
       <div class="btn-nav">
         <button class="btn-secondary" onclick="goto(3)">← Edit inputs</button>
         <button class="btn accent" onclick="goto(1)">+ New valuation</button>
@@ -519,7 +524,23 @@ const LABELS={
 
 // ── HELPERS ──
 const sym=c=>c==='DZD'?'DZD ':c==='EUR'?'€':'$';
-const fmt=(n,c='USD')=>{const s=sym(c);if(Math.abs(n)>=1000000)return s+(n/1000000).toFixed(2)+'M';if(Math.abs(n)>=1000)return s+(n/1000).toFixed(1)+'K';return s+Math.round(n).toLocaleString();};
+const fmt=(n,c='USD')=>{
+  const s=sym(c);
+  const clean=v=>{
+    // Remove trailing zeros: 40.00->40, 1.50->1.5, 1.23->1.23
+    const s=v.toFixed(2);
+    return s.replace(/\.?0+$/,'');
+  };
+  if(Math.abs(n)>=1000000){
+    return s+clean(n/1000000)+'M';
+  }
+  if(Math.abs(n)>=1000){
+    const v=(n/1000);
+    const str=v%1===0?v.toFixed(0):v.toFixed(1).replace(/\.?0+$/,'');
+    return s+str+'K';
+  }
+  return s+Math.round(n).toLocaleString();
+};
 const gv=id=>{const el=document.getElementById(id);return el?parseFloat(el.value)||0:0;};
 const pct=n=>n!==null&&n!==undefined?n.toFixed(1)+'%':'—';
 
@@ -705,6 +726,12 @@ function calc(){
 
   // WHAT-IF
   renderWhatIf();
+
+  // METHODOLOGY
+  renderMethodology(calcResults);
+
+  // METHODOLOGY
+  renderMethodology(calcResults);
 
   // SAVE
   saveIfLoggedIn({
@@ -1025,6 +1052,123 @@ async function saveIfLoggedIn(data){
       showToast('✓ Saved to your dashboard');
     }catch{}
   },800);
+}
+
+// ── METHODOLOGY & SOURCES ──
+function renderMethodology(r){
+  const sectData=SECTEURS[r.sectKey];
+  const sectLabel=LABELS.en[r.sectKey]||r.sectKey||'—';
+  const card=document.getElementById('methodology_card');
+  const content=document.getElementById('methodology_content');
+  card.style.display='block';
+
+  const steps=[
+    {
+      num:'01',
+      title:'Enterprise Value (EV)',
+      formula:'EV = Revenue at exit × EV/Revenue multiple',
+      example:`${fmt(r.revExit,r.cur)} × ${r.evMult}× = ${fmt(r.ev,r.cur)}`,
+      note:'The EV/Revenue multiple is sector-specific and derived from comparable public and private transactions. Sources: Damodaran (NYU Stern), PitchBook, Crunchbase.'
+    },
+    {
+      num:'02',
+      title:'Effective equity stake at exit',
+      formula:'Effective stake = Initial stake × (1 − dilution per round)^N rounds',
+      example:`${r.stake}% × (1 − ${(r.invest>0?(gv('dilution')):20)}%)^${gv('future_rounds')} = ${(r.effStake*100).toFixed(2)}%`,
+      note:'Each subsequent funding round dilutes the investor\'s stake. Standard VC dilution is 15–25% per round. This model applies uniform dilution across all future rounds.'
+    },
+    {
+      num:'03',
+      title:'Investor proceeds at exit',
+      formula:'Proceeds = EV × effective stake',
+      example:`${fmt(r.ev,r.cur)} × ${(r.effStake*100).toFixed(2)}% = ${fmt(r.proceeds,r.cur)}`,
+      note:'Proceeds represent the gross amount returned to the investor at exit before taxes and fees. Net proceeds will vary based on fund structure and jurisdiction.'
+    },
+    {
+      num:'04',
+      title:'IRR (Internal Rate of Return)',
+      formula:'IRR: solve for r where −Investment + Proceeds/(1+r)^N = 0',
+      example:`Solved numerically: ${r.irr!==null?r.irr.toFixed(2)+'%':'—'} over ${r.years} years`,
+      note:'IRR is the annualized return that makes the net present value of cash flows equal to zero. Standard VC threshold: 25–30% minimum, 35–40%+ target for institutional funds. Source: ILPA (Institutional Limited Partners Association), Kauffman Fellows.'
+    },
+    {
+      num:'05',
+      title:'CoCa (Cash-on-Cash Multiple)',
+      formula:'CoCa = Proceeds ÷ Investment',
+      example:`${fmt(r.proceeds,r.cur)} ÷ ${fmt(r.invest,r.cur)} = ${r.coc.toFixed(2)}×`,
+      note:'CoCa measures how many times the investor recovers their initial investment, regardless of time. VC benchmarks: below 3× = difficult to fund, 3–5× = acceptable, 5×+ = top-tier. Source: First Round Capital, a16z portfolio benchmarks.'
+    },
+    {
+      num:'06',
+      title:'Present Value (PV)',
+      formula:'PV = Proceeds ÷ (1 + required return)^N',
+      example:`${fmt(r.proceeds,r.cur)} ÷ (1 + ${(r.reqRet*100).toFixed(0)}%)^${r.years} = ${fmt(r.pv,r.cur)}`,
+      note:'The PV is the maximum amount a rational investor would pay today for this deal, given their required return. If PV > investment, the deal creates value at the required rate.'
+    }
+  ];
+
+  const sectBlock=sectData?`
+    <div style="margin-top:28px;padding-top:24px;border-top:1px solid var(--line)">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px">Sector benchmark — ${sectLabel}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px">
+        <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Floor</div>
+          <div style="font-size:22px;font-weight:800;letter-spacing:-.04em">${sectData.min}×</div>
+        </div>
+        <div style="background:var(--ink);border-radius:12px;padding:14px;text-align:center">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:6px">Median</div>
+          <div style="font-size:22px;font-weight:800;letter-spacing:-.04em;color:#fff">${sectData.med}×</div>
+        </div>
+        <div style="background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Ceiling</div>
+          <div style="font-size:22px;font-weight:800;letter-spacing:-.04em">${sectData.max}×</div>
+        </div>
+      </div>
+      <div style="font-size:13px;line-height:1.75;color:var(--ink-2)">${sectData.desc.en}</div>
+      <div style="font-size:11px;color:var(--muted-2);margin-top:8px">Sources: Damodaran Online (NYU Stern) · PitchBook · Crunchbase · CB Insights · Africa: Partech Africa Report, Briter Bridges</div>
+    </div>`:
+    `<div style="margin-top:20px;font-size:13px;color:var(--muted)">Select a sector in Step 1 to display sector-specific multiple benchmarks.</div>`;
+
+  const sourcesBlock=`
+    <div style="margin-top:28px;padding-top:24px;border-top:1px solid var(--line)">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px">Methodology sources & references</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        ${[
+          {name:'Damodaran Online',org:'NYU Stern School of Business',url:'https://pages.stern.nyu.edu/~adamodar/',note:'Sector multiples, cost of capital, valuation models'},
+          {name:'ILPA Standards',org:'Institutional Limited Partners Association',url:'https://ilpa.org',note:'IRR, CoCa, and fund return benchmarks'},
+          {name:'PitchBook',org:'Morningstar',url:'https://pitchbook.com',note:'Private market transaction comparables'},
+          {name:'Partech Africa Report',org:'Partech Partners',url:'https://partechpartners.com',note:'Africa startup funding benchmarks'},
+          {name:'Briter Bridges',org:'Briter Intelligence',url:'https://briterbridges.com',note:'MENA & Africa deal data'},
+          {name:'Kauffman Fellows',org:'Kauffman Fellows Program',url:'https://kauffmanfellows.org',note:'VC return expectations and fund strategy'},
+        ].map(s=>`
+          <div style="border:1px solid var(--line);border-radius:12px;padding:14px">
+            <div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:2px">${s.name}</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">${s.org}</div>
+            <div style="font-size:11px;color:var(--muted-2);margin-bottom:6px">${s.note}</div>
+            <a href="${s.url}" target="_blank" style="font-size:11px;font-weight:700;color:var(--accent)">${s.url.replace('https://','')}</a>
+          </div>`).join('')}
+      </div>
+      <div style="margin-top:14px;font-size:11px;color:var(--muted-2);line-height:1.7">
+        This tool implements the standard VC valuation method as taught at leading business schools (HBS, Wharton, INSEAD) and used by institutional venture funds globally. Multiples are updated based on publicly available transaction data. Results are estimates — actual investor negotiations will vary based on market conditions, team, traction, and fund strategy.
+      </div>
+    </div>`;
+
+  content.innerHTML=`
+    <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:20px">Methodology — VC Valuation Method</div>
+    <div style="display:grid;gap:0">
+      ${steps.map(step=>`
+        <div style="display:grid;grid-template-columns:32px 1fr;gap:16px;padding:18px 0;border-bottom:1px solid var(--line);align-items:start">
+          <div style="width:32px;height:32px;background:var(--ink);color:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">${step.num}</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:6px">${step.title}</div>
+            <div style="font-family:monospace;font-size:12px;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-bottom:6px;color:var(--ink-2)">${step.formula}</div>
+            <div style="font-family:monospace;font-size:12px;color:var(--accent);margin-bottom:6px;padding-left:2px">→ ${step.example}</div>
+            <div style="font-size:11px;color:var(--muted-2);line-height:1.6">${step.note}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    ${sectBlock}
+    ${sourcesBlock}`;
 }
 
 // ── LANGUAGE ──
