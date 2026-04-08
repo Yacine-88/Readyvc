@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
 import { Calendar } from "lucide-react";
 
+const CALENDLY_URL = "https://calendly.com/vcready/30min";
+
 export function BookSessionCTA() {
   const { t } = useI18n();
-  
+
   return (
     <Card className="bg-accent/5 border-accent/20">
       <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-5">
@@ -20,9 +22,11 @@ export function BookSessionCTA() {
             <p className="text-sm text-muted">{t("cta.bookSession.desc")}</p>
           </div>
         </div>
-        <Button 
-          href="https://cal.com" 
-          variant="primary" 
+        <Button
+          href={CALENDLY_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="primary"
           size="sm"
           className="shrink-0"
         >

@@ -3,6 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
 
+const CALENDLY_URL = "https://calendly.com/vcready/30min";
+
 export function FinalCTA() {
   const { t } = useI18n();
   
@@ -44,7 +46,7 @@ export function FinalCTA() {
               </Button>
             </div>
             <a 
-              href="https://cal.com" 
+              href={CALENDLY_URL}
               target="_blank" 
               rel="noopener noreferrer"
               className="text-white/60 text-sm hover:text-white transition-colors underline underline-offset-4"

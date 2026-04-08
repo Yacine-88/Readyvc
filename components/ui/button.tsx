@@ -23,6 +23,8 @@ interface ButtonAsLink extends ButtonBaseProps {
   onClick?: never;
   type?: never;
   disabled?: never;
+  target?: string;
+  rel?: string;
 }
 
 type ButtonProps = ButtonAsButton | ButtonAsLink;
@@ -58,9 +60,26 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
     const combinedClassName = `${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`;
 
     if ("href" in rest && rest.href) {
+      const linkProps = rest as ButtonAsLink;
+      const isExternal = linkProps.target === "_blank";
+      
+      if (isExternal) {
+        return (
+          <a
+            href={linkProps.href}
+            target={linkProps.target}
+            rel={linkProps.rel}
+            className={combinedClassName}
+            ref={ref as React.Ref<HTMLAnchorElement>}
+          >
+            {children}
+          </a>
+        );
+      }
+      
       return (
         <Link
-          href={rest.href}
+          href={linkProps.href}
           className={combinedClassName}
           ref={ref as React.Ref<HTMLAnchorElement>}
         >
