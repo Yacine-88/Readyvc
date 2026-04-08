@@ -9,6 +9,7 @@ import { ChevronDown } from "lucide-react";
 export function Navbar() {
   const pathname = usePathname();
   const { t } = useI18n();
+  // Force hydration consistency - navbar redesigned
 
   const toolLinks = [
     { href: "/metrics", label: t("nav.metrics") },
