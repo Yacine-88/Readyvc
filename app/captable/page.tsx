@@ -237,6 +237,7 @@ export default function CapTablePage() {
             <h4 className="font-semibold text-sm mb-3">Add Shareholder</h4>
             <FormGrid cols={2}>
               <InputField
+                id="shareholder-name"
                 label="Name"
                 placeholder="e.g., New Investor"
                 value={newShareholder.name}
@@ -245,6 +246,7 @@ export default function CapTablePage() {
                 }
               />
               <SelectField
+                id="shareholder-type"
                 label="Type"
                 value={newShareholder.type}
                 onChange={(e) =>
@@ -253,6 +255,7 @@ export default function CapTablePage() {
                 options={shareholderTypes}
               />
               <InputField
+                id="shareholder-shares"
                 label="Shares"
                 placeholder="e.g., 1000000"
                 type="number"
@@ -284,6 +287,7 @@ export default function CapTablePage() {
         </p>
         <FormGrid cols={3}>
           <InputField
+            id="investment-amount"
             label="Investment Amount"
             type="number"
             value={roundInputs.investmentAmount}
@@ -296,6 +300,7 @@ export default function CapTablePage() {
             hint="New investment size in dollars"
           />
           <InputField
+            id="pre-money-valuation"
             label="Pre-Money Valuation"
             type="number"
             value={roundInputs.preMoneyValuation}
@@ -308,6 +313,7 @@ export default function CapTablePage() {
             hint="Company value before investment"
           />
           <InputField
+            id="new-esop-percentage"
             label="New ESOP %"
             type="number"
             value={roundInputs.newEsopPercentage}
