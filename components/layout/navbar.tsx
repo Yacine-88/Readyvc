@@ -6,62 +6,54 @@ import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
 import { ChevronDown } from "lucide-react";
 
-const CALENDLY_URL = "https://calendly.com/vcready/30min";
-
 export function Navbar() {
   const pathname = usePathname();
   const { t } = useI18n();
 
   const toolLinks = [
-    { href: "/valuation", label: t("nav.valuation") },
     { href: "/metrics", label: t("nav.metrics") },
+    { href: "/valuation", label: t("nav.valuation") },
     { href: "/pitch", label: t("nav.pitch") },
     { href: "/dataroom", label: t("nav.dataroom") },
-    { href: "/qa", label: t("nav.qa") },
     { href: "/captable", label: t("nav.captable") },
-    { href: "/comparables", label: t("nav.comparables") },
+    { href: "/qa", label: t("nav.qa") },
   ];
 
   const isToolActive = toolLinks.some((link) => pathname === link.href);
+  const isComparablesActive = pathname === "/comparables";
 
   return (
     <header className="sticky top-0 z-50 h-16 border-b border-border bg-background">
       <div className="max-w-[var(--container-max)] mx-auto px-6 h-full flex items-center justify-between">
-        {/* Left: Branding (text only) */}
+        {/* Left: Branding */}
         <Link href="/" className="shrink-0 text-sm font-bold tracking-tight">
           VCReady
         </Link>
 
         {/* Center: Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-8">
+          {/* Dashboard */}
           <Link
             href="/dashboard"
             className={`text-sm font-medium transition-colors ${
               pathname === "/dashboard" ? "text-foreground" : "text-muted hover:text-foreground"
             }`}
           >
-            Dashboard
+            {t("nav.dashboard")}
           </Link>
 
-          <Link
-            href="/about"
-            className={`text-sm font-medium transition-colors ${
-              pathname === "/about" ? "text-foreground" : "text-muted hover:text-foreground"
-            }`}
-          >
-            {t("nav.about")}
-          </Link>
-
-          {/* Tools Dropdown - simplified without state */}
+          {/* Tools Dropdown */}
           <div className="group relative">
             <button
-              className={`flex items-center gap-1 text-sm font-medium transition-colors text-muted hover:text-foreground`}
+              className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                isToolActive ? "text-foreground" : "text-muted hover:text-foreground"
+              }`}
             >
-              Tools
+              {t("nav.tools")}
               <ChevronDown className="w-4 h-4 transition-transform group-hover:rotate-180" />
             </button>
 
-            <div className="absolute top-full left-0 mt-2 w-44 py-2 bg-background border border-border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+            <div className="absolute top-full left-0 mt-2 w-48 py-2 bg-background border border-border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
               {toolLinks.map((link) => (
                 <Link
                   key={link.href}
@@ -78,25 +70,31 @@ export function Navbar() {
             </div>
           </div>
 
+          {/* Comparables */}
           <Link
-            href="/readiness"
+            href="/comparables"
             className={`text-sm font-medium transition-colors ${
-              pathname === "/readiness" ? "text-foreground" : "text-muted hover:text-foreground"
+              isComparablesActive ? "text-foreground" : "text-muted hover:text-foreground"
             }`}
           >
-            Readiness
+            {t("nav.comparables")}
+          </Link>
+
+          {/* About */}
+          <Link
+            href="/about"
+            className={`text-sm font-medium transition-colors ${
+              pathname === "/about" ? "text-foreground" : "text-muted hover:text-foreground"
+            }`}
+          >
+            {t("nav.about")}
           </Link>
         </nav>
 
-        {/* Right: Book a session CTA */}
+        {/* Right: CTA Button */}
         <div className="flex items-center gap-3">
-          <Button
-            href={CALENDLY_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            size="sm"
-          >
-            {t("cta.bookSession")}
+          <Button href="/metrics" size="sm">
+            Analyze my startup
           </Button>
         </div>
       </div>
