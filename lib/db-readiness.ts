@@ -175,17 +175,28 @@ export async function calculateReadinessScore(): Promise<ReadinessScoreData> {
   const pitch_score = calculatePitchScore(pitchData);
   const dataroom_score = calculateDataroomScore(dataroomData);
 
-  // Overall readiness: weighted average
-  // Metrics & Traction: 35%, Market (QA): 25%, Financial (Valuation): 20%, 
-  // Operations (CapTable): 10%, Messaging (Pitch): 5%, Artifacts (DataRoom): 5%
-  const overall_score = Math.round(
-    metrics_score * 0.35 +
-    qa_score * 0.25 +
-    valuation_score * 0.2 +
-    cap_table_score * 0.1 +
-    pitch_score * 0.05 +
-    dataroom_score * 0.05
+  // Overall readiness: weighted average (MUST total 100%)
+  // Metrics & Traction: 35% (most critical - revenue, growth, unit economics)
+  // Q&A Prep: 25% (critical - investor confidence in founder)
+  // Valuation: 20% (important - financial model credibility)
+  // Cap Table: 10% (moderate - ownership structure)
+  // Pitch: 5% (supplementary - messaging clarity)
+  // Data Room: 5% (supplementary - supporting documentation)
+  // TOTAL WEIGHT = 35 + 25 + 20 + 10 + 5 + 5 = 100%
+  
+  // Calculate weighted score with explicit bounds verification
+  const weighted_sum = (
+    (metrics_score * 0.35) +
+    (qa_score * 0.25) +
+    (valuation_score * 0.2) +
+    (cap_table_score * 0.1) +
+    (pitch_score * 0.05) +
+    (dataroom_score * 0.05)
   );
+  
+  // Verify normalization: since each input score is 0-100 and weights sum to 1.0,
+  // the output should be bounded: 0 <= weighted_sum <= 100
+  const overall_score = Math.min(100, Math.max(0, Math.round(weighted_sum)));
 
   const investor_readiness_percentage = overall_score;
 
