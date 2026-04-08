@@ -15,6 +15,7 @@ const translations = {
     "nav.pitch": "Pitch",
     "nav.dataroom": "Data Room",
     "nav.qa": "Q&A",
+    "nav.captable": "Cap Table",
     "nav.readiness": "Readiness",
     "nav.signin": "Sign in",
     "nav.getStarted": "Get started",
@@ -85,6 +86,27 @@ const translations = {
     "common.start": "Start",
     "common.viewAll": "View all",
     "common.learnMore": "Learn more",
+    
+    // Cap Table
+    "tool.captable.title": "Cap Table Manager",
+    "tool.captable.desc": "Manage your cap table, track ownership, and model dilution scenarios for future rounds.",
+    
+    // Book a session
+    "cta.bookSession": "Book a session",
+    "cta.bookSession.desc": "Schedule a 30-minute call with our team to review your readiness.",
+    
+    // Newsletter
+    "newsletter.title": "Stay updated",
+    "newsletter.subtitle": "Get fundraising tips and platform updates.",
+    "newsletter.placeholder": "Enter your email",
+    "newsletter.cta": "Subscribe",
+    
+    // Footer links
+    "footer.tools": "Tools",
+    "footer.resources": "Resources",
+    "footer.legal": "Legal",
+    "footer.privacy": "Privacy",
+    "footer.terms": "Terms",
   },
   fr: {
     // Navigation
@@ -94,6 +116,7 @@ const translations = {
     "nav.pitch": "Pitch",
     "nav.dataroom": "Data Room",
     "nav.qa": "Q&R",
+    "nav.captable": "Cap Table",
     "nav.readiness": "Maturite",
     "nav.signin": "Connexion",
     "nav.getStarted": "Commencer",
@@ -164,6 +187,27 @@ const translations = {
     "common.start": "Commencer",
     "common.viewAll": "Voir tout",
     "common.learnMore": "En savoir plus",
+    
+    // Cap Table
+    "tool.captable.title": "Gestionnaire Cap Table",
+    "tool.captable.desc": "Gerez votre cap table, suivez l'actionnariat et modelisez les scenarios de dilution.",
+    
+    // Book a session
+    "cta.bookSession": "Reserver une session",
+    "cta.bookSession.desc": "Planifiez un appel de 30 minutes avec notre equipe pour evaluer votre maturite.",
+    
+    // Newsletter
+    "newsletter.title": "Restez informe",
+    "newsletter.subtitle": "Recevez des conseils de levee et les actualites de la plateforme.",
+    "newsletter.placeholder": "Votre email",
+    "newsletter.cta": "S'abonner",
+    
+    // Footer links
+    "footer.tools": "Outils",
+    "footer.resources": "Ressources",
+    "footer.legal": "Legal",
+    "footer.privacy": "Confidentialite",
+    "footer.terms": "Conditions",
   },
 } as const;
 

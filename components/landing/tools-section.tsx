@@ -47,6 +47,14 @@ const tools = [
   },
   {
     number: "06",
+    title: "Cap Table Manager",
+    description:
+      "Track ownership, add shareholders, and model dilution scenarios for future funding rounds.",
+    href: "/captable",
+    tags: ["Ownership", "Dilution"],
+  },
+  {
+    number: "07",
     title: "Readiness Score",
     description:
       "Your overall investor readiness score. See where you stand and what to improve before raising.",
@@ -66,7 +74,7 @@ export function ToolsSection() {
           className="mb-10"
         />
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {tools.map((tool) => (
             <ToolCard key={tool.number} {...tool} />
           ))}

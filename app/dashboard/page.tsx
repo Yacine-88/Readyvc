@@ -7,6 +7,7 @@ import { ExecutiveSummary } from "@/components/dashboard/executive-summary";
 import { ReadinessScore } from "@/components/dashboard/readiness-score";
 import { PriorityActions } from "@/components/dashboard/priority-actions";
 import { QuickLinks } from "@/components/dashboard/quick-links";
+import { BookSessionCTA } from "@/components/ui/book-session-cta";
 
 export const metadata: Metadata = {
   title: "Dashboard - VCReady",
@@ -27,6 +28,7 @@ export default function DashboardPage() {
               <PriorityActions />
             </div>
             <QuickLinks />
+            <BookSessionCTA />
           </div>
         </Container>
       </main>

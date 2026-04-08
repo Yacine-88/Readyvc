@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ArrowRight, Calculator, BarChart3, FileText, FolderOpen, HelpCircle, Target } from "lucide-react";
+import { ArrowRight, Calculator, BarChart3, FileText, FolderOpen, HelpCircle, Target, PieChart } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 export function QuickLinks() {
@@ -38,6 +38,12 @@ export function QuickLinks() {
       icon: HelpCircle,
       title: t("nav.qa"),
       description: t("tool.qa.desc").slice(0, 40) + "...",
+    },
+    {
+      href: "/captable",
+      icon: PieChart,
+      title: t("nav.captable"),
+      description: t("tool.captable.desc").slice(0, 40) + "...",
     },
     {
       href: "/readiness",

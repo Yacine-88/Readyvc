@@ -23,24 +23,34 @@ export function FinalCTA() {
             </p>
           </div>
 
-          {/* Actions - Fixed contrast: primary button is now clearly visible */}
-          <div className="flex flex-wrap gap-3">
-            <Button
-              href="/dashboard"
-              size="lg"
-              className="bg-accent text-white hover:bg-accent/90 border-accent"
+          {/* Actions */}
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap gap-3">
+              <Button
+                href="/dashboard"
+                size="lg"
+                className="bg-accent text-white hover:bg-accent/90 border-accent"
+              >
+                {t("cta.primary")}
+                <span aria-hidden="true">&rarr;</span>
+              </Button>
+              <Button
+                href="/valuation"
+                variant="secondary"
+                className="bg-transparent text-white border-white/30 hover:border-white hover:bg-white/5"
+                size="lg"
+              >
+                {t("cta.secondary")}
+              </Button>
+            </div>
+            <a 
+              href="https://cal.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-white/60 text-sm hover:text-white transition-colors underline underline-offset-4"
             >
-              {t("cta.primary")}
-              <span aria-hidden="true">&rarr;</span>
-            </Button>
-            <Button
-              href="/valuation"
-              variant="secondary"
-              className="bg-transparent text-white border-white/30 hover:border-white hover:bg-white/5"
-              size="lg"
-            >
-              {t("cta.secondary")}
-            </Button>
+              {t("cta.bookSession")} &rarr;
+            </a>
           </div>
         </div>
       </div>

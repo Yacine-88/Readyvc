@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { ArrowRight, TrendingUp, AlertTriangle, CheckCircle } from "lucide-react";
 import Link from "next/link";
+import { BookSessionCTA } from "@/components/ui/book-session-cta";
 
 export const metadata: Metadata = {
   title: "Investor Readiness - VCReady",
@@ -246,8 +247,13 @@ export default function ReadinessPage() {
             </Card>
           </div>
 
+          {/* Book Session CTA */}
+          <div className="mt-5">
+            <BookSessionCTA />
+          </div>
+
           {/* CTA */}
-          <div className="mt-8 flex items-center justify-between bg-ink text-white rounded-[var(--radius-lg)] p-6">
+          <div className="mt-5 flex items-center justify-between bg-ink text-white rounded-[var(--radius-lg)] p-6">
             <div>
               <h3 className="text-lg font-semibold mb-1">Ready to improve your score?</h3>
               <p className="text-white/60 text-sm">

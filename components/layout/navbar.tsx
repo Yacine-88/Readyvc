@@ -19,6 +19,7 @@ export function Navbar() {
     { href: "/pitch", label: t("nav.pitch") },
     { href: "/dataroom", label: t("nav.dataroom") },
     { href: "/qa", label: t("nav.qa") },
+    { href: "/captable", label: t("nav.captable") },
     { href: "/readiness", label: t("nav.readiness") },
   ];
 
