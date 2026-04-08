@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
@@ -21,11 +22,15 @@ export function Navbar() {
     <header className="sticky top-0 z-50 h-[72px] border-b border-border-strong/80 backdrop-blur-md bg-background/90">
       <div className="max-w-[var(--container-max)] mx-auto px-6 h-full flex items-center justify-between gap-5">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <span className="w-10 h-10 border-[1.5px] border-ink rounded-lg flex items-center justify-center text-base font-extrabold tracking-tight bg-card">
-            VC
-          </span>
-          <span className="text-lg font-bold tracking-tight">Ready</span>
+        <Link href="/" className="shrink-0">
+          <Image
+            src="/logo-black.png"
+            alt="VCReady"
+            width={140}
+            height={40}
+            className="h-8 w-auto"
+            priority
+          />
         </Link>
 
         {/* Navigation */}

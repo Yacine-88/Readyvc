@@ -7,6 +7,11 @@
 */
 
 @theme inline {
+  /* Font families */
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-serif), ui-serif, Georgia, serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+  
   /* Color System - Ultra minimal palette */
   --color-background: #F7F7F5;
   --color-foreground: #0E0E0C;
@@ -82,23 +87,63 @@ body {
   text-wrap: pretty;
 }
 
-/* Headlines use serif */
+/* Headlines use DM Serif Display */
 .heading-display {
   font-family: var(--font-serif);
-  font-weight: 500;
-  letter-spacing: -0.035em;
-  line-height: 1.08;
+  font-weight: 400;
+  font-size: 56px;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
 }
 
 .heading-section {
   font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 36px;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.heading-subsection {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 24px;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+/* Body text - DM Sans */
+.body-text {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.body-small {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-muted);
+}
+
+/* Metrics/numbers - JetBrains Mono */
+.metric-value {
+  font-family: var(--font-mono);
+  font-size: 28px;
   font-weight: 500;
-  letter-spacing: -0.03em;
-  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+.metric-value-lg {
+  font-family: var(--font-mono);
+  font-size: 34px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
 }
 
 /* Eyebrow/kicker text */
 .eyebrow {
+  font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.1em;
