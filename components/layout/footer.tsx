@@ -199,7 +199,8 @@ export function Footer() {
               alt="VCReady"
               width={100}
               height={20}
-              className="h-5 w-auto opacity-80"
+              style={{ width: "auto", height: "auto" }}
+              className="h-5 opacity-80"
             />
             <p className="text-xs text-white/50">
               by <span className="text-white/80 font-medium">Yacine CHIKHAR</span> &middot; &copy;{" "}

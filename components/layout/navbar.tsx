@@ -48,7 +48,8 @@ export function Navbar() {
             alt="VCReady"
             width={120}
             height={24}
-            className="h-5 w-auto"
+            style={{ width: "auto", height: "auto" }}
+            className="h-5"
             priority
           />
         </Link>
