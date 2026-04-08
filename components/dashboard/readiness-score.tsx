@@ -1,29 +1,80 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
+import { getReadinessScore } from "@/lib/db-readiness";
 
 export function ReadinessScore() {
   const { t } = useI18n();
+  const [score, setScore] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadScore() {
+      try {
+        const data = await getReadinessScore();
+        setScore(data);
+      } catch (error) {
+        console.error("[v0] Error loading readiness score:", error);
+        // Set default scores on error
+        setScore({
+          overall_score: 0,
+          metrics_score: 0,
+          valuation_score: 0,
+          qa_score: 0,
+          dataroom_score: 0,
+          pitch_score: 0,
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadScore();
+  }, []);
   
   const categories = [
-    { label: t("nav.metrics"), score: 85, status: "good" as const, href: "/metrics" },
-    { label: t("nav.valuation"), score: 70, status: "good" as const, href: "/valuation" },
-    { label: t("nav.dataroom"), score: 45, status: "warning" as const, href: "/dataroom" },
-    { label: t("nav.pitch"), score: 60, status: "neutral" as const, href: "/pitch" },
+    { 
+      label: "Metrics & Traction", 
+      score: score?.metrics_score || 0, 
+      status: (score?.metrics_score || 0) >= 70 ? "good" : (score?.metrics_score || 0) >= 50 ? "warning" : "danger", 
+      href: "/metrics" 
+    },
+    { 
+      label: "Valuation", 
+      score: score?.valuation_score || 0, 
+      status: (score?.valuation_score || 0) >= 70 ? "good" : (score?.valuation_score || 0) >= 50 ? "warning" : "danger", 
+      href: "/valuation" 
+    },
+    { 
+      label: "Q&A Prep", 
+      score: score?.qa_score || 0, 
+      status: (score?.qa_score || 0) >= 70 ? "good" : (score?.qa_score || 0) >= 50 ? "warning" : "danger", 
+      href: "/qa" 
+    },
+    { 
+      label: "Data Room", 
+      score: score?.dataroom_score || 0, 
+      status: (score?.dataroom_score || 0) >= 70 ? "good" : (score?.dataroom_score || 0) >= 50 ? "warning" : "danger", 
+      href: "/dataroom" 
+    },
   ];
   
-  const overallScore = 72;
+  const overallScore = score?.overall_score || 0;
   const getVerdict = (score: number) => {
     if (score >= 80) return { text: "Excellent", className: "text-success" };
     if (score >= 60) return { text: "Good Progress", className: "text-success" };
     if (score >= 40) return { text: "Needs Work", className: "text-warning" };
-    return { text: "Critical", className: "text-danger" };
+    return { text: "Getting Started", className: "text-danger" };
   };
 
   const verdict = getVerdict(overallScore);
+
+  if (loading) {
+    return <div className="animate-pulse h-96 bg-soft rounded-lg" />;
+  }
 
   return (
     <Card padding="sm">
@@ -70,8 +121,13 @@ export function ReadinessScore() {
               {verdict.text}
             </h3>
             <p className="text-sm text-ink-secondary leading-relaxed">
-              You have a solid foundation. Focus on completing your data room and refining
-              your pitch to reach the next tier.
+              {overallScore >= 80
+                ? "You're well-prepared for investor meetings. Focus on refining the details."
+                : overallScore >= 60
+                ? "You have a solid foundation. Complete the remaining tools to improve readiness."
+                : overallScore >= 40
+                ? "Good start. Focus on metrics, valuation, and Q&A preparation next."
+                : "Start by completing the Metrics tool to establish your foundation."}
             </p>
           </div>
         </div>
@@ -90,9 +146,9 @@ export function ReadinessScore() {
               <ProgressBar value={cat.score} status={cat.status} size="sm" />
               <Link
                 href={cat.href}
-                className="text-[11px] font-semibold text-accent mt-2 block"
+                className="text-[11px] font-semibold text-accent mt-2 block hover:underline"
               >
-                {t("common.explore")} &rarr;
+                Complete &rarr;
               </Link>
             </div>
           ))}

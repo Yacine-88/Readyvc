@@ -17,6 +17,7 @@ const translations = {
     "nav.dataroom": "Data Room",
     "nav.qa": "Q&A",
     "nav.captable": "Cap Table",
+    "nav.comparables": "Comparables",
     "nav.readiness": "Readiness",
     "nav.signin": "Sign in",
     "nav.getStarted": "Get started",
@@ -64,6 +65,8 @@ const translations = {
     "tool.readiness.desc": "Get your overall investor readiness score with actionable recommendations.",
     "tool.captable.title": "Cap Table Manager",
     "tool.captable.desc": "Manage your cap table, track ownership, and model dilution scenarios for future rounds.",
+    "tool.comparables.title": "Sector Comparables",
+    "tool.comparables.desc": "Benchmark your startup against market comparables. Find the right valuation multiple and build your comparable analysis.",
     
     // How it works
     "howItWorks.eyebrow": "Simple process",
@@ -292,6 +295,7 @@ const translations = {
     "nav.dataroom": "Data Room",
     "nav.qa": "Q&R",
     "nav.captable": "Cap Table",
+    "nav.comparables": "Comparables",
     "nav.readiness": "Maturite",
     "nav.signin": "Connexion",
     "nav.getStarted": "Commencer",
@@ -339,6 +343,8 @@ const translations = {
     "tool.readiness.desc": "Obtenez votre score global de maturite investisseur avec des recommandations actionnables.",
     "tool.captable.title": "Gestionnaire Cap Table",
     "tool.captable.desc": "Gerez votre cap table, suivez l'actionnariat et modelisez les scenarios de dilution.",
+    "tool.comparables.title": "Comparables de Secteur",
+    "tool.comparables.desc": "Comparez votre startup avec des comparables du marche. Trouvez le bon multiple de valorisation et construisez votre analyse.",
     
     // How it works
     "howItWorks.eyebrow": "Processus simple",

@@ -1,77 +1,131 @@
-import { Metadata } from "next";
+"use client";
+
+import { useState, useMemo, useCallback } from "react";
 import { ToolPageLayout, ToolSection } from "@/components/tools/tool-page-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
-import { ChevronRight } from "lucide-react";
+import { Save, RotateCcw, Check } from "lucide-react";
+import { saveQAAssessment } from "@/lib/db-qa";
 
-export const metadata: Metadata = {
-  title: "Q&A Preparation - VCReady",
-  description: "The 50+ questions investors will ask. Prepare your answers and identify gaps.",
-};
-
-const questionCategories = [
-  {
-    title: "Business Model",
-    count: 12,
-    answered: 10,
-    questions: [
-      { q: "How do you make money?", answered: true },
-      { q: "What is your pricing model?", answered: true },
-      { q: "What are your unit economics?", answered: true },
-      { q: "What is your path to profitability?", answered: false },
-    ],
-  },
-  {
-    title: "Market & Competition",
-    count: 10,
-    answered: 6,
-    questions: [
-      { q: "How big is your market (TAM/SAM/SOM)?", answered: true },
-      { q: "Who are your main competitors?", answered: true },
-      { q: "What is your competitive advantage?", answered: false },
-      { q: "Why now?", answered: false },
-    ],
-  },
-  {
-    title: "Traction & Metrics",
-    count: 15,
-    answered: 14,
-    questions: [
-      { q: "What is your current MRR/ARR?", answered: true },
-      { q: "What is your growth rate?", answered: true },
-      { q: "What is your churn rate?", answered: true },
-      { q: "What is your CAC and LTV?", answered: true },
-    ],
-  },
-  {
-    title: "Team & Operations",
-    count: 8,
-    answered: 5,
-    questions: [
-      { q: "Why is your team the right one?", answered: true },
-      { q: "What are your key hires?", answered: false },
-      { q: "How did the founders meet?", answered: true },
-      { q: "What is your culture?", answered: false },
-    ],
-  },
-  {
-    title: "Fundraising",
-    count: 10,
-    answered: 8,
-    questions: [
-      { q: "How much are you raising?", answered: true },
-      { q: "What will you use the funds for?", answered: true },
-      { q: "What is your valuation expectation?", answered: true },
-      { q: "Who else is investing?", answered: false },
-    ],
-  },
+const allQuestions = [
+  { category: "Business Model", q: "How do you make money?", weight: 1.2 },
+  { category: "Business Model", q: "What is your pricing model?", weight: 1.0 },
+  { category: "Business Model", q: "What are your unit economics?", weight: 1.3 },
+  { category: "Business Model", q: "What is your path to profitability?", weight: 1.1 },
+  { category: "Market & Competition", q: "How big is your market (TAM/SAM/SOM)?", weight: 1.4 },
+  { category: "Market & Competition", q: "Who are your main competitors?", weight: 1.0 },
+  { category: "Market & Competition", q: "What is your competitive advantage?", weight: 1.5 },
+  { category: "Market & Competition", q: "Why now?", weight: 1.2 },
+  { category: "Traction & Metrics", q: "What is your current MRR/ARR?", weight: 1.3 },
+  { category: "Traction & Metrics", q: "What is your growth rate?", weight: 1.2 },
+  { category: "Traction & Metrics", q: "What is your churn rate?", weight: 1.0 },
+  { category: "Traction & Metrics", q: "What is your CAC and LTV?", weight: 1.1 },
+  { category: "Team & Operations", q: "Why is your team the right one?", weight: 1.3 },
+  { category: "Team & Operations", q: "What are your key hires?", weight: 0.9 },
+  { category: "Team & Operations", q: "How did the founders meet?", weight: 0.7 },
+  { category: "Team & Operations", q: "What is your culture?", weight: 0.6 },
+  { category: "Fundraising", q: "How much are you raising?", weight: 1.0 },
+  { category: "Fundraising", q: "What will you use the funds for?", weight: 1.1 },
+  { category: "Fundraising", q: "What is your valuation expectation?", weight: 1.2 },
+  { category: "Fundraising", q: "Who else is investing?", weight: 0.8 },
 ];
 
+function groupQuestions(questions: any[]) {
+  const grouped = questions.reduce((acc: any, q) => {
+    if (!acc[q.category]) {
+      acc[q.category] = [];
+    }
+    acc[q.category].push(q);
+    return acc;
+  }, {});
+
+  return Object.entries(grouped).map(([title, questions]: any) => ({
+    title,
+    count: questions.length,
+    questions: questions,
+  }));
+}
+
 export default function QAPage() {
-  const totalQuestions = questionCategories.reduce((acc, c) => acc + c.count, 0);
-  const answeredQuestions = questionCategories.reduce((acc, c) => acc + c.answered, 0);
-  const completionRate = Math.round((answeredQuestions / totalQuestions) * 100);
+  const [responses, setResponses] = useState<Record<string, number>>({});
+  const [perspective, setPerspective] = useState<"founder" | "investor">("founder");
+  const [saved, setSaved] = useState(false);
+
+  const categories = useMemo(() => groupQuestions(allQuestions), []);
+  
+  const scores = useMemo(() => {
+    const categoryScores: Record<string, number> = {};
+    let totalWeightedScore = 0;
+    let totalMaxScore = 0;
+
+    // Calculate scores: responses are 0-100, multiply by weight to get weighted score
+    for (const category of categories) {
+      let categoryTotalScore = 0;
+      let categoryTotalMaxScore = 0;
+
+      for (const q of category.questions) {
+        const qIndex = allQuestions.findIndex(aq => aq.q === q.q);
+        const response = responses[q.q] || 0; // 0-100 scale
+        const weight = allQuestions[qIndex].weight;
+
+        // Score contribution = (response/100) * weight * 100 to get 0-100 scale
+        const weighted = (response / 100) * weight * 100;
+        categoryTotalScore += weighted;
+        
+        // Max possible = weight * 100
+        categoryTotalMaxScore += weight * 100;
+        
+        totalWeightedScore += weighted;
+        totalMaxScore += weight * 100;
+      }
+
+      // Category score: normalize to 0-100
+      categoryScores[category.title] = categoryTotalMaxScore > 0 ? Math.round((categoryTotalScore / categoryTotalMaxScore) * 100) : 0;
+    }
+
+    // Overall base score: normalize to 0-100
+    const baseScore = totalMaxScore > 0 ? Math.round((totalWeightedScore / totalMaxScore) * 100) : 0;
+
+    // Investor perspective: emphasize metrics and market (these are most important to investors)
+    let overallScore = baseScore;
+    if (perspective === "investor") {
+      const tractionScore = categoryScores["Traction & Metrics"] || 0;
+      const marketScore = categoryScores["Market & Competition"] || 0;
+      // Investor weighting: 35% traction, 25% market, 40% other
+      overallScore = Math.round(
+        tractionScore * 0.35 + 
+        marketScore * 0.25 + 
+        baseScore * 0.4
+      );
+    }
+
+    return { categoryScores, overallScore };
+  }, [responses, perspective, categories]);
+
+  const answeredCount = useMemo(() => Object.keys(responses).length, [responses]);
+  const totalQuestions = allQuestions.length;
+
+  const handleSave = useCallback(async () => {
+    try {
+      await saveQAAssessment({
+        name: `qa_assessment_${new Date().toISOString()}`,
+        total_score: scores.overallScore,
+        category_scores: scores.categoryScores,
+        responses: responses,
+        perspective: perspective,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (error) {
+      console.error("[v0] Error saving QA assessment:", error);
+    }
+  }, [scores, responses, perspective]);
+
+  const handleReset = useCallback(() => {
+    setResponses({});
+    setSaved(false);
+  }, []);
 
   return (
     <ToolPageLayout
@@ -79,128 +133,137 @@ export default function QAPage() {
       title="Be ready for every question."
       description="The 50+ questions investors will ask. Prepare your answers and identify gaps in your story."
     >
+      {/* Perspective Toggle */}
+      <ToolSection>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted">Evaluation perspective:</span>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant={perspective === "founder" ? "default" : "secondary"}
+              onClick={() => setPerspective("founder")}
+            >
+              Founder
+            </Button>
+            <Button
+              size="sm"
+              variant={perspective === "investor" ? "default" : "secondary"}
+              onClick={() => setPerspective("investor")}
+            >
+              Investor
+            </Button>
+          </div>
+        </div>
+      </ToolSection>
+
       {/* Progress Overview */}
-      <ToolSection title="Preparation Progress">
+      <ToolSection title="Assessment Progress">
         <div className="flex items-center justify-between gap-6 mb-4">
           <div>
             <p className="text-4xl font-extrabold tracking-tight mb-1">
-              {answeredQuestions}<span className="text-muted text-xl">/{totalQuestions}</span>
+              {scores.overallScore}<span className="text-muted text-xl">/100</span>
             </p>
-            <p className="text-sm text-ink-secondary">questions prepared</p>
+            <p className="text-sm text-ink-secondary">{answeredCount} of {totalQuestions} answered</p>
           </div>
-          <Badge variant={completionRate >= 80 ? "success" : completionRate >= 50 ? "warning" : "danger"}>
-            {completionRate}% ready
+          <Badge variant={scores.overallScore >= 70 ? "success" : scores.overallScore >= 50 ? "warning" : "danger"}>
+            {scores.overallScore >= 70 ? "Well prepared" : scores.overallScore >= 50 ? "Moderately prepared" : "Needs work"}
           </Badge>
         </div>
         <ProgressBar
-          value={completionRate}
-          status={completionRate >= 80 ? "good" : completionRate >= 50 ? "warning" : "danger"}
+          value={scores.overallScore}
+          status={scores.overallScore >= 70 ? "good" : scores.overallScore >= 50 ? "warning" : "danger"}
         />
       </ToolSection>
 
-      {/* Question Categories */}
-      {questionCategories.map((category) => (
-        <ToolSection key={category.title} title={category.title}>
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-xs text-muted">
-              {category.answered} of {category.count} answered
-            </p>
-            <ProgressBar
-              value={category.answered}
-              max={category.count}
-              status={category.answered === category.count ? "good" : "neutral"}
-              className="w-24"
-              size="sm"
-            />
-          </div>
-          <div className="space-y-2">
-            {category.questions.map((question) => (
-              <QuestionRow key={question.q} {...question} />
-            ))}
-          </div>
-          {category.count > category.questions.length && (
-            <button className="mt-3 text-xs font-semibold text-accent hover:text-ink transition-colors flex items-center gap-1">
-              View all {category.count} questions
-              <ChevronRight className="w-3 h-3" />
-            </button>
-          )}
-        </ToolSection>
-      ))}
-
-      {/* Tips */}
-      <ToolSection title="Tips for Success">
-        <div className="grid md:grid-cols-3 gap-4">
-          <TipCard
-            number="01"
-            title="Be concise"
-            description="Keep answers under 2 minutes. Investors appreciate clarity."
-          />
-          <TipCard
-            number="02"
-            title="Know your numbers"
-            description="Have key metrics memorized. Hesitation signals lack of control."
-          />
-          <TipCard
-            number="03"
-            title="Practice out loud"
-            description="Record yourself. Speaking differs from writing."
-          />
+      {/* Category Scores */}
+      <ToolSection title="Category Breakdown">
+        <div className="grid md:grid-cols-2 gap-4">
+          {categories.map((category) => (
+            <div key={category.title} className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-semibold">{category.title}</h4>
+                <span className="text-sm font-mono font-bold">{scores.categoryScores[category.title] || 0}/100</span>
+              </div>
+              <ProgressBar
+                value={scores.categoryScores[category.title] || 0}
+                status={(scores.categoryScores[category.title] || 0) >= 70 ? "good" : (scores.categoryScores[category.title] || 0) >= 50 ? "warning" : "danger"}
+                size="sm"
+              />
+            </div>
+          ))}
         </div>
       </ToolSection>
 
+      {/* Question Categories */}
+      {categories.map((category) => (
+        <ToolSection key={category.title} title={category.title}>
+          <div className="space-y-3">
+            {category.questions.map((question) => (
+              <QuestionScoreRow
+                key={question.q}
+                question={question.q}
+                score={responses[question.q] || 0}
+                onScore={(score) => {
+                  setResponses(prev => ({
+                    ...prev,
+                    [question.q]: score,
+                  }));
+                }}
+              />
+            ))}
+          </div>
+        </ToolSection>
+      ))}
+
       {/* Actions */}
-      <div className="flex items-center justify-between bg-card border border-border rounded-[var(--radius-lg)] p-6">
+      <div className="flex items-center justify-between gap-3 bg-card border border-border rounded-[var(--radius-lg)] p-6">
         <p className="text-sm text-muted">
-          Continue preparing your answers
+          {answeredCount}/{totalQuestions} questions evaluated
         </p>
-        <Button>Start practice session</Button>
+        <div className="flex gap-2">
+          <Button onClick={handleReset} variant="secondary" size="sm">
+            <RotateCcw className="w-4 h-4" />
+            Reset
+          </Button>
+          <Button onClick={handleSave} size="sm">
+            {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+            {saved ? "Saved" : "Save Assessment"}
+          </Button>
+        </div>
       </div>
     </ToolPageLayout>
   );
 }
 
-function QuestionRow({ q, answered }: { q: string; answered: boolean }) {
-  return (
-    <div
-      className={`flex items-center gap-3 rounded-[var(--radius-sm)] px-4 py-3 ${
-        answered
-          ? "bg-success-soft border border-success-border"
-          : "bg-soft border border-border"
-      }`}
-    >
-      <span
-        className={`w-2 h-2 rounded-full shrink-0 ${
-          answered ? "bg-success" : "bg-muted-foreground"
-        }`}
-      />
-      <span className={`text-sm flex-1 ${answered ? "text-ink" : "text-muted"}`}>
-        {q}
-      </span>
-      {answered ? (
-        <span className="text-[10px] text-success font-semibold">Prepared</span>
-      ) : (
-        <Button size="sm" variant="ghost" className="h-7 text-[10px]">
-          Answer
-        </Button>
-      )}
-    </div>
-  );
-}
-
-function TipCard({
-  number,
-  title,
-  description,
+function QuestionScoreRow({
+  question,
+  score,
+  onScore,
 }: {
-  number: string;
-  title: string;
-  description: string;
+  question: string;
+  score: number;
+  onScore: (score: number) => void;
 }) {
   return (
-    <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
-      <span className="eyebrow text-[10px] text-muted">{number}</span>
-      <h4 className="text-sm font-semibold mt-1 mb-1">{title}</h4>
-      <p className="text-xs text-muted leading-relaxed">{description}</p>
+    <div className="flex items-center justify-between gap-4 rounded-[var(--radius-sm)] bg-soft border border-border p-4">
+      <div className="flex-1">
+        <p className="text-sm font-medium">{question}</p>
+      </div>
+      <div className="flex gap-2">
+        {[0, 25, 50, 75, 100].map((value) => (
+          <button
+            key={value}
+            onClick={() => onScore(value)}
+            className={`px-3 py-1.5 rounded-[var(--radius-sm)] text-xs font-semibold transition-colors ${
+              score === value
+                ? "bg-accent text-white"
+                : "bg-background border border-border text-muted hover:bg-soft"
+            }`}
+          >
+            {value}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

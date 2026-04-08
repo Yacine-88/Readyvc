@@ -1,12 +1,13 @@
-import { Metadata } from "next";
+"use client";
+
+import { useState, useMemo, useCallback } from "react";
 import { ToolPageLayout, ToolSection } from "@/components/tools/tool-page-layout";
 import { InputField, SelectField, FormGrid } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-
-export const metadata: Metadata = {
-  title: "Cap Table Manager - VCReady",
-  description: "Manage your cap table, track ownership, and model dilution scenarios for future rounds.",
-};
+import { ProgressBar } from "@/components/ui/progress-bar";
+import { Badge } from "@/components/ui/badge";
+import { Save, RotateCcw, Check, TrendingDown, Users, Plus, Trash2 } from "lucide-react";
+import { saveCapTable } from "@/lib/db-cap-table";
 
 const shareholderTypes = [
   { value: "founder", label: "Founder" },
@@ -16,212 +17,511 @@ const shareholderTypes = [
   { value: "advisor", label: "Advisor" },
 ];
 
-export default function CapTablePage() {
-  return (
-    <ToolPageLayout
-      kicker="Cap Table Manager"
-      title="Track ownership and model dilution."
-      description="Manage your cap table, add shareholders, and simulate how future rounds will impact ownership."
-    >
-      {/* Current Shareholders */}
-      <ToolSection title="Current Shareholders">
-        <div className="space-y-3 mb-4">
-          <ShareholderRow name="Alice Chen" type="Founder" shares="4,000,000" percent="40%" />
-          <ShareholderRow name="Bob Smith" type="Founder" shares="3,000,000" percent="30%" />
-          <ShareholderRow name="ESOP Pool" type="Employee" shares="1,500,000" percent="15%" />
-          <ShareholderRow name="Angel Syndicate" type="Angel" shares="1,500,000" percent="15%" />
-        </div>
-        
-        <div className="border-t border-border pt-4 flex justify-between items-center">
-          <div>
-            <p className="text-xs text-muted">Total Shares Outstanding</p>
-            <p className="text-xl font-bold font-mono">10,000,000</p>
-          </div>
-          <Button variant="secondary" size="sm">Add Shareholder</Button>
-        </div>
-      </ToolSection>
-
-      {/* Add New Shareholder */}
-      <ToolSection title="Add Shareholder">
-        <FormGrid>
-          <InputField
-            label="Name"
-            id="shareholder_name"
-            placeholder="Jane Doe"
-          />
-          <SelectField
-            label="Type"
-            id="shareholder_type"
-            options={shareholderTypes}
-            placeholder="Select type..."
-          />
-        </FormGrid>
-        <FormGrid className="mt-4">
-          <InputField
-            label="Number of Shares"
-            id="shares"
-            type="number"
-            placeholder="500,000"
-          />
-          <InputField
-            label="Price per Share ($)"
-            id="price_per_share"
-            type="number"
-            placeholder="0.50"
-            hint="Leave blank for founders"
-          />
-        </FormGrid>
-        <div className="mt-4">
-          <Button>Add to Cap Table</Button>
-        </div>
-      </ToolSection>
-
-      {/* Dilution Simulator */}
-      <ToolSection title="Dilution Simulator">
-        <p className="text-sm text-muted mb-4">
-          Model how a future funding round will affect current ownership percentages.
-        </p>
-        <FormGrid>
-          <InputField
-            label="Round Size ($)"
-            id="round_size"
-            type="number"
-            placeholder="2,000,000"
-            hint="Investment amount"
-          />
-          <InputField
-            label="Pre-Money Valuation ($)"
-            id="pre_money"
-            type="number"
-            placeholder="8,000,000"
-          />
-        </FormGrid>
-        <FormGrid className="mt-4">
-          <InputField
-            label="New ESOP Pool (%)"
-            id="new_esop"
-            type="number"
-            placeholder="10"
-            hint="Additional option pool"
-          />
-          <div className="flex flex-col justify-end">
-            <Button>Simulate Round</Button>
-          </div>
-        </FormGrid>
-      </ToolSection>
-
-      {/* Post-Round Preview */}
-      <ToolSection title="Post-Round Preview">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <ResultCard label="Post-Money Valuation" value="$10M" featured />
-          <ResultCard label="New Investor Ownership" value="20%" />
-          <ResultCard label="Founder Dilution" value="-8%" status="warning" />
-          <ResultCard label="New Share Price" value="$1.00" />
-        </div>
-        
-        <div className="space-y-2 mb-4">
-          <PostRoundRow name="Alice Chen" before="40%" after="32%" />
-          <PostRoundRow name="Bob Smith" before="30%" after="24%" />
-          <PostRoundRow name="ESOP Pool" before="15%" after="12%" />
-          <PostRoundRow name="Angel Syndicate" before="15%" after="12%" />
-          <PostRoundRow name="New Investor" before="0%" after="20%" isNew />
-        </div>
-
-        <div className="flex justify-between items-center pt-4 border-t border-border">
-          <p className="text-xs text-muted">
-            Simulation only - save to apply changes
-          </p>
-          <Button>Save scenario</Button>
-        </div>
-      </ToolSection>
-    </ToolPageLayout>
-  );
-}
-
-function ShareholderRow({
-  name,
-  type,
-  shares,
-  percent,
-}: {
+interface Shareholder {
+  id: string;
   name: string;
   type: string;
-  shares: string;
-  percent: string;
-}) {
-  return (
-    <div className="flex items-center justify-between p-3 bg-soft rounded-[var(--radius-sm)] border border-border">
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-ink text-white flex items-center justify-center text-xs font-bold">
-          {name.split(" ").map((n) => n[0]).join("")}
-        </div>
-        <div>
-          <p className="text-sm font-semibold">{name}</p>
-          <p className="text-xs text-muted">{type}</p>
-        </div>
-      </div>
-      <div className="text-right">
-        <p className="text-sm font-mono font-semibold">{shares}</p>
-        <p className="text-xs text-muted">{percent}</p>
-      </div>
-    </div>
-  );
+  shares: number;
 }
 
-function PostRoundRow({
-  name,
-  before,
-  after,
-  isNew,
-}: {
-  name: string;
-  before: string;
-  after: string;
-  isNew?: boolean;
-}) {
-  return (
-    <div className={`flex items-center justify-between p-3 rounded-[var(--radius-sm)] border ${isNew ? "bg-accent/10 border-accent/30" : "bg-soft border-border"}`}>
-      <p className={`text-sm font-semibold ${isNew ? "text-accent" : ""}`}>{name}</p>
-      <div className="flex items-center gap-4">
-        <span className="text-sm text-muted font-mono">{before}</span>
-        <span className="text-muted">&rarr;</span>
-        <span className={`text-sm font-mono font-semibold ${isNew ? "text-accent" : ""}`}>{after}</span>
-      </div>
-    </div>
-  );
+interface RoundInputs {
+  investmentAmount: number;
+  preMoneyValuation: number;
+  newEsopPercentage: number;
 }
 
-function ResultCard({
-  label,
-  value,
-  featured,
-  status,
-}: {
-  label: string;
-  value: string;
-  featured?: boolean;
-  status?: "good" | "warning" | "danger";
-}) {
-  const statusColors = {
-    good: "text-success",
-    warning: "text-warning",
-    danger: "text-danger",
-  };
+export default function CapTablePage() {
+  const [shareholders, setShareholders] = useState<Shareholder[]>([
+    { id: "1", name: "Founder A", type: "founder", shares: 4000000 },
+    { id: "2", name: "Founder B", type: "founder", shares: 3000000 },
+    { id: "3", name: "ESOP Pool", type: "employee", shares: 1500000 },
+    { id: "4", name: "Angel Syndicate", type: "angel", shares: 1500000 },
+  ]);
+
+  const [newShareholder, setNewShareholder] = useState({
+    name: "",
+    type: "founder",
+    shares: "",
+  });
+
+  const [roundInputs, setRoundInputs] = useState<RoundInputs>({
+    investmentAmount: 2000000,
+    preMoneyValuation: 8000000,
+    newEsopPercentage: 10,
+  });
+
+  const [saved, setSaved] = useState(false);
+  const [showPostRound, setShowPostRound] = useState(false);
+
+  // Calculate current cap table state
+  const currentState = useMemo(() => {
+    const totalShares = shareholders.reduce((sum, s) => sum + s.shares, 0);
+    const founderShares = shareholders
+      .filter((s) => s.type === "founder")
+      .reduce((sum, s) => sum + s.shares, 0);
+    const founderPercentage = totalShares > 0 ? (founderShares / totalShares) * 100 : 0;
+
+    return {
+      totalShares,
+      founderShares,
+      founderPercentage,
+      shareholders: shareholders.map((s) => ({
+        ...s,
+        percentage: totalShares > 0 ? (s.shares / totalShares) * 100 : 0,
+      })),
+    };
+  }, [shareholders]);
+
+  // Calculate post-round state
+  const postRoundState = useMemo(() => {
+    const { investmentAmount, preMoneyValuation, newEsopPercentage } = roundInputs;
+
+    if (!investmentAmount || !preMoneyValuation) {
+      return null;
+    }
+
+    const postMoneyValuation = preMoneyValuation + investmentAmount;
+    const investorOwnershipPercent = (investmentAmount / postMoneyValuation) * 100;
+    const currentTotalShares = currentState.totalShares;
+
+    // Calculate price per share and investor shares
+    const pricePerShare = preMoneyValuation / currentTotalShares;
+    const investorShares = investmentAmount / pricePerShare;
+    const newTotalSharesBeforeEsop = currentTotalShares + investorShares;
+
+    // Calculate final shares with ESOP
+    let finalTotalShares = newTotalSharesBeforeEsop;
+    let esopShares = 0;
+
+    if (newEsopPercentage > 0) {
+      esopShares = (newEsopPercentage / (100 - newEsopPercentage)) * newTotalSharesBeforeEsop;
+      finalTotalShares = newTotalSharesBeforeEsop + esopShares;
+    }
+
+    // Calculate post-round percentages
+    const founderSharesPostRound = currentState.founderShares;
+    const founderPercentagePostRound = (founderSharesPostRound / finalTotalShares) * 100;
+    const dilution = currentState.founderPercentage - founderPercentagePostRound;
+
+    return {
+      postMoneyValuation,
+      investorOwnershipPercent,
+      investorShares: Math.round(investorShares),
+      esopShares: Math.round(esopShares),
+      finalTotalShares: Math.round(finalTotalShares),
+      pricePerShare: pricePerShare.toFixed(4),
+      founderPercentagePostRound,
+      dilution,
+      founderControlMaintained: founderPercentagePostRound > 50,
+    };
+  }, [roundInputs, currentState]);
+
+  const handleAddShareholder = useCallback(() => {
+    if (!newShareholder.name || !newShareholder.shares) return;
+
+    setShareholders((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        name: newShareholder.name,
+        type: newShareholder.type,
+        shares: parseFloat(newShareholder.shares),
+      },
+    ]);
+
+    setNewShareholder({ name: "", type: "founder", shares: "" });
+  }, [newShareholder]);
+
+  const handleRemoveShareholder = useCallback((id: string) => {
+    setShareholders((prev) => prev.filter((s) => s.id !== id));
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    try {
+      await saveCapTable({
+        name: `cap_table_${new Date().toISOString()}`,
+        total_shares: currentState.totalShares,
+        founders_shares: currentState.founderShares,
+        series_a_shares: postRoundState?.investorShares || 0,
+        series_a_valuation: roundInputs.preMoneyValuation,
+        series_a_price_per_share: parseFloat(postRoundState?.pricePerShare || "0"),
+        fully_diluted_shares: postRoundState?.finalTotalShares || currentState.totalShares,
+        option_pool_percentage: roundInputs.newEsopPercentage,
+        details: {
+          shareholders: currentState.shareholders,
+          postRound: postRoundState,
+        },
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (error) {
+      console.error("[v0] Error saving cap table:", error);
+    }
+  }, [currentState, postRoundState, roundInputs]);
+
+  const handleReset = useCallback(() => {
+    setShareholders([
+      { id: "1", name: "Founder A", type: "founder", shares: 4000000 },
+      { id: "2", name: "Founder B", type: "founder", shares: 3000000 },
+      { id: "3", name: "ESOP Pool", type: "employee", shares: 1500000 },
+      { id: "4", name: "Angel Syndicate", type: "angel", shares: 1500000 },
+    ]);
+    setRoundInputs({
+      investmentAmount: 2000000,
+      preMoneyValuation: 8000000,
+      newEsopPercentage: 10,
+    });
+    setShowPostRound(false);
+    setSaved(false);
+  }, []);
 
   return (
-    <div
-      className={`rounded-[var(--radius-md)] p-4 ${
-        featured ? "bg-ink text-white" : "bg-soft border border-border"
-      }`}
+    <ToolPageLayout
+      kicker="Cap Table"
+      title="Model your ownership structure."
+      description="Understand current and post-round cap table, dilution impact, and founder control."
     >
-      <p className={`eyebrow mb-2 ${featured ? "text-white/50" : ""}`}>{label}</p>
-      <p
-        className={`text-2xl font-extrabold tracking-tight leading-none ${
-          featured ? "text-white" : status ? statusColors[status] : ""
-        }`}
-      >
-        {value}
-      </p>
-    </div>
+      {/* Step 1: Current Cap Table */}
+      <ToolSection title="Step 1: Current Cap Table">
+        <div className="space-y-4">
+          <p className="text-sm text-ink-secondary">
+            Your current shareholders and ownership structure
+          </p>
+
+          {/* Current Holdings Table */}
+          <div className="border border-border rounded-[var(--radius-md)] overflow-hidden">
+            <div className="bg-soft border-b border-border p-3 flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              <span className="font-semibold text-sm">Current Shareholders</span>
+              <span className="text-xs text-muted ml-auto">
+                {currentState.totalShares.toLocaleString()} total shares
+              </span>
+            </div>
+
+            <div className="divide-y divide-border">
+              {currentState.shareholders.map((s) => (
+                <div
+                  key={s.id}
+                  className="p-3 flex items-center justify-between hover:bg-soft transition-colors"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-sm truncate">{s.name}</span>
+                      <Badge variant="default" className="shrink-0">
+                        {shareholderTypes.find((t) => t.value === s.type)?.label || s.type}
+                      </Badge>
+                    </div>
+                    <ProgressBar value={s.percentage} size="sm" />
+                  </div>
+                  <div className="ml-4 text-right shrink-0">
+                    <div className="font-mono text-sm font-semibold">
+                      {s.percentage.toFixed(1)}%
+                    </div>
+                    <div className="text-xs text-muted">
+                      {s.shares.toLocaleString()} shares
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleRemoveShareholder(s.id)}
+                    className="ml-3 p-1.5 text-muted hover:text-danger hover:bg-red-50 rounded transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Add Shareholder Form */}
+          <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
+            <h4 className="font-semibold text-sm mb-3">Add Shareholder</h4>
+            <FormGrid cols={2}>
+              <InputField
+                id="shareholder-name"
+                label="Name"
+                placeholder="e.g., New Investor"
+                value={newShareholder.name}
+                onChange={(e) =>
+                  setNewShareholder((prev) => ({ ...prev, name: e.target.value }))
+                }
+              />
+              <SelectField
+                id="shareholder-type"
+                label="Type"
+                value={newShareholder.type}
+                onChange={(e) =>
+                  setNewShareholder((prev) => ({ ...prev, type: e.target.value }))
+                }
+                options={shareholderTypes}
+              />
+              <InputField
+                id="shareholder-shares"
+                label="Shares"
+                placeholder="e.g., 1000000"
+                type="number"
+                value={newShareholder.shares}
+                onChange={(e) =>
+                  setNewShareholder((prev) => ({ ...prev, shares: e.target.value }))
+                }
+              />
+              <div className="flex items-end">
+                <Button
+                  onClick={handleAddShareholder}
+                  disabled={!newShareholder.name || !newShareholder.shares}
+                  className="w-full"
+                  size="sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add
+                </Button>
+              </div>
+            </FormGrid>
+          </div>
+        </div>
+      </ToolSection>
+
+      {/* Step 2: New Round Assumptions */}
+      <ToolSection title="Step 2: New Round Assumptions">
+        <p className="text-sm text-ink-secondary mb-4">
+          Model the impact of a new funding round
+        </p>
+        <FormGrid cols={3}>
+          <InputField
+            id="investment-amount"
+            label="Investment Amount"
+            type="number"
+            value={roundInputs.investmentAmount}
+            onChange={(e) =>
+              setRoundInputs((prev) => ({
+                ...prev,
+                investmentAmount: parseFloat(e.target.value) || 0,
+              }))
+            }
+            hint="New investment size in dollars"
+          />
+          <InputField
+            id="pre-money-valuation"
+            label="Pre-Money Valuation"
+            type="number"
+            value={roundInputs.preMoneyValuation}
+            onChange={(e) =>
+              setRoundInputs((prev) => ({
+                ...prev,
+                preMoneyValuation: parseFloat(e.target.value) || 0,
+              }))
+            }
+            hint="Company value before investment"
+          />
+          <InputField
+            id="new-esop-percentage"
+            label="New ESOP %"
+            type="number"
+            value={roundInputs.newEsopPercentage}
+            onChange={(e) =>
+              setRoundInputs((prev) => ({
+                ...prev,
+                newEsopPercentage: parseFloat(e.target.value) || 0,
+              }))
+            }
+            hint="Option pool to reserve for employees"
+          />
+        </FormGrid>
+      </ToolSection>
+
+      {/* Step 3: Calculation Button */}
+      <div className="flex gap-2">
+        <Button onClick={() => setShowPostRound(true)} size="lg" className="flex-1">
+          Calculate Post-Round Cap Table
+        </Button>
+      </div>
+
+      {/* Step 4: Post-Round Results */}
+      {showPostRound && postRoundState && (
+        <ToolSection title="Step 3: Post-Round Results">
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            {/* Financial Summary */}
+            <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
+              <h4 className="font-semibold text-sm mb-3">Financing Summary</h4>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-ink-secondary">Investment</span>
+                  <span className="font-mono font-semibold">
+                    ${roundInputs.investmentAmount.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-ink-secondary">Pre-Money Val.</span>
+                  <span className="font-mono font-semibold">
+                    ${roundInputs.preMoneyValuation.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center border-t border-border pt-2">
+                  <span className="text-sm font-medium">Post-Money Val.</span>
+                  <span className="font-mono font-bold">
+                    ${postRoundState.postMoneyValuation.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-ink-secondary">Price/Share</span>
+                  <span className="font-mono font-semibold">
+                    ${postRoundState.pricePerShare}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Ownership Summary */}
+            <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
+              <h4 className="font-semibold text-sm mb-3">Post-Round Ownership</h4>
+              <div className="space-y-3">
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm text-ink-secondary">Founders</span>
+                    <span
+                      className={`font-mono font-semibold ${
+                        postRoundState.founderPercentagePostRound > 50
+                          ? "text-success"
+                          : "text-warning"
+                      }`}
+                    >
+                      {postRoundState.founderPercentagePostRound.toFixed(1)}%
+                    </span>
+                  </div>
+                  <ProgressBar
+                    value={postRoundState.founderPercentagePostRound}
+                    status={
+                      postRoundState.founderPercentagePostRound > 50 ? "good" : "warning"
+                    }
+                    size="sm"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm text-ink-secondary">New Investor</span>
+                    <span className="font-mono font-semibold">
+                      {postRoundState.investorOwnershipPercent.toFixed(1)}%
+                    </span>
+                  </div>
+                  <ProgressBar
+                    value={postRoundState.investorOwnershipPercent}
+                    status="neutral"
+                    size="sm"
+                  />
+                </div>
+
+                <div className="border-t border-border pt-2">
+                  <div className="flex items-center gap-2">
+                    <TrendingDown className="w-4 h-4 text-warning" />
+                    <span className="text-sm text-ink-secondary">Founder Dilution</span>
+                    <span className="font-mono font-bold ml-auto">
+                      {postRoundState.dilution.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Control Analysis */}
+          <div
+            className={`border rounded-[var(--radius-md)] p-4 ${
+              postRoundState.founderControlMaintained
+                ? "bg-green-50 border-green-200"
+                : "bg-yellow-50 border-yellow-200"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Badge
+                variant={postRoundState.founderControlMaintained ? "success" : "warning"}
+              >
+                {postRoundState.founderControlMaintained
+                  ? "Control Maintained"
+                  : "Control Lost"}
+              </Badge>
+              <h4 className="font-semibold text-sm">Investor Insight</h4>
+            </div>
+            <p className="text-sm text-ink-secondary">
+              {postRoundState.founderControlMaintained
+                ? `Your team maintains majority control with ${postRoundState.founderPercentagePostRound.toFixed(
+                    1
+                  )}% ownership after this round. Strong founder alignment with investors.`
+                : `After this round, founders own ${postRoundState.founderPercentagePostRound.toFixed(
+                    1
+                  )}% of the company. Consider negotiating terms to maintain control.`}
+            </p>
+          </div>
+
+          {/* Dilution Details */}
+          <div className="mt-6 grid md:grid-cols-2 gap-4 bg-soft border border-border rounded-[var(--radius-md)] p-4">
+            <div>
+              <h4 className="font-semibold text-sm mb-3">Share Count Changes</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-ink-secondary">Current Total</span>
+                  <span className="font-mono">
+                    {currentState.totalShares.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-ink-secondary">New Investor Shares</span>
+                  <span className="font-mono">
+                    +{postRoundState.investorShares.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-ink-secondary">New ESOP Shares</span>
+                  <span className="font-mono">
+                    +{postRoundState.esopShares.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between font-semibold border-t border-border pt-2">
+                  <span>Post-Round Total</span>
+                  <span className="font-mono">
+                    {postRoundState.finalTotalShares.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-sm mb-3">Key Metrics</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-ink-secondary">Investor Ownership</span>
+                  <span className="font-mono">
+                    {postRoundState.investorOwnershipPercent.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-ink-secondary">Founder Dilution</span>
+                  <span className="font-mono text-warning">
+                    -{postRoundState.dilution.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-ink-secondary">ESOP Pool</span>
+                  <span className="font-mono">
+                    {roundInputs.newEsopPercentage.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ToolSection>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex gap-2">
+        <Button onClick={handleReset} variant="secondary" size="sm">
+          <RotateCcw className="w-4 h-4" />
+          Reset
+        </Button>
+        <Button onClick={handleSave} size="sm">
+          {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+          {saved ? "Saved" : "Save Cap Table"}
+        </Button>
+      </div>
+    </ToolPageLayout>
   );
 }

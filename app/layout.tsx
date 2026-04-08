@@ -3,6 +3,8 @@ import { DM_Sans, DM_Serif_Display, JetBrains_Mono } from "next/font/google";
 import { I18nProvider } from "@/lib/i18n";
 import "./globals.css";
 
+// Force dev server recompile - bugs fixed in metrics, valuation, and qa engines
+
 const dmSans = DM_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],

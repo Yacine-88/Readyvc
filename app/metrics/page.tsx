@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { useI18n } from "@/lib/i18n";
 import { RotateCcw, Save, Check, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { saveMetrics, getMetrics } from "@/lib/db-metrics";
 
 // Sector-specific benchmarks
 const SECTOR_BENCHMARKS = {
@@ -164,20 +165,7 @@ export default function MetricsPage() {
     setSaved(false);
   }, []);
 
-  const handleSave = useCallback(() => {
-    const savedResults = JSON.parse(localStorage.getItem("vcready_metrics") || "[]");
-    savedResults.push({
-      sector,
-      ...formData,
-      timestamp: new Date().toISOString(),
-      results: calculations,
-    });
-    localStorage.setItem("vcready_metrics", JSON.stringify(savedResults.slice(-10)));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  }, [formData, sector]);
-
-  // Core calculations for SaaS (primary sector)
+  // Core calculations for SaaS (primary sector) - MUST be defined before handleSave
   const calculations = useMemo(() => {
     const { mrr, newCustomers, churnedCustomers, cacSpend, totalCustomers, grossMargin, avgRevenuePerCustomer, cashBalance, monthlyBurn } = formData;
 
@@ -210,8 +198,12 @@ export default function MetricsPage() {
     const netNewCustomers = newCustomers - churnedCustomers;
     const customerGrowthRate = totalCustomers > 0 ? (netNewCustomers / totalCustomers) * 100 : 0;
 
-    // MRR Growth (estimated based on customer growth + ARPC)
-    const mrrGrowth = customerGrowthRate * (1 + 0.1); // Assume 10% ARPC growth
+    // MRR Growth (monthly growth rate of MRR, compound)
+    // New MRR from new customers - Lost MRR from churn
+    const newMRRFromNewCustomers = newCustomers * avgRevenuePerCustomer;
+    const lostMRRFromChurn = churnedCustomers * avgRevenuePerCustomer;
+    const netMRRGrowth = newMRRFromNewCustomers - lostMRRFromChurn;
+    const mrrGrowth = mrr > 0 ? (netMRRGrowth / mrr) * 100 : 0;
 
     // Magic Number = Net New ARR / S&M Spend (previous quarter)
     const netNewARR = (newCustomers - churnedCustomers) * avgRevenuePerCustomer * 12;
@@ -247,6 +239,28 @@ export default function MetricsPage() {
       avgLifetime,
     };
   }, [formData]);
+
+  const handleSave = useCallback(async () => {
+    try {
+      await saveMetrics({
+        name: `${sector}_metrics_${new Date().toISOString()}`,
+        monthly_revenue: formData.mrr,
+        monthly_growth_rate: calculations.mrrGrowth,
+        customer_acquisition_cost: calculations.cac,
+        lifetime_value: calculations.ltv,
+        monthly_churn_rate: calculations.churnRate,
+        magic_number: calculations.magicNumber,
+        payback_period: Math.round(calculations.cacPayback),
+        rule_of_40_score: calculations.mrrGrowth + (calculations.churnRate > 0 ? 40 - calculations.churnRate : 40),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (error) {
+      console.error("[v0] Error saving metrics:", error);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    }
+  }, [formData, sector, calculations]);
 
   const getStatus = (value: number, benchmark: { good: number; great: number; inverted?: boolean }): "good" | "warning" | "danger" => {
     if (benchmark.inverted) {

@@ -55,6 +55,14 @@ const tools = [
   },
   {
     number: "07",
+    title: "Sector Comparables",
+    description:
+      "Benchmark your startup against market data. Find the right valuation multiple and build your comparable analysis.",
+    href: "/comparables",
+    tags: ["Benchmarking", "Multiples"],
+  },
+  {
+    number: "08",
     title: "Readiness Score",
     description:
       "Your overall investor readiness score. See where you stand and what to improve before raising.",
