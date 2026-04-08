@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
 import { RotateCcw, Save, Check, Info } from "lucide-react";
+import { saveValuation } from "@/lib/db-valuation";
 
 // Sector multiples and benchmarks
 const SECTOR_DATA = {
@@ -74,18 +75,34 @@ export default function ValuationPage() {
     setSaved(false);
   }, []);
 
-  const handleSave = useCallback(() => {
-    // Save to localStorage for now (will be replaced with proper storage)
-    const savedResults = JSON.parse(localStorage.getItem("vcready_valuation") || "[]");
-    savedResults.push({
-      ...formData,
-      timestamp: new Date().toISOString(),
-      results: calculations,
-    });
-    localStorage.setItem("vcready_valuation", JSON.stringify(savedResults.slice(-10)));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  }, [formData]);
+  const handleSave = useCallback(async () => {
+    try {
+      await saveValuation({
+        name: formData.startupName || `valuation_${new Date().toISOString()}`,
+        current_revenue: formData.currentRevenue,
+        growth_rate: calculations.impliedGrowthRate,
+        revenue_multiple: formData.evMultiple,
+        estimated_valuation: calculations.preMoney,
+        valuation_low: calculations.bearCase.preMoney,
+        valuation_high: calculations.bullCase.preMoney,
+        stage: formData.stage,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (error) {
+      console.error("[v0] Error saving valuation:", error);
+      // Fallback to localStorage if Supabase fails
+      const savedResults = JSON.parse(localStorage.getItem("vcready_valuation") || "[]");
+      savedResults.push({
+        ...formData,
+        timestamp: new Date().toISOString(),
+        results: calculations,
+      });
+      localStorage.setItem("vcready_valuation", JSON.stringify(savedResults.slice(-10)));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    }
+  }, [formData, calculations]);
 
   // Core calculations
   const calculations = useMemo(() => {

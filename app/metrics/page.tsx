@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { useI18n } from "@/lib/i18n";
 import { RotateCcw, Save, Check, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { saveMetrics, getMetrics } from "@/lib/db-metrics";
 
 // Sector-specific benchmarks
 const SECTOR_BENCHMARKS = {
@@ -164,18 +165,36 @@ export default function MetricsPage() {
     setSaved(false);
   }, []);
 
-  const handleSave = useCallback(() => {
-    const savedResults = JSON.parse(localStorage.getItem("vcready_metrics") || "[]");
-    savedResults.push({
-      sector,
-      ...formData,
-      timestamp: new Date().toISOString(),
-      results: calculations,
-    });
-    localStorage.setItem("vcready_metrics", JSON.stringify(savedResults.slice(-10)));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  }, [formData, sector]);
+  const handleSave = useCallback(async () => {
+    try {
+      await saveMetrics({
+        name: `${sector}_metrics_${new Date().toISOString()}`,
+        monthly_revenue: formData.mrr * 12,
+        monthly_growth_rate: calculations.mrrGrowth,
+        customer_acquisition_cost: calculations.cac,
+        lifetime_value: calculations.ltv,
+        monthly_churn_rate: calculations.churnRate,
+        magic_number: calculations.magicNumber,
+        payback_period: Math.round(calculations.cacPayback),
+        rule_of_40_score: calculations.mrrGrowth + (calculations.churnRate > 0 ? 40 - calculations.churnRate : 40),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (error) {
+      console.error("[v0] Error saving metrics:", error);
+      // Fallback to localStorage if Supabase fails
+      const savedResults = JSON.parse(localStorage.getItem("vcready_metrics") || "[]");
+      savedResults.push({
+        sector,
+        ...formData,
+        timestamp: new Date().toISOString(),
+        results: calculations,
+      });
+      localStorage.setItem("vcready_metrics", JSON.stringify(savedResults.slice(-10)));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    }
+  }, [formData, sector, calculations]);
 
   // Core calculations for SaaS (primary sector)
   const calculations = useMemo(() => {

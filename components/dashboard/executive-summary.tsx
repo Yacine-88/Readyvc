@@ -1,19 +1,51 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
-
-const metrics = [
-  { label: "MRR", value: "$18,400", change: "+12%", status: "good" as const },
-  { label: "Growth Rate", value: "24%", change: "MoM", status: "good" as const },
-  { label: "LTV:CAC", value: "4.2x", change: "Healthy", status: "good" as const },
-  { label: "Burn Rate", value: "$32K", change: "/month", status: "neutral" as const },
-];
+import { getMetrics } from "@/lib/db-metrics";
+import { getValuation } from "@/lib/db-valuation";
 
 export function ExecutiveSummary() {
   const { t } = useI18n();
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [metricsData, valuationData] = await Promise.all([
+          getMetrics(),
+          getValuation(),
+        ]);
+
+        const latest = {
+          metrics: metricsData?.[0],
+          valuation: valuationData?.[0],
+        };
+
+        setData(latest);
+      } catch (error) {
+        console.error("[v0] Error loading executive summary:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  if (loading) {
+    return <div className="animate-pulse h-24 bg-soft rounded-lg" />;
+  }
   
+  const metrics = [
+    { label: "MRR", value: data?.metrics?.monthly_revenue ? `$${(data.metrics.monthly_revenue / 12).toLocaleString('en-US', {maximumFractionDigits: 0})}` : "-", change: `Growth: ${data?.metrics?.monthly_growth_rate?.toFixed(1) || 0}%`, status: (data?.metrics?.monthly_growth_rate || 0) > 20 ? "good" : "neutral" },
+    { label: "Growth Rate", value: `${data?.metrics?.monthly_growth_rate?.toFixed(1) || 0}%`, change: "MoM", status: (data?.metrics?.monthly_growth_rate || 0) > 20 ? "good" : "neutral" },
+    { label: "LTV:CAC", value: data?.metrics ? `${((data.metrics.lifetime_value || 0) / (data.metrics.customer_acquisition_cost || 1)).toFixed(1)}x` : "-", change: "Healthy", status: ((data?.metrics?.lifetime_value || 0) / (data?.metrics?.customer_acquisition_cost || 1)) > 3 ? "good" : "warning" },
+    { label: "Valuation", value: data?.valuation?.estimated_valuation ? `$${(data.valuation.estimated_valuation / 1000000).toFixed(1)}M` : "-", change: `Stage: ${data?.valuation?.stage || "-"}`, status: "neutral" },
+  ];
+
   return (
     <Card padding="sm">
       <CardHeader>
