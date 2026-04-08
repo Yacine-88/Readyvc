@@ -207,7 +207,7 @@ export default function CapTablePage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-sm truncate">{s.name}</span>
-                      <Badge variant="neutral" className="shrink-0">
+                      <Badge variant="default" className="shrink-0">
                         {shareholderTypes.find((t) => t.value === s.type)?.label || s.type}
                       </Badge>
                     </div>
