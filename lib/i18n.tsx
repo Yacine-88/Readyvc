@@ -57,7 +57,6 @@ const translations = {
     "dataroom.required": "Required",
     "dataroom.marked": "Marked",
     "dataroom.analysis": "Analysis",
-    "common.save": "Save Results",
     "common.reset": "Reset",
     "tool.qa.title": "Investor Q&A Prep",
     "tool.qa.desc": "Prepare for tough investor questions with common questions and suggested answers.",
