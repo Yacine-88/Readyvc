@@ -4,6 +4,21 @@ import { useState, useMemo } from "react";
 import { useI18n } from "@/lib/i18n";
 import { ArrowUpDown } from "lucide-react";
 
+// Deal interface - defines the structure of comparable company data
+interface Deal {
+  name: string;
+  country: string;
+  flag: string;
+  geo: "africa" | "mena" | "europe";
+  sector: string;
+  stage: string;
+  raised: number;
+  valuation: number | null;
+  multiple: number | null;
+  year: number;
+  note: string;
+}
+
 // Comparables database - structured market data with explicit Deal type
 const COMPARABLES_DATA: Deal[] = [
   // AFRICA — FINTECH
@@ -31,20 +46,6 @@ const COMPARABLES_DATA: Deal[] = [
   { name: "Wise", country: "UK", flag: "🇬🇧", geo: "europe", sector: "fintech", stage: "ipo", raised: 900, valuation: 13000, multiple: null, year: 2023, note: "Cross-border payments" },
   { name: "Bolt", country: "Estonia", flag: "🇪🇪", geo: "europe", sector: "marketplace", stage: "seriesG", raised: 1200, valuation: 4600, multiple: null, year: 2023, note: "Mobility super-app" },
 ];
-
-interface Deal {
-  name: string;
-  country: string;
-  flag: string;
-  geo: "africa" | "mena" | "europe";
-  sector: string;
-  stage: string;
-  raised: number;
-  valuation: number | null;
-  multiple: number | null;
-  year: number;
-  note: string;
-}
 
 type SortColumn = "name" | "geo" | "sector" | "stage" | "raised" | "valuation" | "multiple" | "year";
 
