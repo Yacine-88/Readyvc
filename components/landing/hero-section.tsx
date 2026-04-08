@@ -37,7 +37,7 @@ export function HeroSection() {
             </p>
 
             <div className="flex flex-wrap gap-3 mb-6">
-              <Button href="/dashboard" size="lg">
+              <Button href="/tools" size="lg">
                 {t("hero.cta.primary")}
                 <span aria-hidden="true">&rarr;</span>
               </Button>
