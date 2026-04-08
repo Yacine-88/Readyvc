@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { forwardRef } from "react";
 
-type ButtonVariant = "primary" | "secondary" | "ghost";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "outline";
 type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonBaseProps {
@@ -36,6 +36,8 @@ const variantStyles: Record<ButtonVariant, string> = {
     "bg-card text-ink border-border-strong hover:border-ink",
   ghost:
     "bg-transparent text-muted border-border hover:text-ink hover:border-ink",
+  outline:
+    "bg-transparent text-white border-white/30 hover:bg-white/10",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
