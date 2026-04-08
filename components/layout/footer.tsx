@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
@@ -194,14 +193,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Image
-              src="/logo-white.png"
-              alt="VCReady"
-              width={100}
-              height={20}
-              style={{ width: "auto", height: "auto" }}
-              className="h-5 opacity-80"
-            />
+            <span className="text-sm font-bold tracking-tight">VCReady</span>
             <p className="text-xs text-white/50">
               by <span className="text-white/80 font-medium">Yacine CHIKHAR</span> &middot; &copy;{" "}
               {new Date().getFullYear()}

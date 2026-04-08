@@ -10,6 +10,7 @@ const translations = {
   en: {
     // Navigation
     "nav.dashboard": "Dashboard",
+    "nav.about": "About",
     "nav.valuation": "Valuation",
     "nav.metrics": "Metrics",
     "nav.pitch": "Pitch",
@@ -89,6 +90,15 @@ const translations = {
     "newsletter.cta": "Subscribe",
     "newsletter.success": "Thank you for subscribing!",
     "newsletter.error": "Please enter a valid email",
+    
+    // About section
+    "about.title": "About VCReady",
+    "about.para1": "VCReady was built to address a recurring issue observed across many startup ecosystems: founders often enter fundraising processes without fully understanding the metrics investors expect.",
+    "about.para2": "In practice, this leads to a gap. Founders may have strong ideas, relevant markets, and real traction, but struggle to clearly articulate their performance through key indicators such as growth, unit economics, runway, or valuation logic. As a result, many are rejected — not necessarily because of the business itself, but because it is not presented in a structured, investor-ready way.",
+    "about.para3": "VCReady was created to close that gap. The platform provides structured tools to help founders measure, understand, and improve their business before engaging with investors.",
+    "about.founder.title": "Founder",
+    "about.founder.name": "Yacine Chikhar",
+    "about.founder.bio": "For more than 10 years, I have designed and managed programs supporting entrepreneurs, incubators, institutions, and government entities. Having worked with more than 100 entrepreneurs, I have developed programs and practical tools to structure startup support initiatives from early-stage to growth, based on international standards. My work focuses on innovation, ecosystem development, strategic partnerships, and execution. Through first-hand experience across startup ecosystems worldwide, I have built a strong international network of founders, experts, mentors, ecosystem enablers, and public sector stakeholders.",
     
     // Dashboard
     "dashboard.title": "Dashboard",
@@ -266,6 +276,7 @@ const translations = {
   fr: {
     // Navigation
     "nav.dashboard": "Tableau de bord",
+    "nav.about": "À propos",
     "nav.valuation": "Valorisation",
     "nav.metrics": "Indicateurs",
     "nav.pitch": "Pitch",
@@ -345,6 +356,15 @@ const translations = {
     "newsletter.cta": "S'abonner",
     "newsletter.success": "Merci pour votre inscription !",
     "newsletter.error": "Veuillez entrer un email valide",
+    
+    // About section
+    "about.title": "À propos de VCReady",
+    "about.para1": "VCReady est né d'un constat simple observé dans de nombreux écosystèmes startup : beaucoup de fondateurs abordent la levée de fonds sans maîtriser les métriques attendues par les investisseurs.",
+    "about.para2": "Dans la pratique, cela crée un décalage. Les fondateurs peuvent avoir de bonnes idées, un marché pertinent et même de la traction, mais peinent à structurer leur discours autour d'indicateurs clés comme la croissance, les unit economics, le runway ou la logique de valorisation. En conséquence, ils sont souvent rejetés, non pas à cause du projet, mais faute de clarté et de structuration.",
+    "about.para3": "VCReady a été conçu pour combler cet écart. La plateforme propose des outils structurés pour aider les fondateurs à mieux comprendre leur activité et à se préparer efficacement avant d'engager des discussions avec des investisseurs.",
+    "about.founder.title": "Fondateur",
+    "about.founder.name": "Yacine Chikhar",
+    "about.founder.bio": "Depuis plus de 10 ans, je conçois et pilote des programmes d'accompagnement destinés aux entrepreneurs, incubateurs, institutions et acteurs publics. Ayant accompagné plus de 100 entrepreneurs, j'ai développé des programmes et des outils pratiques permettant de structurer l'accompagnement des startups, de l'early-stage à la croissance, en m'appuyant sur des standards internationaux. Mon travail s'articule autour de l'innovation, du développement des écosystèmes, des partenariats stratégiques et de l'exécution. Grâce à une expérience directe dans plusieurs écosystèmes startup à l'international, j'ai constitué un réseau solide de fondateurs, experts, mentors, acteurs de l'écosystème et institutions publiques.",
     
     // Dashboard
     "dashboard.title": "Tableau de bord",
