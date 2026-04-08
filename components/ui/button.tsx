@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { forwardRef } from "react";
-
 type ButtonVariant = "primary" | "secondary" | "ghost" | "outline";
 type ButtonSize = "sm" | "md" | "lg";
 
