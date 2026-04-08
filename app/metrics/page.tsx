@@ -169,7 +169,7 @@ export default function MetricsPage() {
     try {
       await saveMetrics({
         name: `${sector}_metrics_${new Date().toISOString()}`,
-        monthly_revenue: formData.mrr * 12,
+        monthly_revenue: formData.mrr,
         monthly_growth_rate: calculations.mrrGrowth,
         customer_acquisition_cost: calculations.cac,
         lifetime_value: calculations.ltv,
@@ -182,15 +182,6 @@ export default function MetricsPage() {
       setTimeout(() => setSaved(false), 2000);
     } catch (error) {
       console.error("[v0] Error saving metrics:", error);
-      // Fallback to localStorage if Supabase fails
-      const savedResults = JSON.parse(localStorage.getItem("vcready_metrics") || "[]");
-      savedResults.push({
-        sector,
-        ...formData,
-        timestamp: new Date().toISOString(),
-        results: calculations,
-      });
-      localStorage.setItem("vcready_metrics", JSON.stringify(savedResults.slice(-10)));
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     }
@@ -229,8 +220,12 @@ export default function MetricsPage() {
     const netNewCustomers = newCustomers - churnedCustomers;
     const customerGrowthRate = totalCustomers > 0 ? (netNewCustomers / totalCustomers) * 100 : 0;
 
-    // MRR Growth (estimated based on customer growth + ARPC)
-    const mrrGrowth = customerGrowthRate * (1 + 0.1); // Assume 10% ARPC growth
+    // MRR Growth (monthly growth rate of MRR, compound)
+    // New MRR from new customers - Lost MRR from churn
+    const newMRRFromNewCustomers = newCustomers * avgRevenuePerCustomer;
+    const lostMRRFromChurn = churnedCustomers * avgRevenuePerCustomer;
+    const netMRRGrowth = newMRRFromNewCustomers - lostMRRFromChurn;
+    const mrrGrowth = mrr > 0 ? (netMRRGrowth / mrr) * 100 : 0;
 
     // Magic Number = Net New ARR / S&M Spend (previous quarter)
     const netNewARR = (newCustomers - churnedCustomers) * avgRevenuePerCustomer * 12;

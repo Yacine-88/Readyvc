@@ -180,8 +180,9 @@ export default function ValuationPage() {
       const tv = ev * (1 - dilution / 100);
       const returnMult = (impliedOwnership * tv) / investmentAmount;
       const irr = Math.pow(returnMult, 1 / yearsToExit) - 1;
-      const pre = (investmentAmount / (impliedOwnership)) - investmentAmount;
-      return { preMoney: pre, ev, irr: irr * 100, coca: returnMult };
+      // Pre-money = (Investment Amount / Implied Ownership Percentage) - Investment Amount
+      const preMoneyValuation = (investmentAmount / impliedOwnership) - investmentAmount;
+      return { preMoney: preMoneyValuation, ev, irr: irr * 100, coca: returnMult };
     };
 
     const bearCase = calculateScenario(bearMultiple);

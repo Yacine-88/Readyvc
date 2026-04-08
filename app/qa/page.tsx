@@ -57,35 +57,47 @@ export default function QAPage() {
   const scores = useMemo(() => {
     const categoryScores: Record<string, number> = {};
     let totalWeightedScore = 0;
-    let totalWeight = 0;
+    let totalMaxScore = 0;
 
+    // Calculate scores: responses are 0-100, multiply by weight to get weighted score
     for (const category of categories) {
-      let categoryScore = 0;
-      let categoryWeight = 0;
+      let categoryTotalScore = 0;
+      let categoryTotalMaxScore = 0;
 
       for (const q of category.questions) {
         const qIndex = allQuestions.findIndex(aq => aq.q === q.q);
-        const response = responses[q.q] || 0;
+        const response = responses[q.q] || 0; // 0-100 scale
         const weight = allQuestions[qIndex].weight;
 
-        categoryScore += response * weight;
-        categoryWeight += weight;
-        totalWeightedScore += response * weight;
-        totalWeight += weight;
+        // Score contribution = (response/100) * weight * 100 to get 0-100 scale
+        const weighted = (response / 100) * weight * 100;
+        categoryTotalScore += weighted;
+        
+        // Max possible = weight * 100
+        categoryTotalMaxScore += weight * 100;
+        
+        totalWeightedScore += weighted;
+        totalMaxScore += weight * 100;
       }
 
-      categoryScores[category.title] = categoryWeight > 0 ? Math.round((categoryScore / categoryWeight) * 100) : 0;
+      // Category score: normalize to 0-100
+      categoryScores[category.title] = categoryTotalMaxScore > 0 ? Math.round((categoryTotalScore / categoryTotalMaxScore) * 100) : 0;
     }
 
-    const overallScore = totalWeight > 0 ? Math.round((totalWeightedScore / totalWeight) * 100) : 0;
+    // Overall base score: normalize to 0-100
+    const baseScore = totalMaxScore > 0 ? Math.round((totalWeightedScore / totalMaxScore) * 100) : 0;
 
-    // Investor perspective adjusts scoring based on metrics and market
+    // Investor perspective: emphasize metrics and market (these are most important to investors)
+    let overallScore = baseScore;
     if (perspective === "investor") {
-      const investorBias = (categoryScores["Traction & Metrics"] || 0) * 0.3 + (categoryScores["Market & Competition"] || 0) * 0.2;
-      return {
-        categoryScores,
-        overallScore: Math.round(overallScore * 0.7 + investorBias * 0.3),
-      };
+      const tractionScore = categoryScores["Traction & Metrics"] || 0;
+      const marketScore = categoryScores["Market & Competition"] || 0;
+      // Investor weighting: 35% traction, 25% market, 40% other
+      overallScore = Math.round(
+        tractionScore * 0.35 + 
+        marketScore * 0.25 + 
+        baseScore * 0.4
+      );
     }
 
     return { categoryScores, overallScore };
