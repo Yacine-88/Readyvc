@@ -631,7 +631,7 @@ function calc(){
   const runway=burn>0?cash/burn:0;
   const revGrowth=revCur>0&&r1>0?((r1/revCur)-1)*100:null;
 
-  calcResults={ev,proceeds,irr,coc,pv,effStake,years,cur,revExit,evMult,invest,stake,reqRet,gm,burn,cash,revCur,r1,r2,r3,revGrowth,sectKey,stade,runway};
+  calcResults={ev,proceeds,irr,coc,pv,effStake,years,cur,revExit,evMult,invest,stake,reqRet,gm,burn,cash,revCur,r1,r2,r3,revGrowth,sectKey,stade,runway,rounds:gv('future_rounds'),dilution:gv('dilution')};
   wiBase={revExit,evMult,reqRet:gv('req_return'),invest,stake:gv('stake'),dilution:gv('dilution'),rounds};
 
   const startupName=document.getElementById('startup_name').value||'Your startup';
@@ -786,26 +786,138 @@ function renderInvestorScore(r){
 
 function renderAnalysis(r){
   const cur=r.cur;
-  const irrTxt=r.irr!==null?r.irr.toFixed(1)+'%':'—';
-  const lines=[];
+  const sectData=SECTEURS[r.sectKey];
+  const sectLabel=LABELS.en[r.sectKey]||r.sectKey||'your sector';
+  const irrN=r.irr!==null?r.irr.toFixed(1)+'%':'—';
+  const cocN=r.coc.toFixed(1);
+  const evN=fmt(r.ev,cur);
+  const pvN=fmt(r.pv,cur);
+  const investN=fmt(r.invest,cur);
 
-  if(r.irr===null){lines.push('Unable to calculate IRR — check your inputs.');}
-  else if(r.irr>=40){lines.push(`<strong>IRR of ${irrTxt}</strong> places you in the top quartile of VC-backable companies. You have strong negotiating leverage on valuation.`);}
-  else if(r.irr>=25){lines.push(`<strong>IRR of ${irrTxt}</strong> clears the typical 25% VC threshold. The deal is fundable — focus on growing exit assumptions.`);}
-  else{lines.push(`<strong>IRR of ${irrTxt}</strong> is below the 25% VC threshold. Use the What-If simulator to test which lever — exit multiple, revenue, or timeline — has the most impact.`);}
-
-  if(r.coc>=5){lines.push(`CoCa of <strong>${r.coc.toFixed(1)}×</strong> is excellent. Top-tier investors target 5× or more.`);}
-  else if(r.coc>=3){lines.push(`CoCa of <strong>${r.coc.toFixed(1)}×</strong> is above the 3× minimum. Push toward 5× by improving exit assumptions or reducing dilution.`);}
-  else{lines.push(`CoCa of <strong>${r.coc.toFixed(1)}×</strong> is below 3×. Increase your exit valuation multiple, reduce investment requirement, or extend the timeline.`);}
-
-  if(r.revGrowth!==null){
-    if(r.revGrowth>100){lines.push(`Revenue growth of <strong>${r.revGrowth.toFixed(0)}%</strong> YoY signals strong traction — this is a key credibility factor with investors.`);}
-    else{lines.push(`Revenue growth of <strong>${r.revGrowth.toFixed(0)}%</strong> YoY. Target 100%+ to position as high-growth.`);}
+  // ── BLOCK 1: IRR INTERPRETATION ──
+  let irrHtml='';
+  if(r.irr===null){
+    irrHtml=`<p>IRR cannot be calculated — verify your exit year and revenue inputs are correctly filled.</p>`;
+  } else if(r.irr>=50){
+    irrHtml=`<p>Your IRR of <strong>${irrN}</strong> is exceptional — top decile of VC-backable deals globally. At this level, you have strong negotiating leverage on valuation and terms. Institutional Series A+ investors will be attracted. The main risk: assumptions may be too optimistic. Stress-test with the bear scenario (−40% revenue) and ensure IRR still clears 25% before presenting to investors.</p>`;
+  } else if(r.irr>=35){
+    irrHtml=`<p>An IRR of <strong>${irrN}</strong> puts you in the top quartile — solidly above the 25–30% VC floor. This is a fundable profile. Your focus should not be on improving the IRR itself, but on making its assumptions defensible: revenue projections grounded in real traction, an exit multiple backed by sector comparables, and a realistic dilution path through future rounds.</p>`;
+  } else if(r.irr>=25){
+    irrHtml=`<p>An IRR of <strong>${irrN}</strong> clears the VC threshold but sits in the acceptable zone rather than the attractive zone. Most funds target 30–40%+ to account for portfolio loss rates. You are fundable, but investors will push on pre-money valuation, equity stake, or exit multiple. Run the What-If simulator below to identify which single lever moves your IRR above 35% most efficiently — typically the exit revenue multiple or the investment size.</p>`;
+  } else if(r.irr>=15){
+    irrHtml=`<p>An IRR of <strong>${irrN}</strong> falls below the VC floor of 25%. The deal is difficult to fund as currently structured — you need to close a gap of <strong>${(25-r.irr).toFixed(1)} percentage points</strong>. The three most effective levers: (1) increase the exit multiple if sector comparables support it, (2) reduce the pre-money to give the investor a larger initial stake, or (3) extend the exit timeline if you expect strong compounding growth. Use the What-If simulator to model each scenario.</p>`;
+  } else {
+    irrHtml=`<p>An IRR of <strong>${irrN}</strong> is significantly below VC expectations. The deal is not fundable through traditional venture at this stage. Consider alternative paths — revenue-based financing, grants, business angels — while improving unit economics. The gap to VC fundability requires either a materially higher exit assumption or a lower pre-money valuation.</p>`;
   }
 
-  if(r.sectKey==='ai'||r.sectKey==='saas'){lines.push(`The <strong>${LABELS.en[r.sectKey]}</strong> sector commands premium multiples (${SECTEURS[r.sectKey]?.med}× median). Justify the multiple with clear ARR/MRR metrics and growth rate.`);}
+  // ── BLOCK 2: VALUATION VS MARKET ──
+  let mktHtml='';
+  if(sectData){
+    const yourMult=r.evMult;
+    const medMult=sectData.med;
+    const multDiffPct=((yourMult-medMult)/medMult*100);
+    const multAbs=Math.abs(multDiffPct).toFixed(0);
+    const multDir=yourMult>medMult?'above':'below';
+    let multJudgement='';
+    if(Math.abs(multDiffPct)<=15){
+      multJudgement=`Your multiple is in line with the sector median — a defensible position in investor conversations. No specific justification required beyond standard comparable analysis.`;
+    } else if(yourMult>medMult){
+      multJudgement=`Your multiple is <strong>${multAbs}% above the sector median</strong>. This is defensible if you can demonstrate superior growth (100%+ YoY revenue), gross margins above 70%, strong retention metrics, or a clear competitive moat. Prepare 2–3 recent comparable deals at similar multiples before investor meetings.`;
+    } else {
+      multJudgement=`Your multiple is <strong>${multAbs}% below the sector median</strong>. This may be intentional conservative positioning, or it may be understating your valuation. If your growth profile and margins are strong, review whether the multiple should be revised upward before presenting to investors.`;
+    }
+    mktHtml=`
+      <p>In <strong>${sectLabel}</strong>, the VC market range is <strong>${sectData.min}×–${sectData.max}× EV/Revenue</strong> with a median of <strong>${sectData.med}×</strong>. You are using <strong>${yourMult}×</strong> — ${multAbs}% ${multDir} median. ${multJudgement}</p>
+      <p style="margin-top:10px">At exit, this produces an Enterprise Value of <strong>${evN}</strong>. Discounted at your required return of ${(r.reqRet*100).toFixed(0)}%, the present value of the investor's proceeds is <strong>${pvN}</strong> — ${r.pv>r.invest?`which exceeds the investment of ${investN}. The deal creates value at the required return hurdle.`:`which is below the investment of ${investN}. The deal does not yet clear the required return hurdle.`}</p>`;
+  } else {
+    mktHtml=`<p>Select a sector in Step 1 to benchmark your valuation multiple against market comparables.</p>`;
+  }
 
-  document.getElementById('analysis_body').innerHTML=lines.map(l=>`<p style="margin-bottom:12px">${l}</p>`).join('');
+  // ── BLOCK 3: STRENGTHS & WEAKNESSES ──
+  const strengths=[];
+  const weaknesses=[];
+
+  if(r.irr!==null&&r.irr>=35) strengths.push(`<strong>Strong IRR (${irrN})</strong> — above the 35% top-quartile threshold. The return profile is attractive for institutional investors.`);
+  else if(r.irr!==null&&r.irr>=25) strengths.push(`<strong>Fundable IRR (${irrN})</strong> — above the 25% VC minimum. The deal clears the threshold.`);
+  else weaknesses.push(`<strong>IRR below threshold (${irrN})</strong> — the current structure does not generate sufficient returns for VC funding.`);
+
+  if(r.coc>=5) strengths.push(`<strong>Excellent CoCa (${cocN}×)</strong> — top-tier multiple. Investors target 5×+ for strong portfolio returns.`);
+  else if(r.coc>=3) strengths.push(`<strong>Acceptable CoCa (${cocN}×)</strong> — above the 3× minimum VC floor.`);
+  else weaknesses.push(`<strong>CoCa below 3× (${cocN}×)</strong> — most VCs require at least 3× cash-on-cash to compensate for portfolio risk.`);
+
+  if(r.gm>=70) strengths.push(`<strong>High gross margin (${r.gm}%)</strong> — above 70%, this signals a scalable business model and justifies premium valuation multiples.`);
+  else if(r.gm>=50) strengths.push(`<strong>Healthy gross margin (${r.gm}%)</strong> — above industry average for most emerging market sectors.`);
+  else weaknesses.push(`<strong>Low gross margin (${r.gm}%)</strong> — below 50%, which compresses valuation multiples. Investors will scrutinize the path to margin improvement.`);
+
+  if(r.revGrowth!==null&&r.revGrowth>=100) strengths.push(`<strong>Strong revenue growth (${r.revGrowth.toFixed(0)}% YoY)</strong> — triple-digit growth is a key signal for venture investors and justifies premium multiples.`);
+  else if(r.revGrowth!==null&&r.revGrowth>=60) strengths.push(`<strong>Solid revenue growth (${r.revGrowth.toFixed(0)}% YoY)</strong> — above the 60% threshold that differentiates high-growth from moderate-growth profiles.`);
+  else if(r.revGrowth!==null) weaknesses.push(`<strong>Moderate revenue growth (${r.revGrowth.toFixed(0)}% YoY)</strong> — below the 60–100% range VCs typically require for Series A+ funding.`);
+
+  if(r.runway>=18) strengths.push(`<strong>Strong runway (${r.runway.toFixed(0)} months)</strong> — 18+ months gives you negotiating leverage and reduces perceived execution risk.`);
+  else if(r.runway>=12) strengths.push(`<strong>Adequate runway (${r.runway.toFixed(0)} months)</strong> — above 12 months, sufficient to reach the next milestone without urgency.`);
+  else if(r.runway>0) weaknesses.push(`<strong>Short runway (${r.runway.toFixed(0)} months)</strong> — below 12 months, which creates investor pressure and weakens your negotiating position. Fundraising urgency will affect terms.`);
+
+  const swHtml=`
+    ${strengths.length?`<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:10px">Strengths</div>${strengths.map(s=>`<div style="display:flex;gap:10px;margin-bottom:8px;align-items:flex-start"><span style="color:var(--accent);font-size:14px;flex-shrink:0;margin-top:1px">✓</span><span style="font-size:13px;line-height:1.7;color:var(--ink-2)">${s}</span></div>`).join('')}</div>`:''}
+    ${weaknesses.length?`<div><div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9A3B3B;margin-bottom:10px">Areas to address</div>${weaknesses.map(w=>`<div style="display:flex;gap:10px;margin-bottom:8px;align-items:flex-start"><span style="color:#9A3B3B;font-size:14px;flex-shrink:0;margin-top:1px">↑</span><span style="font-size:13px;line-height:1.7;color:var(--ink-2)">${w}</span></div>`).join('')}</div>`:''}`;
+
+  // ── BLOCK 4: RECOMMENDATIONS ──
+  const recs=[];
+
+  if(r.irr!==null&&r.irr<25){
+    const gapPts=(25-r.irr).toFixed(1);
+    recs.push(`Use the <strong>What-If Simulator</strong> to close the ${gapPts}pt IRR gap. Start with the exit revenue assumption (+20–30% typically moves IRR by 5–8pts), then test the EV/Revenue multiple if sector comparables support a higher value.`);
+  }
+  if(r.coc<3){
+    recs.push(`To reach a 3× CoCa, your investor's exit proceeds need to be <strong>${fmt(r.invest*3,cur)}</strong>. Either increase the exit EV (via higher revenue or multiple), reduce dilution between now and exit, or reduce the investment amount while maintaining the same equity stake.`);
+  }
+  if(r.gm<50){
+    recs.push(`Work on <strong>gross margin improvement</strong> before fundraising. A path from ${r.gm}% to 60%+ typically requires: raising prices, reducing COGS through supplier negotiation or automation, or shifting toward higher-margin product lines. This directly improves your valuation multiple.`);
+  }
+  if(r.runway>0&&r.runway<12){
+    recs.push(`With only <strong>${r.runway.toFixed(0)} months of runway</strong>, prioritize near-term capital efficiency. Cut non-essential burn, accelerate revenue collection, and consider a bridge round before the main raise. Never enter a fundraise with less than 6 months of cash.`);
+  }
+  if(r.evMult>sectData?.max*0.9){
+    recs.push(`Your exit multiple of <strong>${r.evMult}×</strong> is near the top of the ${sectLabel} range. Prepare a comparable transactions analysis (3–5 similar deals from Crunchbase or the Comparables page) to defend this assumption. Investors will stress-test it aggressively.`);
+  }
+  if(!r.sectKey){
+    recs.push(`<strong>Select your sector</strong> in Step 1 to unlock sector-specific multiple recommendations, benchmark context, and more targeted analysis.`);
+  }
+  if(recs.length===0){
+    recs.push(`Your profile is strong across the key VC metrics. Focus now on: (1) preparing your data room with all 35 documents investors will request, (2) running the Pitch Readiness Score to ensure your narrative matches your numbers, and (3) building your comparable deals analysis using the Sector Comparables page.`);
+  }
+
+  const recsHtml=recs.map((rec,i)=>`
+    <div style="display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);align-items:flex-start">
+      <div style="width:24px;height:24px;background:var(--ink);color:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;margin-top:1px">${i+1}</div>
+      <div style="font-size:13px;line-height:1.75;color:var(--ink-2)">${rec}</div>
+    </div>`).join('');
+
+  // ── RENDER ALL ──
+  document.getElementById('analysis_card').innerHTML=`
+    <div style="display:grid;gap:0">
+
+      <div style="padding-bottom:24px;border-bottom:1px solid var(--line);margin-bottom:24px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">IRR interpretation</div>
+        <div style="font-size:14px;line-height:1.85;color:var(--ink-2)">${irrHtml}</div>
+      </div>
+
+      <div style="padding-bottom:24px;border-bottom:1px solid var(--line);margin-bottom:24px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Valuation vs market</div>
+        <div style="font-size:14px;line-height:1.85;color:var(--ink-2)">${mktHtml}</div>
+      </div>
+
+      <div style="padding-bottom:24px;border-bottom:1px solid var(--line);margin-bottom:24px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:16px">Strengths & areas to address</div>
+        ${swHtml}
+      </div>
+
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Recommended actions</div>
+        ${recsHtml}
+      </div>
+
+    </div>`;
 }
 
 // ── WHAT-IF SIMULATOR ──
