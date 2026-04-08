@@ -4,8 +4,8 @@ import { useState, useMemo } from "react";
 import { useI18n } from "@/lib/i18n";
 import { ArrowUpDown } from "lucide-react";
 
-// Comparables database - structured market data
-const COMPARABLES_DATA = [
+// Comparables database - structured market data with explicit Deal type
+const COMPARABLES_DATA: Deal[] = [
   // AFRICA — FINTECH
   { name: "Wave", country: "Senegal", flag: "🇸🇳", geo: "africa", sector: "fintech", stage: "seriesC", raised: 200, valuation: 1700, multiple: null, year: 2021, note: "Mobile money, West Africa" },
   { name: "Flutterwave", country: "Nigeria", flag: "🇳🇬", geo: "africa", sector: "fintech", stage: "seriesD", raised: 250, valuation: 3000, multiple: null, year: 2022, note: "Payment infrastructure" },
@@ -58,7 +58,7 @@ export default function ComparablesPage() {
 
   // Filter and sort data
   const filtered = useMemo(() => {
-    let result = COMPARABLES_DATA.filter((deal: Deal) => {
+    let result = COMPARABLES_DATA.filter((deal) => {
       const geoMatch = activeGeo === "all" || deal.geo === activeGeo;
       const sectorMatch = activeSector === "all" || deal.sector === activeSector;
       const stageMatch = activeStage === "all" || deal.stage === activeStage;
@@ -66,7 +66,7 @@ export default function ComparablesPage() {
     });
 
     // Sort
-    result.sort((a: Deal, b: Deal) => {
+    result.sort((a, b) => {
       let aVal = a[sortCol as keyof Deal];
       let bVal = b[sortCol as keyof Deal];
 
@@ -97,10 +97,10 @@ export default function ComparablesPage() {
   const benchmarks = useMemo(() => {
     if (filtered.length === 0) return { medianValuation: 0, medianMultiple: 0, avgRaised: 0, medianYear: 0 };
 
-    const valuations = filtered.filter((d: Deal) => d.valuation !== null).map((d: Deal) => d.valuation as number);
-    const multiples = filtered.filter((d: Deal) => d.multiple !== null).map((d: Deal) => d.multiple as number);
-    const raised = filtered.map((d: Deal) => d.raised);
-    const years = filtered.map((d: Deal) => d.year);
+    const valuations = filtered.filter((d) => d.valuation !== null).map((d) => d.valuation as number);
+    const multiples = filtered.filter((d) => d.multiple !== null).map((d) => d.multiple as number);
+    const raised = filtered.map((d) => d.raised);
+    const years = filtered.map((d) => d.year);
 
     return {
       medianValuation: valuations.length > 0 ? valuations.sort((a, b) => a - b)[Math.floor(valuations.length / 2)] : 0,
