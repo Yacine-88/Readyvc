@@ -238,6 +238,13 @@ export default function ValuationPage() {
         exit_proceeds: result.investor.exitProceeds,
         cash_on_cash: result.investor.cashOnCash,
         implied_irr: result.investor.impliedIRR,
+        projection_quality_score: result.projectionQuality.qualityScore,
+        growth_profile: result.projectionQuality.growthProfile,
+        recommended_conservative: result.recommendedRange.conservative,
+        recommended_base: result.recommendedRange.base,
+        recommended_stretch: result.recommendedRange.stretch,
+        fundraising_min: result.recommendedRange.fundraisingMin,
+        fundraising_max: result.recommendedRange.fundraisingMax,
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
@@ -264,7 +271,7 @@ export default function ValuationPage() {
     <ToolPageLayout
       kicker="Valuation Engine"
       title="Investor-grade startup valuation."
-      description="Three complementary methods — VC Method, Revenue Multiple, and Stage Comparables — with real investor mechanics, scenario modelling, and founder analysis."
+      description="Multi-method valuation engine combining VC Method, Revenue Multiple, and Stage Comparables. Includes 5-year projection analysis, investor return modeling, and recommended fundraising ranges based on benchmark data."
     >
       <div className="grid lg:grid-cols-[400px_1fr] gap-8 items-start">
         {/* ── Input Panel ── */}
@@ -314,6 +321,11 @@ export default function ValuationPage() {
 
           {/* Revenue Projections */}
           <ToolSection title="5-Year Revenue Projections">
+            <div className="bg-accent/5 border border-accent/20 rounded-[var(--radius-md)] p-3 mb-4 text-xs text-ink-secondary leading-relaxed">
+              These projections <strong className="text-ink">directly drive your valuation</strong>.
+              They feed into exit revenue calculations, growth profile analysis, and scenario modeling.
+              Unrealistic assumptions will be flagged.
+            </div>
             <div className="space-y-3">
               <InputRow
                 label="Base Annual Growth Rate"
@@ -329,7 +341,7 @@ export default function ValuationPage() {
               </InputRow>
               <InputRow
                 label="Exit Horizon"
-                hint="Years until exit / liquidity event"
+                hint="Years until exit / liquidity event. Typical VC hold period: 5-7 years."
               >
                 <NumberInput
                   value={form.exitYears}
@@ -339,6 +351,18 @@ export default function ValuationPage() {
                   suffix="yr"
                 />
               </InputRow>
+              {form.exitYears <= 5 && (
+                <div className="bg-accent/5 border border-accent/20 rounded-[var(--radius-md)] p-2.5 text-[11px] text-ink-secondary">
+                  <strong className="text-ink">Exit revenue</strong> will be calculated from Year {form.exitYears} projections
+                  below ({fmt(form.currentRevenue * Math.pow(1 + form.baseGrowthRate / 100, form.exitYears))} at current growth rate).
+                </div>
+              )}
+              {form.exitYears > 5 && (
+                <div className="bg-warning/5 border border-warning/20 rounded-[var(--radius-md)] p-2.5 text-[11px] text-ink-secondary">
+                  <strong className="text-warning">Note:</strong> Exit in Year {form.exitYears} extends beyond the 5-year projection window.
+                  Exit revenue will be extrapolated using your base growth rate.
+                </div>
+              )}
               <div>
                 <p className="text-xs font-semibold text-muted mb-2">
                   EBITDA Margin by Year (base scenario)
@@ -365,6 +389,25 @@ export default function ValuationPage() {
                   ))}
                 </div>
                 <p className="text-[11px] text-muted mt-1.5">Values in %. Negative = pre-profit.</p>
+              </div>
+              <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 mt-3">
+                <p className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1.5">
+                  Projection Quality Tips
+                </p>
+                <ul className="space-y-1 text-[11px] text-ink-secondary">
+                  <li className="flex gap-2">
+                    <span className="text-accent">•</span>
+                    <span>Growth typically decelerates as revenue scales — investors expect this</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-accent">•</span>
+                    <span>Margins should improve gradually as you achieve economies of scale</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-accent">•</span>
+                    <span>Support high-growth claims with cohort retention and unit economics data</span>
+                  </li>
+                </ul>
               </div>
             </div>
           </ToolSection>
@@ -497,25 +540,75 @@ export default function ValuationPage() {
                 <p className="text-base font-semibold text-ink mb-2">
                   Fill in your inputs and press Calculate
                 </p>
-                <p className="text-sm text-ink-secondary max-w-sm mx-auto">
-                  Three valuation methods, investor mechanics, 5-year projections,
-                  and scenario analysis will appear here.
+                <p className="text-sm text-ink-secondary max-w-md mx-auto">
+                  Get investor-grade valuation analysis including: recommended fundraising range,
+                  three valuation methods, 5-year projection quality assessment, investor return
+                  modeling, and scenario analysis.
                 </p>
               </div>
             </ToolSection>
           ) : (
             <>
+              {/* ── Methodology Note ── */}
+              <div className="bg-accent/5 border border-accent/20 rounded-[var(--radius-lg)] p-4 mb-4 text-xs text-ink-secondary leading-relaxed">
+                <strong className="text-ink">Methodology Note:</strong> This valuation uses three
+                industry-standard methods (VC Method, Revenue Multiple, Stage Comparables) and is{" "}
+                <strong>scenario-based and benchmark-informed</strong>, not a certified appraisal.
+                Outputs are intended for fundraising preparation and reflect reasonable negotiation
+                ranges, subject to market conditions.
+              </div>
+
+              {/* ── Recommended Fundraising Range ── */}
+              <ToolSection title="Recommended Fundraising Range">
+                <p className="text-xs text-muted mb-4">
+                  Synthesis of all methods, projection quality, and investor return profile.
+                  This is your defensible negotiation range.
+                </p>
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <MetricCard
+                    label="Conservative"
+                    value={fmt(result.recommendedRange.conservative)}
+                    sub="Floor for negotiations"
+                  />
+                  <MetricCard
+                    label="Recommended"
+                    value={fmt(result.recommendedRange.base)}
+                    sub="Target pre-money"
+                    accent
+                  />
+                  <MetricCard
+                    label="Stretch"
+                    value={fmt(result.recommendedRange.stretch)}
+                    sub="Ceiling with strong case"
+                  />
+                </div>
+                <div className="bg-accent/10 border border-accent/30 rounded-[var(--radius-md)] p-4">
+                  <p className="text-xs font-semibold text-accent uppercase tracking-wider mb-2">
+                    Fundraising Strategy
+                  </p>
+                  <p className="text-sm text-ink leading-relaxed mb-3">
+                    {result.recommendedRange.rationale}
+                  </p>
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-muted">Defensible range:</span>
+                    <span className="font-bold font-mono text-accent">
+                      {fmt(result.recommendedRange.fundraisingMin)} – {fmt(result.recommendedRange.fundraisingMax)}
+                    </span>
+                  </div>
+                </div>
+              </ToolSection>
+
               {/* ── Valuation Summary ── */}
-              <ToolSection title="Valuation Summary">
-                <div className="grid grid-cols-3 gap-3 mb-5">
-                  <MetricCard label="Conservative" value={fmt(result.blended.low)} sub="Floor estimate" />
+              <ToolSection title="Valuation Summary (All Methods)">
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <MetricCard label="Conservative" value={fmt(result.blended.low)} sub="Min across methods" />
                   <MetricCard
                     label="Base Case"
                     value={fmt(result.blended.base)}
                     sub="3-method average"
                     accent
                   />
-                  <MetricCard label="Optimistic" value={fmt(result.blended.high)} sub="Ceiling estimate" />
+                  <MetricCard label="Optimistic" value={fmt(result.blended.high)} sub="Max across methods" />
                 </div>
                 <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 text-sm leading-relaxed">
                   <span className="font-semibold">
@@ -534,10 +627,13 @@ export default function ValuationPage() {
 
               {/* ── Multi-Method Comparison ── */}
               <ToolSection title="Multi-Method Comparison">
-                <p className="text-xs text-muted mb-4">
-                  Each method applies independently. Divergence between them reveals where your
-                  valuation story is strong or needs work.
-                </p>
+                <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 mb-4 text-xs text-ink-secondary leading-relaxed">
+                  <strong className="text-ink">How to interpret:</strong> Each method serves a different
+                  purpose. <strong>VC Method</strong> shows what valuation supports investor returns.{" "}
+                  <strong>Revenue Multiple</strong> reflects sector norms.{" "}
+                  <strong>Comparables</strong> ground-truth against actual rounds at your stage.
+                  Divergence between methods is normal — it reveals negotiation leverage and risks.
+                </div>
                 <div className="space-y-3">
                   {[result.vcMethod, result.revenueMultiple, result.comparables].map((m) => (
                     <div key={m.method} className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
@@ -573,10 +669,49 @@ export default function ValuationPage() {
 
               {/* ── 5-Year Projections ── */}
               <ToolSection title="5-Year Revenue Projections">
-                <p className="text-xs text-muted mb-4">
-                  Base growth of {form.baseGrowthRate}%/yr. Optimistic = 135%, Pessimistic = 65% of
-                  base rate.
-                </p>
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <p className="text-xs text-muted">
+                    Base growth of {form.baseGrowthRate}%/yr. Optimistic = 135%, Pessimistic = 65% of
+                    base rate.
+                  </p>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[10px] font-semibold text-muted uppercase tracking-wider">
+                      Quality
+                    </span>
+                    <span
+                      className={`inline-flex items-center justify-center px-2 py-1 rounded-md text-xs font-bold ${
+                        result.projectionQuality.qualityScore >= 80
+                          ? "bg-success/10 text-success"
+                          : result.projectionQuality.qualityScore >= 60
+                          ? "bg-warning/10 text-warning"
+                          : "bg-danger/10 text-danger"
+                      }`}
+                    >
+                      {result.projectionQuality.qualityScore}/100
+                    </span>
+                  </div>
+                </div>
+                {result.projectionQuality.warnings.length > 0 && (
+                  <div className="bg-warning/5 border border-warning/20 rounded-[var(--radius-md)] p-3 mb-4">
+                    <p className="text-[10px] font-bold text-warning uppercase tracking-wider mb-2">
+                      Projection Warnings
+                    </p>
+                    <ul className="space-y-1.5">
+                      {result.projectionQuality.warnings.map((warning, i) => (
+                        <li key={i} className="text-xs text-ink-secondary leading-relaxed flex gap-2">
+                          <span className="text-warning mt-0.5">•</span>
+                          <span>{warning}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 mb-4">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted">Growth Profile:</span>
+                    <span className="font-bold text-ink">{result.projectionQuality.growthProfile}</span>
+                  </div>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
@@ -651,11 +786,20 @@ export default function ValuationPage() {
                     accent={result.investor.impliedIRR >= 0.3}
                   />
                 </div>
-                <div className="flex items-center gap-2 text-[11px] text-muted">
-                  <Info className="w-3 h-3 shrink-0" />
-                  <span>
-                    Exit EV based on {fmt(form.currentRevenue * Math.pow(1 + form.baseGrowthRate / 100, form.exitYears))} exit revenue × {form.exitRevenueMultiple}x multiple
-                  </span>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-[11px] text-muted">
+                    <Info className="w-3 h-3 shrink-0" />
+                    <span>
+                      Exit EV based on {fmt(form.currentRevenue * Math.pow(1 + form.baseGrowthRate / 100, form.exitYears))} exit revenue × {form.exitRevenueMultiple}x multiple
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px] text-muted">
+                    <Info className="w-3 h-3 shrink-0" />
+                    <span>
+                      Exit proceeds shown are pre-tax. Actual investor returns may be subject to
+                      capital gains tax (typically 15-30% depending on jurisdiction and holding period).
+                    </span>
+                  </div>
                 </div>
               </ToolSection>
 
@@ -732,11 +876,40 @@ export default function ValuationPage() {
               {/* ── Sources & Methodology ── */}
               <ToolSection title="Sources & Methodology">
                 <div className="space-y-3 text-xs text-ink-secondary">
-                  <p className="leading-relaxed">
-                    This valuation is{" "}
-                    <strong>benchmark-informed, scenario-based, and intended for fundraising preparation only</strong>.
-                    It is not financial advice and does not represent a certified appraisal.
-                  </p>
+                  <div className="bg-accent/5 border border-accent/20 rounded-[var(--radius-md)] p-3">
+                    <p className="font-semibold text-ink mb-2">What this tool provides:</p>
+                    <p className="leading-relaxed">
+                      A <strong>multi-method, scenario-based valuation range</strong> using industry
+                      benchmarks and investor return mechanics. Designed for fundraising preparation,
+                      not certified appraisal. Results reflect reasonable negotiation ranges subject to
+                      market conditions, deal structure, and investor-specific criteria.
+                    </p>
+                  </div>
+                  <div className="bg-warning/5 border border-warning/20 rounded-[var(--radius-md)] p-3">
+                    <p className="font-semibold text-warning mb-2">Limitations:</p>
+                    <ul className="space-y-1 leading-relaxed">
+                      <li className="flex gap-2">
+                        <span>•</span>
+                        <span>
+                          Benchmarks reflect 2022–2024 data and may not capture current market shifts
+                        </span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span>•</span>
+                        <span>
+                          Stage multiples have high variance — validate with recent comparables in your
+                          sector and geography
+                        </span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span>•</span>
+                        <span>
+                          Final valuations depend on negotiation, investor mandate, and qualitative factors
+                          not captured here
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
                   <div className="space-y-2">
                     <p className="font-semibold text-ink text-xs uppercase tracking-wide">
                       Benchmark References

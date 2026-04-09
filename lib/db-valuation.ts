@@ -31,6 +31,15 @@ export interface ValuationData {
   exit_proceeds?: number
   cash_on_cash?: number
   implied_irr?: number
+  // Projection quality
+  projection_quality_score?: number
+  growth_profile?: string
+  // Recommended range
+  recommended_conservative?: number
+  recommended_base?: number
+  recommended_stretch?: number
+  fundraising_min?: number
+  fundraising_max?: number
   // Meta
   calculated_at?: string
 }

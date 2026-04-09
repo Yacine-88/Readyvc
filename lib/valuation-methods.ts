@@ -70,6 +70,15 @@ export interface ScenarioResult {
   blendedValuation: number;
 }
 
+export interface RecommendedRange {
+  conservative: number;
+  base: number;
+  stretch: number;
+  fundraisingMin: number;
+  fundraisingMax: number;
+  rationale: string;
+}
+
 export interface ValuationSummary {
   vcMethod: ValuationMethodResult;
   revenueMultiple: ValuationMethodResult;
@@ -79,6 +88,8 @@ export interface ValuationSummary {
   investor: InvestorMetrics;
   scenarios: ScenarioResult[];
   projections: YearlyProjection[];
+  projectionQuality: ReturnType<typeof analyzeProjectionQuality>;
+  recommendedRange: RecommendedRange;
   analysis: string[];
 }
 
@@ -421,6 +432,99 @@ export function buildScenarios(params: {
   });
 }
 
+// ─── Projection Quality Analysis ──────────────────────────────────────────────
+
+export function analyzeProjectionQuality(projections: YearlyProjection[]): {
+  isAccelerating: boolean;
+  isDecelerating: boolean;
+  isUnrealistic: boolean;
+  growthProfile: string;
+  qualityScore: number; // 0-100
+  warnings: string[];
+} {
+  const warnings: string[] = [];
+  let qualityScore = 100;
+
+  // Calculate year-over-year growth rates
+  const growthRates: number[] = [];
+  for (let i = 1; i < projections.length; i++) {
+    const rate =
+      (projections[i].revenue - projections[i - 1].revenue) / projections[i - 1].revenue;
+    growthRates.push(rate);
+  }
+
+  // Check for acceleration/deceleration
+  const avgFirst2 = (growthRates[0] + growthRates[1]) / 2;
+  const avgLast2 = (growthRates[2] + growthRates[3]) / 2;
+  const isAccelerating = avgLast2 > avgFirst2 * 1.15;
+  const isDecelerating = avgLast2 < avgFirst2 * 0.85;
+
+  // Identify growth profile
+  let growthProfile = "Steady Growth";
+  if (isAccelerating) growthProfile = "Accelerating";
+  else if (isDecelerating) growthProfile = "Decelerating";
+
+  // Check for unrealistic patterns
+  let isUnrealistic = false;
+
+  // Warning: Extremely high sustained growth
+  const hasExtremeGrowth = growthRates.some((r) => r > 3.0); // 300%+
+  if (hasExtremeGrowth) {
+    warnings.push(
+      "Projections show 300%+ YoY growth. This is rare even for breakout companies — be prepared to justify with cohort data."
+    );
+    qualityScore -= 20;
+    isUnrealistic = true;
+  }
+
+  // Warning: Unrealistic acceleration in later years
+  if (growthRates[3] > growthRates[0] * 1.5 && growthRates[0] > 0.5) {
+    warnings.push(
+      "Growth accelerating in later years despite already-high base. Investors typically expect deceleration as revenue scales."
+    );
+    qualityScore -= 15;
+  }
+
+  // Warning: Margin inconsistency
+  const margins = projections.map((p) => p.margin);
+  const marginImprovement = margins[4] - margins[0];
+  if (marginImprovement > 0.6) {
+    // >60pp improvement
+    warnings.push(
+      "EBITDA margin improves by over 60 percentage points. Ensure this is supported by realistic unit economics."
+    );
+    qualityScore -= 10;
+  }
+
+  // Warning: Revenue declining
+  const hasDecline = growthRates.some((r) => r < -0.05);
+  if (hasDecline) {
+    warnings.push(
+      "Projections show YoY revenue decline. This is a red flag for growth-stage fundraising."
+    );
+    qualityScore -= 30;
+    isUnrealistic = true;
+  }
+
+  // Warning: Very low growth for early stage
+  const avgGrowth = growthRates.reduce((a, b) => a + b, 0) / growthRates.length;
+  if (avgGrowth < 0.15) {
+    warnings.push(
+      "Average growth under 15%/yr is below investor expectations for early-stage companies."
+    );
+    qualityScore -= 15;
+  }
+
+  return {
+    isAccelerating,
+    isDecelerating,
+    isUnrealistic,
+    growthProfile,
+    qualityScore: Math.max(0, Math.min(100, qualityScore)),
+    warnings,
+  };
+}
+
 // ─── Founder Analysis ─────────────────────────────────────────────────────────
 
 export function generateAnalysis(params: {
@@ -432,9 +536,30 @@ export function generateAnalysis(params: {
   stage: string;
   growthRate: number;
   scenarios: ScenarioResult[];
+  projectionQuality?: ReturnType<typeof analyzeProjectionQuality>;
 }): string[] {
-  const { vcMethod, revenueMultiple, comparables, investor, growthRate, scenarios } = params;
+  const { vcMethod, revenueMultiple, comparables, investor, growthRate, scenarios, projectionQuality } = params;
   const insights: string[] = [];
+
+  // Projection quality insights (if available)
+  if (projectionQuality) {
+    if (projectionQuality.qualityScore >= 80) {
+      insights.push(
+        `Your revenue projections show a ${projectionQuality.growthProfile.toLowerCase()} pattern with strong internal consistency (quality score: ${projectionQuality.qualityScore}/100). This strengthens credibility with investors.`
+      );
+    } else if (projectionQuality.qualityScore >= 60) {
+      insights.push(
+        `Your projections have moderate consistency (quality score: ${projectionQuality.qualityScore}/100). Review the warnings below to strengthen your financial model before investor presentations.`
+      );
+    } else {
+      insights.push(
+        `Your projections have significant credibility gaps (quality score: ${projectionQuality.qualityScore}/100). Investors will heavily discount these assumptions — consider revising to more defensible targets.`
+      );
+    }
+
+    // Add specific warnings from projection analysis
+    projectionQuality.warnings.forEach((w) => insights.push(w));
+  }
 
   const base = scenarios.find((s) => s.name === "Base");
   const pess = scenarios.find((s) => s.name === "Pessimistic");
@@ -520,6 +645,70 @@ export function generateAnalysis(params: {
   }
 
   return insights;
+}
+
+// ─── Recommended Fundraising Range ────────────────────────────────────────────
+
+export function calculateRecommendedRange(params: {
+  vcMethod: ValuationMethodResult;
+  revenueMultiple: ValuationMethodResult;
+  comparables: ValuationMethodResult;
+  blended: { low: number; base: number; high: number };
+  investor: InvestorMetrics;
+  projectionQuality: ReturnType<typeof analyzeProjectionQuality>;
+  scenarios: ScenarioResult[];
+}): RecommendedRange {
+  const { vcMethod, revenueMultiple, comparables, blended, investor, projectionQuality, scenarios } = params;
+
+  // Conservative: Use the minimum of all methods, with downward adjustment for quality
+  const methodMin = Math.min(vcMethod.low, revenueMultiple.low, comparables.low);
+  const qualityFactor = projectionQuality.qualityScore / 100;
+  const conservative = methodMin * (0.85 + qualityFactor * 0.15);
+
+  // Base: Weighted average favoring more reliable methods
+  // If IRR is attractive, favor VC method; otherwise favor comparables/revenue multiple
+  let base = blended.base;
+  if (investor.impliedIRR < 0.25) {
+    // Poor IRR: de-weight VC method
+    base = (revenueMultiple.valuation * 0.5 + comparables.valuation * 0.5);
+  } else if (investor.impliedIRR > 0.35) {
+    // Strong IRR: favor VC method
+    base = (vcMethod.valuation * 0.5 + revenueMultiple.valuation * 0.3 + comparables.valuation * 0.2);
+  }
+
+  // Stretch: Use optimistic scenario but cap at realistic ceiling
+  const scenarioOpt = scenarios.find((s) => s.name === "Optimistic");
+  const methodMax = Math.max(vcMethod.high, revenueMultiple.high, comparables.high);
+  const stretch = Math.min(
+    methodMax,
+    scenarioOpt ? scenarioOpt.blendedValuation * 1.1 : blended.high
+  );
+
+  // Fundraising range: Recommended pre-money range for negotiations
+  // Conservative to Base forms the defensible range
+  const fundraisingMin = conservative;
+  const fundraisingMax = base * 1.15; // Allow 15% upward flexibility from base
+
+  // Rationale
+  let rationale = "";
+  if (projectionQuality.qualityScore >= 80 && investor.impliedIRR >= 0.30) {
+    rationale = "All methods align well with strong investor returns. You have a defensible position at the base valuation.";
+  } else if (projectionQuality.qualityScore < 60) {
+    rationale = "Projection credibility is a concern. Anchor negotiations to the conservative range until you strengthen your financial model.";
+  } else if (investor.impliedIRR < 0.25) {
+    rationale = "Investor returns are below typical VC hurdles. Consider whether valuation expectations need adjustment or if exit assumptions are too conservative.";
+  } else {
+    rationale = "Your valuation is reasonable but has some variance across methods. Focus negotiations in the conservative-to-base range.";
+  }
+
+  return {
+    conservative,
+    base,
+    stretch,
+    fundraisingMin,
+    fundraisingMax,
+    rationale,
+  };
 }
 
 // ─── Master Calculator ─────────────────────────────────────────────────────────
@@ -614,6 +803,9 @@ export function calculateFullValuation(params: {
     exitRevenueMultiple,
   });
 
+  // Projection quality analysis
+  const projectionQuality = analyzeProjectionQuality(projections);
+
   // Analysis
   const analysis = generateAnalysis({
     vcMethod,
@@ -623,6 +815,18 @@ export function calculateFullValuation(params: {
     sector,
     stage,
     growthRate: baseGrowthRate,
+    scenarios,
+    projectionQuality,
+  });
+
+  // Recommended range
+  const recommendedRange = calculateRecommendedRange({
+    vcMethod,
+    revenueMultiple,
+    comparables,
+    blended,
+    investor,
+    projectionQuality,
     scenarios,
   });
 
@@ -635,6 +839,8 @@ export function calculateFullValuation(params: {
     investor,
     scenarios,
     projections,
+    projectionQuality,
+    recommendedRange,
     analysis,
   };
 }
