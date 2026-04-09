@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>VCReady — Connexion...</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
+<body>
+<script>
+const SUPA_URL='https://fvbrzttvdvxhbdkjknje.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YnJ6dHR2ZHZ4aGJka2prbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzgwNTAsImV4cCI6MjA5MDcxNDA1MH0.tcE5PlgMsu7suLAzN3uT5VjKnFhc25qkJJMKkbNmtvI';
+
+const sb=supabase.createClient(SUPA_URL,SUPA_KEY,{
+  auth:{detectSessionInUrl:true,persistSession:true,autoRefreshToken:true}
+});
+
+async function handleCallback(){
+  // SDK auto-detects token in URL hash and exchanges it
+  const {data:{session},error}=await sb.auth.getSession();
+  if(session){
+    window.location.replace('dashboard.html');
+  } else {
+    // Wait for onAuthStateChange to fire
+    sb.auth.onAuthStateChange((event,session)=>{
+      if(session) window.location.replace('dashboard.html');
+      else window.location.replace('dashboard.html'); // go anyway, dashboard handles no-session
+    });
+    // Fallback after 3s
+    setTimeout(()=>window.location.replace('dashboard.html'),3000);
+  }
+}
+
+handleCallback();
+</script>
+<style>
+body{background:#F5F2EC;display:flex;align-items:center;justify-content:center;height:100vh;font-family:'DM Sans',sans-serif;font-size:13px;color:#8A8880;letter-spacing:.06em;text-transform:uppercase}
+</style>
+<p>Signing you in...</p>
+</body>
+</html>

@@ -1,0 +1,2860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VCReady — Dashboard</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7BRPFG4JQL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-7BRPFG4JQL');
+  </script>
+
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    :root{
+      --bg:#F7F7F5;
+      --panel:#FFFFFF;
+      --ink:#0E0E0C;
+      --ink-2:#2B2B27;
+      --muted:#6F6E66;
+      --muted-2:#99978E;
+      --line:#E7E3DA;
+      --line-2:#D8D4CB;
+      --soft:#F2F0EA;
+      --soft-2:#FBFBF9;
+      --success:#0F6A46;
+      --success-bg:#EAF6F0;
+      --success-line:#B6DEC8;
+      --warn:#8A6B1F;
+      --warn-bg:#F8F3E6;
+      --warn-line:#E7D5A7;
+      --danger:#8C4343;
+      --danger-bg:#FAECEC;
+      --danger-line:#E8C0C0;
+      --radius:20px;
+      --radius-sm:14px;
+      --shadow:0 10px 30px rgba(0,0,0,.04);
+      --font:'Inter',sans-serif;
+      --container:1260px;
+    }
+
+    html{scroll-behavior:smooth}
+
+    body{
+      background:var(--bg);
+      color:var(--ink);
+      font-family:var(--font);
+      font-size:14px;
+      line-height:1.6;
+      min-height:100vh;
+    }
+
+    a{color:inherit}
+
+    .container{
+      width:100%;
+      max-width:var(--container);
+      margin:0 auto;
+      padding:0 32px;
+    }
+
+    /* TOPBAR */
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:100;
+      height:72px;
+      border-bottom:1px solid rgba(216,212,203,.8);
+      backdrop-filter:blur(16px);
+      background:rgba(247,247,245,.88);
+    }
+
+    .topbar-inner{
+      height:72px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:20px;
+    }
+
+    .logo{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      text-decoration:none;
+      color:var(--ink);
+      flex-shrink:0;
+    }
+
+    .logo-mark{
+      width:42px;
+      height:42px;
+      border:1.5px solid var(--ink);
+      border-radius:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:17px;
+      font-weight:800;
+      letter-spacing:-.05em;
+      line-height:1;
+      background:#FFF;
+    }
+
+    .logo-word{
+      font-size:20px;
+      font-weight:700;
+      letter-spacing:-.045em;
+    }
+
+    .topbar-right{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-shrink:0;
+    }
+
+    .user-chip{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border:1px solid var(--line-2);
+      border-radius:999px;
+      padding:8px 12px 8px 8px;
+      background:#FFF;
+      min-width:0;
+    }
+
+    .user-avatar{
+      width:32px;
+      height:32px;
+      border-radius:50%;
+      background:var(--ink);
+      color:#FFF;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:11px;
+      font-weight:800;
+      flex-shrink:0;
+    }
+
+    .user-meta{
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+
+    .user-name{
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:-.01em;
+      color:var(--ink);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:180px;
+    }
+
+    .user-email{
+      font-size:11px;
+      color:var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:180px;
+    }
+
+    .btn,
+    .btn-secondary,
+    .btn-ghost{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      text-decoration:none;
+      border:none;
+      font-family:var(--font);
+      cursor:pointer;
+      transition:.18s ease;
+      white-space:nowrap;
+      border-radius:12px;
+    }
+
+    .btn{
+      height:42px;
+      padding:0 16px;
+      background:var(--ink);
+      color:#FFF;
+      font-size:13px;
+      font-weight:700;
+      letter-spacing:-.01em;
+    }
+
+    .btn:hover{background:#000;transform:translateY(-1px)}
+
+    .btn-secondary{
+      height:42px;
+      padding:0 16px;
+      background:#FFF;
+      color:var(--ink);
+      border:1px solid var(--line-2);
+      font-size:13px;
+      font-weight:700;
+      letter-spacing:-.01em;
+    }
+
+    .btn-secondary:hover{
+      border-color:var(--ink);
+      transform:translateY(-1px);
+    }
+
+    .btn-ghost{
+      height:42px;
+      padding:0 14px;
+      background:transparent;
+      color:var(--muted);
+      border:1px solid var(--line);
+      font-size:12px;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
+
+    .btn-ghost:hover{
+      color:var(--ink);
+      border-color:var(--ink);
+    }
+
+    /* AUTH */
+    .auth-screen{
+      min-height:calc(100vh - 72px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:40px 24px;
+    }
+
+    .auth-wrap{
+      width:100%;
+      max-width:1060px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:22px;
+      align-items:stretch;
+    }
+
+    .auth-panel,
+    .auth-preview{
+      border:1px solid var(--line);
+      background:#FFF;
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .auth-panel{
+      padding:34px;
+    }
+
+    .auth-eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      color:var(--muted);
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      margin-bottom:22px;
+    }
+
+    .auth-eyebrow::before{
+      content:'';
+      width:24px;
+      height:1px;
+      background:var(--line-2);
+      display:block;
+    }
+
+    .auth-title{
+      font-size:48px;
+      line-height:.98;
+      letter-spacing:-.06em;
+      font-weight:800;
+      margin-bottom:14px;
+      max-width:420px;
+    }
+
+    .auth-sub{
+      font-size:15px;
+      color:var(--ink-2);
+      line-height:1.8;
+      max-width:440px;
+      margin-bottom:26px;
+    }
+
+    .auth-benefits{
+      display:grid;
+      gap:12px;
+      padding:20px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:var(--soft-2);
+      margin-bottom:22px;
+    }
+
+    .auth-benefit{
+      display:flex;
+      gap:10px;
+      color:var(--ink-2);
+      font-size:13px;
+      line-height:1.7;
+    }
+
+    .auth-benefit::before{
+      content:'';
+      width:6px;
+      height:6px;
+      border-radius:50%;
+      background:var(--success);
+      flex-shrink:0;
+      margin-top:8px;
+    }
+
+    .btn-google{
+      width:100%;
+      height:50px;
+      border-radius:12px;
+      border:none;
+      background:var(--ink);
+      color:#FFF;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      font-family:var(--font);
+      font-size:13px;
+      font-weight:700;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+
+    .btn-google:hover{background:#000}
+
+    .google-icon{width:18px;height:18px;flex-shrink:0}
+
+    .auth-divider{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      margin:18px 0;
+    }
+
+    .auth-divider-line{
+      flex:1;
+      height:1px;
+      background:var(--line);
+    }
+
+    .auth-divider-text{
+      color:var(--muted);
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .magic-input{
+      width:100%;
+      height:48px;
+      border-radius:12px;
+      border:1px solid var(--line-2);
+      padding:0 14px;
+      font-size:14px;
+      color:var(--ink);
+      background:#FFF;
+      outline:none;
+      margin-bottom:10px;
+      font-family:var(--font);
+    }
+
+    .magic-input:focus{border-color:var(--ink)}
+
+    .btn-magic{
+      width:100%;
+      height:48px;
+      border-radius:12px;
+      border:1px solid var(--line-2);
+      background:#FFF;
+      color:var(--ink);
+      font-family:var(--font);
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+
+    .btn-magic:hover{
+      background:var(--soft);
+      border-color:var(--ink);
+    }
+
+    .auth-success,
+    .auth-err{
+      display:none;
+      margin-top:12px;
+      border-radius:12px;
+      padding:12px 14px;
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .auth-success{
+      background:var(--success-bg);
+      border:1px solid var(--success-line);
+      color:var(--success);
+      font-weight:600;
+    }
+
+    .auth-err{
+      background:var(--danger-bg);
+      border:1px solid var(--danger-line);
+      color:var(--danger);
+      font-weight:600;
+    }
+
+    .auth-note{
+      margin-top:14px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.7;
+      text-align:center;
+    }
+
+    .auth-preview{
+      padding:0;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      background:linear-gradient(180deg,#FFFFFF 0%, #FBFBF9 100%);
+    }
+
+    .preview-head{
+      padding:20px 24px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      background:#FCFCFA;
+    }
+
+    .preview-title{
+      font-size:14px;
+      font-weight:800;
+      letter-spacing:-.02em;
+    }
+
+    .preview-pill{
+      border:1px solid var(--success-line);
+      background:var(--success-bg);
+      color:var(--success);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:11px;
+      font-weight:700;
+    }
+
+    .preview-body{
+      padding:24px;
+      display:grid;
+      gap:16px;
+    }
+
+    .preview-score{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:20px;
+      background:#FFF;
+    }
+
+    .preview-score-label{
+      color:var(--muted);
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      margin-bottom:8px;
+    }
+
+    .preview-score-value{
+      font-size:68px;
+      line-height:.92;
+      letter-spacing:-.08em;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+
+    .preview-score-text{
+      color:var(--ink-2);
+      font-size:13px;
+      line-height:1.75;
+      max-width:360px;
+    }
+
+    .preview-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+    }
+
+    .preview-card{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#FFF;
+      padding:18px;
+    }
+
+    .preview-card h4{
+      font-size:13px;
+      font-weight:700;
+      letter-spacing:-.02em;
+      margin-bottom:8px;
+    }
+
+    .preview-card strong{
+      display:block;
+      font-size:30px;
+      line-height:1;
+      letter-spacing:-.06em;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+
+    .preview-card span{
+      display:block;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.7;
+    }
+
+    /* LOADING */
+    .loading{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:calc(100vh - 72px);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    /* DASHBOARD */
+    .dashboard{
+      display:none;
+      padding:30px 0 72px;
+    }
+
+    .dash-shell{
+      display:grid;
+      gap:20px;
+    }
+
+    .panel{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .panel-head{
+      padding:18px 22px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      background:#FCFCFA;
+    }
+
+    .panel-kicker{
+      color:var(--muted);
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      margin-bottom:6px;
+    }
+
+    .panel-title{
+      font-size:20px;
+      font-weight:800;
+      letter-spacing:-.04em;
+      line-height:1.1;
+    }
+
+    .panel-link{
+      text-decoration:none;
+      color:var(--ink);
+      font-size:12px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .panel-link:hover{color:var(--success)}
+
+    /* HERO SUMMARY */
+    .hero-summary{
+      display:grid;
+      grid-template-columns:1.2fr .8fr;
+      gap:20px;
+      align-items:stretch;
+    }
+
+    .summary-main{
+      padding:28px;
+      min-height:360px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      background:linear-gradient(180deg,#FFF 0%, #FBFBF9 100%);
+    }
+
+    .summary-eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      color:var(--muted);
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      margin-bottom:16px;
+    }
+
+    .summary-eyebrow::before{
+      content:'';
+      width:24px;
+      height:1px;
+      background:var(--line-2);
+      display:block;
+    }
+
+    .summary-main h1{
+      font-size:52px;
+      line-height:.96;
+      letter-spacing:-.065em;
+      font-weight:800;
+      margin-bottom:14px;
+      max-width:700px;
+    }
+
+    .summary-main h1 span{
+      color:var(--muted);
+    }
+
+    .summary-text{
+      color:var(--ink-2);
+      font-size:15px;
+      line-height:1.8;
+      max-width:620px;
+    }
+
+    .summary-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:22px;
+    }
+
+    .summary-side{
+      padding:24px;
+      display:grid;
+      gap:16px;
+      background:#FFF;
+    }
+
+    .mini-panel{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:18px;
+      background:var(--soft-2);
+    }
+
+    .mini-panel-label{
+      color:var(--muted);
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      margin-bottom:10px;
+    }
+
+    .mini-panel-value{
+      font-size:28px;
+      line-height:1;
+      letter-spacing:-.05em;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+
+    .mini-panel-text{
+      color:var(--ink-2);
+      font-size:12px;
+      line-height:1.75;
+    }
+
+    /* EXECUTIVE STRIP */
+    .exec-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:16px;
+    }
+
+    .exec-card{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#FFF;
+      padding:20px;
+    }
+
+    .exec-label{
+      color:var(--muted);
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      margin-bottom:10px;
+    }
+
+    .exec-value{
+      font-size:30px;
+      line-height:1;
+      letter-spacing:-.06em;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+
+    .exec-sub{
+      color:var(--ink-2);
+      font-size:12px;
+      line-height:1.75;
+    }
+
+    /* SCORE + PRIORITIES */
+    .score-priority-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+    }
+
+    .score-wrap{
+      padding:26px;
+      display:grid;
+      gap:22px;
+    }
+
+    .score-top{
+      display:grid;
+      grid-template-columns:140px 1fr;
+      gap:22px;
+      align-items:center;
+    }
+
+    .gauge{
+      position:relative;
+      width:140px;
+      height:140px;
+      margin:0 auto;
+    }
+
+    .gauge svg{
+      transform:rotate(-90deg);
+    }
+
+    .g-bg{
+      fill:none;
+      stroke:var(--line);
+      stroke-width:9;
+    }
+
+    .g-fg{
+      fill:none;
+      stroke-width:9;
+      stroke-linecap:round;
+      transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1);
+    }
+
+    .g-center{
+      position:absolute;
+      inset:0;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .g-num{
+      font-size:40px;
+      font-weight:800;
+      letter-spacing:-.06em;
+      line-height:1;
+    }
+
+    .g-den{
+      color:var(--muted);
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:.06em;
+      margin-top:4px;
+    }
+
+    .score-verdict{
+      font-size:28px;
+      line-height:1.02;
+      letter-spacing:-.05em;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+
+    .score-verdict.excellent,
+    .score-verdict.good{
+      color:var(--success);
+    }
+
+    .score-verdict.fair{
+      color:var(--warn);
+    }
+
+    .score-verdict.weak{
+      color:var(--danger);
+    }
+
+    .score-desc{
+      color:var(--ink-2);
+      font-size:14px;
+      line-height:1.8;
+      max-width:460px;
+    }
+
+    .score-bars{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:14px;
+      padding-top:4px;
+    }
+
+    .score-bar{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      background:var(--soft-2);
+    }
+
+    .score-bar-head{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+      font-size:11px;
+      font-weight:700;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+
+    .score-track{
+      width:100%;
+      height:6px;
+      background:var(--line);
+      border-radius:999px;
+      overflow:hidden;
+      margin-bottom:10px;
+    }
+
+    .score-fill{
+      height:100%;
+      border-radius:999px;
+    }
+
+    .score-link{
+      text-decoration:none;
+      font-size:12px;
+      font-weight:700;
+      color:var(--success);
+    }
+
+    .score-link.muted{
+      color:var(--muted);
+    }
+
+    .priority-wrap{
+      padding:26px;
+      display:grid;
+      gap:16px;
+    }
+
+    .priority-list{
+      display:grid;
+      gap:12px;
+    }
+
+    .priority-item{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:18px;
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      gap:14px;
+      align-items:start;
+      background:#FFF;
+    }
+
+    .priority-badge{
+      min-width:76px;
+      height:28px;
+      border-radius:999px;
+      padding:0 12px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-size:10px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      border:1px solid var(--line-2);
+      background:var(--soft);
+      color:var(--ink);
+    }
+
+    .priority-badge.high{
+      background:var(--danger-bg);
+      border-color:var(--danger-line);
+      color:var(--danger);
+    }
+
+    .priority-badge.medium{
+      background:var(--warn-bg);
+      border-color:var(--warn-line);
+      color:var(--warn);
+    }
+
+    .priority-badge.low{
+      background:var(--success-bg);
+      border-color:var(--success-line);
+      color:var(--success);
+    }
+
+    .priority-title{
+      font-size:15px;
+      font-weight:800;
+      letter-spacing:-.02em;
+      margin-bottom:4px;
+    }
+
+    .priority-desc{
+      color:var(--ink-2);
+      font-size:13px;
+      line-height:1.75;
+    }
+
+    .priority-meta{
+      color:var(--muted);
+      font-size:11px;
+      font-weight:700;
+      white-space:nowrap;
+      padding-top:2px;
+    }
+
+    /* WORKSPACE */
+    .workspace-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+    }
+
+    .completion-wrap,
+    .tools-wrap{
+      padding:24px;
+    }
+
+    .completion-top{
+      display:grid;
+      grid-template-columns:120px 1fr;
+      gap:18px;
+      align-items:center;
+      margin-bottom:18px;
+    }
+
+    .completion-ring{
+      width:120px;
+      height:120px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      background:conic-gradient(var(--ink) 0deg, var(--ink) 0deg, var(--line) 0deg);
+      margin:0 auto;
+    }
+
+    .completion-ring::after{
+      content:'';
+      position:absolute;
+      inset:10px;
+      background:#FFF;
+      border-radius:50%;
+    }
+
+    .completion-center{
+      position:relative;
+      z-index:1;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .completion-num{
+      font-size:28px;
+      font-weight:800;
+      letter-spacing:-.05em;
+      line-height:1;
+    }
+
+    .completion-den{
+      color:var(--muted);
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      margin-top:4px;
+    }
+
+    .completion-title{
+      font-size:24px;
+      line-height:1.05;
+      letter-spacing:-.05em;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+
+    .completion-text{
+      color:var(--ink-2);
+      font-size:13px;
+      line-height:1.8;
+      max-width:420px;
+    }
+
+    .completion-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .completion-item{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      background:var(--soft-2);
+    }
+
+    .completion-item-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
+    .completion-dot{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      flex-shrink:0;
+      background:var(--line-2);
+    }
+
+    .completion-dot.done{background:var(--success)}
+    .completion-dot.partial{background:var(--warn)}
+
+    .completion-name{
+      font-size:13px;
+      font-weight:700;
+      letter-spacing:-.01em;
+    }
+
+    .completion-state{
+      color:var(--muted);
+      font-size:11px;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      white-space:nowrap;
+    }
+
+    .tools-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:14px;
+    }
+
+    .tool-card{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:var(--soft-2);
+      padding:18px;
+      display:grid;
+      gap:10px;
+    }
+
+    .tool-card-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .tool-card-name{
+      font-size:15px;
+      font-weight:800;
+      letter-spacing:-.02em;
+      line-height:1.15;
+      max-width:180px;
+    }
+
+    .tool-card-score{
+      font-size:24px;
+      font-weight:800;
+      letter-spacing:-.05em;
+      line-height:1;
+      white-space:nowrap;
+    }
+
+    .tool-card-score.good{color:var(--success)}
+    .tool-card-score.warn{color:var(--warn)}
+    .tool-card-score.na{color:var(--muted-2)}
+
+    .tool-card-sub{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.75;
+      min-height:40px;
+    }
+
+    .tool-card-track{
+      width:100%;
+      height:5px;
+      border-radius:999px;
+      overflow:hidden;
+      background:var(--line);
+    }
+
+    .tool-card-fill{
+      height:100%;
+    }
+
+    .tool-card-link{
+      text-decoration:none;
+      color:var(--success);
+      font-size:12px;
+      font-weight:700;
+    }
+
+    /* INSIGHTS + ANALYSIS */
+    .analysis-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+    }
+
+    .analysis-wrap,
+    .insights-wrap{
+      padding:24px;
+    }
+
+    .signal-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+
+    .signal-card{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+      background:var(--soft-2);
+    }
+
+    .signal-label{
+      color:var(--muted);
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      margin-bottom:8px;
+    }
+
+    .signal-value{
+      font-size:26px;
+      line-height:1;
+      letter-spacing:-.05em;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+
+    .signal-value.good{color:var(--success)}
+    .signal-value.warn{color:var(--warn)}
+    .signal-value.weak{color:var(--danger)}
+
+    .signal-desc{
+      color:var(--ink-2);
+      font-size:12px;
+      line-height:1.75;
+    }
+
+    .insight-list{
+      display:grid;
+      gap:12px;
+    }
+
+    .insight-item{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px 18px;
+      background:#FFF;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+    }
+
+    .insight-mark{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      flex-shrink:0;
+      margin-top:7px;
+      background:var(--line-2);
+    }
+
+    .insight-mark.good{background:var(--success)}
+    .insight-mark.warn{background:var(--warn)}
+    .insight-mark.weak{background:var(--danger)}
+
+    .insight-copy{
+      color:var(--ink-2);
+      font-size:13px;
+      line-height:1.8;
+    }
+
+    .insight-copy strong{color:var(--ink)}
+    .insight-copy a{
+      color:var(--success);
+      text-decoration:none;
+      font-weight:700;
+    }
+
+    /* CHART + HISTORY */
+    .history-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+    }
+
+    .chart-wrap,
+    .history-wrap{
+      padding:24px;
+    }
+
+    .chart-box{
+      height:260px;
+      position:relative;
+    }
+
+    .table{
+      display:grid;
+      gap:10px;
+    }
+
+    .table-head,
+    .table-row{
+      display:grid;
+      grid-template-columns:86px 1fr 74px 86px 70px;
+      gap:12px;
+      align-items:center;
+    }
+
+    .table-head{
+      color:var(--muted);
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      padding:0 2px 6px;
+    }
+
+    .table-row{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      background:var(--soft-2);
+      text-decoration:none;
+      transition:.18s ease;
+    }
+
+    .table-row:hover{
+      border-color:var(--ink);
+      transform:translateY(-1px);
+    }
+
+    .t-date{
+      color:var(--muted);
+      font-size:11px;
+      font-weight:700;
+    }
+
+    .t-main{
+      min-width:0;
+    }
+
+    .t-name{
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:-.01em;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      margin-bottom:2px;
+    }
+
+    .t-sub{
+      color:var(--muted);
+      font-size:11px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .t-num{
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:-.01em;
+    }
+
+    .t-num.good{color:var(--success)}
+    .t-num.warn{color:var(--warn)}
+    .t-num.weak{color:var(--danger)}
+    .t-stage{
+      color:var(--muted);
+      font-size:11px;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      white-space:nowrap;
+    }
+
+    .table-empty{
+      border:1px dashed var(--line-2);
+      border-radius:18px;
+      padding:20px;
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.8;
+    }
+
+    .table-empty a{
+      color:var(--success);
+      text-decoration:none;
+      font-weight:700;
+    }
+
+    /* PROFILE + NEXT STEPS */
+    .lower-grid{
+      display:grid;
+      grid-template-columns:.9fr 1.1fr;
+      gap:20px;
+    }
+
+    .profile-wrap,
+    .steps-wrap{
+      padding:24px;
+    }
+
+    .profile-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+
+    .profile-card{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+      background:var(--soft-2);
+    }
+
+    .profile-label{
+      color:var(--muted);
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      margin-bottom:8px;
+    }
+
+    .profile-value{
+      font-size:16px;
+      font-weight:800;
+      letter-spacing:-.02em;
+      line-height:1.3;
+      word-break:break-word;
+    }
+
+    .step-list{
+      display:grid;
+      gap:12px;
+    }
+
+    .step-item{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+      background:#FFF;
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      gap:14px;
+      align-items:center;
+    }
+
+    .step-index{
+      width:34px;
+      height:34px;
+      border-radius:10px;
+      background:var(--ink);
+      color:#FFF;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:12px;
+      font-weight:800;
+      flex-shrink:0;
+    }
+
+    .step-title{
+      font-size:14px;
+      font-weight:800;
+      letter-spacing:-.01em;
+      margin-bottom:3px;
+    }
+
+    .step-desc{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.7;
+    }
+
+    .step-link{
+      text-decoration:none;
+      color:var(--success);
+      font-size:12px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    /* RESPONSIVE */
+    @media(max-width:1120px){
+      .hero-summary,
+      .score-priority-grid,
+      .workspace-grid,
+      .analysis-grid,
+      .history-grid,
+      .lower-grid{
+        grid-template-columns:1fr;
+      }
+
+      .exec-grid{
+        grid-template-columns:1fr 1fr;
+      }
+
+      .score-bars{
+        grid-template-columns:1fr 1fr;
+      }
+
+      .completion-top{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media(max-width:820px){
+      .container{padding:0 18px}
+      .topbar{height:64px}
+      .topbar-inner{height:64px}
+      .user-meta{display:none}
+      .btn-secondary{display:none}
+
+      .auth-wrap{
+        grid-template-columns:1fr;
+      }
+
+      .auth-title{
+        font-size:38px;
+      }
+
+      .summary-main h1{
+        font-size:38px;
+      }
+
+      .exec-grid,
+      .score-bars,
+      .tools-grid,
+      .signal-grid,
+      .profile-grid{
+        grid-template-columns:1fr;
+      }
+
+      .score-top{
+        grid-template-columns:1fr;
+      }
+
+      .table-head{
+        display:none;
+      }
+
+      .table-row{
+        grid-template-columns:1fr;
+      }
+
+      .step-item,
+      .priority-item{
+        grid-template-columns:1fr;
+      }
+
+      .priority-meta{
+        white-space:normal;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="container">
+      <div class="topbar-inner">
+        <a href="index.html" class="logo">
+          <span class="logo-mark">VC</span>
+          <span class="logo-word">Ready</span>
+        </a>
+
+        <div class="topbar-right">
+          <a href="valuation.html" class="btn-secondary" id="top_new_btn" style="display:none">New valuation</a>
+
+          <div class="user-chip" id="user-info" style="display:none">
+            <div class="user-avatar" id="user_avatar">—</div>
+            <div class="user-meta">
+              <div class="user-name" id="user_name">—</div>
+              <div class="user-email" id="user_email">—</div>
+            </div>
+          </div>
+
+          <button class="btn-ghost" onclick="signOut()" id="btn_signout" style="display:none">Sign out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTH -->
+  <div class="auth-screen" id="auth-screen">
+    <div class="auth-wrap">
+      <div class="auth-panel">
+        <div class="auth-eyebrow">Your founder workspace</div>
+        <h1 class="auth-title">Sign in to your VCReady dashboard.</h1>
+        <p class="auth-sub">
+          Save your analyses, track readiness over time, and turn isolated scores into a clearer fundraising action plan.
+        </p>
+
+        <div class="auth-benefits">
+          <div class="auth-benefit">Your analyses saved automatically across tools</div>
+          <div class="auth-benefit">A single readiness view across valuation, pitch, data room and investor Q&amp;A</div>
+          <div class="auth-benefit">Clear priorities to improve before going to market</div>
+          <div class="auth-benefit">Free access, no password, no noise</div>
+        </div>
+
+        <button class="btn-google" onclick="signInGoogle()">
+          <svg class="google-icon" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Continue with Google
+        </button>
+
+        <div class="auth-divider">
+          <div class="auth-divider-line"></div>
+          <div class="auth-divider-text">or</div>
+          <div class="auth-divider-line"></div>
+        </div>
+
+        <input
+          type="email"
+          class="magic-input"
+          id="auth_email"
+          placeholder="your@email.com"
+          onkeydown="if(event.key==='Enter')sendMagicLink()"
+        >
+        <button class="btn-magic" onclick="sendMagicLink()">Send magic link</button>
+
+        <div class="auth-success" id="auth_success">Check your inbox — your sign-in link has been sent.</div>
+        <div class="auth-err" id="auth_err"></div>
+        <div class="auth-note">No password. No spam. Just a secure sign-in link.</div>
+      </div>
+
+      <div class="auth-preview">
+        <div class="preview-head">
+          <div class="preview-title">Workspace preview</div>
+          <div class="preview-pill">Readiness view</div>
+        </div>
+
+        <div class="preview-body">
+          <div class="preview-score">
+            <div class="preview-score-label">Overall readiness</div>
+            <div class="preview-score-value">74</div>
+            <div class="preview-score-text">
+              Strong operating signal. The business performs better than the fundraising narrative currently communicates.
+            </div>
+          </div>
+
+          <div class="preview-grid">
+            <div class="preview-card">
+              <h4>Strongest area</h4>
+              <strong>Metrics</strong>
+              <span>Healthy operating discipline and credible unit economics.</span>
+            </div>
+            <div class="preview-card">
+              <h4>Weakest area</h4>
+              <strong>Pitch</strong>
+              <span>Story clarity and investor framing still underperform.</span>
+            </div>
+            <div class="preview-card">
+              <h4>Priority</h4>
+              <strong>Fix narrative</strong>
+              <span>Tighten the deck before the next investor conversation.</span>
+            </div>
+            <div class="preview-card">
+              <h4>Completion</h4>
+              <strong>4 / 5</strong>
+              <span>Most of the workspace is active, but one key module is still missing.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading" id="loading">Loading dashboard...</div>
+
+  <!-- DASHBOARD -->
+  <div class="dashboard" id="dashboard">
+    <div class="container">
+      <div class="dash-shell">
+
+        <!-- HERO SUMMARY -->
+        <div class="panel">
+          <div class="hero-summary">
+            <div class="summary-main">
+              <div>
+                <div class="summary-eyebrow">Investor readiness workspace</div>
+                <h1 id="hero_title">Your investor readiness, <span>at a glance.</span></h1>
+                <p class="summary-text" id="hero_subtext">
+                  A structured overview of what is strong, what is missing, and what to fix next before fundraising.
+                </p>
+              </div>
+
+              <div class="summary-actions">
+                <a href="valuation.html" class="btn">Run a new valuation →</a>
+                <a href="https://calendly.com/yacine-chikhar/30min" target="_blank" class="btn-secondary">Book an expert session</a>
+              </div>
+            </div>
+
+            <div class="summary-side">
+              <div class="mini-panel">
+                <div class="mini-panel-label">Member snapshot</div>
+                <div class="mini-panel-value" id="dash_name">—</div>
+                <div class="mini-panel-text" id="dash_meta">Member since —</div>
+              </div>
+
+              <div class="mini-panel">
+                <div class="mini-panel-label">Latest update</div>
+                <div class="mini-panel-value" id="latest_update_value">—</div>
+                <div class="mini-panel-text" id="latest_update_text">No analysis recorded yet.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EXEC STRIP -->
+        <div class="exec-grid" id="exec_grid">
+          <div class="exec-card">
+            <div class="exec-label">Overall readiness</div>
+            <div class="exec-value" id="exec_readiness">—</div>
+            <div class="exec-sub" id="exec_readiness_text">Complete the workspace to generate your score.</div>
+          </div>
+          <div class="exec-card">
+            <div class="exec-label">Strongest area</div>
+            <div class="exec-value" id="exec_strength">—</div>
+            <div class="exec-sub" id="exec_strength_text">Not enough data yet.</div>
+          </div>
+          <div class="exec-card">
+            <div class="exec-label">Weakest area</div>
+            <div class="exec-value" id="exec_weakness">—</div>
+            <div class="exec-sub" id="exec_weakness_text">Not enough data yet.</div>
+          </div>
+          <div class="exec-card">
+            <div class="exec-label">Top priority</div>
+            <div class="exec-value" id="exec_priority">—</div>
+            <div class="exec-sub" id="exec_priority_text">Run the first module to unlock recommendations.</div>
+          </div>
+        </div>
+
+        <!-- SCORE + PRIORITIES -->
+        <div class="score-priority-grid">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-kicker">Core score</div>
+                <div class="panel-title">Global readiness score</div>
+              </div>
+              <div class="panel-link" id="readiness_date">—</div>
+            </div>
+            <div class="score-wrap" id="readiness_content"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-kicker">Action layer</div>
+                <div class="panel-title">Priority actions</div>
+              </div>
+            </div>
+            <div class="priority-wrap">
+              <div class="priority-list" id="priority_list"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- WORKSPACE -->
+        <div class="workspace-grid">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-kicker">Workspace</div>
+                <div class="panel-title">Completion status</div>
+              </div>
+            </div>
+            <div class="completion-wrap" id="completion_content"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-kicker">Modules</div>
+                <div class="panel-title">Tool performance</div>
+              </div>
+            </div>
+            <div class="tools-wrap" id="tool_scores_content"></div>
+          </div>
+        </div>
+
+        <!-- ANALYSIS + INSIGHTS -->
+        <div class="analysis-grid">
+          <div class="panel" id="analysis_section" style="display:none">
+            <div class="panel-head">
+              <div>
+                <div class="panel-kicker">Signals</div>
+                <div class="panel-title">Advanced analysis</div>
+              </div>
+            </div>
+            <div class="analysis-wrap" id="analysis_grid"></div>
+          </div>
+
+          <div class="panel" id="insights_section" style="display:none">
+            <div class="panel-head">
+              <div>
+                <div class="panel-kicker">Interpretation</div>
+                <div class="panel-title">Personalized insights</div>
+              </div>
+            </div>
+            <div class="insights-wrap" id="insights_list"></div>
+          </div>
+        </div>
+
+        <!-- CHART + HISTORY -->
+        <div class="history-grid">
+          <div class="panel" id="chart_section" style="display:none">
+            <div class="panel-head">
+              <div>
+                <div class="panel-kicker">Trend</div>
+                <div class="panel-title">IRR progression</div>
+              </div>
+            </div>
+            <div class="chart-wrap">
+              <div class="chart-box">
+                <canvas id="irrChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-kicker">History</div>
+                <div class="panel-title">Recent valuations</div>
+              </div>
+              <a href="valuation.html" class="panel-link">Run a new one →</a>
+            </div>
+            <div class="history-wrap" id="val_list"></div>
+          </div>
+        </div>
+
+        <!-- PROFILE + NEXT STEPS -->
+        <div class="lower-grid">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-kicker">Founder profile</div>
+                <div class="panel-title">Current profile</div>
+              </div>
+              <a href="valuation.html" class="panel-link">Update →</a>
+            </div>
+            <div class="profile-wrap">
+              <div class="profile-grid" id="profile_grid">
+                <div class="profile-card">
+                  <div class="profile-label">Startup</div>
+                  <div class="profile-value" id="p_startup">—</div>
+                </div>
+                <div class="profile-card">
+                  <div class="profile-label">Sector</div>
+                  <div class="profile-value" id="p_sector">—</div>
+                </div>
+                <div class="profile-card">
+                  <div class="profile-label">Stage</div>
+                  <div class="profile-value" id="p_stage">—</div>
+                </div>
+                <div class="profile-card">
+                  <div class="profile-label">Country</div>
+                  <div class="profile-value" id="p_country">—</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-kicker">Workflow</div>
+                <div class="panel-title">Recommended next steps</div>
+              </div>
+            </div>
+            <div class="steps-wrap">
+              <div class="step-list" id="next_steps"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const SUPA_URL = 'https://fvbrzttvdvxhbdkjknje.supabase.co';
+    const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2YnJ6dHR2ZHZ4aGJka2prbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzgwNTAsImV4cCI6MjA5MDcxNDA1MH0.tcE5PlgMsu7suLAzN3uT5VjKnFhc25qkJJMKkbNmtvI';
+
+    const sb = supabase.createClient(SUPA_URL, SUPA_KEY, {
+      auth:{
+        detectSessionInUrl:true,
+        persistSession:true,
+        autoRefreshToken:true
+      }
+    });
+
+    let irrChartInst = null;
+
+    async function sendMagicLink(){
+      const email = document.getElementById('auth_email').value.trim();
+      const err = document.getElementById('auth_err');
+      const succ = document.getElementById('auth_success');
+      err.style.display = 'none';
+      succ.style.display = 'none';
+
+      if(!email || !email.includes('@')){
+        err.textContent = 'Please enter a valid email.';
+        err.style.display = 'block';
+        return;
+      }
+
+      const { error } = await sb.auth.signInWithOtp({
+        email,
+        options:{ emailRedirectTo:'https://vcready.co/callback.html' }
+      });
+
+      if(error){
+        err.textContent = 'Something went wrong. Please try again.';
+        err.style.display = 'block';
+      }else{
+        succ.style.display = 'block';
+      }
+    }
+
+    async function signInGoogle(){
+      await sb.auth.signInWithOAuth({
+        provider:'google',
+        options:{ redirectTo:'https://vcready.co/callback.html' }
+      });
+    }
+
+    async function signOut(){
+      await sb.auth.signOut();
+      showAuth();
+    }
+
+    function fmtD(s){
+      if(!s) return '—';
+      const d = new Date(s);
+      return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    }
+
+    function fmtN(n){
+      if(!n && n !== 0) return '—';
+      if(Math.abs(n) >= 1000000) return '$' + (n/1000000).toFixed(2) + 'M';
+      if(Math.abs(n) >= 1000) return '$' + (n/1000).toFixed(1) + 'K';
+      return '$' + Math.round(n);
+    }
+
+    function cleanName(email){
+      const raw = (email || '').split('@')[0] || '';
+      return raw
+        .replace(/[._-]/g,' ')
+        .split(' ')
+        .filter(Boolean)
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+    }
+
+    function showAuth(){
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('auth-screen').style.display = 'flex';
+      document.getElementById('user-info').style.display = 'none';
+      document.getElementById('btn_signout').style.display = 'none';
+      document.getElementById('top_new_btn').style.display = 'none';
+    }
+
+    function showDash(){
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      document.getElementById('user-info').style.display = 'flex';
+      document.getElementById('btn_signout').style.display = 'inline-flex';
+      document.getElementById('top_new_btn').style.display = 'inline-flex';
+    }
+
+    async function dbQueryFilter(table, col, val, limit = 50){
+      const { data, error } = await sb
+        .from(table)
+        .select('*')
+        .eq(col, val)
+        .order('created_at', { ascending:false })
+        .limit(limit);
+
+      if(error) return [];
+      return data || [];
+    }
+
+    function getLatestDate(values){
+      const dates = values
+        .map(v => v?.created_at)
+        .filter(Boolean)
+        .map(d => new Date(d).getTime());
+
+      if(!dates.length) return null;
+      return new Date(Math.max(...dates));
+    }
+
+    function getValuationScore(v){
+      if(!v) return null;
+      const irrPart = Math.min(100, Math.round(((v.irr || 0) / 50) * 40));
+      const scorePart = Math.min(100, Math.round(((v.score || 0) / 100) * 60));
+      return Math.min(100, irrPart + scorePart);
+    }
+
+    function getDataRoomPct(d){
+      if(!d || !d.total) return null;
+      return Math.round((d.score / d.total) * 100);
+    }
+
+    function getQAPct(q){
+      if(!q || !q.total) return null;
+      return Math.round((q.score / q.total) * 100);
+    }
+
+    function scoreStatus(score){
+      if(score === null || score === undefined) return 'na';
+      if(score >= 75) return 'good';
+      if(score >= 55) return 'warn';
+      return 'weak';
+    }
+
+    function readinessLevel(global){
+      if(global === null || global === undefined) return null;
+      if(global >= 80) return 'excellent';
+      if(global >= 60) return 'good';
+      if(global >= 40) return 'fair';
+      return 'weak';
+    }
+
+    function readinessMeta(level){
+      return {
+        excellent:{
+          verdict:'Investor-ready.',
+          desc:'Your profile is strong across the main dimensions. Focus on precision, consistency, and final polish before active fundraising.',
+          color:'var(--success)'
+        },
+        good:{
+          verdict:'Almost ready.',
+          desc:'The fundamentals are solid, but a few weak points could still reduce investor confidence. Prioritize the highest-impact fixes before your next meeting.',
+          color:'var(--success)'
+        },
+        fair:{
+          verdict:'Needs work.',
+          desc:'You have useful building blocks, but the profile is still uneven. Tightening the narrative and missing materials should come first.',
+          color:'var(--warn)'
+        },
+        weak:{
+          verdict:'Not yet ready.',
+          desc:'The workspace still shows major gaps. Start with the core modules and build a cleaner readiness baseline before fundraising.',
+          color:'var(--danger)'
+        }
+      };
+    }
+
+    function getToolsModel(vals, pitch, dataroom, qa){
+      const latestVal = vals[0] || null;
+      return [
+        {
+          key:'valuation',
+          name:'VC Valuation',
+          score: latestVal ? latestVal.score : null,
+          sub: latestVal ? `IRR ${latestVal.irr?.toFixed(1) || '—'}%` : 'Not run yet',
+          link:'valuation.html',
+          color:'#0E0E0C',
+          state: latestVal ? 'done' : 'missing'
+        },
+        {
+          key:'pitch',
+          name:'Pitch Readiness',
+          score: pitch ? pitch.score : null,
+          sub: pitch ? `${pitch.score}/100` : 'Not assessed',
+          link:'pitch.html',
+          color:'#0F6A46',
+          state: pitch ? 'done' : 'missing'
+        },
+        {
+          key:'dataroom',
+          name:'Data Room',
+          score: getDataRoomPct(dataroom),
+          sub: dataroom ? `${dataroom.score}/${dataroom.total} docs ready` : 'Not checked',
+          link:'dataroom.html',
+          color:'#4C4A43',
+          state: dataroom ? 'done' : 'missing'
+        },
+        {
+          key:'qa',
+          name:'Investor Q&A',
+          score: getQAPct(qa),
+          sub: qa ? `${qa.score}/${qa.total} answers ready` : 'Not simulated',
+          link:'qa.html',
+          color:'#77736A',
+          state: qa ? 'done' : 'missing'
+        },
+        {
+          key:'captable',
+          name:'Cap Table',
+          score: null,
+          sub:'Simulation tool available',
+          link:'captable.html',
+          color:'#AAA59A',
+          state:'optional'
+        }
+      ];
+    }
+
+    function computeWorkspace(vals, pitch, dataroom, qa){
+      const modules = [
+        {name:'VC Valuation', done: !!vals.length, link:'valuation.html'},
+        {name:'Pitch Readiness', done: !!pitch, link:'pitch.html'},
+        {name:'Data Room', done: !!dataroom, link:'dataroom.html'},
+        {name:'Investor Q&A', done: !!qa, link:'qa.html'},
+        {name:'Cap Table', done: false, link:'captable.html', optional:true}
+      ];
+
+      const completed = modules.filter(m => m.done).length;
+      return { modules, completed, total: modules.length };
+    }
+
+    function computeGlobalReadiness(vals, pitch, dataroom, qa){
+      const vScore = getValuationScore(vals[0]);
+      const pScore = pitch ? pitch.score : null;
+      const dScore = getDataRoomPct(dataroom);
+      const qScore = getQAPct(qa);
+
+      const weighted = [];
+      if(vScore !== null) weighted.push({score:vScore, weight:35});
+      if(pScore !== null) weighted.push({score:pScore, weight:30});
+      if(dScore !== null) weighted.push({score:dScore, weight:20});
+      if(qScore !== null) weighted.push({score:qScore, weight:15});
+
+      if(!weighted.length) return null;
+
+      const totalWeight = weighted.reduce((s, i) => s + i.weight, 0);
+      return Math.round(weighted.reduce((s, i) => s + i.score * i.weight, 0) / totalWeight);
+    }
+
+    function computeStrengthWeakness(vals, pitch, dataroom, qa){
+      const areas = [
+        {name:'Valuation', score:getValuationScore(vals[0]), short:'Valuation quality'},
+        {name:'Pitch', score:pitch ? pitch.score : null, short:'Pitch clarity'},
+        {name:'Data Room', score:getDataRoomPct(dataroom), short:'Data room readiness'},
+        {name:'Q&A', score:getQAPct(qa), short:'Investor Q&A prep'}
+      ].filter(a => a.score !== null);
+
+      if(!areas.length){
+        return {
+          strongest:{name:'—', score:null, short:'Not enough data yet.'},
+          weakest:{name:'—', score:null, short:'Not enough data yet.'}
+        };
+      }
+
+      const strongest = [...areas].sort((a,b) => b.score - a.score)[0];
+      const weakest = [...areas].sort((a,b) => a.score - b.score)[0];
+      return { strongest, weakest };
+    }
+
+    function computePriorities(vals, pitch, dataroom, qa){
+      const latestVal = vals[0] || null;
+      const priorities = [];
+
+      if(!latestVal){
+        priorities.push({
+          level:'high',
+          title:'Run your first valuation',
+          desc:'Start with the core financial signal. This unlocks the first serious investor-readiness baseline.',
+          eta:'10–15 min',
+          link:'valuation.html'
+        });
+      } else if((latestVal.irr || 0) < 25){
+        priorities.push({
+          level:'high',
+          title:'Improve IRR above VC threshold',
+          desc:`Your latest IRR is ${latestVal.irr?.toFixed(1) || '—'}%. Rework assumptions and test scenarios until the return profile becomes more credible.`,
+          eta:'15–20 min',
+          link:'valuation.html'
+        });
+      }
+
+      if(!pitch){
+        priorities.push({
+          level:'high',
+          title:'Assess pitch readiness',
+          desc:'Your operating signal may be stronger than the story. Score the deck before the market does it for you.',
+          eta:'15 min',
+          link:'pitch.html'
+        });
+      } else if(pitch.score < 60){
+        priorities.push({
+          level:'high',
+          title:'Raise pitch quality',
+          desc:`Current pitch score: ${pitch.score}/100. Narrative clarity is likely reducing perceived investability.`,
+          eta:'20 min',
+          link:'pitch.html'
+        });
+      }
+
+      const drPct = getDataRoomPct(dataroom);
+      if(!dataroom){
+        priorities.push({
+          level:'medium',
+          title:'Start data room preparation',
+          desc:'Lack of materials slows diligence and signals weak preparation. Build the document base early.',
+          eta:'20–30 min',
+          link:'dataroom.html'
+        });
+      } else if(drPct < 75){
+        priorities.push({
+          level:'medium',
+          title:'Complete missing data room items',
+          desc:`Current completion: ${drPct}%. Focus on the highest-friction legal and financial documents first.`,
+          eta:'20 min',
+          link:'dataroom.html'
+        });
+      }
+
+      const qaPct = getQAPct(qa);
+      if(!qa){
+        priorities.push({
+          level:'medium',
+          title:'Simulate investor Q&A',
+          desc:'Pressure-test how well you answer first-meeting questions before facing them live.',
+          eta:'15 min',
+          link:'qa.html'
+        });
+      } else if(qaPct < 70){
+        priorities.push({
+          level:'medium',
+          title:'Strengthen investor answers',
+          desc:`Current readiness: ${qaPct}%. Tighten answers on financials, risk, and market assumptions.`,
+          eta:'15–20 min',
+          link:'qa.html'
+        });
+      }
+
+      if(vals.length === 1){
+        priorities.push({
+          level:'low',
+          title:'Run multiple scenarios',
+          desc:'One valuation is not enough. Build a tighter range of outcomes with at least 2–3 assumptions sets.',
+          eta:'10 min',
+          link:'valuation.html'
+        });
+      }
+
+      priorities.push({
+        level:'low',
+        title:'Review sector comparables',
+        desc:'Anchor your expectations in real deals across Africa, MENA and Europe before fundraising conversations.',
+        eta:'10 min',
+        link:'comparables.html'
+      });
+
+      return priorities.slice(0,4);
+    }
+
+    function renderHeroMeta(user, latestDate){
+      const email = user.email || '—';
+      const name = user.user_metadata?.full_name || user.user_metadata?.name || cleanName(email) || 'Founder';
+      const firstName = name.split(' ')[0] || 'Founder';
+      const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2) || 'F';
+
+      document.getElementById('user_avatar').textContent = initials;
+      document.getElementById('user_email').textContent = email;
+      document.getElementById('user_name').textContent = name;
+      document.getElementById('dash_name').textContent = firstName;
+      document.getElementById('dash_meta').textContent = `Member since ${fmtD(user.created_at)}`;
+
+      if(latestDate){
+        document.getElementById('latest_update_value').textContent = fmtD(latestDate);
+        document.getElementById('latest_update_text').textContent = 'Latest workspace activity recorded across your saved analyses.';
+      } else {
+        document.getElementById('latest_update_value').textContent = 'No data';
+        document.getElementById('latest_update_text').textContent = 'Run your first module to start building your workspace.';
+      }
+    }
+
+    function renderExecutiveStrip(global, strengthWeakness, priorities){
+      const level = readinessLevel(global);
+      const strongest = strengthWeakness.strongest;
+      const weakest = strengthWeakness.weakest;
+      const topPriority = priorities[0];
+
+      document.getElementById('exec_readiness').textContent = global !== null ? `${global}/100` : '—';
+      document.getElementById('exec_readiness_text').textContent =
+        global !== null
+          ? readinessMeta(level).desc
+          : 'Complete the core tools to generate your score.';
+
+      document.getElementById('exec_strength').textContent = strongest.name;
+      document.getElementById('exec_strength_text').textContent =
+        strongest.score !== null
+          ? `${strongest.score}% — currently your strongest signal.`
+          : 'Not enough data yet.';
+
+      document.getElementById('exec_weakness').textContent = weakest.name;
+      document.getElementById('exec_weakness_text').textContent =
+        weakest.score !== null
+          ? `${weakest.score}% — your weakest area right now.`
+          : 'Not enough data yet.';
+
+      document.getElementById('exec_priority').textContent = topPriority ? topPriority.title : '—';
+      document.getElementById('exec_priority_text').textContent =
+        topPriority
+          ? topPriority.desc
+          : 'Run the first module to unlock recommendations.';
+    }
+
+    function renderReadiness(global, vals, pitch, dataroom, qa){
+      const level = readinessLevel(global);
+      const meta = level ? readinessMeta(level) : null;
+      const circ = 339.3;
+      const pct = global || 0;
+      const latestDate = getLatestDate([vals[0], pitch, dataroom, qa].filter(Boolean));
+
+      document.getElementById('readiness_date').textContent = latestDate ? fmtD(latestDate) : 'No score yet';
+
+      const bars = [
+        {label:'Valuation', score:getValuationScore(vals[0]), link:'valuation.html', color:'#0E0E0C'},
+        {label:'Pitch', score:pitch ? pitch.score : null, link:'pitch.html', color:'#0F6A46'},
+        {label:'Data room', score:getDataRoomPct(dataroom), link:'dataroom.html', color:'#4C4A43'},
+        {label:'Q&A', score:getQAPct(qa), link:'qa.html', color:'#77736A'}
+      ];
+
+      document.getElementById('readiness_content').innerHTML = `
+        <div class="score-top">
+          <div class="gauge">
+            <svg width="140" height="140" viewBox="0 0 140 140">
+              <circle class="g-bg" cx="70" cy="70" r="54"></circle>
+              <circle
+                class="g-fg"
+                cx="70"
+                cy="70"
+                r="54"
+                stroke="${meta ? meta.color : 'var(--line-2)'}"
+                stroke-dasharray="${circ}"
+                stroke-dashoffset="${global !== null ? circ - (circ * pct / 100) : circ}"
+              ></circle>
+            </svg>
+            <div class="g-center">
+              <div class="g-num">${global !== null ? global : '—'}</div>
+              <div class="g-den">/ 100</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="score-verdict ${level || ''}">
+              ${meta ? meta.verdict : 'Complete the core tools to generate your score.'}
+            </div>
+            <div class="score-desc">
+              ${meta ? meta.desc : 'Run the Valuation, Pitch Readiness, Data Room, and Investor Q&A modules to generate a fuller investor-readiness signal.'}
+            </div>
+          </div>
+        </div>
+
+        <div class="score-bars">
+          ${bars.map(b => `
+            <div class="score-bar">
+              <div class="score-bar-head">
+                <span>${b.label}</span>
+                <span>${b.score !== null ? b.score + '%' : '—'}</span>
+              </div>
+              <div class="score-track">
+                <div class="score-fill" style="width:${b.score || 0}%;background:${b.color}"></div>
+              </div>
+              <a href="${b.link}" class="score-link ${b.score === null ? 'muted' : ''}">
+                ${b.score === null ? 'Not assessed yet →' : 'Improve →'}
+              </a>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderPriorities(priorities){
+      if(!priorities.length){
+        document.getElementById('priority_list').innerHTML = `
+          <div class="table-empty">Run your first module to unlock prioritized actions.</div>
+        `;
+        return;
+      }
+
+      document.getElementById('priority_list').innerHTML = priorities.map(p => `
+        <div class="priority-item">
+          <div class="priority-badge ${p.level}">
+            ${p.level}
+          </div>
+          <div>
+            <div class="priority-title">${p.title}</div>
+            <div class="priority-desc">${p.desc}</div>
+          </div>
+          <div class="priority-meta">${p.eta}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderCompletion(workspace){
+      const percent = Math.round((workspace.completed / workspace.total) * 100);
+      const completionText =
+        percent >= 80 ? 'Most of the workspace is active. Focus now on quality and precision.' :
+        percent >= 50 ? 'The foundation is in place, but some critical modules are still missing.' :
+        'The workspace is still incomplete. Start with the core readiness modules first.';
+
+      document.getElementById('completion_content').innerHTML = `
+        <div class="completion-top">
+          <div class="completion-ring" style="background:conic-gradient(var(--ink) ${percent * 3.6}deg, var(--line) 0deg)">
+            <div class="completion-center">
+              <div class="completion-num">${workspace.completed}</div>
+              <div class="completion-den">of ${workspace.total}</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="completion-title">${percent}% workspace completion</div>
+            <div class="completion-text">${completionText}</div>
+          </div>
+        </div>
+
+        <div class="completion-list">
+          ${workspace.modules.map(m => `
+            <div class="completion-item">
+              <div class="completion-item-left">
+                <div class="completion-dot ${m.done ? 'done' : (m.optional ? 'partial' : '')}"></div>
+                <div class="completion-name">${m.name}</div>
+              </div>
+              <div class="completion-state">${m.done ? 'Completed' : (m.optional ? 'Optional' : 'Missing')}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderToolScores(vals, pitch, dataroom, qa){
+      const tools = getToolsModel(vals, pitch, dataroom, qa);
+
+      document.getElementById('tool_scores_content').innerHTML = `
+        <div class="tools-grid">
+          ${tools.map(t => `
+            <div class="tool-card">
+              <div class="tool-card-top">
+                <div class="tool-card-name">${t.name}</div>
+                <div class="tool-card-score ${scoreStatus(t.score)}">
+                  ${t.score !== null ? `${t.score}%` : '—'}
+                </div>
+              </div>
+              <div class="tool-card-sub">${t.sub}</div>
+              <div class="tool-card-track">
+                <div class="tool-card-fill" style="width:${t.score || 0}%;background:${t.color}"></div>
+              </div>
+              <a href="${t.link}" class="tool-card-link">${t.score !== null ? 'Improve →' : 'Start →'}</a>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderAdvancedAnalysis(vals, pitch, dataroom, qa){
+      if(!vals.length && !pitch && !dataroom && !qa){
+        document.getElementById('analysis_section').style.display = 'none';
+        return;
+      }
+
+      document.getElementById('analysis_section').style.display = 'block';
+
+      const latest = vals[0] || null;
+      const trend = vals.length >= 2 ? (vals[0].irr || 0) - (vals[vals.length - 1].irr || 0) : null;
+      const bestCoc = vals.length ? vals.reduce((b, v) => Math.max(b, v.coc || 0), 0) : null;
+      const drPct = getDataRoomPct(dataroom);
+      const qaPct = getQAPct(qa);
+
+      const signals = [
+        {
+          label:'Latest IRR',
+          value: latest ? `${latest.irr?.toFixed(1) || '—'}%` : '—',
+          class: latest ? ((latest.irr || 0) >= 25 ? 'good' : 'warn') : '',
+          desc: latest
+            ? ((latest.irr || 0) >= 40
+              ? 'Excellent return profile. Strong signal from a venture perspective.'
+              : (latest.irr || 0) >= 25
+                ? 'Above the core VC threshold. Fundable territory.'
+                : 'Below 25%. Scenario work is needed.')
+            : 'No valuation recorded yet.'
+        },
+        {
+          label:'Pitch quality',
+          value: pitch ? `${pitch.score}/100` : '—',
+          class: pitch ? (pitch.score >= 70 ? 'good' : pitch.score >= 50 ? 'warn' : 'weak') : '',
+          desc: pitch
+            ? (pitch.score >= 70
+              ? 'Narrative quality is strong.'
+              : pitch.score >= 50
+                ? 'Decent base, but still not investor-grade.'
+                : 'The story likely underperforms against the business.')
+            : 'Pitch readiness not assessed yet.'
+        },
+        {
+          label:'Data room',
+          value: drPct !== null ? `${drPct}%` : '—',
+          class: drPct !== null ? (drPct >= 75 ? 'good' : drPct >= 50 ? 'warn' : 'weak') : '',
+          desc: dataroom
+            ? `${dataroom.score}/${dataroom.total} documents ready.`
+            : 'Data room not checked yet.'
+        },
+        {
+          label:'Investor Q&A',
+          value: qaPct !== null ? `${qaPct}%` : '—',
+          class: qaPct !== null ? (qaPct >= 75 ? 'good' : qaPct >= 50 ? 'warn' : 'weak') : '',
+          desc: qa
+            ? `${qa.score}/${qa.total} answers currently ready.`
+            : 'Q&A simulation not run yet.'
+        },
+        {
+          label:'IRR trend',
+          value: trend === null ? '—' : `${trend > 0 ? '+' : ''}${trend.toFixed(1)}%`,
+          class: trend === null ? '' : (trend > 0 ? 'good' : trend < 0 ? 'warn' : ''),
+          desc: trend === null
+            ? 'Run at least two valuations to track change over time.'
+            : trend > 0
+              ? 'Direction is improving.'
+              : trend < 0
+                ? 'Recent assumptions weakened the return profile.'
+                : 'No change across the current history.'
+        },
+        {
+          label:'Best CoC',
+          value: bestCoc ? `${bestCoc.toFixed(1)}×` : '—',
+          class: bestCoc ? (bestCoc >= 3 ? 'good' : 'warn') : '',
+          desc: bestCoc
+            ? (bestCoc >= 5
+              ? 'Top-tier return multiple.'
+              : bestCoc >= 3
+                ? 'Above the 3× baseline.'
+                : 'Below typical VC expectations.')
+            : 'No capital multiple recorded yet.'
+        }
+      ];
+
+      document.getElementById('analysis_grid').innerHTML = `
+        <div class="signal-grid">
+          ${signals.map(s => `
+            <div class="signal-card">
+              <div class="signal-label">${s.label}</div>
+              <div class="signal-value ${s.class}">${s.value}</div>
+              <div class="signal-desc">${s.desc}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderInsights(vals, pitch, dataroom, qa){
+      const items = [];
+      const latest = vals[0] || null;
+      const global = computeGlobalReadiness(vals, pitch, dataroom, qa);
+      const sw = computeStrengthWeakness(vals, pitch, dataroom, qa);
+
+      if(global === null){
+        items.push({
+          cls:'warn',
+          text:'<strong>No global readiness score yet.</strong> Complete the core modules to build a reliable investor-readiness baseline.'
+        });
+      } else {
+        items.push({
+          cls: global >= 60 ? 'good' : 'warn',
+          text:`<strong>Your current readiness score is ${global}/100.</strong> ${readinessMeta(readinessLevel(global)).desc}`
+        });
+      }
+
+      if(sw.strongest.score !== null){
+        items.push({
+          cls:'good',
+          text:`<strong>Your strongest area is ${sw.strongest.name}.</strong> This currently contributes the most positive signal to your profile.`
+        });
+      }
+
+      if(sw.weakest.score !== null){
+        items.push({
+          cls: sw.weakest.score < 55 ? 'warn' : 'good',
+          text:`<strong>Your weakest area is ${sw.weakest.name}.</strong> This is the most likely place where investor perception drops.`
+        });
+      }
+
+      if(latest){
+        if((latest.irr || 0) < 25){
+          items.push({
+            cls:'warn',
+            text:`<strong>IRR is below the typical VC threshold.</strong> Rework scenarios in the <a href="valuation.html">valuation tool</a> before treating the current result as decision-grade.`
+          });
+        } else {
+          items.push({
+            cls:'good',
+            text:`<strong>IRR is above threshold at ${latest.irr?.toFixed(1)}%.</strong> The financial signal is credible, but other layers still determine fundraising quality.`
+          });
+        }
+      }
+
+      if(!pitch){
+        items.push({
+          cls:'warn',
+          text:'<strong>The narrative layer is missing.</strong> Use <a href="pitch.html">Pitch Readiness</a> to test whether the company is being communicated with the same quality as it is being operated.'
+        });
+      }
+
+      if(!dataroom){
+        items.push({
+          cls:'warn',
+          text:'<strong>The diligence layer is missing.</strong> Investors do not only assess stories and numbers; they assess preparedness. Start the <a href="dataroom.html">Data Room</a> module.'
+        });
+      }
+
+      if(vals.length === 1){
+        items.push({
+          cls:'weak',
+          text:'<strong>You only have one valuation scenario saved.</strong> Build at least 2–3 scenarios to understand the range of outcomes, not just one point estimate.'
+        });
+      }
+
+      items.push({
+        cls:'good',
+        text:'<strong>Use market anchors, not intuition.</strong> Review the <a href="comparables.html">sector comparables</a> before refining valuation expectations or fundraising messaging.'
+      });
+
+      document.getElementById('insights_section').style.display = 'block';
+      document.getElementById('insights_list').innerHTML = `
+        <div class="insight-list">
+          ${items.slice(0,6).map(i => `
+            <div class="insight-item">
+              <div class="insight-mark ${i.cls}"></div>
+              <div class="insight-copy">${i.text}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderChart(vals){
+      if(vals.length < 2){
+        document.getElementById('chart_section').style.display = 'none';
+        return;
+      }
+
+      document.getElementById('chart_section').style.display = 'block';
+
+      const sorted = vals.slice().sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+      if(irrChartInst) irrChartInst.destroy();
+
+      irrChartInst = new Chart(document.getElementById('irrChart'), {
+        type:'line',
+        data:{
+          labels:sorted.map(v => fmtD(v.created_at)),
+          datasets:[
+            {
+              label:'IRR',
+              data:sorted.map(v => v.irr || 0),
+              borderColor:'#0E0E0C',
+              borderWidth:2,
+              pointRadius:4,
+              pointBackgroundColor:'#0E0E0C',
+              fill:false,
+              tension:.35
+            },
+            {
+              label:'Threshold',
+              data:sorted.map(() => 25),
+              borderColor:'#0F6A46',
+              borderWidth:1.5,
+              borderDash:[5,5],
+              pointRadius:0,
+              fill:false
+            }
+          ]
+        },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins:{ legend:{ display:false } },
+          scales:{
+            x:{
+              grid:{ display:false },
+              ticks:{ color:'#99978E', font:{ size:10 } }
+            },
+            y:{
+              min:0,
+              grid:{ color:'rgba(0,0,0,.05)' },
+              ticks:{
+                color:'#99978E',
+                font:{ size:10 },
+                callback:(value) => value + '%'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderValuations(vals){
+      if(!vals.length){
+        document.getElementById('val_list').innerHTML = `
+          <div class="table-empty">
+            No valuations yet. <a href="valuation.html">Run your first one →</a>
+          </div>
+        `;
+        return;
+      }
+
+      document.getElementById('val_list').innerHTML = `
+        <div class="table">
+          <div class="table-head">
+            <div>Date</div>
+            <div>Startup</div>
+            <div>IRR</div>
+            <div>Score</div>
+            <div>Stage</div>
+          </div>
+
+          ${vals.slice(0,6).map(v => {
+            const irrClass = (v.irr || 0) >= 25 ? 'good' : (v.irr || 0) >= 15 ? 'warn' : 'weak';
+            return `
+              <a href="valuation.html" class="table-row">
+                <div class="t-date">${fmtD(v.created_at)}</div>
+                <div class="t-main">
+                  <div class="t-name">${v.startup || '—'}</div>
+                  <div class="t-sub">${v.sector || '—'} · ${fmtN(v.pv)}</div>
+                </div>
+                <div class="t-num ${irrClass}">${v.irr ? v.irr.toFixed(1) + '%' : '—'}</div>
+                <div class="t-num">${v.score ? v.score + '/100' : '—'}</div>
+                <div class="t-stage">${v.stade || v.stage || '—'}</div>
+              </a>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function renderProfile(founder){
+      if(!founder) return;
+      document.getElementById('p_startup').textContent = founder.startup || '—';
+      document.getElementById('p_sector').textContent = founder.sector || '—';
+      document.getElementById('p_stage').textContent = founder.stade || founder.stage || '—';
+      document.getElementById('p_country').textContent = founder.country || founder.pays || '—';
+    }
+
+    function renderNextSteps(priorities){
+      const defaultSteps = priorities.map((p, idx) => ({
+        idx:String(idx + 1).padStart(2,'0'),
+        title:p.title,
+        desc:p.desc,
+        link:p.link,
+        label:'Open →'
+      }));
+
+      if(!defaultSteps.length){
+        defaultSteps.push({
+          idx:'01',
+          title:'Run your first valuation',
+          desc:'Start the workspace with the core financial readiness signal.',
+          link:'valuation.html',
+          label:'Start →'
+        });
+      }
+
+      defaultSteps.push({
+        idx:String(defaultSteps.length + 1).padStart(2,'0'),
+        title:'Review market comparables',
+        desc:'Anchor expectations in real deals before refining valuation or narrative.',
+        link:'comparables.html',
+        label:'Browse →'
+      });
+
+      defaultSteps.push({
+        idx:String(defaultSteps.length + 1).padStart(2,'0'),
+        title:'Book an expert session',
+        desc:'Turn your current signals into a more fundable fundraising strategy.',
+        link:'https://calendly.com/yacine-chikhar/30min',
+        label:'Book →'
+      });
+
+      document.getElementById('next_steps').innerHTML = defaultSteps.slice(0,5).map(s => `
+        <div class="step-item">
+          <div class="step-index">${s.idx}</div>
+          <div>
+            <div class="step-title">${s.title}</div>
+            <div class="step-desc">${s.desc}</div>
+          </div>
+          <a href="${s.link}" class="step-link"${s.link.startsWith('http') ? ' target="_blank"' : ''}>${s.label}</a>
+        </div>
+      `).join('');
+    }
+
+    async function loadDashboard(user){
+      showDash();
+
+      const email = user.email || '';
+      const latestQueries = await Promise.all([
+        dbQueryFilter('valuations','user_id',user.id),
+        dbQueryFilter('founders','email',email),
+        dbQueryFilter('pitch_scores','user_id',user.id,1),
+        dbQueryFilter('dataroom_scores','user_id',user.id,1),
+        dbQueryFilter('qa_scores','user_id',user.id,1)
+      ]);
+
+      const valuations = latestQueries[0] || [];
+      const founders = latestQueries[1] || [];
+      const pitch = (latestQueries[2] || [])[0] || null;
+      const dataroom = (latestQueries[3] || [])[0] || null;
+      const qa = (latestQueries[4] || [])[0] || null;
+      const founder = founders[0] || null;
+
+      const latestDate = getLatestDate([valuations[0], pitch, dataroom, qa].filter(Boolean));
+      const global = computeGlobalReadiness(valuations, pitch, dataroom, qa);
+      const sw = computeStrengthWeakness(valuations, pitch, dataroom, qa);
+      const priorities = computePriorities(valuations, pitch, dataroom, qa);
+      const workspace = computeWorkspace(valuations, pitch, dataroom, qa);
+
+      renderHeroMeta(user, latestDate);
+      renderExecutiveStrip(global, sw, priorities);
+      renderReadiness(global, valuations, pitch, dataroom, qa);
+      renderPriorities(priorities);
+      renderCompletion(workspace);
+      renderToolScores(valuations, pitch, dataroom, qa);
+      renderAdvancedAnalysis(valuations, pitch, dataroom, qa);
+      renderInsights(valuations, pitch, dataroom, qa);
+      renderChart(valuations);
+      renderValuations(valuations);
+      renderProfile(founder);
+      renderNextSteps(priorities);
+    }
+
+    async function init(){
+      sb.auth.onAuthStateChange((event, session) => {
+        if(event === 'SIGNED_IN' && session){
+          loadDashboard(session.user);
+        } else if(event === 'SIGNED_OUT'){
+          showAuth();
+        }
+      });
+
+      const { data:{ session } } = await sb.auth.getSession();
+
+      if(session){
+        loadDashboard(session.user);
+      }else{
+        showAuth();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

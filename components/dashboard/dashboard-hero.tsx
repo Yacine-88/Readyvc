@@ -1,0 +1,84 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { useI18n } from "@/lib/i18n";
+
+export function DashboardHero() {
+  const { t } = useI18n();
+  
+  return (
+    <Card className="overflow-hidden" padding="lg">
+      <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-6">
+        {/* Left: Main Content */}
+        <div className="flex flex-col justify-between min-h-[280px]">
+          <div>
+            <p className="eyebrow inline-flex items-center gap-2.5 mb-4">
+              <span className="w-6 h-px bg-border-strong" aria-hidden="true" />
+              {t("dashboard.title")}
+            </p>
+            <h1 className="heading-display text-4xl md:text-5xl text-balance mb-3">
+              {t("dashboard.welcome")}, <span className="text-muted">Founder.</span>
+            </h1>
+            <p className="text-ink-secondary text-base leading-relaxed max-w-lg text-pretty">
+              {t("dashboard.subtitle")}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3 mt-6">
+            <Button href="/readiness">
+              {t("dashboard.score.title")}
+              <span aria-hidden="true">&rarr;</span>
+            </Button>
+            <Button href="/valuation" variant="secondary">
+              {t("nav.valuation")}
+            </Button>
+          </div>
+        </div>
+
+        {/* Right: Summary Cards */}
+        <div className="grid gap-4">
+          <MiniSummaryCard
+            label={t("dashboard.score.title")}
+            value="72"
+            suffix="/100"
+            description="Up 8 points from last month"
+          />
+          <MiniSummaryCard
+            label={t("nav.valuation")}
+            value="$4.2M"
+            description="Based on current metrics"
+          />
+          <MiniSummaryCard
+            label="Runway"
+            value="14 mo"
+            description="At current burn rate"
+          />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function MiniSummaryCard({
+  label,
+  value,
+  suffix,
+  description,
+}: {
+  label: string;
+  value: string;
+  suffix?: string;
+  description: string;
+}) {
+  return (
+    <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
+      <p className="eyebrow mb-2">{label}</p>
+      <p className="text-2xl font-extrabold tracking-tight leading-none mb-1 font-mono">
+        {value}
+        {suffix && <span className="text-muted text-base font-bold">{suffix}</span>}
+      </p>
+      <p className="text-xs text-ink-secondary">{description}</p>
+    </div>
+  );
+}
