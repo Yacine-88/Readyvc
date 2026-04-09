@@ -627,43 +627,119 @@ export default function ValuationPage() {
 
               {/* ── Multi-Method Comparison ── */}
               <ToolSection title="Multi-Method Comparison">
-                <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 mb-4 text-xs text-ink-secondary leading-relaxed">
-                  <strong className="text-ink">How to interpret:</strong> Each method serves a different
-                  purpose. <strong>VC Method</strong> shows what valuation supports investor returns.{" "}
-                  <strong>Revenue Multiple</strong> reflects sector norms.{" "}
-                  <strong>Comparables</strong> ground-truth against actual rounds at your stage.
-                  Divergence between methods is normal — it reveals negotiation leverage and risks.
+                <div className="bg-accent/5 border border-accent/20 rounded-[var(--radius-md)] p-3 mb-4 text-xs text-ink-secondary leading-relaxed">
+                  <strong className="text-ink">Three Independent Methods:</strong> Each approach calculates
+                  valuation using different assumptions and benchmarks. <strong>VC Method</strong> — investor
+                  return-driven. <strong>Revenue Multiple</strong> — sector norms. <strong>Comparables</strong> — 
+                  actual stage-specific rounds. Divergence reveals where your story needs strengthening.
                 </div>
-                <div className="space-y-3">
-                  {[result.vcMethod, result.revenueMultiple, result.comparables].map((m) => (
-                    <div key={m.method} className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
-                      <div className="flex items-start justify-between gap-4 mb-2">
-                        <div>
-                          <p className="text-sm font-bold">{m.method}</p>
-                          <p className="text-[11px] text-muted mt-0.5">{m.reasoning}</p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-base font-extrabold font-mono">{fmt(m.valuation)}</p>
-                          {m.multiple !== undefined && (
-                            <p className="text-[11px] text-muted">{m.multiple.toFixed(1)}x revenue</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-[10px] text-muted">
-                        <span className="font-mono">{fmt(m.low)}</span>
-                        <div className="flex-1">
-                          <ProgressBar
-                            value={m.valuation - m.low}
-                            max={m.high - m.low}
-                            status="neutral"
-                            size="sm"
-                          />
-                        </div>
-                        <span className="font-mono">{fmt(m.high)}</span>
-                      </div>
-                      <p className="text-[10px] text-muted mt-2 italic">Source: {m.source}</p>
+                
+                {/* METHOD 1: VC Method */}
+                <div className="mb-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-6 h-6 rounded-full bg-accent text-white flex items-center justify-center text-xs font-bold">
+                      1
                     </div>
-                  ))}
+                    <h4 className="text-sm font-bold text-ink">VC Method (Return-Driven)</h4>
+                  </div>
+                  <div className="bg-soft border-2 border-accent/30 rounded-[var(--radius-md)] p-4">
+                    <div className="flex items-start justify-between gap-4 mb-2">
+                      <div>
+                        <p className="text-xs text-muted">{result.vcMethod.reasoning}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-lg font-extrabold font-mono text-accent">{fmt(result.vcMethod.valuation)}</p>
+                        {result.vcMethod.multiple !== undefined && (
+                          <p className="text-[11px] text-muted">{result.vcMethod.multiple.toFixed(1)}x revenue</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-muted mb-2">
+                      <span className="font-mono">{fmt(result.vcMethod.low)}</span>
+                      <div className="flex-1">
+                        <ProgressBar
+                          value={result.vcMethod.valuation - result.vcMethod.low}
+                          max={result.vcMethod.high - result.vcMethod.low}
+                          status="neutral"
+                          size="sm"
+                        />
+                      </div>
+                      <span className="font-mono">{fmt(result.vcMethod.high)}</span>
+                    </div>
+                    <p className="text-[10px] text-muted italic">Source: {result.vcMethod.source}</p>
+                  </div>
+                </div>
+
+                {/* METHOD 2: Revenue Multiple */}
+                <div className="mb-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-6 h-6 rounded-full bg-accent text-white flex items-center justify-center text-xs font-bold">
+                      2
+                    </div>
+                    <h4 className="text-sm font-bold text-ink">Revenue Multiple (Sector Norms)</h4>
+                  </div>
+                  <div className="bg-soft border-2 border-border rounded-[var(--radius-md)] p-4">
+                    <div className="flex items-start justify-between gap-4 mb-2">
+                      <div>
+                        <p className="text-xs text-muted">{result.revenueMultiple.reasoning}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-lg font-extrabold font-mono">{fmt(result.revenueMultiple.valuation)}</p>
+                        {result.revenueMultiple.multiple !== undefined && (
+                          <p className="text-[11px] text-muted">{result.revenueMultiple.multiple.toFixed(1)}x revenue</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-muted mb-2">
+                      <span className="font-mono">{fmt(result.revenueMultiple.low)}</span>
+                      <div className="flex-1">
+                        <ProgressBar
+                          value={result.revenueMultiple.valuation - result.revenueMultiple.low}
+                          max={result.revenueMultiple.high - result.revenueMultiple.low}
+                          status="neutral"
+                          size="sm"
+                        />
+                      </div>
+                      <span className="font-mono">{fmt(result.revenueMultiple.high)}</span>
+                    </div>
+                    <p className="text-[10px] text-muted italic">Source: {result.revenueMultiple.source}</p>
+                  </div>
+                </div>
+
+                {/* METHOD 3: Comparables */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-6 h-6 rounded-full bg-accent text-white flex items-center justify-center text-xs font-bold">
+                      3
+                    </div>
+                    <h4 className="text-sm font-bold text-ink">Stage Comparables (Market Reality)</h4>
+                  </div>
+                  <div className="bg-soft border-2 border-border rounded-[var(--radius-md)] p-4">
+                    <div className="flex items-start justify-between gap-4 mb-2">
+                      <div>
+                        <p className="text-xs text-muted">{result.comparables.reasoning}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-lg font-extrabold font-mono">{fmt(result.comparables.valuation)}</p>
+                        {result.comparables.multiple !== undefined && (
+                          <p className="text-[11px] text-muted">{result.comparables.multiple.toFixed(1)}x revenue</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-muted mb-2">
+                      <span className="font-mono">{fmt(result.comparables.low)}</span>
+                      <div className="flex-1">
+                        <ProgressBar
+                          value={result.comparables.valuation - result.comparables.low}
+                          max={result.comparables.high - result.comparables.low}
+                          status="neutral"
+                          size="sm"
+                        />
+                      </div>
+                      <span className="font-mono">{fmt(result.comparables.high)}</span>
+                    </div>
+                    <p className="text-[10px] text-muted italic">Source: {result.comparables.source}</p>
+                  </div>
                 </div>
               </ToolSection>
 
