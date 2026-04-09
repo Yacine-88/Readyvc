@@ -1259,20 +1259,20 @@ function renderMethodology(r){
       example:`${fmt(r.revExit,r.cur)} × ${r.evMult}× = ${fmt(r.ev,r.cur)}`,
       note:'The EV/Revenue multiple is sector-specific and derived from comparable public and private transactions. Sources: Damodaran (NYU Stern), PitchBook, Crunchbase.'
     },
-    {
-      num:'02',
-      title:'Effective equity stake at exit',
-      formula:'Effective stake = Initial stake × (1 − dilution per round)^N rounds',
-      example:`${r.stake}% × (1 − ${(r.invest>0?(gv('dilution')):20)}%)^${gv('future_rounds')} = ${(r.effStake*100).toFixed(2)}%`,
-      note:'Each subsequent funding round dilutes the investor\'s stake. Standard VC dilution is 15–25% per round. This model applies uniform dilution across all future rounds.'
-    },
-    {
-      num:'03',
-      title:'Investor proceeds at exit',
-      formula:'Proceeds = EV × effective stake',
-      example:`${fmt(r.ev,r.cur)} × ${(r.effStake*100).toFixed(2)}% = ${fmt(r.proceeds,r.cur)}`,
-      note:'Proceeds represent the gross amount returned to the investor at exit before taxes and fees. Net proceeds will vary based on fund structure and jurisdiction.'
-    },
+  {
+  num:'02',
+  title:'Effective equity stake at exit',
+  formula:'Effective stake = Initial stake × (1 − dilution per round)^N rounds',
+  example:`${(r.stake*100).toFixed(1)}% × (1 − ${(r.invest>0?(gv('dilution')):20)}%)^${gv('future_rounds')} = ${(r.effStake*100).toFixed(2)}%`,
+  note:'Each subsequent funding round dilutes the investor\'s stake. Standard VC dilution is 15–25% per round. This model applies uniform dilution across all future rounds.'
+  },
+  {
+  num:'03',
+  title:'Investor proceeds at exit (net after tax)',
+  formula:'Net Proceeds = (EV × effective stake) × (1 − tax rate)',
+  example:`(${fmt(r.ev,r.cur)} × ${(r.effStake*100).toFixed(2)}%) × (1 − ${(r.taxRate*100).toFixed(0)}%) = ${fmt(r.proceeds,r.cur)}`,
+  note:'Net proceeds are after capital gains tax. Gross proceeds (pre-tax) would be higher. Tax rates vary by jurisdiction (typically 15-30% for capital gains) and fund structure.'
+  },
     {
       num:'04',
       title:'IRR (Internal Rate of Return)',
@@ -1374,6 +1374,7 @@ const TX={
     lbEvMult:'EV/Revenue multiple',hintEvMult:'Comparable sector multiple',
     lbRevCur:'Current annual revenue ($)',
     lbR1:'Year 1 revenue ($)',lbR2:'Year 2 revenue ($)',lbR3:'Year 3 revenue ($)',
+    lbR4:'Year 4 revenue ($)',lbR5:'Year 5 revenue ($)',
     lbGm:'Gross margin (%)',lbBurn:'Monthly burn ($)',lbCash:'Cash in bank ($)',
     lbInvest:'Investment amount ($)',hintInvest:'Amount the investor puts in',
     lbStake:'Equity stake (%)',hintStake:'Ownership offered to investor',
@@ -1396,6 +1397,7 @@ const TX={
     lbEvMult:'Multiple EV/Revenu',hintEvMult:'Multiple sectoriel comparable',
     lbRevCur:'CA annuel actuel ($)',
     lbR1:'CA Année 1 ($)',lbR2:'CA Année 2 ($)',lbR3:'CA Année 3 ($)',
+    lbR4:'CA Année 4 ($)',lbR5:'CA Année 5 ($)',
     lbGm:'Marge brute (%)',lbBurn:'Burn mensuel ($)',lbCash:'Cash en banque ($)',
     lbInvest:'Montant investi ($)',hintInvest:'Montant que l\'investisseur apporte',
     lbStake:'Part de capital (%)',hintStake:'Part offerte à l\'investisseur',
@@ -1425,7 +1427,7 @@ function setLang(l){
   s('lb_ev_mult',tx.lbEvMult);s('hint_ev_mult',tx.hintEvMult);
   s('lb_rev_cur',tx.lbRevCur);
   s('lb_r1',tx.lbR1);s('lb_r2',tx.lbR2);s('lb_r3',tx.lbR3);
-  s('lb_r4',tx.lbR4||'Year 4 revenue ($)');s('lb_r5',tx.lbR5||'Year 5 revenue ($)');
+  s('lb_r4',tx.lbR4);s('lb_r5',tx.lbR5);
   s('lb_gm',tx.lbGm);s('lb_burn',tx.lbBurn);s('lb_cash',tx.lbCash);
   s('lb_invest',tx.lbInvest);s('hint_invest',tx.hintInvest);
   s('lb_stake',tx.lbStake);s('hint_stake',tx.hintStake);
@@ -1461,20 +1463,21 @@ function updateProjectionHint(){
   const hintEl=document.getElementById('proj_hint');
   if(!hintEl)return;
   let hintText='';
+  const lang=currentLang||'en';
   if(hasUnrealistic){
-    hintText='⚠️ Projection path appears unstable — extreme growth or decline detected';
+    hintText=lang==='fr'?'⚠️ Trajectoire instable — croissance ou déclin extrême détecté':'⚠️ Projection path appears unstable — extreme growth or decline detected';
     hintEl.style.background='#FFF4E6';
     hintEl.style.borderColor='#FFD699';
   }else if(isAccelerating){
-    hintText='→ Growth appears accelerating';
+    hintText=lang==='fr'?'→ Croissance en accélération':'→ Growth appears accelerating';
     hintEl.style.background='var(--accent-bg)';
     hintEl.style.borderColor='var(--accent-line)';
   }else if(isDecelerating){
-    hintText='↓ Growth appears decelerating (normal for scaling companies)';
+    hintText=lang==='fr'?'↓ Croissance en décélération (normal pour entreprises en croissance)':'↓ Growth appears decelerating (normal for scaling companies)';
     hintEl.style.background='var(--soft)';
     hintEl.style.borderColor='var(--line)';
   }else{
-    hintText='✓ Projection path is broadly consistent';
+    hintText=lang==='fr'?'✓ Trajectoire de projection cohérente':'✓ Projection path is broadly consistent';
     hintEl.style.background='var(--accent-bg)';
     hintEl.style.borderColor='var(--accent-line)';
   }
