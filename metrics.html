@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VCReady — Metrics Calculator</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7BRPFG4JQL"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-7BRPFG4JQL');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
+    :root{
+      --bg:#F7F7F5;--ink:#0E0E0C;--ink-2:#2B2B27;--muted:#6F6E66;--muted-2:#99978E;
+      --line:#E7E3DA;--line-2:#D8D4CB;--soft:#FBFBF9;
+      --accent:#0F6A46;--accent-bg:#EAF6F0;--accent-line:#B6DEC8;
+      --font:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+      --radius:20px;--radius-sm:14px;--radius-btn:12px;
+      --container:1200px;
+    }
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.75;min-height:100vh;}
+    a{color:inherit;text-decoration:none;}
+    .container{width:100%;max-width:var(--container);margin:0 auto;padding:0 32px;}
+    .topbar{position:sticky;top:0;z-index:100;height:68px;border-bottom:1px solid rgba(216,212,203,.85);backdrop-filter:blur(14px);background:rgba(247,247,245,.92);}
+    .topbar-inner{height:68px;display:flex;align-items:center;justify-content:space-between;gap:20px;max-width:var(--container);margin:0 auto;padding:0 32px;}
+    .logo{display:flex;align-items:center;gap:10px;}
+    .logo-mark{width:40px;height:40px;border:1.5px solid var(--ink);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;letter-spacing:-.04em;background:#fff;}
+    .logo-word{font-size:19px;font-weight:700;letter-spacing:-.04em;}
+    .topbar-nav{display:flex;align-items:center;gap:22px;}
+    .nav-link{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;transition:.15s;}
+    .nav-link:hover,.nav-link.active{color:var(--ink);}
+    .topbar-actions{display:flex;align-items:center;gap:10px;}
+    .lang-toggle{display:flex;border:1px solid var(--line-2);border-radius:10px;overflow:hidden;background:#fff;}
+    .lang-btn{border:none;background:transparent;color:var(--muted);height:36px;min-width:42px;padding:0 10px;font-family:var(--font);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:.15s;}
+    .lang-btn.active{background:var(--ink);color:#fff;}
+    .btn{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 16px;background:var(--ink);color:#fff;border:none;border-radius:var(--radius-btn);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap;}
+    .btn:hover{background:#000;}
+    .btn-sec{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 16px;background:#fff;color:var(--ink);border:1px solid var(--line-2);border-radius:var(--radius-btn);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap;text-decoration:none;}
+    .btn-sec:hover{border-color:var(--ink);}
+    .page-header{padding:52px 0 0;border-bottom:1px solid var(--line);padding-bottom:0;}
+    .page-eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:inline-flex;align-items:center;gap:10px;margin-bottom:12px;}
+    .page-eyebrow:before{content:'';width:20px;height:1px;background:var(--line-2);display:block;}
+    .page-title{font-size:42px;line-height:1.06;letter-spacing:-0.04em;font-weight:800;margin-bottom:10px;}
+    .page-desc{font-size:15px;line-height:1.75;color:var(--ink-2);max-width:560px;margin-bottom:32px;}
+    .sector-tabs{display:flex;gap:0;overflow:hidden;border-bottom:2px solid var(--line);margin-top:32px;}
+    .sector-tab{border:none;background:transparent;color:var(--muted);padding:12px 20px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:.15s;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;}
+    .sector-tab.active{color:var(--ink);border-bottom-color:var(--ink);}
+    .sector-tab:hover:not(.active){color:var(--ink);}
+    .tool-layout{display:grid;grid-template-columns:300px 1fr;gap:40px;padding:40px 0 80px;align-items:start;}
+    .input-panel{position:sticky;top:84px;}
+    .input-card{border:1px solid var(--line);border-radius:var(--radius);background:#fff;padding:24px;}
+    .input-card-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--line);}
+    .field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+    .field label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+    .field input{width:100%;height:42px;border:1px solid var(--line-2);border-radius:var(--radius-sm);background:#fff;padding:0 12px;font-size:14px;font-weight:500;color:var(--ink);font-family:var(--font);outline:none;transition:.15s;}
+    .field input:focus{border-color:var(--ink);}
+    .field .hint{font-size:11px;color:var(--muted-2);line-height:1.5;}
+    .calc-btn{width:100%;margin-top:18px;height:46px;background:var(--ink);color:#fff;border:none;border-radius:var(--radius-btn);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:.15s;}
+    .calc-btn:hover{background:var(--accent);}
+    .results-empty{border:1px solid var(--line);border-radius:var(--radius);padding:80px 40px;text-align:center;background:#fff;}
+    .results-empty-kpi{font-size:72px;font-weight:800;letter-spacing:-.08em;line-height:1;color:var(--line);margin-bottom:12px;}
+    .results-empty-lbl{font-size:13px;color:var(--muted);}
+    .metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+    .metric-card{border:1px solid var(--line);border-radius:var(--radius);background:#fff;padding:20px;}
+    .metric-top{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+    .metric-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+    .metric-dot.good{background:var(--accent);}
+    .metric-dot.ok{background:#D4913A;}
+    .metric-dot.bad{background:#C0504D;}
+    .metric-dot.neutral{background:var(--muted-2);}
+    .metric-name{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+    .metric-value{font-size:32px;font-weight:800;letter-spacing:-.06em;line-height:1;margin-bottom:8px;}
+    .metric-value.good{color:var(--accent);}
+    .metric-value.ok{color:#92631A;}
+    .metric-value.bad{color:#9A3B3B;}
+    .metric-desc{font-size:12px;color:var(--ink-2);line-height:1.6;margin-bottom:5px;}
+    .metric-bench{font-size:11px;color:var(--muted);font-family:monospace;}
+    .runway-card{border:1px solid var(--line);border-radius:var(--radius);background:#fff;padding:20px;margin-bottom:12px;}
+    .runway-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+    .runway-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+    .runway-val{font-size:28px;font-weight:800;letter-spacing:-.05em;}
+    .runway-track{background:var(--line);border-radius:999px;height:8px;margin-bottom:10px;}
+    .runway-fill{height:100%;border-radius:999px;transition:width .5s ease;}
+    .runway-fill.good{background:var(--accent);}
+    .runway-fill.ok{background:#D4913A;}
+    .runway-fill.bad{background:#C0504D;}
+    .runway-ticks{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-weight:600;}
+    .analysis-card{border:1px solid var(--line);border-radius:var(--radius);background:#fff;padding:24px;}
+    .analysis-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--line);}
+    .analysis-point{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);align-items:flex-start;}
+    .analysis-point:last-of-type{border-bottom:none;padding-bottom:0;}
+    .ap-icon{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:2px;font-weight:800;}
+    .ap-icon.good{background:var(--accent-bg);color:var(--accent);}
+    .ap-icon.warn{background:#FEF3E2;color:#92631A;}
+    .ap-icon.neutral{background:var(--soft);color:var(--muted);}
+    .ap-text{font-size:13px;line-height:1.75;color:var(--ink-2);}
+    .ap-text strong{color:var(--ink);}
+    .analysis-footer{display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:20px;border-top:1px solid var(--line);gap:16px;flex-wrap:wrap;}
+    .analysis-footer-text{font-size:13px;color:var(--muted);}
+    .analysis-footer a{background:var(--ink);color:#fff;padding:10px 18px;border-radius:var(--radius-btn);font-size:12px;font-weight:700;white-space:nowrap;transition:.15s;display:inline-block;}
+    .analysis-footer a:hover{background:var(--accent);}
+    footer{background:var(--ink);color:rgba(255,255,255,.46);padding:0 0 28px;}
+    .footer-inner{border-top:1px solid rgba(255,255,255,.1);padding-top:20px;display:flex;align-items:center;justify-content:space-between;gap:20px;font-size:12px;}
+    .footer-inner a{color:#fff;font-weight:700;}
+    @media(max-width:900px){.tool-layout{grid-template-columns:1fr;}.input-panel{position:static;}.metrics-grid{grid-template-columns:1fr;}}
+    @media(max-width:820px){.topbar-inner,.container{padding-left:18px;padding-right:18px;}.topbar-nav{display:none;}.lang-toggle{display:none;}.topbar-actions .btn-sec{display:none;}.page-title{font-size:30px;}.sector-tab{padding:10px 14px;font-size:11px;}}
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-mark">VC</span>
+      <span class="logo-word">Ready</span>
+    </a>
+    <nav class="topbar-nav">
+      <a href="valuation.html" class="nav-link">Valuation</a>
+      <a href="metrics.html" class="nav-link active">Metrics</a>
+      <a href="pitch.html" class="nav-link">Pitch</a>
+      <a href="dataroom.html" class="nav-link">Data Room</a>
+      <a href="qa.html" class="nav-link">Q&amp;A</a>
+      <a href="comparables.html" class="nav-link">Comparables</a>
+      <a href="captable.html" class="nav-link">Cap Table</a>
+    </nav>
+    <div class="topbar-actions">
+      <div class="lang-toggle">
+        <button class="lang-btn" onclick="setLang('fr')">FR</button>
+        <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      </div>
+      <a href="dashboard.html" class="btn-sec">Sign in</a>
+      <a href="dashboard.html" class="btn">Dashboard →</a>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-header">
+    <div class="page-eyebrow" id="pg_eyebrow">Investor Metrics</div>
+    <h1 class="page-title" id="pg_title">Know your numbers before the room does.</h1>
+    <p class="page-desc" id="pg_desc">Sector-specific KPIs investors will ask about. Calculate your unit economics, runway, and growth health — interpreted with VC logic.</p>
+    <div class="sector-tabs">
+      <button class="sector-tab active" onclick="setSector('saas')" id="tab_saas">SaaS & Subscription</button>
+      <button class="sector-tab" onclick="setSector('marketplace')" id="tab_marketplace">Marketplace & Commerce</button>
+      <button class="sector-tab" onclick="setSector('fintech')" id="tab_fintech">Fintech & Transactional</button>
+      <button class="sector-tab" onclick="setSector('deeptech')" id="tab_deeptech">Deeptech & R&D</button>
+      <button class="sector-tab" onclick="setSector('agri')" id="tab_agri">AgriTech & Impact</button>
+    </div>
+    <div id="sector_coverage" style="padding:10px 0 30px;font-size:12px;color:var(--muted);font-weight:500;"></div>
+  </div>
+
+  <div class="tool-layout">
+    <!-- INPUT PANEL -->
+    <div class="input-panel">
+      <div class="input-card">
+        <div class="input-card-title" id="input_title">Your data</div>
+        <div id="dynamic_inputs"></div>
+        <button class="calc-btn" onclick="calculate()" id="calc_btn">Calculate metrics →</button>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="results-panel">
+      <div class="results-empty" id="results_empty">
+        <div class="results-empty-kpi">KPI</div>
+        <div class="results-empty-lbl" id="empty_lbl">Enter your data and click Calculate</div>
+      </div>
+      <div id="results_area" style="display:none">
+        <div class="metrics-grid" id="metrics_grid"></div>
+        <div id="runway_wrap"></div>
+        <div class="analysis-card" id="analysis_card" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div>VCReady · by <strong style="color:rgba(255,255,255,.8)">Yacine CHIKHAR</strong> · © 2026</div>
+      <a href="dashboard.html">Open dashboard →</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+let currentLang='en';
+let currentSector='saas';
+
+const SECTOR_COVERAGE={
+  saas:{en:'Covers: SaaS · AI & Machine Learning · EdTech · HR Tech · Cybersecurity · Legal Tech',fr:'Couvre : SaaS · IA & Machine Learning · EdTech · HR Tech · Cybersécurité · Legal Tech'},
+  marketplace:{en:'Covers: E-commerce · Marketplace · Retail · DNVB · Consumer Brands · B2B Commerce',fr:'Couvre : E-commerce · Marketplace · Retail · DNVB · Marques consommateur · B2B Commerce'},
+  fintech:{en:'Covers: Fintech · Payments · Digital Banking · Insurance · Web3 · Crypto',fr:'Couvre : Fintech · Paiements · Banque digitale · Assurance · Web3 · Crypto'},
+  deeptech:{en:'Covers: Biotech · MedTech · CleanTech · Hardware · IoT · Space · Advanced Manufacturing',fr:'Couvre : Biotech · MedTech · CleanTech · Hardware · IoT · Spatial · Fabrication avancée'},
+  agri:{en:'Covers: AgriTech · GovTech · Logistics Tech · Impact & ESG · Social Enterprise',fr:'Couvre : AgriTech · GovTech · LogiTech · Impact & ESG · Entreprise sociale'}
+};
+
+
+// ── FORMS ──
+const FORMS={
+  saas:{
+    en:[
+      {id:'mrr',label:'Monthly Recurring Revenue (MRR)',placeholder:'e.g. 15000',hint:'Total recurring revenue this month ($)'},
+      {id:'new_customers',label:'New customers / month',placeholder:'e.g. 25',hint:'Paying customers acquired'},
+      {id:'churned',label:'Churned customers / month',placeholder:'e.g. 2',hint:'Paying customers lost'},
+      {id:'cac_spend',label:'Sales & marketing spend / month',placeholder:'e.g. 5000',hint:'All acquisition costs ($)'},
+      {id:'total_customers',label:'Total active customers',placeholder:'e.g. 200',hint:'Current paying customer base'},
+      {id:'gross_margin',label:'Gross margin (%)',placeholder:'e.g. 75',hint:'Revenue minus COGS as % of revenue'}
+    ],
+    fr:[
+      {id:'mrr',label:'Revenu récurrent mensuel (MRR)',placeholder:'ex. 15000',hint:'Revenu récurrent total ce mois ($)'},
+      {id:'new_customers',label:'Nouveaux clients / mois',placeholder:'ex. 25',hint:'Clients payants acquis'},
+      {id:'churned',label:'Clients perdus / mois',placeholder:'ex. 2',hint:'Clients payants perdus'},
+      {id:'cac_spend',label:'Budget ventes & marketing / mois',placeholder:'ex. 5000',hint:'Tous les coûts d\'acquisition ($)'},
+      {id:'total_customers',label:'Clients actifs totaux',placeholder:'ex. 200',hint:'Base actuelle de clients payants'},
+      {id:'gross_margin',label:'Marge brute (%)',placeholder:'ex. 75',hint:'Revenu moins COGS en % du revenu'}
+    ]
+  },
+  marketplace:{
+    en:[
+      {id:'gmv',label:'GMV / month',placeholder:'e.g. 500000',hint:'Gross Merchandise Value ($)'},
+      {id:'take_rate',label:'Take rate (%)',placeholder:'e.g. 12',hint:'Your cut on each transaction'},
+      {id:'orders',label:'Orders / month',placeholder:'e.g. 2500',hint:'Completed transactions'},
+      {id:'cac_spend',label:'Marketing spend / month',placeholder:'e.g. 15000',hint:'Acquisition budget ($)'},
+      {id:'cogs',label:'COGS / month',placeholder:'e.g. 50000',hint:'Direct fulfillment costs ($)'},
+      {id:'repeat_rate',label:'Repeat purchase rate (%)',placeholder:'e.g. 35',hint:'% of customers who buy again'}
+    ],
+    fr:[
+      {id:'gmv',label:'GMV / mois',placeholder:'ex. 500000',hint:'Volume brut de marchandises ($)'},
+      {id:'take_rate',label:'Take rate (%)',placeholder:'ex. 12',hint:'Votre part sur chaque transaction'},
+      {id:'orders',label:'Commandes / mois',placeholder:'ex. 2500',hint:'Transactions finalisées'},
+      {id:'cac_spend',label:'Budget marketing / mois',placeholder:'ex. 15000',hint:'Budget acquisition ($)'},
+      {id:'cogs',label:'COGS / mois',placeholder:'ex. 50000',hint:'Coûts directs de fulfillment ($)'},
+      {id:'repeat_rate',label:'Taux de rachat (%)',placeholder:'ex. 35',hint:'% de clients qui reviennent'}
+    ]
+  },
+  fintech:{
+    en:[
+      {id:'gmv',label:'Transaction volume / month',placeholder:'e.g. 2000000',hint:'Total value processed ($)'},
+      {id:'take_rate',label:'Net revenue rate (%)',placeholder:'e.g. 1.5',hint:'Your revenue as % of GMV'},
+      {id:'active_users',label:'Monthly active users (MAU)',placeholder:'e.g. 50000',hint:'Users who transacted this month'},
+      {id:'cac_spend',label:'Acquisition spend / month',placeholder:'e.g. 20000',hint:'All acquisition costs ($)'},
+      {id:'cash',label:'Cash in bank ($)',placeholder:'e.g. 800000',hint:'Current treasury'},
+      {id:'burn',label:'Net monthly burn ($)',placeholder:'e.g. 60000',hint:'Monthly spend minus revenue'}
+    ],
+    fr:[
+      {id:'gmv',label:'Volume transactionnel / mois',placeholder:'ex. 2000000',hint:'Valeur totale traitée ($)'},
+      {id:'take_rate',label:'Taux de revenu net (%)',placeholder:'ex. 1.5',hint:'Votre revenu en % du GMV'},
+      {id:'active_users',label:'Utilisateurs actifs mensuels (MAU)',placeholder:'ex. 50000',hint:'Utilisateurs ayant transigé ce mois'},
+      {id:'cac_spend',label:'Budget acquisition / mois',placeholder:'ex. 20000',hint:'Tous les coûts d\'acquisition ($)'},
+      {id:'cash',label:'Cash en banque ($)',placeholder:'ex. 800000',hint:'Trésorerie actuelle'},
+      {id:'burn',label:'Burn net mensuel ($)',placeholder:'ex. 60000',hint:'Dépenses moins revenus'}
+    ]
+  },
+  deeptech:{
+    en:[
+      {id:'cash',label:'Cash in bank ($)',placeholder:'e.g. 1200000',hint:'Current treasury'},
+      {id:'fixed_costs',label:'Fixed costs / month ($)',placeholder:'e.g. 60000',hint:'Salaries, rent, infrastructure'},
+      {id:'rd_spend',label:'R&D spend / month ($)',placeholder:'e.g. 30000',hint:'Direct R&D and lab costs'},
+      {id:'revenue',label:'Monthly revenue ($)',placeholder:'e.g. 0',hint:'Grants, pilots, licensing'},
+      {id:'milestones',label:'Months to next milestone',placeholder:'e.g. 8',hint:'Estimated time to next fundable milestone'},
+      {id:'patents',label:'Patents filed / granted',placeholder:'e.g. 2',hint:'IP assets filed or granted'}
+    ],
+    fr:[
+      {id:'cash',label:'Cash en banque ($)',placeholder:'ex. 1200000',hint:'Trésorerie actuelle'},
+      {id:'fixed_costs',label:'Coûts fixes / mois ($)',placeholder:'ex. 60000',hint:'Salaires, loyers, infrastructure'},
+      {id:'rd_spend',label:'Dépenses R&D / mois ($)',placeholder:'ex. 30000',hint:'Coûts directs R&D et labo'},
+      {id:'revenue',label:'Revenu mensuel ($)',placeholder:'ex. 0',hint:'Subventions, pilotes, licences'},
+      {id:'milestones',label:'Mois jusqu\'au prochain milestone',placeholder:'ex. 8',hint:'Temps estimé jusqu\'au prochain milestone finançable'},
+      {id:'patents',label:'Brevets déposés / accordés',placeholder:'ex. 2',hint:'Actifs IP déposés ou accordés'}
+    ]
+  },
+  agri:{
+    en:[
+      {id:'farmers',label:'Active farmers / users',placeholder:'e.g. 1200',hint:'Active end users on the platform'},
+      {id:'revenue_per_user',label:'Revenue per user / month ($)',placeholder:'e.g. 8',hint:'Monthly ARPU'},
+      {id:'cac_spend',label:'Acquisition spend / month ($)',placeholder:'e.g. 8000',hint:'All user acquisition costs'},
+      {id:'churn_rate',label:'Monthly churn rate (%)',placeholder:'e.g. 4',hint:'% users lost per month'},
+      {id:'cash',label:'Cash in bank ($)',placeholder:'e.g. 400000',hint:'Current treasury'},
+      {id:'burn',label:'Net monthly burn ($)',placeholder:'e.g. 35000',hint:'Monthly spend minus revenue'}
+    ],
+    fr:[
+      {id:'farmers',label:'Agriculteurs / utilisateurs actifs',placeholder:'ex. 1200',hint:'Utilisateurs actifs sur la plateforme'},
+      {id:'revenue_per_user',label:'Revenu par utilisateur / mois ($)',placeholder:'ex. 8',hint:'ARPU mensuel'},
+      {id:'cac_spend',label:'Budget acquisition / mois ($)',placeholder:'ex. 8000',hint:'Tous les coûts d\'acquisition'},
+      {id:'churn_rate',label:'Churn mensuel (%)',placeholder:'ex. 4',hint:'% d\'utilisateurs perdus par mois'},
+      {id:'cash',label:'Cash en banque ($)',placeholder:'ex. 400000',hint:'Trésorerie actuelle'},
+      {id:'burn',label:'Burn net mensuel ($)',placeholder:'ex. 35000',hint:'Dépenses moins revenus'}
+    ]
+  }
+};
+
+// ── HELPERS ──
+function gv(id){return parseFloat(document.getElementById(id)?.value)||0;}
+function fmt(n){
+  const clean=v=>{const s=v.toFixed(2);return s.replace(/\.?0+$/,'');};
+  if(Math.abs(n)>=1000000) return '$'+clean(n/1000000)+'M';
+  if(Math.abs(n)>=1000) return '$'+(n/1000%1===0?(n/1000).toFixed(0):(n/1000).toFixed(1).replace(/\.?0+$/,''))+'K';
+  return '$'+Math.round(n).toLocaleString();
+}
+function pct(n,d=1){return n.toFixed(d)+'%';}
+function mult(n,d=1){return n.toFixed(d)+'×';}
+
+// ── CALCULATIONS ──
+function calcSaas(v){
+  const mrr=v.mrr||0,newC=v.new_customers||1,churned=v.churned||0;
+  const cacSpend=v.cac_spend||0,totalC=v.total_customers||1,gm=v.gross_margin||0;
+  const arr=mrr*12;
+  const churnRate=(churned/Math.max(totalC,1))*100;
+  const arpu=totalC>0?mrr/totalC:0;
+  const ltv=churnRate>0?arpu/(churnRate/100):arpu*24;
+  const cac=newC>0?cacSpend/newC:0;
+  const ltvCac=cac>0?ltv/cac:0;
+  const netNewMrr=(newC*arpu)-(churned*arpu);
+  const mrrGrowth=mrr>0?(netNewMrr/mrr)*100:0;
+  return{metrics:[
+    {label:'ARR',value:fmt(arr),status:arr>1000000?'good':arr>100000?'ok':'bad',desc:currentLang==='fr'?'Revenu annuel récurrent':'Annual recurring revenue',bench:currentLang==='fr'?'> $1M = crédible pour VC Series A':'> $1M = credible for VC Series A'},
+    {label:'CAC',value:fmt(cac),status:cac<500?'good':cac<2000?'ok':'bad',desc:currentLang==='fr'?'Coût d\'acquisition client':'Customer acquisition cost',bench:'< $500 excellent · > $2K to watch'},
+    {label:'LTV',value:fmt(ltv),status:ltv>3*cac?'good':ltv>cac?'ok':'bad',desc:currentLang==='fr'?'Valeur à vie client estimée':'Estimated customer lifetime value',bench:currentLang==='fr'?'Doit clairement dépasser le CAC':'Should clearly exceed CAC'},
+    {label:'LTV / CAC',value:mult(ltvCac),status:ltvCac>=3?'good':ltvCac>=1?'ok':'bad',desc:currentLang==='fr'?'Ratio central de santé économique':'Core unit economics health ratio',bench:'≥ 3× = VC threshold (ILPA standard)'},
+    {label:'Churn Rate',value:pct(churnRate),status:churnRate<2?'good':churnRate<5?'ok':'bad',desc:currentLang==='fr'?'Clients perdus chaque mois':'Customers lost each month',bench:'< 2% excellent · > 5% critical'},
+    {label:'MRR Growth',value:pct(mrrGrowth),status:mrrGrowth>10?'good':mrrGrowth>3?'ok':'bad',desc:currentLang==='fr'?'Croissance nette mensuelle':'Monthly net MRR growth',bench:'> 10%/month = strong signal'},
+  ],runway:null,data:{ltvCac,churnRate,mrrGrowth,arr}}
+}
+
+function calcMarketplace(v){
+  const gmv=v.gmv||0,takeRate=v.take_rate||0,orders=v.orders||1;
+  const cacSpend=v.cac_spend||0,cogs=v.cogs||0,repeatRate=v.repeat_rate||0;
+  const revenue=gmv*(takeRate/100);
+  const grossProfit=revenue-cogs;
+  const grossMargin=revenue>0?(grossProfit/revenue)*100:0;
+  const aov=orders>0?gmv/orders:0;
+  const roas=cacSpend>0?revenue/cacSpend:0;
+  return{metrics:[
+    {label:'Net Revenue',value:fmt(revenue),status:revenue>50000?'good':revenue>10000?'ok':'bad',desc:currentLang==='fr'?'Revenu net capté':'Net revenue captured by the platform',bench:'GMV × take rate'},
+    {label:'Gross Margin',value:pct(grossMargin,0),status:grossMargin>50?'good':grossMargin>30?'ok':'bad',desc:currentLang==='fr'?'Marge après coûts directs':'Margin after direct costs',bench:'> 50% excellent · < 30% fragile'},
+    {label:'AOV',value:fmt(aov),status:'neutral',desc:currentLang==='fr'?'Panier moyen':'Average order value',bench:currentLang==='fr'?'À benchmarker vs comparables':'Benchmark against sector comparables'},
+    {label:'ROAS',value:mult(roas),status:roas>=3?'good':roas>=1.5?'ok':'bad',desc:currentLang==='fr'?'Retour sur dépense marketing':'Return on ad spend',bench:'≥ 3× healthy · < 1.5× weak'},
+    {label:'Repeat Rate',value:pct(repeatRate,0),status:repeatRate>=40?'good':repeatRate>=20?'ok':'bad',desc:currentLang==='fr'?'Taux de rachat':'Repeat purchase rate',bench:'> 40% = strong retention signal'},
+    {label:'Take Rate',value:pct(takeRate,1),status:takeRate>=10?'good':takeRate>=5?'ok':'bad',desc:currentLang==='fr'?'Part sur chaque transaction':'Cut per transaction',bench:'10–15% = healthy marketplace'},
+  ],runway:null,data:{grossMargin,roas,repeatRate}}
+}
+
+function calcFintech(v){
+  const gmv=v.gmv||0,takeRate=v.take_rate||0,mau=v.active_users||1;
+  const cacSpend=v.cac_spend||0,cash=v.cash||0,burn=v.burn||0;
+  const revenue=gmv*(takeRate/100);
+  const arpu=mau>0?revenue/mau:0;
+  const cac=mau>0?cacSpend/Math.max(mau*0.1,1):0;
+  const runway=burn>0?cash/burn:999;
+  return{metrics:[
+    {label:'Net Revenue',value:fmt(revenue),status:revenue>100000?'good':revenue>20000?'ok':'bad',desc:currentLang==='fr'?'Revenu net généré':'Net revenue generated',bench:'GMV × take rate'},
+    {label:'ARPU',value:'$'+arpu.toFixed(2),status:arpu>5?'good':arpu>1?'ok':'bad',desc:currentLang==='fr'?'Revenu moyen par utilisateur':'Average revenue per user',bench:'> $5 = solid monetisation'},
+    {label:'CAC',value:fmt(cac),status:cac<100?'good':cac<500?'ok':'bad',desc:currentLang==='fr'?'Coût d\'acquisition estimé':'Estimated acquisition cost',bench:'< $100 = excellent in fintech'},
+    {label:'MAU',value:mau>=1000000?fmt(mau):mau>=1000?(mau/1000).toFixed(0)+'K':String(mau),status:mau>10000?'good':mau>1000?'ok':'bad',desc:currentLang==='fr'?'Utilisateurs actifs mensuels':'Monthly active users',bench:'> 10K = clear traction signal'},
+  ],runway,data:{runway,arpu,mau,burn,revenue}}
+}
+
+function calcDeeptech(v){
+  const cash=v.cash||0,fixed=v.fixed_costs||0,rd=v.rd_spend||0;
+  const revenue=v.revenue||0,milestones=v.milestones||12,patents=v.patents||0;
+  const burn=Math.max(fixed+rd-revenue,0);
+  const runway=burn>0?cash/burn:999;
+  const rdEff=burn>0?(rd/burn)*100:0;
+  return{metrics:[
+    {label:'Runway',value:runway>=999?'∞':runway.toFixed(0)+' mo',status:runway>=24?'good':runway>=12?'ok':'bad',desc:currentLang==='fr'?'Mois de trésorerie restants':'Months of cash remaining',bench:'≥ 24 months = deeptech standard'},
+    {label:'Burn Rate',value:fmt(burn)+'/mo',status:'neutral',desc:currentLang==='fr'?'Consommation nette mensuelle':'Monthly net burn',bench:'Fixed costs + R&D − revenue'},
+    {label:'R&D %',value:pct(rdEff,0),status:rdEff>50?'good':'ok',desc:currentLang==='fr'?'Part du burn dédiée à la R&D':'Share of burn in R&D',bench:'> 50% = credible R&D profile'},
+    {label:'→ Milestone',value:milestones+' mo',status:milestones<=runway?'good':milestones<=runway*1.2?'ok':'bad',desc:currentLang==='fr'?'Mois jusqu\'au prochain milestone':'Time to next fundable milestone',bench:currentLang==='fr'?'Doit être sous le runway':'Must stay below runway'},
+    {label:'Patents / IP',value:String(patents),status:patents>=2?'good':patents>=1?'ok':'neutral',desc:currentLang==='fr'?'Actifs IP déposés ou obtenus':'Filed or granted IP assets',bench:'≥ 2 = defensible technology moat'},
+    {label:'Cash',value:fmt(cash),status:cash>500000?'good':cash>100000?'ok':'bad',desc:currentLang==='fr'?'Trésorerie actuelle':'Current treasury',bench:'> $500K = real room to manoeuvre'},
+  ],runway,data:{runway,milestones,patents,rdEff}}
+}
+
+function calcAgri(v){
+  const farmers=v.farmers||1,arpu=v.revenue_per_user||0;
+  const cacSpend=v.cac_spend||0,churnRate=v.churn_rate||0;
+  const cash=v.cash||0,burn=v.burn||0;
+  const mrr=farmers*arpu;
+  const cac=farmers>0?cacSpend/Math.max(farmers*0.1,1):0;
+  const ltv=churnRate>0?arpu/(churnRate/100):0;
+  const ltvCac=cac>0?ltv/cac:0;
+  const runway=burn>0?cash/burn:999;
+  return{metrics:[
+    {label:'MRR',value:fmt(mrr),status:mrr>10000?'good':mrr>2000?'ok':'bad',desc:currentLang==='fr'?'Revenu récurrent mensuel':'Monthly recurring revenue',bench:'ARPU × active users'},
+    {label:'ARPU',value:'$'+arpu.toFixed(2),status:arpu>10?'good':arpu>3?'ok':'bad',desc:currentLang==='fr'?'Revenu moyen par utilisateur':'Average revenue per user',bench:'> $10 = good in agri context'},
+    {label:'CAC',value:fmt(cac),status:cac<50?'good':cac<200?'ok':'bad',desc:currentLang==='fr'?'Coût d\'acquisition estimé':'Estimated acquisition cost',bench:'< $50 = excellent'},
+    {label:'LTV / CAC',value:mult(ltvCac),status:ltvCac>=3?'good':ltvCac>=1?'ok':'bad',desc:currentLang==='fr'?'Santé de l\'unit economics':'Unit economics health',bench:'≥ 3× = VC threshold'},
+    {label:'Churn Rate',value:pct(churnRate,1),status:churnRate<3?'good':churnRate<8?'ok':'bad',desc:currentLang==='fr'?'Utilisateurs perdus chaque mois':'Users lost each month',bench:'< 3% good · > 8% diagnose'},
+    {label:'Runway',value:runway>=999?'∞':runway.toFixed(0)+' mo',status:runway>=18?'good':runway>=9?'ok':'bad',desc:currentLang==='fr'?'Mois de trésorerie restants':'Months of cash remaining',bench:'≥ 18 months = fundraising comfort'},
+  ],runway,data:{ltvCac,churnRate,arpu,runway}}
+}
+
+// ── ANALYSIS GENERATION ──
+function buildAnalysis(result){
+  const{data,runway}=result;
+  const fr=currentLang==='fr';
+  const points=[];
+
+  if(currentSector==='saas'){
+    if(data.ltvCac>=3) points.push({type:'good',text:fr?`<strong>LTV/CAC solide à ${data.ltvCac.toFixed(1)}×</strong> — vous passez le test VC fondamental sur l'unit economics. Ce ratio est la première chose qu'un investisseur early-stage va vérifier.`:`<strong>Strong LTV/CAC at ${data.ltvCac.toFixed(1)}×</strong> — you pass the core VC unit economics test. This is the first ratio early-stage investors check.`});
+    else points.push({type:'warn',text:fr?`<strong>LTV/CAC à renforcer (${data.ltvCac.toFixed(1)}×)</strong> — votre priorité : réduire le CAC via l'acquisition organique ou améliorer la rétention. Chaque point de churn en moins allonge significativement le LTV.`:`<strong>LTV/CAC needs improvement (${data.ltvCac.toFixed(1)}×)</strong> — priority: reduce CAC via organic acquisition or improve retention. Each churn point you reduce significantly extends LTV.`});
+    if(data.churnRate<2) points.push({type:'good',text:fr?`<strong>Churn excellent (${data.churnRate.toFixed(1)}%)</strong> — c'est un signal fort de rétention. Mettez-le en avant explicitement dans votre deck — les investisseurs SaaS y accordent un poids très élevé.`:`<strong>Excellent churn (${data.churnRate.toFixed(1)}%)</strong> — strong retention signal. Feature this explicitly in your deck — SaaS investors weight this heavily.`});
+    else if(data.churnRate>5) points.push({type:'warn',text:fr?`<strong>Churn préoccupant (${data.churnRate.toFixed(1)}%)</strong> — avant de pitcher, diagnostiquez l'onboarding, l'usage produit et les raisons de sortie. Un churn >5% structure tout le LTV et compresse votre valorisation.`:`<strong>Concerning churn (${data.churnRate.toFixed(1)}%)</strong> — before pitching, diagnose onboarding, product usage and exit reasons. Churn >5% structures your entire LTV and compresses your valuation.`});
+    if(data.mrrGrowth>10) points.push({type:'good',text:fr?`<strong>Croissance MRR forte (${data.mrrGrowth.toFixed(1)}%/mois)</strong> — très bon signal pour les investisseurs early-stage. Maintenez ce rythme et documentez-le sur 6+ mois pour maximiser la crédibilité.`:`<strong>Strong MRR growth (${data.mrrGrowth.toFixed(1)}%/month)</strong> — very strong early-stage signal. Sustain this pace and document it over 6+ months to maximise credibility.`});
+    if(data.arr>1000000) points.push({type:'good',text:fr?`<strong>ARR >$1M</strong> — vous franchissez le seuil de crédibilité pour une levée Series A. C'est un signal fort que le business est réel et monétisable.`:`<strong>ARR >$1M</strong> — you cross the credibility threshold for a Series A raise. Strong signal that the business is real and monetisable.`});
+  }
+
+  if(currentSector==='marketplace'){
+    if(data.grossMargin>50) points.push({type:'good',text:fr?`<strong>Marge brute solide (${data.grossMargin.toFixed(0)}%)</strong> — bonne base pour une marketplace scalable. Les VCs regardent si la marge brute couvre les coûts fixes et laisse de la place pour le marketing.`:`<strong>Strong gross margin (${data.grossMargin.toFixed(0)}%)</strong> — solid base for a scalable marketplace. VCs check if gross margin covers fixed costs and leaves room for marketing.`});
+    else if(data.grossMargin<30) points.push({type:'warn',text:fr?`<strong>Marge brute fragile (${data.grossMargin.toFixed(0)}%)</strong> — revoyez votre pricing, take rate ou coûts de fulfillment. Une marge sous 30% rend le chemin vers la profitabilité très long.`:`<strong>Fragile gross margin (${data.grossMargin.toFixed(0)}%)</strong> — revisit pricing, take rate or fulfillment costs. Sub-30% margin makes the path to profitability very long.`});
+    if(data.roas>=3) points.push({type:'good',text:fr?`<strong>ROAS très bon (${data.roas.toFixed(1)}×)</strong> — votre acquisition payante semble scalable. À ce niveau, vous pouvez justifier d'augmenter le budget acquisition.`:`<strong>Very good ROAS (${data.roas.toFixed(1)}×)</strong> — your paid acquisition appears scalable. At this level you can justify increasing acquisition budget.`});
+    if(data.repeatRate>=40) points.push({type:'good',text:fr?`<strong>Taux de rachat fort (${data.repeatRate.toFixed(0)}%)</strong> — c'est un signal clair de product-market fit et de rétention. Les meilleurs marketplaces ont des taux de rachat >50%.`:`<strong>Strong repeat rate (${data.repeatRate.toFixed(0)}%)</strong> — clear product-market fit and retention signal. Best-in-class marketplaces exceed 50%.`});
+  }
+
+  if(currentSector==='fintech'){
+    if(data.runway>=18) points.push({type:'good',text:fr?`<strong>Runway confortable (${data.runway.toFixed(0)} mois)</strong> — vous gardez du levier dans la discussion de levée. Ne commencez jamais à lever avec moins de 6 mois de cash.`:`<strong>Comfortable runway (${data.runway.toFixed(0)} months)</strong> — you keep leverage in the fundraising conversation. Never start raising with less than 6 months of cash.`});
+    else if(data.runway<9) points.push({type:'warn',text:fr?`<strong>Runway critique (${data.runway.toFixed(0)} mois)</strong> — réduisez le burn immédiatement et lancez le fundraising sans attendre. En-dessous de 6 mois, vous perdez tout levier de négociation.`:`<strong>Critical runway (${data.runway.toFixed(0)} months)</strong> — reduce burn immediately and start fundraising now. Below 6 months, you lose all negotiating leverage.`});
+    if(data.arpu>5) points.push({type:'good',text:fr?`<strong>ARPU solide ($${data.arpu.toFixed(2)})</strong> — bonne monétisation de la base active. En fintech, l'ARPU est un signal clé de la capacité à monétiser au-delà de la transaction.`:`<strong>Strong ARPU ($${data.arpu.toFixed(2)})</strong> — good monetisation of the active base. In fintech, ARPU is a key signal of ability to monetise beyond the transaction.`});
+    if(data.mau<10000) points.push({type:'warn',text:fr?`<strong>Traction utilisateur limitée</strong> — la preuve d'usage reste à construire. En fintech, les VCs veulent voir une base MAU significative avant de s'engager sur une valorisation premium.`:`<strong>Limited user traction</strong> — proof of usage still to build. In fintech, VCs want a significant MAU base before committing to premium valuation.`});
+  }
+
+  if(currentSector==='deeptech'){
+    if(data.runway<data.milestones) points.push({type:'warn',text:fr?`<strong>Runway inférieur au prochain milestone</strong> — c'est un point de tension majeur pour un investisseur deeptech. Réduisez le burn ou commencez à lever maintenant.`:`<strong>Runway below next milestone</strong> — major tension point for a deeptech investor. Reduce burn or start raising now.`});
+    else if(data.runway>=24) points.push({type:'good',text:fr?`<strong>Runway deeptech solide (${data.runway.toFixed(0)} mois)</strong> — vous pouvez attendre un meilleur point d'inflexion (résultats cliniques, prototype validé) avant de lever.`:`<strong>Strong deeptech runway (${data.runway.toFixed(0)} months)</strong> — you can wait for a better inflection point (clinical results, validated prototype) before raising.`});
+    if(data.patents>=2) points.push({type:'good',text:fr?`<strong>Barrière IP crédible (${data.patents} brevets)</strong> — votre moat technologique devient défendable. Les investisseurs deeptech exigent une barrière à l'entrée solide.`:`<strong>Credible IP barrier (${data.patents} patents)</strong> — your technology moat is becoming defensible. Deeptech investors require a strong barrier to entry.`});
+    else points.push({type:'warn',text:fr?`<strong>IP encore limitée</strong> — un renforcement de la propriété intellectuelle améliorera nettement la crédibilité. Considérez le dépôt de brevets comme un investissement stratégique pré-levée.`:`<strong>IP still limited</strong> — stronger IP would clearly improve credibility. Consider patent filing as a strategic pre-raise investment.`});
+    if(data.rdEff>50) points.push({type:'good',text:fr?`<strong>R&D bien priorisée (${data.rdEff.toFixed(0)}% du burn)</strong> — bonne allocation pour un profil deeptech. Les investisseurs spécialisés attendent que la majorité du burn soit en R&D.`:`<strong>R&D well prioritised (${data.rdEff.toFixed(0)}% of burn)</strong> — good allocation for a deeptech profile. Specialist investors expect the majority of burn to be in R&D.`});
+  }
+
+  if(currentSector==='agri'){
+    points.push({type:'neutral',text:fr?`<strong>Lecture AgriTech / impact</strong> — les investisseurs de ce segment regardent l'adoption terrain, la rétention saisonnière et la viabilité économique par utilisateur. Distinguez bien churn structurel et saisonnalité.`:`<strong>AgriTech / impact lens</strong> — investors in this segment focus on field adoption, seasonal retention and per-user economic viability. Clearly distinguish structural churn from seasonality.`});
+    if(data.arpu>10) points.push({type:'good',text:fr?`<strong>ARPU solide ($${data.arpu.toFixed(2)})</strong> — bon signal de monétisation dans un contexte agri/impact où les budgets utilisateurs sont limités.`:`<strong>Strong ARPU ($${data.arpu.toFixed(2)})</strong> — good monetisation signal in an agri/impact context where user budgets are constrained.`});
+    if(data.ltvCac>=3) points.push({type:'good',text:fr?`<strong>Unit economics viable (${data.ltvCac.toFixed(1)}×)</strong> — c'est un vrai point fort pour un investisseur impact. Peu de startups agri atteignent 3× LTV/CAC.`:`<strong>Viable unit economics (${data.ltvCac.toFixed(1)}×)</strong> — genuine strength for an impact investor. Few agri startups reach 3× LTV/CAC.`});
+    if(data.churnRate>8) points.push({type:'warn',text:fr?`<strong>Churn élevé (${data.churnRate.toFixed(1)}%)</strong> — analysez la saisonnalité avant de conclure à un problème de rétention. Présentez le churn ajusté de la saisonnalité à vos investisseurs.`:`<strong>High churn (${data.churnRate.toFixed(1)}%)</strong> — analyse seasonality before concluding it's a retention problem. Present seasonality-adjusted churn to investors.`});
+  }
+
+  points.push({type:'neutral',text:fr?`<strong>Prochaine étape</strong> — utilisez ce diagnostic pour identifier 2–3 priorités d'amélioration avant votre prochaine discussion investisseur. Benchmarkez également votre valorisation dans l'outil de valorisation VC.`:`<strong>Next step</strong> — use this diagnostic to identify 2–3 improvement priorities before your next investor conversation. Also benchmark your valuation in the VC Valuation Tool.`});
+  return points;
+}
+
+// ── RENDER ──
+function renderResults(result){
+  document.getElementById('results_empty').style.display='none';
+  document.getElementById('results_area').style.display='block';
+
+  // Metric cards (exclude runway type)
+  const cards=result.metrics.filter(m=>!m.type);
+  document.getElementById('metrics_grid').innerHTML=cards.map(m=>`
+    <div class="metric-card">
+      <div class="metric-top">
+        <div class="metric-dot ${m.status}"></div>
+        <div class="metric-name">${m.label}</div>
+      </div>
+      <div class="metric-value ${m.status==='good'?'good':m.status==='bad'?'bad':m.status==='ok'?'ok':''}">${m.value}</div>
+      <div class="metric-desc">${m.desc}</div>
+      <div class="metric-bench">${m.bench}</div>
+    </div>`).join('');
+
+  // Runway bar
+  const rw=result.runway;
+  if(rw!==null){
+    const pctFill=Math.min((rw/36)*100,100);
+    const rwClass=rw>=18?'good':rw>=9?'ok':'bad';
+    const rwLabel=rw>=999?'∞':rw.toFixed(0);
+    const fr=currentLang==='fr';
+    document.getElementById('runway_wrap').innerHTML=`
+      <div class="runway-card">
+        <div class="runway-header">
+          <div class="runway-label">${fr?'Runway — trésorerie restante':'Runway — cash remaining'}</div>
+          <div class="runway-val" style="color:var(--${rwClass==='good'?'accent':rwClass==='ok'?'warn-color':'bad-color'})">${rwLabel} ${fr?'mois':'months'}</div>
+        </div>
+        <div class="runway-track"><div class="runway-fill ${rwClass}" style="width:${pctFill}%"></div></div>
+        <div class="runway-ticks"><span>0</span><span>9 mo</span><span>18 mo</span><span>36 mo</span></div>
+      </div>`;
+  } else {
+    document.getElementById('runway_wrap').innerHTML='';
+  }
+
+  // Analysis
+  const points=buildAnalysis(result);
+  const fr=currentLang==='fr';
+  const card=document.getElementById('analysis_card');
+  card.style.display='block';
+  card.innerHTML=`
+    <div class="analysis-title">${fr?'Analyse de votre situation':'Analysis of your situation'}</div>
+    <div>
+      ${points.map(p=>`
+        <div class="analysis-point">
+          <div class="ap-icon ${p.type}">${p.type==='good'?'✓':p.type==='warn'?'↑':'→'}</div>
+          <div class="ap-text">${p.text}</div>
+        </div>`).join('')}
+    </div>
+    <div class="analysis-footer">
+      <div class="analysis-footer-text">${fr?'Besoin de défendre ces métriques face à des investisseurs ?':'Need help defending these metrics in front of investors?'}</div>
+      <a href="https://calendly.com/yacine-chikhar/30min" target="_blank">${fr?'Réserver une session →':'Book a session →'}</a>
+    </div>`;
+}
+
+function calculate(){
+  const v={};
+  FORMS[currentSector][currentLang].forEach(f=>v[f.id]=gv(f.id));
+  let result;
+  if(currentSector==='saas') result=calcSaas(v);
+  else if(currentSector==='marketplace') result=calcMarketplace(v);
+  else if(currentSector==='fintech') result=calcFintech(v);
+  else if(currentSector==='deeptech') result=calcDeeptech(v);
+  else result=calcAgri(v);
+  renderResults(result);
+}
+
+function setSector(sector){
+  currentSector=sector;
+  document.querySelectorAll('.sector-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab_'+sector).classList.add('active');
+  const cov=document.getElementById('sector_coverage');
+  if(cov)cov.textContent=SECTOR_COVERAGE[sector]?.[currentLang]||'';
+  renderForm();
+  document.getElementById('results_empty').style.display='block';
+  document.getElementById('results_area').style.display='none';
+}
+
+function renderForm(){
+  const fields=FORMS[currentSector][currentLang];
+  document.getElementById('dynamic_inputs').innerHTML=fields.map(f=>`
+    <div class="field">
+      <label>${f.label}</label>
+      <input type="number" id="${f.id}" placeholder="${f.placeholder}" min="0">
+      ${f.hint?`<div class="hint">${f.hint}</div>`:''}
+    </div>`).join('');
+}
+
+function setLang(l){
+  currentLang=l;
+  document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',['fr','en'][i]===l));
+  const fr=l==='fr';
+  document.getElementById('pg_eyebrow').textContent=fr?'Métriques Investisseur':'Investor Metrics';
+  document.getElementById('pg_title').textContent=fr?'Connaissez vos chiffres avant d\'entrer dans la salle.':'Know your numbers before the room does.';
+  document.getElementById('pg_desc').textContent=fr?'Les KPIs sectoriels que les investisseurs vont regarder. Calculez votre unit economics, runway et santé de croissance — interprétés avec une logique VC.':'Sector-specific KPIs investors will ask about. Calculate your unit economics, runway, and growth health — interpreted with VC logic.';
+  document.getElementById('input_title').textContent=fr?'Vos données':'Your data';
+  document.getElementById('calc_btn').textContent=fr?'Calculer les métriques →':'Calculate metrics →';
+  document.getElementById('empty_lbl').textContent=fr?'Renseignez vos données puis cliquez sur Calculer':'Enter your data and click Calculate';
+  document.getElementById('tab_saas').textContent=fr?'SaaS & Abonnement':'SaaS & Subscription';
+  document.getElementById('tab_marketplace').textContent=fr?'Marketplace & Commerce':'Marketplace & Commerce';
+  document.getElementById('tab_fintech').textContent=fr?'Fintech & Transactionnel':'Fintech & Transactional';
+  document.getElementById('tab_deeptech').textContent=fr?'Deeptech & R&D':'Deeptech & R&D';
+  document.getElementById('tab_agri').textContent=fr?'AgriTech & Impact':'AgriTech & Impact';
+  const cov=document.getElementById('sector_coverage');
+  if(cov)cov.textContent=SECTOR_COVERAGE[currentSector]?.[l]||'';
+  renderForm();
+  document.getElementById('results_empty').style.display='block';
+  document.getElementById('results_area').style.display='none';
+}
+
+// Init
+renderForm();
+const initCov=document.getElementById('sector_coverage');
+if(initCov)initCov.textContent=SECTOR_COVERAGE['saas']?.['en']||'';
+</script>
+</body>
+</html>
