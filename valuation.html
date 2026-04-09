@@ -316,7 +316,7 @@
     <!-- STEP 2 — PROJECTIONS -->
     <div class="panel" id="p2">
       <div class="form-card">
-        <div class="form-card-title" id="p2_title">Revenue projections</div>
+        <div class="form-card-title" id="p2_title">5-Year Revenue Projections</div>
         <div class="g3">
           <div class="field">
             <label id="lb_r1">Year 1 revenue ($)</label>
@@ -331,6 +331,17 @@
             <input type="number" id="rev_y3" value="3000000">
           </div>
         </div>
+        <div class="g2" style="margin-top:16px">
+          <div class="field">
+            <label id="lb_r4">Year 4 revenue ($)</label>
+            <input type="number" id="rev_y4" value="5400000">
+          </div>
+          <div class="field">
+            <label id="lb_r5">Year 5 revenue ($)</label>
+            <input type="number" id="rev_y5" value="9000000">
+          </div>
+        </div>
+        <div id="proj_hint" class="field-note" style="margin-top:12px;display:none;"></div>
       </div>
 
       <div class="form-card">
@@ -641,18 +652,98 @@ function calc(){
   const revCur=gv('rev_current');
   const sectKey=document.getElementById('secteur_tool').value;
   const stade=document.getElementById('stade_tool').value;
-  const r1=gv('rev_y1'),r2=gv('rev_y2'),r3=gv('rev_y3');
+  const taxRate=gv('tax_rate')/100;
 
+  // ── READ ALL 5 YEARS ──
+  const r1=gv('rev_y1'),r2=gv('rev_y2'),r3=gv('rev_y3'),r4=gv('rev_y4'),r5=gv('rev_y5');
+  const revs=[r1,r2,r3,r4,r5];
+
+  // ── BUILD GROWTH PROFILE ──
+  const growthRates=[];
+  for(let i=1;i<revs.length;i++){
+    if(revs[i-1]>0) growthRates.push((revs[i]/revs[i-1]-1)*100);
+  }
+  const avgGrowth=growthRates.length>0?growthRates.reduce((a,b)=>a+b,0)/growthRates.length:0;
+  const firstHalf=growthRates.length>=2?(growthRates[0]+growthRates[1])/2:growthRates[0]||0;
+  const secondHalf=growthRates.length>=4?(growthRates[2]+growthRates[3])/2:growthRates[growthRates.length-1]||0;
+  const isAccelerating=secondHalf>firstHalf*1.15;
+  const isDecelerating=secondHalf<firstHalf*0.85;
+  const hasUnrealistic=growthRates.some(g=>g>300)||growthRates.some(g=>g<-5);
+  let projectionTrend=isAccelerating?'accelerating':isDecelerating?'decelerating':'steady';
+  const projectionRisk=hasUnrealistic?'unstable':'consistent';
+
+  // Display projection hint
+  const hintEl=document.getElementById('proj_hint');
+  if(hintEl){
+    let hintText='';
+    if(hasUnrealistic){
+      hintText='⚠️ Projection path appears unstable — extreme growth or decline detected';
+      hintEl.style.background='#FFF4E6';
+      hintEl.style.borderColor='#FFD699';
+    }else if(isAccelerating){
+      hintText='→ Growth appears accelerating';
+      hintEl.style.background='var(--accent-bg)';
+      hintEl.style.borderColor='var(--accent-line)';
+    }else if(isDecelerating){
+      hintText='↓ Growth appears decelerating (normal for scaling companies)';
+      hintEl.style.background='var(--soft)';
+      hintEl.style.borderColor='var(--line)';
+    }else{
+      hintText='✓ Projection path is broadly consistent';
+      hintEl.style.background='var(--accent-bg)';
+      hintEl.style.borderColor='var(--accent-line)';
+    }
+    hintEl.textContent=hintText;
+    hintEl.style.display='block';
+  }
+
+  // ── VC METHOD (existing logic) ──
   const ev=revExit*evMult;
   const effStake=stake*Math.pow(1-dilution,rounds);
-  const proceeds=ev*effStake;
-  const irr=calcIRR(invest,proceeds,years);
-  const coc=invest>0?proceeds/invest:0;
-  const pv=invest>0?proceeds/Math.pow(1+reqRet,years):0;
+  const proceedsGross=ev*effStake;
+  const proceedsNet=proceedsGross*(1-taxRate);
+  const irr=calcIRR(invest,proceedsNet,years);
+  const coc=invest>0?proceedsNet/invest:0;
+  const pv=invest>0?proceedsNet/Math.pow(1+reqRet,years):0;
   const runway=burn>0?cash/burn:0;
   const revGrowth=revCur>0&&r1>0?((r1/revCur)-1)*100:null;
 
-  calcResults={ev,proceeds,irr,coc,pv,effStake,years,cur,revExit,evMult,invest,stake,reqRet,gm,burn,cash,revCur,r1,r2,r3,revGrowth,sectKey,stade,runway,rounds:gv('future_rounds'),dilution:gv('dilution')};
+  // ── REVENUE MULTIPLE METHOD ──
+  const sectData=SECTEURS[sectKey]||{min:1,med:3,max:8};
+  const revenueMultipleLow=revCur*sectData.min;
+  const revenueMultipleMid=revCur*sectData.med;
+  const revenueMultipleHigh=revCur*sectData.max;
+
+  // ── COMPARABLES-INFORMED RANGE ──
+  const stageMultiples={
+    'pre_seed':{low:0.5,mid:1.5,high:3},
+    'seed':{low:1,mid:3,high:6},
+    'serie_a':{low:2,mid:5,high:10},
+    'serie_b':{low:4,mid:8,high:15},
+    'serie_c':{low:6,mid:12,high:25}
+  };
+  const stageMults=stageMultiples[stade]||{low:1,mid:3,high:8};
+  const comparablesLow=revCur*stageMults.low;
+  const comparablesMid=revCur*stageMults.mid;
+  const comparablesHigh=revCur*stageMults.high;
+
+  // ── FINAL SYNTHESIS ──
+  const valuationConservative=Math.min(pv,revenueMultipleLow,comparablesLow);
+  const valuationBase=(pv+revenueMultipleMid+comparablesMid)/3;
+  const valuationStretch=Math.max(pv*1.2,revenueMultipleHigh,comparablesHigh);
+  const fundraisingRangeLow=valuationConservative;
+  const fundraisingRangeHigh=valuationBase*1.15;
+
+  calcResults={
+    ev,proceeds:proceedsNet,proceedsGross,irr,coc,pv,effStake,years,cur,revExit,evMult,invest,stake,reqRet,
+    gm,burn,cash,revCur,r1,r2,r3,r4,r5,revGrowth,sectKey,stade,runway,
+    rounds:gv('future_rounds'),dilution:gv('dilution'),taxRate,
+    growthRates,avgGrowth,projectionTrend,projectionRisk,
+    revenueMultipleLow,revenueMultipleMid,revenueMultipleHigh,
+    comparablesLow,comparablesMid,comparablesHigh,
+    valuationConservative,valuationBase,valuationStretch,
+    fundraisingRangeLow,fundraisingRangeHigh
+  };
   wiBase={revExit,evMult,reqRet:gv('req_return'),invest,stake:gv('stake'),dilution:gv('dilution'),rounds};
 
   const startupName=document.getElementById('startup_name').value||'Your startup';
@@ -662,7 +753,7 @@ function calc(){
   const irrGood=irr!==null&&irr>=35;
   const irrOk=irr!==null&&irr>=25;
 
-  // MAIN KPIs
+  // ── A. MAIN VC RESULT ──
   const irrClass=irrGood?'good':irrOk?'':'bad';
   const cocClass=coc>=5?'good':coc>=3?'':'bad';
   document.getElementById('results_grid').innerHTML=`
@@ -682,20 +773,111 @@ function calc(){
       <div class="result-sub">${coc>=5?'Top-tier':coc>=3?'Above 3× threshold':'Below 3× — needs work'}</div>
     </div>
     <div class="result-card">
-      <div class="result-label">Present Value (investor)</div>
+      <div class="result-label">Present Value</div>
       <div class="result-value">${fmt(pv,cur)}</div>
-      <div class="result-sub">Discounted at ${gv('req_return')}% required return</div>
+      <div class="result-sub">Pre-money valuation (VC method)</div>
     </div>
     <div class="result-card">
-      <div class="result-label">Exit proceeds (investor)</div>
-      <div class="result-value">${fmt(proceeds,cur)}</div>
-      <div class="result-sub">${(effStake*100).toFixed(1)}% effective stake at exit</div>
+      <div class="result-label">Exit proceeds (net)</div>
+      <div class="result-value">${fmt(calcResults.proceeds,cur)}</div>
+      <div class="result-sub">After ${(taxRate*100).toFixed(0)}% tax · ${(effStake*100).toFixed(1)}% stake</div>
     </div>
     <div class="result-card">
       <div class="result-label">Runway</div>
       <div class="result-value">${runway>0?runway.toFixed(0)+' mo':'—'}</div>
       <div class="result-sub">${burn>0?fmt(burn,cur)+'/mo burn':''}</div>
     </div>`;
+
+  // ── B. MULTI-METHOD VALUATION COMPARISON ──
+  const multiMethodHTML=`
+    <div class="form-card" style="margin-top:20px;margin-bottom:20px">
+      <div class="form-card-title">Multi-Method Valuation Comparison</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Three independent approaches. Divergence reveals where your valuation story needs strengthening.</p>
+      <div class="g3">
+        <div style="border:2px solid var(--accent);border-radius:var(--radius-sm);padding:18px;background:var(--accent-bg)">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px">1. VC Method</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5">Return-driven valuation</div>
+          <div style="font-size:28px;font-weight:800;letter-spacing:-0.04em;margin-bottom:8px">${fmt(pv,cur)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px">IRR: ${irr!==null?irr.toFixed(1)+'%':'—'}</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px">CoC: ${coc.toFixed(1)}×</div>
+          <div style="font-size:11px;color:var(--muted)">PV: ${fmt(pv,cur)}</div>
+        </div>
+        <div style="border:1px solid var(--line);border-radius:var(--radius-sm);padding:18px;background:#fff">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">2. Revenue Multiple</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5">Sector norms</div>
+          <div style="font-size:28px;font-weight:800;letter-spacing:-0.04em;margin-bottom:8px">${fmt(calcResults.revenueMultipleMid,cur)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Low: ${fmt(calcResults.revenueMultipleLow,cur)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Median: ${fmt(calcResults.revenueMultipleMid,cur)}</div>
+          <div style="font-size:11px;color:var(--muted)">High: ${fmt(calcResults.revenueMultipleHigh,cur)}</div>
+        </div>
+        <div style="border:1px solid var(--line);border-radius:var(--radius-sm);padding:18px;background:#fff">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">3. Stage Comparables</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5">Market reality</div>
+          <div style="font-size:28px;font-weight:800;letter-spacing:-0.04em;margin-bottom:8px">${fmt(calcResults.comparablesMid,cur)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Low: ${fmt(calcResults.comparablesLow,cur)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Midpoint: ${fmt(calcResults.comparablesMid,cur)}</div>
+          <div style="font-size:11px;color:var(--muted)">High: ${fmt(calcResults.comparablesHigh,cur)}</div>
+        </div>
+      </div>
+    </div>`;
+
+  // ── C. FINAL FUNDRAISING RANGE ──
+  const fundraisingHTML=`
+    <div class="form-card" style="margin-bottom:20px;border:2px solid var(--accent);background:var(--accent-bg)">
+      <div class="form-card-title" style="color:var(--accent)">Recommended Fundraising Range</div>
+      <p style="font-size:13px;color:var(--ink-2);margin-bottom:16px;line-height:1.6;font-weight:500">What valuation range can you realistically defend in investor conversations?</p>
+      <div class="g3" style="margin-bottom:16px">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Conservative</div>
+          <div style="font-size:32px;font-weight:800;letter-spacing:-0.04em;color:var(--ink)">${fmt(calcResults.valuationConservative,cur)}</div>
+          <div style="font-size:11px;color:var(--muted)">Floor for negotiations</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px">Base (Target)</div>
+          <div style="font-size:38px;font-weight:800;letter-spacing:-0.04em;color:var(--accent)">${fmt(calcResults.valuationBase,cur)}</div>
+          <div style="font-size:11px;color:var(--muted)">Recommended pre-money</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Stretch</div>
+          <div style="font-size:32px;font-weight:800;letter-spacing:-0.04em;color:var(--ink)">${fmt(calcResults.valuationStretch,cur)}</div>
+          <div style="font-size:11px;color:var(--muted)">Ceiling with strong case</div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--accent-line);border-radius:var(--radius-sm);padding:14px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:6px">Defensible Fundraising Range</div>
+        <div style="font-size:20px;font-weight:800;letter-spacing:-0.03em;color:var(--ink)">${fmt(calcResults.fundraisingRangeLow,cur)} – ${fmt(calcResults.fundraisingRangeHigh,cur)}</div>
+      </div>
+    </div>`;
+
+  // ── D. PROJECTION QUALITY / WARNINGS ──
+  const projQualityHTML=`
+    <div class="form-card" style="margin-bottom:20px;background:${hasUnrealistic?'#FFF4E6':'var(--soft)'}">
+      <div class="form-card-title">Projection Quality Assessment</div>
+      <div class="g2">
+        <div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Growth Trend</div>
+          <div style="font-size:22px;font-weight:800;letter-spacing:-0.03em;text-transform:capitalize;margin-bottom:4px">${calcResults.projectionTrend}</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5">Average growth: ${avgGrowth.toFixed(1)}%/yr</div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Projection Realism</div>
+          <div style="font-size:22px;font-weight:800;letter-spacing:-0.03em;text-transform:capitalize;margin-bottom:4px;color:${hasUnrealistic?'#C0504D':'var(--accent)'}">${calcResults.projectionRisk}</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5">${hasUnrealistic?'Review assumptions':'Path is defensible'}</div>
+        </div>
+      </div>
+      ${hasUnrealistic?`<div style="margin-top:14px;padding:12px;background:#FFF;border:1px solid #FFD699;border-radius:10px">
+        <div style="font-size:11px;font-weight:700;color:#C0504D;margin-bottom:4px">⚠️ WARNING</div>
+        <div style="font-size:12px;color:var(--ink-2);line-height:1.5">Your projections show extreme growth (300%+) or decline. Investors will heavily discount these assumptions. Consider revising to more defensible targets.</div>
+      </div>`:''}
+    </div>`;
+
+  // Insert new sections before scenarios
+  const scenariosCard=document.querySelector('.form-card');
+  if(scenariosCard && scenariosCard.parentNode){
+    scenariosCard.insertAdjacentHTML('beforebegin',multiMethodHTML);
+    scenariosCard.insertAdjacentHTML('beforebegin',fundraisingHTML);
+    scenariosCard.insertAdjacentHTML('beforebegin',projQualityHTML);
+  }
 
   // SCENARIOS
   const base=calcScenario(1);
