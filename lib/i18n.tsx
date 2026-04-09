@@ -25,9 +25,9 @@ const translations = {
     
     // Hero
     "hero.eyebrow": "Investor Readiness Platform",
-    "hero.title": "Know exactly where you stand before your next raise.",
-    "hero.subtitle": "VCReady helps founders assess their investor readiness, identify gaps, and prepare for successful fundraising.",
-    "hero.cta.primary": "Start assessment",
+    "hero.title": "Know if you're ready to raise.",
+    "hero.subtitle": "VCReady helps founders assess their investor readiness, identify gaps, and prepare for successful fundraising with investor-grade tools.",
+    "hero.cta.primary": "Analyze my startup",
     "hero.cta.secondary": "See how it works",
     
     // Stats
@@ -303,9 +303,9 @@ const translations = {
     
     // Hero
     "hero.eyebrow": "Plateforme de preparation investisseur",
-    "hero.title": "Sachez exactement ou vous en etes avant votre prochaine levee.",
-    "hero.subtitle": "VCReady aide les fondateurs a evaluer leur maturite investisseur, identifier les lacunes et preparer une levee reussie.",
-    "hero.cta.primary": "Commencer l'evaluation",
+    "hero.title": "Sachez si vous etes pret a lever des fonds.",
+    "hero.subtitle": "VCReady aide les fondateurs a evaluer leur maturite investisseur, identifier les lacunes et preparer une levee reussie avec des outils professionnels.",
+    "hero.cta.primary": "Analyser ma startup",
     "hero.cta.secondary": "Voir comment ca marche",
     
     // Stats

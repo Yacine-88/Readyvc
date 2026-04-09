@@ -140,14 +140,14 @@ export default function QAPage() {
           <div className="flex gap-2">
             <Button
               size="sm"
-              variant={perspective === "founder" ? "default" : "secondary"}
+              variant={perspective === "founder" ? "primary" : "secondary"}
               onClick={() => setPerspective("founder")}
             >
               Founder
             </Button>
             <Button
               size="sm"
-              variant={perspective === "investor" ? "default" : "secondary"}
+              variant={perspective === "investor" ? "primary" : "secondary"}
               onClick={() => setPerspective("investor")}
             >
               Investor
