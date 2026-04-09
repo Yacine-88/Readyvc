@@ -6,6 +6,9 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { useI18n } from "@/lib/i18n";
 import { RotateCcw, Save, Check, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { saveMetrics, getMetrics } from "@/lib/db-metrics";
+import { FlowProgress } from "@/components/flow-progress";
+import { FlowContinue } from "@/components/flow-continue";
+import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
 
 // Sector-specific benchmarks
 const SECTOR_BENCHMARKS = {
@@ -152,6 +155,18 @@ export default function MetricsPage() {
   const [sector, setSector] = useState<SectorKey>("saas");
   const [formData, setFormData] = useState<SaaSFormData>(defaultSaaSData);
   const [saved, setSaved] = useState(false);
+  const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
+
+  useEffect(() => { setCompletedSteps(getCompletedSteps()); }, []);
+
+  const isComplete = formData.mrr > 0;
+
+  useEffect(() => {
+    if (isComplete) {
+      markStepComplete("metrics");
+      setCompletedSteps(getCompletedSteps());
+    }
+  }, [isComplete]);
 
   const updateField = useCallback(<K extends keyof SaaSFormData>(field: K, value: SaaSFormData[K]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -344,6 +359,9 @@ export default function MetricsPage() {
             <h1 className="heading-display mb-3">{t("metrics.title")}</h1>
             <p className="text-ink-secondary max-w-2xl">{t("metrics.description")}</p>
           </div>
+
+          {/* Flow Progress */}
+          <FlowProgress currentStep="metrics" completedSteps={completedSteps} />
 
           {/* Sector Tabs */}
           <div className="flex flex-wrap gap-0 border-b border-border mb-8 -mt-2 overflow-x-auto">
@@ -549,6 +567,9 @@ export default function MetricsPage() {
               </div>
             </div>
           </div>
+
+          {/* Flow Continue */}
+          <FlowContinue isComplete={isComplete} nextHref="/valuation" nextLabel="Valuation" />
       </div>
     </div>
   );

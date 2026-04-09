@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { ToolPageLayout, ToolSection } from "@/components/tools/tool-page-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { Save, RotateCcw, Check } from "lucide-react";
 import { saveQAAssessment } from "@/lib/db-qa";
+import { FlowProgress } from "@/components/flow-progress";
+import { FlowContinue } from "@/components/flow-continue";
+import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
 
 const allQuestions = [
   { category: "Business Model", q: "How do you make money?", weight: 1.2 },
@@ -53,6 +56,16 @@ export default function QAPage() {
   const [responses, setResponses] = useState<Record<string, number>>({});
   const [perspective, setPerspective] = useState<"founder" | "investor">("founder");
   const [saved, setSaved] = useState(false);
+  const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
+
+  useEffect(() => { setCompletedSteps(getCompletedSteps()); }, []);
+
+  useEffect(() => {
+    if (saved) {
+      markStepComplete("qa");
+      setCompletedSteps(getCompletedSteps());
+    }
+  }, [saved]);
 
   const categories = useMemo(() => groupQuestions(allQuestions), []);
   
@@ -135,6 +148,7 @@ export default function QAPage() {
       title="Be ready for every question."
       description="The 50+ questions investors will ask. Prepare your answers and identify gaps in your story."
     >
+      <FlowProgress currentStep="qa" completedSteps={completedSteps} />
       {/* Perspective Toggle */}
       <ToolSection>
         <div className="flex items-center gap-3">
@@ -233,6 +247,7 @@ export default function QAPage() {
           </Button>
         </div>
       </div>
+      <FlowContinue isComplete={completedSteps.includes("qa")} nextHref="/captable" nextLabel="Cap Table" />
     </ToolPageLayout>
   );
 }

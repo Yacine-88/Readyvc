@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { ToolPageLayout, ToolSection } from "@/components/tools/tool-page-layout";
 import { InputField, SelectField, FormGrid } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,9 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { Badge } from "@/components/ui/badge";
 import { Save, RotateCcw, Check, TrendingDown, Users, Plus, Trash2 } from "lucide-react";
 import { saveCapTable } from "@/lib/db-cap-table";
+import { FlowProgress } from "@/components/flow-progress";
+import { FlowContinue } from "@/components/flow-continue";
+import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
 
 const shareholderTypes = [
   { value: "founder", label: "Founder" },
@@ -52,6 +55,16 @@ export default function CapTablePage() {
 
   const [saved, setSaved] = useState(false);
   const [showPostRound, setShowPostRound] = useState(false);
+  const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
+
+  useEffect(() => { setCompletedSteps(getCompletedSteps()); }, []);
+
+  useEffect(() => {
+    if (saved) {
+      markStepComplete("captable");
+      setCompletedSteps(getCompletedSteps());
+    }
+  }, [saved]);
 
   // Calculate current cap table state
   const currentState = useMemo(() => {
@@ -181,6 +194,7 @@ export default function CapTablePage() {
       title="Model your ownership structure."
       description="Understand current and post-round cap table, dilution impact, and founder control."
     >
+      <FlowProgress currentStep="captable" completedSteps={completedSteps} />
       {/* Step 1: Current Cap Table */}
       <ToolSection title="Step 1: Current Cap Table">
         <div className="space-y-4">
@@ -522,6 +536,7 @@ export default function CapTablePage() {
           {saved ? "Saved" : "Save Cap Table"}
         </Button>
       </div>
+      <FlowContinue isComplete={completedSteps.includes("captable")} nextHref="/pitch" nextLabel="Pitch" />
     </ToolPageLayout>
   );
 }

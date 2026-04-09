@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { useI18n } from "@/lib/i18n";
 import { RotateCcw, Save, Check, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { FlowProgress } from "@/components/flow-progress";
+import { FlowContinue } from "@/components/flow-continue";
+import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
 
 // Pitch section questions and scoring criteria
 const PITCH_SECTIONS = {
@@ -206,6 +209,16 @@ export default function PitchPage() {
   const [answers, setAnswers] = useState<Answers>(defaultAnswers);
   const [expandedSection, setExpandedSection] = useState<SectionKey | null>("problem");
   const [saved, setSaved] = useState(false);
+  const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
+
+  useEffect(() => { setCompletedSteps(getCompletedSteps()); }, []);
+
+  useEffect(() => {
+    if (saved) {
+      markStepComplete("pitch");
+      setCompletedSteps(getCompletedSteps());
+    }
+  }, [saved]);
 
   const updateAnswer = useCallback((questionId: string, value: 0 | 1 | 2 | 3) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
@@ -331,6 +344,8 @@ export default function PitchPage() {
             <p className="text-ink-secondary max-w-2xl">{t("pitch.description")}</p>
           </div>
 
+          <FlowProgress currentStep="pitch" completedSteps={completedSteps} />
+
           <div className="grid lg:grid-cols-[1fr_340px] gap-8">
             {/* Questions Panel */}
             <div className="space-y-4">
@@ -396,6 +411,7 @@ export default function PitchPage() {
                   {saved ? t("common.saved") : t("common.saveToDashboard")}
                 </Button>
               </div>
+              <FlowContinue isComplete={completedSteps.includes("pitch")} nextHref="/dataroom" nextLabel="Data Room" />
             </div>
 
             {/* Score Panel */}

@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Metadata } from "next";
 import { ToolPageLayout, ToolSection } from "@/components/tools/tool-page-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { useI18n } from "@/lib/i18n";
 import { CheckCircle2, Circle, RotateCcw, Save } from "lucide-react";
+import { FlowProgress } from "@/components/flow-progress";
+import { FlowContinue } from "@/components/flow-continue";
+import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
 
 interface Document {
   id: string;
@@ -47,9 +49,11 @@ export default function DataRoomPage() {
   const { t } = useI18n();
   const [documents, setDocuments] = useState<Document[]>(INITIAL_DOCUMENTS);
   const [saved, setSaved] = useState(false);
+  const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
 
   // Load saved data on mount
   useEffect(() => {
+    setCompletedSteps(getCompletedSteps());
     const saved = localStorage.getItem("dataroom_documents");
     if (saved) {
       setDocuments(JSON.parse(saved));
@@ -63,6 +67,13 @@ export default function DataRoomPage() {
   const requiredCount = documents.filter((d) => d.required && d.status !== "complete").length;
   const totalDocs = documents.length;
   const completionRate = Math.round((completeCount / totalDocs) * 100);
+
+  useEffect(() => {
+    if (completeCount >= 1) {
+      markStepComplete("dataroom");
+      setCompletedSteps(getCompletedSteps());
+    }
+  }, [completeCount]);
 
   // Calculate readiness score (0-100)
   const requiredComplete = documents.filter((d) => d.required && d.status === "complete").length;
@@ -112,6 +123,7 @@ export default function DataRoomPage() {
       title={t("tool.dataroom.title") || "Are you ready for due diligence?"}
       description={t("tool.dataroom.desc") || "Track your data room completeness and investor readiness."}
     >
+      <FlowProgress currentStep="dataroom" completedSteps={completedSteps} />
       {/* Score Panel */}
       <ToolSection title={t("dataroom.readiness_score") || "Readiness Score"}>
         <div className="grid md:grid-cols-3 gap-6">
@@ -259,6 +271,7 @@ export default function DataRoomPage() {
           )}
         </div>
       </ToolSection>
+      <FlowContinue isComplete={completeCount >= 1} nextHref="/dashboard" nextLabel="Dashboard" isFinal />
     </ToolPageLayout>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { ToolPageLayout, ToolSection } from "@/components/tools/tool-page-layout";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -10,6 +10,9 @@ import {
   calculateFullValuation,
   type ValuationSummary,
 } from "@/lib/valuation-methods";
+import { FlowProgress } from "@/components/flow-progress";
+import { FlowContinue } from "@/components/flow-continue";
+import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -175,6 +178,16 @@ export default function ValuationPage() {
   const [calculated, setCalculated] = useState(false);
   const [result, setResult] = useState<ValuationSummary | null>(null);
   const [saved, setSaved] = useState(false);
+  const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
+
+  useEffect(() => { setCompletedSteps(getCompletedSteps()); }, []);
+
+  useEffect(() => {
+    if (calculated && result) {
+      markStepComplete("valuation");
+      setCompletedSteps(getCompletedSteps());
+    }
+  }, [calculated, result]);
 
   const update = useCallback(<K extends keyof FormState>(k: K, v: FormState[K]) => {
     setForm((prev) => ({ ...prev, [k]: v }));
@@ -266,6 +279,7 @@ export default function ValuationPage() {
       title="Investor-grade startup valuation."
       description="Three complementary methods — VC Method, Revenue Multiple, and Stage Comparables — with real investor mechanics, scenario modelling, and founder analysis."
     >
+      <FlowProgress currentStep="valuation" completedSteps={completedSteps} />
       <div className="grid lg:grid-cols-[400px_1fr] gap-8 items-start">
         {/* ── Input Panel ── */}
         <div className="space-y-0">
@@ -797,6 +811,7 @@ export default function ValuationPage() {
               </ToolSection>
             </>
           )}
+          <FlowContinue isComplete={calculated && !!result} nextHref="/qa" nextLabel="Q&A" />
         </div>
       </div>
     </ToolPageLayout>
