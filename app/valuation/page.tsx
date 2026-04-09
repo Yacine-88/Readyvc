@@ -13,6 +13,7 @@ import {
 import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
+import { computeValuationScore } from "@/lib/local-readiness";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -252,11 +253,24 @@ export default function ValuationPage() {
         cash_on_cash: result.investor.cashOnCash,
         implied_irr: result.investor.impliedIRR,
       });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
     } catch (err) {
       console.error("[v0] Error saving valuation:", err);
     }
+    // Persist score to localStorage for local readiness engine
+    const score = computeValuationScore(
+      result.blended.base,
+      form.baseGrowthRate,
+      !!(form.sector && form.stage)
+    );
+    localStorage.setItem("vcready_valuation", JSON.stringify({
+      score,
+      estimated_valuation: result.blended.base,
+      growth_rate: form.baseGrowthRate,
+      sector: form.sector,
+      stage: form.stage,
+    }));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
   }, [form, result]);
 
   const handleReset = useCallback(() => {

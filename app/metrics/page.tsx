@@ -6,6 +6,7 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { useI18n } from "@/lib/i18n";
 import { RotateCcw, Save, Check, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { saveMetrics, getMetrics } from "@/lib/db-metrics";
+import { computeMetricsScore } from "@/lib/local-readiness";
 import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
@@ -266,13 +267,27 @@ export default function MetricsPage() {
         payback_period: Math.round(calculations.cacPayback),
         rule_of_40_score: calculations.mrrGrowth + (calculations.churnRate > 0 ? 40 - calculations.churnRate : 40),
       });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
     } catch (error) {
       console.error("[v0] Error saving metrics:", error);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
     }
+    // Persist score to localStorage for local readiness engine (works without auth)
+    const score = computeMetricsScore(
+      formData.mrr,
+      calculations.mrrGrowth,
+      calculations.ltvCacRatio,
+      calculations.churnRate
+    );
+    localStorage.setItem("vcready_metrics", JSON.stringify({
+      score,
+      mrr: formData.mrr,
+      arr: calculations.arr,
+      growth_rate: calculations.mrrGrowth,
+      ltv_cac: calculations.ltvCacRatio,
+      churn: calculations.churnRate,
+      runway: calculations.runway,
+    }));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   }, [formData, sector, calculations]);
 
   const getStatus = (value: number, benchmark: { good: number; great: number; inverted?: boolean }): "good" | "warning" | "danger" => {

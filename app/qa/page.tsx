@@ -130,11 +130,13 @@ export default function QAPage() {
         responses: responses,
         perspective: perspective,
       });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
     } catch (error) {
       console.error("[v0] Error saving QA assessment:", error);
     }
+    // Persist score to localStorage for local readiness engine
+    localStorage.setItem("vcready_qa", JSON.stringify({ score: scores.overallScore }));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   }, [scores, responses, perspective]);
 
   const handleReset = useCallback(() => {

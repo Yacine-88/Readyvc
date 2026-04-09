@@ -236,10 +236,12 @@ export default function PitchPage() {
       answers,
       timestamp: new Date().toISOString(),
       results: sectionScores,
+      overallScore,
     });
     localStorage.setItem("vcready_pitch", JSON.stringify(savedResults.slice(-10)));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+    // sectionScores and overallScore are captured in closure (derived from answers)
   }, [answers]);
 
   // Calculate scores

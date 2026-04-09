@@ -11,6 +11,7 @@ import { saveCapTable } from "@/lib/db-cap-table";
 import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
+import { computeCapTableScore } from "@/lib/local-readiness";
 
 const shareholderTypes = [
   { value: "founder", label: "Founder" },
@@ -165,11 +166,24 @@ export default function CapTablePage() {
           postRound: postRoundState,
         },
       });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
     } catch (error) {
       console.error("[v0] Error saving cap table:", error);
     }
+    // Persist score to localStorage for local readiness engine
+    const hasEsop =
+      roundInputs.newEsopPercentage > 0 ||
+      currentState.shareholders.some((s) => s.type === "employee");
+    const hasInvestors = currentState.shareholders.some(
+      (s) => s.type === "angel" || s.type === "vc"
+    );
+    const score = computeCapTableScore(
+      currentState.founderPercentage,
+      hasEsop,
+      hasInvestors
+    );
+    localStorage.setItem("vcready_captable", JSON.stringify({ score }));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   }, [currentState, postRoundState, roundInputs]);
 
   const handleReset = useCallback(() => {
