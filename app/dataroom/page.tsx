@@ -12,6 +12,7 @@ import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
 import { ExpertMeetingModal } from "@/components/ui/expert-meeting-modal";
 import { getLocalReadinessScore, saveReadinessSnapshot } from "@/lib/local-readiness";
+import { saveToolToDB, getToolFromDB } from "@/lib/db-tools";
 
 interface Document {
   id: string;
@@ -62,6 +63,12 @@ export default function DataRoomPage() {
     if (saved) {
       setDocuments(JSON.parse(saved));
     }
+    // DB restore
+    getToolFromDB("dataroom").then((db) => {
+      if (!db?.inputs) return;
+      const inp = db.inputs as { documents?: Document[] };
+      if (inp.documents && inp.documents.length > 0) setDocuments(inp.documents);
+    });
   }, []);
 
   // Calculate stats
@@ -110,6 +117,7 @@ export default function DataRoomPage() {
       })
     );
     saveReadinessSnapshot();
+    saveToolToDB("dataroom", readinessScore, { documents: documents as unknown as Record<string, unknown>[] } as unknown as Record<string, unknown>).catch(console.error);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
     // Show expert meeting modal after the final step is saved

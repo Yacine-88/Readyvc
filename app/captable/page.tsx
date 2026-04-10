@@ -8,6 +8,7 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { Badge } from "@/components/ui/badge";
 import { Save, RotateCcw, Check, TrendingDown, Users, Plus, Trash2 } from "lucide-react";
 import { saveCapTable } from "@/lib/db-cap-table";
+import { saveToolToDB, getToolFromDB } from "@/lib/db-tools";
 import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
@@ -69,6 +70,13 @@ export default function CapTablePage() {
         if (data.roundInputs) setRoundInputs(data.roundInputs);
       }
     } catch { /* ignore */ }
+    // DB restore
+    getToolFromDB("captable").then((db) => {
+      if (!db?.inputs) return;
+      const inp = db.inputs as { shareholders?: Shareholder[]; roundInputs?: RoundInputs };
+      if (inp.shareholders && inp.shareholders.length > 0) setShareholders(inp.shareholders);
+      if (inp.roundInputs) setRoundInputs(inp.roundInputs);
+    });
   }, []);
 
   useEffect(() => {
@@ -195,6 +203,7 @@ export default function CapTablePage() {
     localStorage.setItem("vcready_captable", JSON.stringify({ score }));
     localStorage.setItem("vcready_captable_inputs", JSON.stringify({ shareholders, roundInputs }));
     saveReadinessSnapshot();
+    saveToolToDB("captable", score, { shareholders: shareholders as unknown as Record<string, unknown>[], roundInputs: roundInputs as unknown as Record<string, unknown> } as unknown as Record<string, unknown>).catch(console.error);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }, [currentState, postRoundState, roundInputs]);

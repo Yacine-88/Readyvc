@@ -10,6 +10,7 @@ import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
 import { saveReadinessSnapshot } from "@/lib/local-readiness";
+import { saveToolToDB, getToolFromDB } from "@/lib/db-tools";
 
 // Pitch section questions and scoring criteria
 const PITCH_SECTIONS = {
@@ -223,6 +224,12 @@ export default function PitchPage() {
         if (last?.answers && Object.keys(last.answers).length > 0) setAnswers(last.answers);
       }
     } catch { /* ignore */ }
+    // DB restore
+    getToolFromDB("pitch").then((db) => {
+      if (!db?.inputs) return;
+      const inp = db.inputs as { answers?: Answers };
+      if (inp.answers && Object.keys(inp.answers).length > 0) setAnswers(inp.answers);
+    });
   }, []);
 
   useEffect(() => {
@@ -252,6 +259,7 @@ export default function PitchPage() {
     });
     localStorage.setItem("vcready_pitch", JSON.stringify(savedResults.slice(-10)));
     saveReadinessSnapshot();
+    saveToolToDB("pitch", overallScore, { answers: answers as unknown as Record<string, unknown> }).catch(console.error);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
     // sectionScores and overallScore are captured in closure (derived from answers)

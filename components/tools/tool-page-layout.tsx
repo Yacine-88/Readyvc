@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Container } from "@/components/layout/section";
 import { isOnboarded } from "@/lib/onboard";
+import { syncProfileFromDB } from "@/lib/db-user";
+import { syncAllToolsToLocalStorage } from "@/lib/db-tools";
+import { useAuth } from "@/lib/auth-context";
 
 interface ToolPageLayoutProps {
   children: React.ReactNode;
@@ -21,14 +24,31 @@ export function ToolPageLayout({
   actions,
 }: ToolPageLayoutProps) {
   const router = useRouter();
+  const { user, loading } = useAuth();
+  const synced = useRef(false);
 
   useEffect(() => {
-    if (!isOnboarded()) {
-      router.replace("/onboard");
-    }
-  }, [router]);
+    if (loading) return;
 
-  // Avoid flashing the tool content before the redirect fires
+    async function check() {
+      // Authenticated user: try to pull profile + tool data from DB
+      if (user && !synced.current) {
+        synced.current = true;
+        await syncProfileFromDB();
+        await syncAllToolsToLocalStorage();
+      }
+
+      // Guard: must be onboarded (localStorage profile present)
+      if (!isOnboarded()) {
+        router.replace("/onboard");
+      }
+    }
+
+    check();
+  }, [user, loading, router]);
+
+  // Don't flash content before guard resolves
+  if (loading) return <div className="animate-pulse h-screen bg-background" />;
   if (typeof window !== "undefined" && !isOnboarded()) return null;
 
   return (

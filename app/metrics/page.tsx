@@ -7,6 +7,7 @@ import { useI18n } from "@/lib/i18n";
 import { RotateCcw, Save, Check, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { saveMetrics, getMetrics } from "@/lib/db-metrics";
 import { computeMetricsScore, saveReadinessSnapshot } from "@/lib/local-readiness";
+import { saveToolToDB, getToolFromDB } from "@/lib/db-tools";
 import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
@@ -169,6 +170,13 @@ export default function MetricsPage() {
         if (saved.formData) setFormData(saved.formData);
       }
     } catch { /* ignore */ }
+    // DB restore (async — overwrites localStorage state if user is authenticated)
+    getToolFromDB("metrics").then((db) => {
+      if (!db?.inputs) return;
+      const inp = db.inputs as { sector?: SectorKey; formData?: SaaSFormData };
+      if (inp.sector) setSector(inp.sector);
+      if (inp.formData) setFormData(inp.formData);
+    });
   }, []);
 
   const isComplete = formData.mrr > 0;
@@ -300,6 +308,7 @@ export default function MetricsPage() {
     // Persist full form so navigating back restores exact state
     localStorage.setItem("vcready_metrics_inputs", JSON.stringify({ sector, formData }));
     saveReadinessSnapshot();
+    saveToolToDB("metrics", score, { sector, formData: formData as unknown as Record<string, unknown> }).catch(console.error);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }, [formData, sector, calculations]);

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { Save, RotateCcw, Check, Calculator, ExternalLink, Info } from "lucide-react";
 import { saveValuation } from "@/lib/db-valuation";
+import { saveToolToDB, getToolFromDB } from "@/lib/db-tools";
 import {
   calculateFullValuation,
   type ValuationSummary,
@@ -191,6 +192,11 @@ export default function ValuationPage() {
         setForm(savedForm);
       }
     } catch { /* ignore */ }
+    // DB restore
+    getToolFromDB("valuation").then((db) => {
+      if (!db?.inputs) return;
+      setForm(db.inputs as unknown as FormState);
+    });
   }, []);
 
   useEffect(() => {
@@ -282,6 +288,7 @@ export default function ValuationPage() {
     // Persist full form inputs so navigating back restores exact state
     localStorage.setItem("vcready_valuation_inputs", JSON.stringify(form));
     saveReadinessSnapshot();
+    saveToolToDB("valuation", score, form as unknown as Record<string, unknown>).catch(console.error);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   }, [form, result]);

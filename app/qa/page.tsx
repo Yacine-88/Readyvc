@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { Save, RotateCcw, Check } from "lucide-react";
 import { saveQAAssessment } from "@/lib/db-qa";
+import { saveToolToDB, getToolFromDB } from "@/lib/db-tools";
 import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
@@ -70,6 +71,13 @@ export default function QAPage() {
         if (data.perspective) setPerspective(data.perspective);
       }
     } catch { /* ignore */ }
+    // DB restore
+    getToolFromDB("qa").then((db) => {
+      if (!db?.inputs) return;
+      const inp = db.inputs as { responses?: Record<string, number>; perspective?: "founder" | "investor" };
+      if (inp.responses && Object.keys(inp.responses).length > 0) setResponses(inp.responses);
+      if (inp.perspective) setPerspective(inp.perspective);
+    });
   }, []);
 
   useEffect(() => {
@@ -149,6 +157,7 @@ export default function QAPage() {
     localStorage.setItem("vcready_qa", JSON.stringify({ score: scores.overallScore }));
     localStorage.setItem("vcready_qa_inputs", JSON.stringify({ responses, perspective }));
     saveReadinessSnapshot();
+    saveToolToDB("qa", scores.overallScore, { responses: responses as unknown as Record<string, unknown>, perspective }).catch(console.error);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }, [scores, responses, perspective]);

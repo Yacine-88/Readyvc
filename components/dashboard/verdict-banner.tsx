@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { getLocalReadinessScore, type LocalReadinessData } from "@/lib/local-readiness";
+import { syncAllToolsToLocalStorage } from "@/lib/db-tools";
 
 // ─── Verdict config ───────────────────────────────────────────────────────────
 
@@ -73,7 +74,9 @@ export function VerdictBanner() {
   const [data, setData] = useState<LocalReadinessData | null>(null);
 
   useEffect(() => {
-    setData(getLocalReadinessScore());
+    syncAllToolsToLocalStorage().then(() => {
+      setData(getLocalReadinessScore());
+    });
   }, []);
 
   if (!data) {

@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Container } from "@/components/layout/section";
 import { Button } from "@/components/ui/button";
-import { saveFounderProfile, isOnboarded } from "@/lib/onboard";
+import { isOnboarded } from "@/lib/onboard";
+import { saveProfileToDB } from "@/lib/db-user";
+import { useAuth } from "@/lib/auth-context";
 
 const SECTORS = [
   "SaaS",
@@ -24,22 +26,26 @@ const STAGES = ["Pre-seed", "Seed", "Series A", "Series B+"];
 
 export default function OnboardPage() {
   const router = useRouter();
+  const { signUp, user, loading } = useAuth();
   const [form, setForm] = useState({
     name: "",
     email: "",
+    password: "",
     startupName: "",
     country: "",
     sector: "",
     stage: "",
     hasRaisedBefore: null as boolean | null,
   });
+  const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // If already onboarded (and authenticated), go straight to dashboard
   useEffect(() => {
-    if (isOnboarded()) {
-      router.replace("/metrics");
+    if (!loading && user && isOnboarded()) {
+      router.replace("/dashboard");
     }
-  }, [router]);
+  }, [user, loading, router]);
 
   function set(field: string, value: string | boolean) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -48,17 +54,36 @@ export default function OnboardPage() {
   const valid =
     form.name.trim() &&
     form.email.trim() &&
+    form.password.length >= 8 &&
     form.startupName.trim() &&
     form.country.trim() &&
     form.sector &&
     form.stage &&
     form.hasRaisedBefore !== null;
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!valid || submitting) return;
+    setError(null);
     setSubmitting(true);
-    saveFounderProfile({
+
+    // 1. Attempt Supabase signup (best effort — no-op if Supabase not configured)
+    const { error: authError } = await signUp(form.email.trim(), form.password);
+    if (authError && !authError.includes("already registered")) {
+      setError(authError);
+      setSubmitting(false);
+      return;
+    }
+
+    // If user already exists with that email, direct them to login
+    if (authError && authError.includes("already registered")) {
+      setError("An account with this email already exists. Sign in instead.");
+      setSubmitting(false);
+      return;
+    }
+
+    // 2. Save profile to localStorage + DB
+    const profileData = {
       name: form.name.trim(),
       email: form.email.trim(),
       startupName: form.startupName.trim(),
@@ -66,9 +91,13 @@ export default function OnboardPage() {
       sector: form.sector,
       stage: form.stage,
       hasRaisedBefore: form.hasRaisedBefore!,
-    });
+    };
+    await saveProfileToDB(profileData);
+
     router.push("/metrics");
   }
+
+  if (loading) return null;
 
   return (
     <div className="min-h-[calc(100vh-64px)] flex flex-col justify-center py-12">
@@ -84,7 +113,7 @@ export default function OnboardPage() {
               Tell us about your startup.
             </h1>
             <p className="text-ink-secondary text-base leading-relaxed">
-              Takes 60 seconds. Your answers personalise the analysis and stay on your device.
+              Takes 60 seconds. Create a free account to save your progress across devices.
             </p>
           </div>
 
@@ -106,6 +135,15 @@ export default function OnboardPage() {
                 placeholder="jane@startup.com"
               />
             </div>
+
+            {/* Password */}
+            <Field
+              label="Password (min. 8 characters)"
+              type="password"
+              value={form.password}
+              onChange={(v) => set("password", v)}
+              placeholder="••••••••"
+            />
 
             {/* Startup + Country */}
             <div className="grid sm:grid-cols-2 gap-4">
@@ -162,6 +200,17 @@ export default function OnboardPage() {
               </div>
             </div>
 
+            {error && (
+              <div className="text-xs text-danger font-medium bg-danger/10 border border-danger/20 rounded-[var(--radius-md)] px-3 py-2">
+                {error}{" "}
+                {error.includes("already exists") && (
+                  <Link href="/auth/login" className="underline font-bold">
+                    Sign in →
+                  </Link>
+                )}
+              </div>
+            )}
+
             {/* Submit */}
             <div className="pt-2">
               <Button
@@ -169,12 +218,12 @@ export default function OnboardPage() {
                 disabled={!valid || submitting}
                 className="w-full h-12 text-sm"
               >
-                {submitting ? "Starting…" : "Start my analysis →"}
+                {submitting ? "Creating account…" : "Start my analysis →"}
               </Button>
               <p className="text-xs text-muted text-center mt-3">
-                No account needed. Data stays local.{" "}
-                <Link href="/dashboard" className="underline hover:text-ink transition-colors">
-                  Already did this? Go to dashboard →
+                Already have an account?{" "}
+                <Link href="/auth/login" className="underline hover:text-ink transition-colors">
+                  Sign in →
                 </Link>
               </p>
             </div>

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { getReadinessHistory, type ReadinessSnapshot } from "@/lib/local-readiness";
+import { getHistoryFromDB } from "@/lib/db-history";
+import { syncAllToolsToLocalStorage } from "@/lib/db-tools";
 
 function fmtDate(iso: string): string {
   const d = new Date(iso);
@@ -24,9 +26,28 @@ export function ReadinessHistory() {
   const [history, setHistory] = useState<ReadinessSnapshot[]>([]);
 
   useEffect(() => {
-    const h = getReadinessHistory();
-    // Show most recent first
-    setHistory([...h].reverse());
+    async function load() {
+      // Sync DB data to localStorage first (cross-device support)
+      await syncAllToolsToLocalStorage();
+
+      // Merge local + DB history, dedupe by timestamp, sort newest first
+      const local = getReadinessHistory();
+      const db = await getHistoryFromDB();
+
+      const all = [...local, ...db];
+      const seen = new Set<string>();
+      const merged = all
+        .filter((s) => {
+          const key = s.timestamp;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+      setHistory(merged);
+    }
+    load();
   }, []);
 
   if (history.length === 0) return null;
