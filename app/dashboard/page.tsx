@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { Container } from "@/components/layout/section";
 import { DashboardHero } from "@/components/dashboard/dashboard-hero";
-import { ExecutiveSummary } from "@/components/dashboard/executive-summary";
+import { VerdictBanner } from "@/components/dashboard/verdict-banner";
 import { ReadinessScore } from "@/components/dashboard/readiness-score";
 import { PriorityActions } from "@/components/dashboard/priority-actions";
 import { QuickLinks } from "@/components/dashboard/quick-links";
@@ -18,7 +18,7 @@ export default function DashboardPage() {
       <Container>
         <div className="space-y-5">
           <DashboardHero />
-          <ExecutiveSummary />
+          <VerdictBanner />
           <div className="grid lg:grid-cols-2 gap-5">
             <ReadinessScore />
             <PriorityActions />
