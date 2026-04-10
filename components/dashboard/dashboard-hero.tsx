@@ -35,7 +35,7 @@ export function DashboardHero() {
               <span className="w-6 h-px bg-border-strong" aria-hidden="true" />
               {t("dashboard.title")}
             </p>
-            <h1 className="heading-display text-4xl md:text-5xl text-balance mb-3">
+            <h1 className="heading-display text-3xl md:text-4xl lg:text-5xl text-balance mb-3">
               {t("dashboard.welcome")}, <span className="text-muted">Founder.</span>
             </h1>
             <p className="text-ink-secondary text-base leading-relaxed max-w-lg text-pretty">

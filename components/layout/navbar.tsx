@@ -43,7 +43,7 @@ export function Navbar() {
 
         {/* Right: CTA Button */}
         <div className="flex items-center gap-3">
-          <Button href="/metrics" size="sm">
+          <Button href="/onboard" size="sm">
             Analyze my startup
           </Button>
         </div>

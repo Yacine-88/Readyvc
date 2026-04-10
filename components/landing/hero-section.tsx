@@ -28,16 +28,16 @@ export function HeroSection() {
               {t("hero.eyebrow")}
             </p>
 
-            <h1 className="heading-display text-5xl md:text-6xl lg:text-[68px] text-balance mb-5">
+            <h1 className="heading-display text-4xl sm:text-5xl md:text-6xl lg:text-[68px] text-balance mb-4 md:mb-5">
               {t("hero.title")}
             </h1>
 
-            <p className="text-ink-secondary text-base md:text-lg leading-relaxed max-w-xl mb-8 text-pretty">
+            <p className="text-ink-secondary text-sm md:text-base lg:text-lg leading-relaxed max-w-xl mb-6 md:mb-8 text-pretty">
               {t("hero.subtitle")}
             </p>
 
-            <div className="flex flex-wrap gap-3 mb-6">
-              <Button href="/metrics" size="lg">
+            <div className="flex flex-wrap gap-3 mb-5 md:mb-6">
+              <Button href="/onboard" size="lg">
                 {t("hero.cta.primary")}
                 <span aria-hidden="true">&rarr;</span>
               </Button>
@@ -71,8 +71,8 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Right: Preview Card */}
-          <div className="lg:pl-4">
+          {/* Right: Preview Card — hidden on mobile to keep hero focused */}
+          <div className="hidden lg:block lg:pl-4">
             <HeroPreviewCard />
           </div>
         </div>

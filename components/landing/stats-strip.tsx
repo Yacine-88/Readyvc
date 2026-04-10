@@ -1,4 +1,5 @@
 import { Container } from "@/components/layout/section";
+import { AnimatedNumber } from "@/components/ui/animated-number";
 
 const stats = [
   { value: "26", label: "Sectors covered", description: "Industry-specific benchmarks" },
@@ -17,9 +18,10 @@ export function StatsStrip() {
               key={stat.label}
               className="bg-soft border border-border rounded-[var(--radius-lg)] p-4"
             >
-              <p className="text-3xl md:text-4xl font-extrabold tracking-tight leading-none mb-2">
-                {stat.value}
-              </p>
+              <AnimatedNumber
+                value={stat.value}
+                className="text-3xl md:text-4xl font-extrabold tracking-tight leading-none mb-2 block"
+              />
               <p className="eyebrow mb-1">{stat.label}</p>
               <p className="text-xs text-muted">{stat.description}</p>
             </div>

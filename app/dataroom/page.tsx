@@ -10,6 +10,8 @@ import { CheckCircle2, Circle, RotateCcw, Save } from "lucide-react";
 import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
+import { ExpertMeetingModal } from "@/components/ui/expert-meeting-modal";
+import { getLocalReadinessScore } from "@/lib/local-readiness";
 
 interface Document {
   id: string;
@@ -50,6 +52,8 @@ export default function DataRoomPage() {
   const [documents, setDocuments] = useState<Document[]>(INITIAL_DOCUMENTS);
   const [saved, setSaved] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [overallScore, setOverallScore] = useState(0);
 
   // Load saved data on mount
   useEffect(() => {
@@ -107,6 +111,10 @@ export default function DataRoomPage() {
     );
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+    // Show expert meeting modal after the final step is saved
+    const readiness = getLocalReadinessScore();
+    setOverallScore(readiness.overall_score);
+    setTimeout(() => setShowModal(true), 1200);
   };
 
   const resetAll = () => {
@@ -118,6 +126,7 @@ export default function DataRoomPage() {
   };
 
   return (
+    <>
     <ToolPageLayout
       kicker={t("tool.dataroom.kicker") || "Data Room"}
       title={t("tool.dataroom.title") || "Are you ready for due diligence?"}
@@ -273,5 +282,13 @@ export default function DataRoomPage() {
       </ToolSection>
       <FlowContinue isComplete={completeCount >= 1} nextHref="/dashboard" nextLabel="Dashboard" isFinal />
     </ToolPageLayout>
+
+    {showModal && (
+      <ExpertMeetingModal
+        score={overallScore}
+        onClose={() => setShowModal(false)}
+      />
+    )}
+    </>
   );
 }
