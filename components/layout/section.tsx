@@ -1,6 +1,6 @@
-interface SectionProps {
-  children: React.ReactNode;
-  className?: string;
+import React from "react";
+
+interface SectionProps extends React.HTMLAttributes<HTMLElement> {
   bordered?: boolean;
   padding?: "sm" | "md" | "lg" | "none";
 }
@@ -17,10 +17,12 @@ export function Section({
   className = "",
   bordered = true,
   padding = "md",
+  ...rest
 }: SectionProps) {
   return (
     <section
       className={`${bordered ? "border-b border-border" : ""} ${paddingStyles[padding]} ${className}`}
+      {...rest}
     >
       {children}
     </section>
