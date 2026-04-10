@@ -11,7 +11,7 @@ import { saveCapTable } from "@/lib/db-cap-table";
 import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
-import { computeCapTableScore } from "@/lib/local-readiness";
+import { computeCapTableScore, saveReadinessSnapshot } from "@/lib/local-readiness";
 
 const shareholderTypes = [
   { value: "founder", label: "Founder" },
@@ -58,7 +58,18 @@ export default function CapTablePage() {
   const [showPostRound, setShowPostRound] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
 
-  useEffect(() => { setCompletedSteps(getCompletedSteps()); }, []);
+  // Restore saved cap table state on mount
+  useEffect(() => {
+    setCompletedSteps(getCompletedSteps());
+    try {
+      const raw = localStorage.getItem("vcready_captable_inputs");
+      if (raw) {
+        const data = JSON.parse(raw) as { shareholders?: Shareholder[]; roundInputs?: RoundInputs };
+        if (data.shareholders && data.shareholders.length > 0) setShareholders(data.shareholders);
+        if (data.roundInputs) setRoundInputs(data.roundInputs);
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   useEffect(() => {
     if (saved) {
@@ -182,6 +193,8 @@ export default function CapTablePage() {
       hasInvestors
     );
     localStorage.setItem("vcready_captable", JSON.stringify({ score }));
+    localStorage.setItem("vcready_captable_inputs", JSON.stringify({ shareholders, roundInputs }));
+    saveReadinessSnapshot();
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }, [currentState, postRoundState, roundInputs]);

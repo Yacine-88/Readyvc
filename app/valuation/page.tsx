@@ -13,7 +13,7 @@ import {
 import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
-import { computeValuationScore } from "@/lib/local-readiness";
+import { computeValuationScore, saveReadinessSnapshot } from "@/lib/local-readiness";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -181,7 +181,17 @@ export default function ValuationPage() {
   const [saved, setSaved] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
 
-  useEffect(() => { setCompletedSteps(getCompletedSteps()); }, []);
+  // Restore saved form state on mount
+  useEffect(() => {
+    setCompletedSteps(getCompletedSteps());
+    try {
+      const raw = localStorage.getItem("vcready_valuation_inputs");
+      if (raw) {
+        const savedForm = JSON.parse(raw) as FormState;
+        setForm(savedForm);
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   useEffect(() => {
     if (calculated && result) {
@@ -269,6 +279,9 @@ export default function ValuationPage() {
       sector: form.sector,
       stage: form.stage,
     }));
+    // Persist full form inputs so navigating back restores exact state
+    localStorage.setItem("vcready_valuation_inputs", JSON.stringify(form));
+    saveReadinessSnapshot();
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   }, [form, result]);

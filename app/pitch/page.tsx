@@ -9,6 +9,7 @@ import { RotateCcw, Save, Check, AlertCircle, ChevronDown, ChevronUp } from "luc
 import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
+import { saveReadinessSnapshot } from "@/lib/local-readiness";
 
 // Pitch section questions and scoring criteria
 const PITCH_SECTIONS = {
@@ -211,7 +212,18 @@ export default function PitchPage() {
   const [saved, setSaved] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
 
-  useEffect(() => { setCompletedSteps(getCompletedSteps()); }, []);
+  // Restore saved pitch answers on mount
+  useEffect(() => {
+    setCompletedSteps(getCompletedSteps());
+    try {
+      const raw = localStorage.getItem("vcready_pitch");
+      if (raw) {
+        const saves = JSON.parse(raw) as Array<{ answers?: Answers }>;
+        const last = saves[saves.length - 1];
+        if (last?.answers && Object.keys(last.answers).length > 0) setAnswers(last.answers);
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   useEffect(() => {
     if (saved) {
@@ -239,6 +251,7 @@ export default function PitchPage() {
       overallScore,
     });
     localStorage.setItem("vcready_pitch", JSON.stringify(savedResults.slice(-10)));
+    saveReadinessSnapshot();
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
     // sectionScores and overallScore are captured in closure (derived from answers)

@@ -187,6 +187,26 @@ export function VerdictBanner() {
             {" "}— they carry 60% of your readiness score.
           </div>
         )}
+
+        {/* Expert CTA — shown when there's data */}
+        {hasAnyData && (
+          <div className="mt-5 pt-5 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-bold text-ink mb-1">Want expert feedback on your readiness?</p>
+              <p className="text-xs text-ink-secondary">
+                Book a free 30-min call to review your score, close your gaps, and sharpen your fundraising strategy.
+              </p>
+            </div>
+            <a
+              href="https://calendly.com/vcready/30min"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-[var(--radius-md)] bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors shrink-0 whitespace-nowrap"
+            >
+              Book a free session →
+            </a>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

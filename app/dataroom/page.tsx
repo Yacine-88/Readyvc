@@ -11,7 +11,7 @@ import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
 import { ExpertMeetingModal } from "@/components/ui/expert-meeting-modal";
-import { getLocalReadinessScore } from "@/lib/local-readiness";
+import { getLocalReadinessScore, saveReadinessSnapshot } from "@/lib/local-readiness";
 
 interface Document {
   id: string;
@@ -109,6 +109,7 @@ export default function DataRoomPage() {
         total: totalDocs,
       })
     );
+    saveReadinessSnapshot();
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
     // Show expert meeting modal after the final step is saved

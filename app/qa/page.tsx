@@ -10,6 +10,7 @@ import { saveQAAssessment } from "@/lib/db-qa";
 import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
+import { saveReadinessSnapshot } from "@/lib/local-readiness";
 
 const allQuestions = [
   { category: "Business Model", q: "How do you make money?", weight: 1.2 },
@@ -58,7 +59,18 @@ export default function QAPage() {
   const [saved, setSaved] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
 
-  useEffect(() => { setCompletedSteps(getCompletedSteps()); }, []);
+  // Restore saved responses and perspective on mount
+  useEffect(() => {
+    setCompletedSteps(getCompletedSteps());
+    try {
+      const raw = localStorage.getItem("vcready_qa_inputs");
+      if (raw) {
+        const data = JSON.parse(raw) as { responses?: Record<string, number>; perspective?: "founder" | "investor" };
+        if (data.responses && Object.keys(data.responses).length > 0) setResponses(data.responses);
+        if (data.perspective) setPerspective(data.perspective);
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   useEffect(() => {
     if (saved) {
@@ -133,8 +145,10 @@ export default function QAPage() {
     } catch (error) {
       console.error("[v0] Error saving QA assessment:", error);
     }
-    // Persist score to localStorage for local readiness engine
+    // Persist score and full inputs for restoration on back-navigation
     localStorage.setItem("vcready_qa", JSON.stringify({ score: scores.overallScore }));
+    localStorage.setItem("vcready_qa_inputs", JSON.stringify({ responses, perspective }));
+    saveReadinessSnapshot();
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }, [scores, responses, perspective]);
@@ -153,8 +167,8 @@ export default function QAPage() {
       <FlowProgress currentStep="qa" completedSteps={completedSteps} />
       {/* Perspective Toggle */}
       <ToolSection>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted">Evaluation perspective:</span>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <span className="text-sm text-muted shrink-0">Evaluation perspective:</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -170,6 +184,17 @@ export default function QAPage() {
             >
               Investor
             </Button>
+          </div>
+        </div>
+        {/* Perspective explanation */}
+        <div className="mt-3 grid sm:grid-cols-2 gap-2">
+          <div className={`rounded-[var(--radius-md)] p-3 border text-xs leading-relaxed transition-colors ${perspective === "founder" ? "bg-accent/5 border-accent/30 text-ink" : "bg-soft border-border text-muted"}`}>
+            <span className="font-semibold block mb-0.5">Founder view</span>
+            Self-assessment — how you rate your own answers. Use this to identify gaps in your preparation.
+          </div>
+          <div className={`rounded-[var(--radius-md)] p-3 border text-xs leading-relaxed transition-colors ${perspective === "investor" ? "bg-accent/5 border-accent/30 text-ink" : "bg-soft border-border text-muted"}`}>
+            <span className="font-semibold block mb-0.5">Investor view</span>
+            Applies VC weights — traction and market score 60% of the total. See how a VC would evaluate your answers.
           </div>
         </div>
       </ToolSection>

@@ -6,7 +6,7 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { useI18n } from "@/lib/i18n";
 import { RotateCcw, Save, Check, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { saveMetrics, getMetrics } from "@/lib/db-metrics";
-import { computeMetricsScore } from "@/lib/local-readiness";
+import { computeMetricsScore, saveReadinessSnapshot } from "@/lib/local-readiness";
 import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
@@ -158,7 +158,18 @@ export default function MetricsPage() {
   const [saved, setSaved] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
 
-  useEffect(() => { setCompletedSteps(getCompletedSteps()); }, []);
+  // Restore saved form inputs on mount so navigating back shows last state
+  useEffect(() => {
+    setCompletedSteps(getCompletedSteps());
+    try {
+      const raw = localStorage.getItem("vcready_metrics_inputs");
+      if (raw) {
+        const saved = JSON.parse(raw) as { sector?: SectorKey; formData?: SaaSFormData };
+        if (saved.sector) setSector(saved.sector);
+        if (saved.formData) setFormData(saved.formData);
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   const isComplete = formData.mrr > 0;
 
@@ -286,6 +297,9 @@ export default function MetricsPage() {
       churn: calculations.churnRate,
       runway: calculations.runway,
     }));
+    // Persist full form so navigating back restores exact state
+    localStorage.setItem("vcready_metrics_inputs", JSON.stringify({ sector, formData }));
+    saveReadinessSnapshot();
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }, [formData, sector, calculations]);

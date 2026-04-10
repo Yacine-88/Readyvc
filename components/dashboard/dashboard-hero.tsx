@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useI18n } from "@/lib/i18n";
 import { getLocalReadinessScore, type LocalReadinessData } from "@/lib/local-readiness";
+import { getFounderProfile } from "@/lib/onboard";
 
 function fmt(n: number): string {
   if (n >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(1)}B`;
@@ -16,9 +17,16 @@ function fmt(n: number): string {
 export function DashboardHero() {
   const { t } = useI18n();
   const [data, setData] = useState<LocalReadinessData | null>(null);
+  const [firstName, setFirstName] = useState<string | null>(null);
+  const [startupName, setStartupName] = useState<string | null>(null);
 
   useEffect(() => {
     setData(getLocalReadinessScore());
+    const profile = getFounderProfile();
+    if (profile) {
+      setFirstName(profile.name.split(" ")[0]);
+      setStartupName(profile.startupName);
+    }
   }, []);
 
   const overall = data?.overall_score ?? null;
@@ -29,16 +37,17 @@ export function DashboardHero() {
     <Card className="overflow-hidden" padding="lg">
       <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-6">
         {/* Left */}
-        <div className="flex flex-col justify-between min-h-[280px]">
+        <div className="flex flex-col justify-between min-h-[240px] md:min-h-[280px]">
           <div>
             <p className="eyebrow inline-flex items-center gap-2.5 mb-4">
               <span className="w-6 h-px bg-border-strong" aria-hidden="true" />
-              {t("dashboard.title")}
+              {startupName ? `${startupName} · ${t("dashboard.title")}` : t("dashboard.title")}
             </p>
             <h1 className="heading-display text-3xl md:text-4xl lg:text-5xl text-balance mb-3">
-              {t("dashboard.welcome")}, <span className="text-muted">Founder.</span>
+              {t("dashboard.welcome")},{" "}
+              <span className="text-muted">{firstName ?? "Founder"}.</span>
             </h1>
-            <p className="text-ink-secondary text-base leading-relaxed max-w-lg text-pretty">
+            <p className="text-ink-secondary text-sm md:text-base leading-relaxed max-w-lg text-pretty">
               {t("dashboard.subtitle")}
             </p>
           </div>

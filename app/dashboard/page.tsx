@@ -5,6 +5,7 @@ import { VerdictBanner } from "@/components/dashboard/verdict-banner";
 import { ReadinessScore } from "@/components/dashboard/readiness-score";
 import { PriorityActions } from "@/components/dashboard/priority-actions";
 import { QuickLinks } from "@/components/dashboard/quick-links";
+import { ReadinessHistory } from "@/components/dashboard/readiness-history";
 import { BookSessionCTA } from "@/components/ui/book-session-cta";
 
 export const metadata: Metadata = {
@@ -23,6 +24,7 @@ export default function DashboardPage() {
             <ReadinessScore />
             <PriorityActions />
           </div>
+          <ReadinessHistory />
           <QuickLinks />
           <BookSessionCTA />
         </div>

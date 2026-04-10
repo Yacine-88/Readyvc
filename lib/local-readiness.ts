@@ -216,3 +216,57 @@ export function getLocalReadinessScore(): LocalReadinessData {
     stage: v.stage,
   }
 }
+
+// ─── Readiness History ────────────────────────────────────────────────────────
+
+export interface ReadinessSnapshot {
+  timestamp: string
+  overall_score: number
+  metrics_score: number
+  valuation_score: number
+  qa_score: number
+  cap_table_score: number
+  pitch_score: number
+  dataroom_score: number
+}
+
+const HISTORY_KEY = "vcready_history"
+const MAX_HISTORY = 20
+
+export function saveReadinessSnapshot(): void {
+  if (typeof window === "undefined") return
+  const current = getLocalReadinessScore()
+  if (current.overall_score === 0) return // don't record empty state
+
+  const snapshot: ReadinessSnapshot = {
+    timestamp: new Date().toISOString(),
+    overall_score: current.overall_score,
+    metrics_score: current.metrics_score,
+    valuation_score: current.valuation_score,
+    qa_score: current.qa_score,
+    cap_table_score: current.cap_table_score,
+    pitch_score: current.pitch_score,
+    dataroom_score: current.dataroom_score,
+  }
+
+  const history = getReadinessHistory()
+  // Avoid duplicate entries within 60 seconds
+  const last = history[history.length - 1]
+  if (last && Math.abs(new Date(last.timestamp).getTime() - Date.now()) < 60_000) {
+    history[history.length - 1] = snapshot // replace with latest
+  } else {
+    history.push(snapshot)
+  }
+
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-MAX_HISTORY)))
+}
+
+export function getReadinessHistory(): ReadinessSnapshot[] {
+  if (typeof window === "undefined") return []
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY)
+    return raw ? (JSON.parse(raw) as ReadinessSnapshot[]) : []
+  } catch {
+    return []
+  }
+}
