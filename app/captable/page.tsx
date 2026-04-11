@@ -35,13 +35,21 @@ interface RoundInputs {
   newEsopPercentage: number;
 }
 
+const DEMO_SHAREHOLDERS: Shareholder[] = [
+  { id: "1", name: "Founder A", type: "founder", shares: 4000000 },
+  { id: "2", name: "Founder B", type: "founder", shares: 3000000 },
+  { id: "3", name: "ESOP Pool", type: "employee", shares: 1500000 },
+  { id: "4", name: "Angel Syndicate", type: "angel", shares: 1500000 },
+];
+
+const DEMO_ROUND: RoundInputs = {
+  investmentAmount: 2000000,
+  preMoneyValuation: 8000000,
+  newEsopPercentage: 10,
+};
+
 export default function CapTablePage() {
-  const [shareholders, setShareholders] = useState<Shareholder[]>([
-    { id: "1", name: "Founder A", type: "founder", shares: 4000000 },
-    { id: "2", name: "Founder B", type: "founder", shares: 3000000 },
-    { id: "3", name: "ESOP Pool", type: "employee", shares: 1500000 },
-    { id: "4", name: "Angel Syndicate", type: "angel", shares: 1500000 },
-  ]);
+  const [shareholders, setShareholders] = useState<Shareholder[]>([]);
 
   const [newShareholder, setNewShareholder] = useState({
     name: "",
@@ -50,8 +58,8 @@ export default function CapTablePage() {
   });
 
   const [roundInputs, setRoundInputs] = useState<RoundInputs>({
-    investmentAmount: 2000000,
-    preMoneyValuation: 8000000,
+    investmentAmount: 0,
+    preMoneyValuation: 0,
     newEsopPercentage: 10,
   });
 
@@ -208,18 +216,16 @@ export default function CapTablePage() {
     setTimeout(() => setSaved(false), 2000);
   }, [currentState, postRoundState, roundInputs]);
 
+  const handleLoadDemo = useCallback(() => {
+    setShareholders(DEMO_SHAREHOLDERS);
+    setRoundInputs(DEMO_ROUND);
+    setShowPostRound(false);
+    setSaved(false);
+  }, []);
+
   const handleReset = useCallback(() => {
-    setShareholders([
-      { id: "1", name: "Founder A", type: "founder", shares: 4000000 },
-      { id: "2", name: "Founder B", type: "founder", shares: 3000000 },
-      { id: "3", name: "ESOP Pool", type: "employee", shares: 1500000 },
-      { id: "4", name: "Angel Syndicate", type: "angel", shares: 1500000 },
-    ]);
-    setRoundInputs({
-      investmentAmount: 2000000,
-      preMoneyValuation: 8000000,
-      newEsopPercentage: 10,
-    });
+    setShareholders([]);
+    setRoundInputs({ investmentAmount: 0, preMoneyValuation: 0, newEsopPercentage: 10 });
     setShowPostRound(false);
     setSaved(false);
   }, []);
@@ -562,7 +568,12 @@ export default function CapTablePage() {
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        {shareholders.length === 0 && (
+          <Button onClick={handleLoadDemo} variant="secondary" size="sm">
+            Load demo data
+          </Button>
+        )}
         <Button onClick={handleReset} variant="secondary" size="sm">
           <RotateCcw className="w-4 h-4" />
           Reset

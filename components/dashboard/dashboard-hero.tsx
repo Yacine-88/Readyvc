@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { useI18n } from "@/lib/i18n";
 import { getLocalReadinessScore, type LocalReadinessData } from "@/lib/local-readiness";
 import { getFounderProfile } from "@/lib/onboard";
+import { getCompletedSteps, FLOW_STEPS, type FlowStepId } from "@/lib/flow";
+import { AssessmentActions } from "./assessment-actions";
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmt(n: number): string {
   if (n >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(1)}B`;
@@ -14,14 +18,62 @@ function fmt(n: number): string {
   return `$${n.toFixed(0)}`;
 }
 
+const TOOL_HREFS: Record<FlowStepId, string> = {
+  metrics:   "/metrics",
+  valuation: "/valuation",
+  qa:        "/qa",
+  captable:  "/captable",
+  pitch:     "/pitch",
+  dataroom:  "/dataroom",
+  dashboard: "/dashboard",
+};
+
+const TOOL_LABELS: Record<FlowStepId, string> = {
+  metrics:   "Metrics",
+  valuation: "Valuation",
+  qa:        "Q&A",
+  captable:  "Cap Table",
+  pitch:     "Pitch",
+  dataroom:  "Data Room",
+  dashboard: "Dashboard",
+};
+
+const SCORE_KEYS: Partial<Record<FlowStepId, keyof LocalReadinessData>> = {
+  metrics:   "metrics_score",
+  valuation: "valuation_score",
+  qa:        "qa_score",
+  captable:  "cap_table_score",
+  pitch:     "pitch_score",
+  dataroom:  "dataroom_score",
+};
+
+function getNextStep(data: LocalReadinessData, completedSteps: FlowStepId[]) {
+  const toolSteps = FLOW_STEPS.filter((s) => s.id !== "dashboard");
+  for (const step of toolSteps) {
+    const scoreKey = SCORE_KEYS[step.id];
+    const score = scoreKey ? (data[scoreKey] as number) : 0;
+    if (score > 0 && !completedSteps.includes(step.id)) return step;
+  }
+  for (const step of toolSteps) {
+    if (!completedSteps.includes(step.id)) return step;
+  }
+  return null;
+}
+
+const CALENDLY_URL = "https://calendly.com/vcready/30min";
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export function DashboardHero() {
   const { t } = useI18n();
   const [data, setData] = useState<LocalReadinessData | null>(null);
   const [firstName, setFirstName] = useState<string | null>(null);
   const [startupName, setStartupName] = useState<string | null>(null);
+  const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
 
   useEffect(() => {
     setData(getLocalReadinessScore());
+    setCompletedSteps(getCompletedSteps());
     const profile = getFounderProfile();
     if (profile) {
       setFirstName(profile.name.split(" ")[0]);
@@ -32,54 +84,86 @@ export function DashboardHero() {
   const overall = data?.overall_score ?? null;
   const valuation = data?.estimated_valuation ?? null;
   const runway = data?.runway ?? null;
+  const nextStep = data ? getNextStep(data, completedSteps) : null;
+  const completedCount = FLOW_STEPS.filter(
+    (s) => s.id !== "dashboard" && completedSteps.includes(s.id)
+  ).length;
+  const totalTools = FLOW_STEPS.filter((s) => s.id !== "dashboard").length;
 
   return (
     <Card className="overflow-hidden" padding="lg">
       <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-6">
         {/* Left */}
-        <div className="flex flex-col justify-between min-h-[240px] md:min-h-[280px]">
+        <div className="flex flex-col justify-between min-h-[240px]">
           <div>
-            <p className="eyebrow inline-flex items-center gap-2.5 mb-4">
+            <p className="eyebrow inline-flex items-center gap-2.5 mb-3">
               <span className="w-6 h-px bg-border-strong" aria-hidden="true" />
-              {startupName ? `${startupName} · ${t("dashboard.title")}` : t("dashboard.title")}
+              {startupName ? `${startupName} · Dashboard` : "Dashboard"}
             </p>
-            <h1 className="heading-display text-3xl md:text-4xl lg:text-5xl text-balance mb-3">
+            <h1 className="heading-display text-3xl md:text-4xl text-balance mb-2">
               {t("dashboard.welcome")},{" "}
               <span className="text-muted">{firstName ?? "Founder"}.</span>
             </h1>
-            <p className="text-ink-secondary text-sm md:text-base leading-relaxed max-w-lg text-pretty">
-              {t("dashboard.subtitle")}
+            <p className="text-ink-secondary text-sm leading-relaxed max-w-md">
+              {completedCount === 0
+                ? "Start your assessment to see your investor readiness score."
+                : completedCount === totalTools
+                ? "All tools complete. Review your score and book a readiness call."
+                : `${completedCount} of ${totalTools} tools completed.`}
             </p>
           </div>
-          <div className="flex flex-wrap gap-3 mt-6">
-            <Button href="/readiness">
-              {t("dashboard.score.title")}
-              <span aria-hidden="true">&rarr;</span>
-            </Button>
-            <Button href="/metrics" variant="secondary">
-              {t("nav.valuation")}
-            </Button>
+
+          {/* CTAs */}
+          <div className="flex flex-wrap gap-2 mt-4">
+            {nextStep ? (
+              <Link
+                href={TOOL_HREFS[nextStep.id]}
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
+              >
+                Continue: {TOOL_LABELS[nextStep.id]} →
+              </Link>
+            ) : (
+              <Link
+                href="/readiness"
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
+              >
+                View full score →
+              </Link>
+            )}
+            <a
+              href={CALENDLY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-[var(--radius-md)] border border-border bg-soft text-sm font-semibold text-ink hover:border-ink/30 transition-colors"
+            >
+              Book a readiness review
+            </a>
+          </div>
+
+          {/* Assessment actions */}
+          <div className="mt-4 pt-4 border-t border-border">
+            <AssessmentActions />
           </div>
         </div>
 
         {/* Right: live summary cards */}
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           <MiniSummaryCard
-            label={t("dashboard.score.title")}
+            label="Readiness Score"
             value={overall !== null ? String(overall) : "—"}
             suffix={overall !== null ? "/100" : undefined}
             description={
               overall === null
                 ? "Complete a tool to see your score"
                 : overall >= 70
-                ? "You're investor ready"
+                ? "Investor ready"
                 : overall >= 40
-                ? "Keep completing the tools"
+                ? "Keep completing tools"
                 : "Start with Metrics & Q&A"
             }
           />
           <MiniSummaryCard
-            label={t("nav.valuation")}
+            label="Estimated Valuation"
             value={valuation ? fmt(valuation) : "—"}
             description={
               valuation
@@ -119,7 +203,7 @@ function MiniSummaryCard({
 }) {
   return (
     <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
-      <p className="eyebrow mb-2">{label}</p>
+      <p className="eyebrow mb-1.5">{label}</p>
       <p className="text-2xl font-extrabold tracking-tight leading-none mb-1 font-mono">
         {value}
         {suffix && <span className="text-muted text-base font-bold">{suffix}</span>}

@@ -141,15 +141,15 @@ interface SaaSFormData {
 }
 
 const defaultSaaSData: SaaSFormData = {
-  mrr: 15000,
-  newCustomers: 25,
-  churnedCustomers: 2,
-  cacSpend: 5000,
-  totalCustomers: 200,
-  grossMargin: 75,
-  avgRevenuePerCustomer: 75,
-  cashBalance: 500000,
-  monthlyBurn: 35000,
+  mrr: 0,
+  newCustomers: 0,
+  churnedCustomers: 0,
+  cacSpend: 0,
+  totalCustomers: 0,
+  grossMargin: 70,  // sensible default; user overrides
+  avgRevenuePerCustomer: 0,
+  cashBalance: 0,
+  monthlyBurn: 0,
 };
 
 export default function MetricsPage() {

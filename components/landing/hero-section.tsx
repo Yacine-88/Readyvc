@@ -1,13 +1,26 @@
 "use client";
 
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Section, Container } from "@/components/layout/section";
 import { HeroPreviewCard } from "./hero-preview-card";
 import { useI18n } from "@/lib/i18n";
+import { isOnboarded, getFounderProfile } from "@/lib/onboard";
 
 export function HeroSection() {
   const { t } = useI18n();
-  
+  const [onboarded, setOnboarded] = useState(false);
+  const [firstName, setFirstName] = useState<string | null>(null);
+
+  useEffect(() => {
+    const profile = getFounderProfile();
+    if (profile) {
+      setOnboarded(true);
+      setFirstName(profile.name.split(" ")[0]);
+    }
+  }, []);
+
   return (
     <Section bordered={true} padding="lg" className="relative overflow-hidden">
       {/* Subtle radial gradient overlay */}
@@ -37,41 +50,46 @@ export function HeroSection() {
             </p>
 
             <div className="flex flex-wrap gap-3 mb-5 md:mb-6">
-              <Button href="/onboard" size="lg">
-                {t("hero.cta.primary")}
-                <span aria-hidden="true">&rarr;</span>
-              </Button>
-              <Button href="#how-it-works" variant="secondary" size="lg">
-                {t("hero.cta.secondary")}
-              </Button>
+              {onboarded ? (
+                <>
+                  <Button href="/dashboard" size="lg">
+                    {firstName ? `Welcome back, ${firstName}` : "Go to dashboard"}
+                    <span aria-hidden="true">&rarr;</span>
+                  </Button>
+                  <Button href="/metrics" variant="secondary" size="lg">
+                    Continue analysis
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button href="/onboard" size="lg">
+                    {t("hero.cta.primary")}
+                    <span aria-hidden="true">&rarr;</span>
+                  </Button>
+                  <Button href="#how-it-works" variant="secondary" size="lg">
+                    {t("hero.cta.secondary")}
+                  </Button>
+                </>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-5 text-xs font-medium text-muted">
               <span className="inline-flex items-center gap-2">
-                <span
-                  className="w-1.5 h-1.5 rounded-full bg-muted-foreground"
-                  aria-hidden="true"
-                />
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" aria-hidden="true" />
                 No credit card required
               </span>
               <span className="inline-flex items-center gap-2">
-                <span
-                  className="w-1.5 h-1.5 rounded-full bg-muted-foreground"
-                  aria-hidden="true"
-                />
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" aria-hidden="true" />
                 Free tools included
               </span>
               <span className="inline-flex items-center gap-2">
-                <span
-                  className="w-1.5 h-1.5 rounded-full bg-muted-foreground"
-                  aria-hidden="true"
-                />
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" aria-hidden="true" />
                 Investor-grade insights
               </span>
             </div>
           </div>
 
-          {/* Right: Preview Card — hidden on mobile to keep hero focused */}
+          {/* Right: Preview Card — hidden on mobile */}
           <div className="hidden lg:block lg:pl-4">
             <HeroPreviewCard />
           </div>

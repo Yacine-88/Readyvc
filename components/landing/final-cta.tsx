@@ -1,13 +1,20 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
+import { isOnboarded } from "@/lib/onboard";
 
 const CALENDLY_URL = "https://calendly.com/vcready/30min";
 
 export function FinalCTA() {
   const { t } = useI18n();
-  
+  const [onboarded, setOnboarded] = useState(false);
+
+  useEffect(() => {
+    setOnboarded(isOnboarded());
+  }, []);
+
   return (
     <section className="bg-ink text-white">
       <div className="max-w-[var(--container-max)] mx-auto px-6 py-20">
@@ -28,30 +35,52 @@ export function FinalCTA() {
           {/* Actions */}
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-3">
-              <Button
-                href="/dashboard"
-                size="lg"
-                className="bg-accent text-white hover:bg-accent/90 border-accent"
-              >
-                {t("cta.primary")}
-                <span aria-hidden="true">&rarr;</span>
-              </Button>
-              <Button
-                href="/valuation"
-                variant="secondary"
-                className="bg-transparent text-white border-white/30 hover:border-white hover:bg-white/5"
-                size="lg"
-              >
-                {t("cta.secondary")}
-              </Button>
+              {onboarded ? (
+                <>
+                  <Button
+                    href="/dashboard"
+                    size="lg"
+                    className="bg-accent text-white hover:bg-accent/90 border-accent"
+                  >
+                    Go to my dashboard →
+                  </Button>
+                  <Button
+                    href="/metrics"
+                    variant="secondary"
+                    className="bg-transparent text-white border-white/30 hover:border-white hover:bg-white/5"
+                    size="lg"
+                  >
+                    Resume tools
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    href="/onboard"
+                    size="lg"
+                    className="bg-accent text-white hover:bg-accent/90 border-accent"
+                  >
+                    {t("cta.primary")}
+                    <span aria-hidden="true">&rarr;</span>
+                  </Button>
+                  <Button
+                    href="/valuation"
+                    variant="secondary"
+                    className="bg-transparent text-white border-white/30 hover:border-white hover:bg-white/5"
+                    size="lg"
+                  >
+                    {t("cta.secondary")}
+                  </Button>
+                </>
+              )}
             </div>
-            <a 
+            <a
               href={CALENDLY_URL}
-              target="_blank" 
+              target="_blank"
               rel="noopener noreferrer"
               className="text-white/60 text-sm hover:text-white transition-colors underline underline-offset-4"
             >
-              {t("cta.bookSession")} &rarr;
+              Book a founder readiness review →
             </a>
           </div>
         </div>
