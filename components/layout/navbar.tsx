@@ -54,6 +54,8 @@ export function Navbar() {
   // In Supabase mode:   authenticated = has a real session (user !== null)
   const isAuthenticated = isLocalOnly ? !!firstName : !!user;
   const showConnected   = isAuthenticated && !!firstName;
+  // Authenticated but no profile in localStorage yet (e.g. after login before DB sync)
+  const showAuthNoProfile = isAuthenticated && !firstName;
 
   return (
     <header className="sticky top-0 z-50 h-16 border-b border-border bg-background">
@@ -84,7 +86,6 @@ export function Navbar() {
         {/* Right: Auth state */}
         <div className="flex items-center gap-2 sm:gap-3">
           {loading && !isLocalOnly ? (
-            // Brief loading state only needed in Supabase mode
             <div className="w-20 h-7 bg-soft rounded-full animate-pulse" />
           ) : showConnected ? (
             <>
@@ -93,7 +94,6 @@ export function Navbar() {
                 href="/dashboard"
                 className="flex items-center gap-2 h-8 px-3 rounded-full border border-border bg-soft text-xs font-semibold text-ink hover:border-ink/30 transition-colors"
               >
-                {/* Avatar */}
                 <span className="w-5 h-5 rounded-full bg-accent text-white text-[10px] font-bold flex items-center justify-center shrink-0">
                   {firstName![0].toUpperCase()}
                 </span>
@@ -101,27 +101,40 @@ export function Navbar() {
                   {startupName ?? firstName}
                 </span>
               </Link>
-
-              {/* Sign out — visible whenever there's local data, even without a real session */}
-              {(user || isLocalOnly || !!firstName) && (
-                <button
-                  onClick={handleSignOut}
-                  className="hidden sm:block text-xs text-muted hover:text-ink transition-colors font-medium"
-                >
-                  Sign out
-                </button>
-              )}
+              <button
+                onClick={handleSignOut}
+                className="hidden sm:block text-xs text-muted hover:text-ink transition-colors font-medium"
+              >
+                Sign out
+              </button>
+            </>
+          ) : showAuthNoProfile ? (
+            <>
+              {/* Authenticated but no profile yet — show email initial + sign out */}
+              <Link
+                href="/onboard"
+                className="flex items-center gap-2 h-8 px-3 rounded-full border border-border bg-soft text-xs font-semibold text-ink hover:border-ink/30 transition-colors"
+              >
+                <span className="w-5 h-5 rounded-full bg-accent text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                  {user?.email?.[0]?.toUpperCase() ?? "?"}
+                </span>
+                <span className="hidden sm:inline">Complete profile</span>
+              </Link>
+              <button
+                onClick={handleSignOut}
+                className="hidden sm:block text-xs text-muted hover:text-ink transition-colors font-medium"
+              >
+                Sign out
+              </button>
             </>
           ) : (
             <>
-              {/* Sign in link */}
               <Link
                 href="/auth/login"
                 className="text-sm font-medium text-muted hover:text-ink transition-colors"
               >
                 Sign in
               </Link>
-              {/* Primary CTA */}
               <Button href="/onboard" size="sm">
                 Get started
               </Button>
