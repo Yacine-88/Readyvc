@@ -10,15 +10,43 @@ import { saveProfileToDB } from "@/lib/db-user";
 import { useAuth } from "@/lib/auth-context";
 
 const SECTORS = [
-  "SaaS",
+  // AI & Software
+  "AI / Machine Learning",
+  "SaaS / B2B Software",
+  "Developer Tools",
+  "Cybersecurity",
+  "Data & Analytics",
+  "Cloud Infrastructure",
+  // Fintech & Finance
   "Fintech",
-  "Healthtech",
-  "Edtech",
+  "Crypto / Web3",
+  "InsurTech",
+  "RegTech",
+  // Health & Bio
+  "Healthtech / Digital Health",
+  "Biotech",
+  "MedTech",
+  // Consumer & Commerce
+  "Consumer App",
   "E-commerce",
   "Marketplace",
+  "Gaming / Entertainment",
+  "Media & Content",
+  // Industry Verticals
+  "Edtech",
+  "Legaltech",
+  "HRtech / Future of Work",
+  "Proptech",
+  "Logistics / Supply Chain",
+  "Foodtech",
+  "Traveltech",
+  // Deep Tech
   "DeepTech",
-  "Cleantech",
-  "Consumer",
+  "Cleantech / Climate",
+  "SpaceTech",
+  "Hardware / IoT",
+  "Robotics / Automation",
+  // Other
   "Other",
 ];
 

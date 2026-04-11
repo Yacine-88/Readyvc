@@ -69,6 +69,8 @@ export function DashboardHero() {
   const [data, setData] = useState<LocalReadinessData | null>(null);
   const [firstName, setFirstName] = useState<string | null>(null);
   const [startupName, setStartupName] = useState<string | null>(null);
+  const [country, setCountry] = useState<string | null>(null);
+  const [sector, setSector] = useState<string | null>(null);
   const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
 
   useEffect(() => {
@@ -78,6 +80,8 @@ export function DashboardHero() {
     if (profile) {
       setFirstName(profile.name.split(" ")[0]);
       setStartupName(profile.startupName);
+      setCountry(profile.country ?? null);
+      setSector(profile.sector ?? null);
     }
   }, []);
 
@@ -100,10 +104,24 @@ export function DashboardHero() {
               <span className="w-6 h-px bg-border-strong" aria-hidden="true" />
               {startupName ? `${startupName} · Dashboard` : "Dashboard"}
             </p>
-            <h1 className="heading-display text-3xl md:text-4xl text-balance mb-2">
+            <h1 className="heading-display text-3xl md:text-4xl text-balance mb-3">
               {t("dashboard.welcome")},{" "}
               <span className="text-muted">{firstName ?? "Founder"}.</span>
             </h1>
+            {(country || sector) && (
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                {country && (
+                  <span className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full border border-border bg-soft text-xs font-medium text-ink">
+                    {countryFlag(country)} {country}
+                  </span>
+                )}
+                {sector && (
+                  <span className="inline-flex items-center h-7 px-2.5 rounded-full border border-border bg-soft text-xs font-medium text-ink">
+                    {sector}
+                  </span>
+                )}
+              </div>
+            )}
             <p className="text-ink-secondary text-sm leading-relaxed max-w-md">
               {completedCount === 0
                 ? "Start your assessment to see your investor readiness score."
@@ -188,6 +206,38 @@ export function DashboardHero() {
       </div>
     </Card>
   );
+}
+
+// ─── Country flag helper ──────────────────────────────────────────────────────
+
+const COUNTRY_CODES: Record<string, string> = {
+  "afghanistan": "AF", "albania": "AL", "algeria": "DZ", "argentina": "AR",
+  "australia": "AU", "austria": "AT", "bangladesh": "BD", "belgium": "BE",
+  "brazil": "BR", "canada": "CA", "chile": "CL", "china": "CN",
+  "colombia": "CO", "czech republic": "CZ", "denmark": "DK", "egypt": "EG",
+  "ethiopia": "ET", "finland": "FI", "france": "FR", "germany": "DE",
+  "ghana": "GH", "greece": "GR", "hungary": "HU", "india": "IN",
+  "indonesia": "ID", "ireland": "IE", "israel": "IL", "italy": "IT",
+  "japan": "JP", "kenya": "KE", "malaysia": "MY", "mexico": "MX",
+  "morocco": "MA", "netherlands": "NL", "new zealand": "NZ", "nigeria": "NG",
+  "norway": "NO", "pakistan": "PK", "peru": "PE", "philippines": "PH",
+  "poland": "PL", "portugal": "PT", "romania": "RO", "russia": "RU",
+  "saudi arabia": "SA", "senegal": "SN", "singapore": "SG", "south africa": "ZA",
+  "south korea": "KR", "spain": "ES", "sweden": "SE", "switzerland": "CH",
+  "taiwan": "TW", "thailand": "TH", "tunisia": "TN", "turkey": "TR",
+  "ukraine": "UA", "united arab emirates": "AE", "uae": "AE",
+  "united kingdom": "GB", "uk": "GB", "united states": "US", "usa": "US",
+  "vietnam": "VN",
+};
+
+function countryFlag(country: string): string {
+  const code = COUNTRY_CODES[country.toLowerCase()];
+  if (!code) return "🌍";
+  return code
+    .toUpperCase()
+    .split("")
+    .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
+    .join("");
 }
 
 function MiniSummaryCard({
