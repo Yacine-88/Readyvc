@@ -12,6 +12,8 @@ export interface FounderProfile {
   stage: string
   hasRaisedBefore: boolean
   createdAt: string
+  /** B2B: set when founder joins an organization via invite link */
+  orgId?: string
 }
 
 const KEY = "vcready_founder"
