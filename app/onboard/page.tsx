@@ -67,31 +67,29 @@ export default function OnboardPage() {
     setError(null);
     setSubmitting(true);
 
-    // 1. Attempt Supabase signup (best effort — no-op if Supabase not configured)
-    const { error: authError } = await signUp(form.email.trim(), form.password);
-    if (authError && !authError.includes("already registered")) {
-      setError(authError);
-      setSubmitting(false);
-      return;
-    }
+    // 1. If already authenticated (e.g. returning user with no DB profile),
+    //    skip signup/login — just save the profile below.
+    if (!user) {
+      const { error: authError } = await signUp(form.email.trim(), form.password);
+      if (authError && !authError.includes("already registered")) {
+        setError(authError);
+        setSubmitting(false);
+        return;
+      }
 
-    // If user already exists with that email, direct them to login
-    if (authError && authError.includes("already registered")) {
-      setError("An account with this email already exists. Sign in instead.");
-      setSubmitting(false);
-      return;
-    }
+      if (authError && authError.includes("already registered")) {
+        setError("An account with this email already exists. Sign in instead.");
+        setSubmitting(false);
+        return;
+      }
 
-    // 1b. Auto-login after signup so saveProfileToDB has a session to write to DB.
-    // Without this, signUp returns session: null when email confirmation is pending,
-    // and the DB profile write is silently skipped (login later would fail to sync).
-    const { error: signInError } = await signIn(form.email.trim(), form.password);
-    if (signInError) {
-      // This will fail if email confirmation is still enabled in Supabase.
-      // Fix: Supabase Dashboard → Authentication → Settings → disable "Enable email confirmations".
-      setError(`Account created but sign-in failed: ${signInError}. Check your email to confirm your account, then sign in.`);
-      setSubmitting(false);
-      return;
+      // Auto-login after signup so saveProfileToDB has a real session.
+      const { error: signInError } = await signIn(form.email.trim(), form.password);
+      if (signInError) {
+        setError(`Account created but sign-in failed: ${signInError}.`);
+        setSubmitting(false);
+        return;
+      }
     }
 
     // 2. Save profile to localStorage + DB
