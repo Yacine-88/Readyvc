@@ -34,6 +34,7 @@ export function saveFounderProfile(
   if (typeof window === "undefined") return
   const full: FounderProfile = { ...profile, createdAt: new Date().toISOString() }
   localStorage.setItem(KEY, JSON.stringify(full))
+  window.dispatchEvent(new Event("vcready:profile-updated"))
 }
 
 export function isOnboarded(): boolean {

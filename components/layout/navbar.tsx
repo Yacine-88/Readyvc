@@ -24,16 +24,21 @@ export function Navbar() {
   const [firstName,    setFirstName]    = useState<string | null>(null);
   const [startupName,  setStartupName]  = useState<string | null>(null);
 
-  // Sync display name from localStorage on mount and whenever auth changes
+  // Sync display name from localStorage on mount, auth changes, and profile saves
   useEffect(() => {
-    const profile = getFounderProfile();
-    if (profile) {
-      setFirstName(profile.name.split(" ")[0]);
-      setStartupName(profile.startupName);
-    } else {
-      setFirstName(null);
-      setStartupName(null);
+    function syncFromStorage() {
+      const profile = getFounderProfile();
+      if (profile) {
+        setFirstName(profile.name.split(" ")[0]);
+        setStartupName(profile.startupName);
+      } else {
+        setFirstName(null);
+        setStartupName(null);
+      }
     }
+    syncFromStorage();
+    window.addEventListener("vcready:profile-updated", syncFromStorage);
+    return () => window.removeEventListener("vcready:profile-updated", syncFromStorage);
   }, [user, loading]);
 
   async function handleSignOut() {
@@ -110,15 +115,11 @@ export function Navbar() {
             </>
           ) : showAuthNoProfile ? (
             <>
-              {/* Authenticated but no profile yet — show email initial + sign out */}
               <Link
                 href="/onboard"
-                className="flex items-center gap-2 h-8 px-3 rounded-full border border-border bg-soft text-xs font-semibold text-ink hover:border-ink/30 transition-colors"
+                className="flex items-center justify-center w-8 h-8 rounded-full border border-border bg-soft text-xs font-bold text-ink hover:border-ink/30 transition-colors"
               >
-                <span className="w-5 h-5 rounded-full bg-accent text-white text-[10px] font-bold flex items-center justify-center shrink-0">
-                  {user?.email?.[0]?.toUpperCase() ?? "?"}
-                </span>
-                <span className="hidden sm:inline">Complete profile</span>
+                {user?.email?.[0]?.toUpperCase() ?? "?"}
               </Link>
               <button
                 onClick={handleSignOut}
