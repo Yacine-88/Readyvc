@@ -4,6 +4,7 @@ import { useI18n } from "@/lib/i18n";
 import { Section } from "@/components/layout/section";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Linkedin } from "lucide-react";
 
 export default function AboutPage() {
   const { t } = useI18n();
@@ -42,7 +43,18 @@ export default function AboutPage() {
             
             <div className="space-y-6">
               <div>
-                <h3 className="text-2xl font-semibold mb-4">{t("about.founder.name")}</h3>
+                <div className="flex items-center gap-3 mb-4">
+                  <h3 className="text-2xl font-semibold">{t("about.founder.name")}</h3>
+                  <a
+                    href="https://www.linkedin.com/in/yacine-chikhar-a53906103/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Yacine CHIKHAR on LinkedIn"
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#0A66C2]/10 text-[#0A66C2] hover:bg-[#0A66C2]/20 transition-colors"
+                  >
+                    <Linkedin className="w-4 h-4" aria-hidden="true" />
+                  </a>
+                </div>
                 <div className="body-text text-base leading-relaxed space-y-4 text-ink-secondary">
                   {t("about.founder.bio").split("\n\n").map((paragraph, index) => (
                     <p key={index}>{paragraph}</p>

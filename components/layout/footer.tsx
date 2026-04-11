@@ -91,7 +91,7 @@ export function Footer() {
         </div>
 
         {/* Links Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-10">
           {/* Tools */}
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-white/40 mb-4">
@@ -114,15 +114,72 @@ export function Footer() {
           {/* Resources */}
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-white/40 mb-4">
-              {t("footer.resources")}
+              Resources
             </p>
             <ul className="space-y-2">
+              <li>
+                <a
+                  href="https://www.notion.so/templates/category/startups"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-white/60 hover:text-white transition-colors"
+                >
+                  Startup templates
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.crunchbase.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-white/60 hover:text-white transition-colors"
+                >
+                  Investor database
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://docs.google.com/spreadsheets"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-white/60 hover:text-white transition-colors"
+                >
+                  MRR spreadsheet
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.ycombinator.com/apply"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-white/60 hover:text-white transition-colors"
+                >
+                  Accelerators
+                </a>
+              </li>
               <li>
                 <Link
                   href="/dashboard"
                   className="text-sm text-white/60 hover:text-white transition-colors"
                 >
                   Dashboard
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Company */}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-white/40 mb-4">
+              Company
+            </p>
+            <ul className="space-y-2">
+              <li>
+                <Link
+                  href="/about"
+                  className="text-sm text-white/60 hover:text-white transition-colors"
+                >
+                  About
                 </Link>
               </li>
               <li>
@@ -164,7 +221,7 @@ export function Footer() {
           </div>
 
           {/* Book a Session */}
-          <div className="col-span-2 md:col-span-1">
+          <div className="col-span-2 md:col-span-2 lg:col-span-1">
             <p className="text-xs font-semibold uppercase tracking-wider text-white/40 mb-4">
               {t("cta.bookSession")}
             </p>

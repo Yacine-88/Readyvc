@@ -31,14 +31,26 @@ export function ToolPageLayout({
     if (loading) return;
 
     async function check() {
-      // Authenticated user: try to pull profile + tool data from DB
-      if (user && !synced.current) {
+      // Not authenticated at all
+      if (!user) {
+        // Returning user (has local profile but lost session) → sign in
+        if (isOnboarded()) {
+          router.replace("/auth/login");
+        } else {
+          // New visitor → create account first
+          router.replace("/onboard");
+        }
+        return;
+      }
+
+      // Authenticated: sync DB → localStorage on first mount
+      if (!synced.current) {
         synced.current = true;
         await syncProfileFromDB();
         await syncAllToolsToLocalStorage();
       }
 
-      // Guard: must be onboarded (localStorage profile present)
+      // Guard: must have completed onboarding form
       if (!isOnboarded()) {
         router.replace("/onboard");
       }
@@ -49,7 +61,7 @@ export function ToolPageLayout({
 
   // Don't flash content before guard resolves
   if (loading) return <div className="animate-pulse h-screen bg-background" />;
-  if (typeof window !== "undefined" && !isOnboarded()) return null;
+  if (typeof window !== "undefined" && (!isOnboarded())) return null;
 
   return (
     <>
