@@ -29,7 +29,7 @@ const COMPARABLES_DATA: Deal[] = [
   { name: "Kuda Bank", country: "Nigeria", flag: "🇳🇬", geo: "africa", sector: "fintech", stage: "seriesB", raised: 55, valuation: 500, multiple: null, year: 2021, note: "Neobank" },
   
   // AFRICA — SAAS
-  { name: "Yassir", country: "Algeria", flag: "🇩🇿", geo: "africa", sector: "saas", stage: "seriesB", raised: 150, valuation: 700, multiple: 8.5, year: 2023, note: "Super-app, North Africa" },
+  { name: "Yassir", country: "Algeria", flag: "🇩🇿", geo: "africa", sector: "saas", stage: "seriesB", raised: 150, valuation: 700, multiple: 8.5, year: 2023, note: "Super-app, Algeria" },
   { name: "Wasoko", country: "Kenya", flag: "🇰🇪", geo: "africa", sector: "saas", stage: "seriesB", raised: 125, valuation: 625, multiple: 7.2, year: 2022, note: "B2B e-commerce SaaS" },
   { name: "TradeDepot", country: "Nigeria", flag: "🇳🇬", geo: "africa", sector: "saas", stage: "seriesB", raised: 110, valuation: null, multiple: null, year: 2022, note: "B2B trade platform" },
   
