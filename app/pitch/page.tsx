@@ -11,6 +11,7 @@ import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
 import { saveReadinessSnapshot } from "@/lib/local-readiness";
 import { saveToolToDB, getToolFromDB } from "@/lib/db-tools";
+import { useToolGuard } from "@/lib/use-tool-guard";
 
 // Pitch section questions and scoring criteria
 const PITCH_SECTIONS = {
@@ -207,6 +208,7 @@ type Answers = Record<string, 0 | 1 | 2 | 3>; // 0: not answered, 1: weak, 2: ok
 const defaultAnswers: Answers = {};
 
 export default function PitchPage() {
+  const { ready } = useToolGuard();
   const { t, locale } = useI18n();
   const [answers, setAnswers] = useState<Answers>(defaultAnswers);
   const [expandedSection, setExpandedSection] = useState<SectionKey | null>("problem");
@@ -356,6 +358,8 @@ export default function PitchPage() {
     if (overallScore >= 60) return t("pitch.goodProgress");
     return t("pitch.needsWork");
   };
+
+  if (!ready) return <div className="animate-pulse h-screen bg-background" />;
 
   return (
     <div className="bg-background">

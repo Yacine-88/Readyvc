@@ -11,6 +11,7 @@ import { saveToolToDB, getToolFromDB } from "@/lib/db-tools";
 import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
+import { useToolGuard } from "@/lib/use-tool-guard";
 
 // Sector-specific benchmarks
 const SECTOR_BENCHMARKS = {
@@ -153,6 +154,7 @@ const defaultSaaSData: SaaSFormData = {
 };
 
 export default function MetricsPage() {
+  const { ready } = useToolGuard();
   const { t, locale } = useI18n();
   const [sector, setSector] = useState<SectorKey>("saas");
   const [formData, setFormData] = useState<SaaSFormData>(defaultSaaSData);
@@ -387,6 +389,8 @@ export default function MetricsPage() {
 
     return list;
   }, [calculations, locale]);
+
+  if (!ready) return <div className="animate-pulse h-screen bg-background" />;
 
   return (
     <div className="bg-background">

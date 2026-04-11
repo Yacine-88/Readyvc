@@ -23,6 +23,10 @@ const stubClient = {
   }),
 } as any
 
+export function isSupabaseConfigured(): boolean {
+  return !!(SUPABASE_URL && SUPABASE_ANON_KEY)
+}
+
 export function createClient() {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     return stubClient

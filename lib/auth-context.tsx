@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import type { User, Session } from "@supabase/supabase-js";
-import { createClient } from "./supabase-client";
+import { createClient, isSupabaseConfigured } from "./supabase-client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -17,6 +17,12 @@ interface AuthState {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  /**
+   * True when Supabase is not configured (no env vars).
+   * In this mode, localStorage profile presence = authenticated.
+   * All auth-dependent UI should treat isOnboarded() as the auth signal.
+   */
+  isLocalOnly: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -28,6 +34,7 @@ const AuthContext = createContext<AuthState>({
   user: null,
   session: null,
   loading: true,
+  isLocalOnly: !isSupabaseConfigured(),
   signIn: async () => ({ error: null }),
   signUp: async () => ({ error: null }),
   signOut: async () => {},
@@ -81,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isLocalOnly: !isSupabaseConfigured(), signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

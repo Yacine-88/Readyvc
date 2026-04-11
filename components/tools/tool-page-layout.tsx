@@ -1,12 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { Container } from "@/components/layout/section";
-import { isOnboarded } from "@/lib/onboard";
-import { syncProfileFromDB } from "@/lib/db-user";
-import { syncAllToolsToLocalStorage } from "@/lib/db-tools";
-import { useAuth } from "@/lib/auth-context";
+import { useToolGuard } from "@/lib/use-tool-guard";
 
 interface ToolPageLayoutProps {
   children: React.ReactNode;
@@ -23,45 +18,9 @@ export function ToolPageLayout({
   description,
   actions,
 }: ToolPageLayoutProps) {
-  const router = useRouter();
-  const { user, loading } = useAuth();
-  const synced = useRef(false);
+  const { ready } = useToolGuard();
 
-  useEffect(() => {
-    if (loading) return;
-
-    async function check() {
-      // Not authenticated at all
-      if (!user) {
-        // Returning user (has local profile but lost session) → sign in
-        if (isOnboarded()) {
-          router.replace("/auth/login");
-        } else {
-          // New visitor → create account first
-          router.replace("/onboard");
-        }
-        return;
-      }
-
-      // Authenticated: sync DB → localStorage on first mount
-      if (!synced.current) {
-        synced.current = true;
-        await syncProfileFromDB();
-        await syncAllToolsToLocalStorage();
-      }
-
-      // Guard: must have completed onboarding form
-      if (!isOnboarded()) {
-        router.replace("/onboard");
-      }
-    }
-
-    check();
-  }, [user, loading, router]);
-
-  // Don't flash content before guard resolves
-  if (loading) return <div className="animate-pulse h-screen bg-background" />;
-  if (typeof window !== "undefined" && (!isOnboarded())) return null;
+  if (!ready) return <div className="animate-pulse h-screen bg-background" />;
 
   return (
     <>
