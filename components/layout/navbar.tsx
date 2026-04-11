@@ -114,9 +114,16 @@ export function Navbar() {
             </>
           ) : (
             <>
-              {/* Not onboarded: primary CTA */}
+              {/* Sign in link */}
+              <Link
+                href="/auth/login"
+                className="text-sm font-medium text-muted hover:text-ink transition-colors"
+              >
+                Sign in
+              </Link>
+              {/* Primary CTA */}
               <Button href="/onboard" size="sm">
-                Analyze my startup
+                Get started
               </Button>
             </>
           )}

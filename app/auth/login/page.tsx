@@ -38,11 +38,13 @@ export default function LoginPage() {
       return;
     }
 
-    // Sync profile and tool data from DB to localStorage
+    // Sync profile and tool data from DB to localStorage (best effort)
     await syncProfileFromDB();
     await syncAllToolsToLocalStorage();
 
-    router.replace(isOnboarded() ? "/dashboard" : "/onboard");
+    // Always go to dashboard after successful login — the user authenticated,
+    // they belong in their workspace regardless of localStorage state.
+    router.replace("/dashboard");
   }
 
   if (loading) return null;
