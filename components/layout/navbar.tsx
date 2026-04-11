@@ -129,14 +129,11 @@ export function Navbar() {
             </>
           ) : (
             <>
-              <Link
-                href="/auth/login"
-                className="text-sm font-medium text-muted hover:text-ink transition-colors"
-              >
-                Sign in
-              </Link>
-              <Button href="/onboard" size="sm">
-                Get started
+              <Button href="/auth/login" variant="secondary" size="sm">
+                Log in
+              </Button>
+              <Button href="/onboard" variant="primary" size="sm">
+                Sign up →
               </Button>
             </>
           )}
