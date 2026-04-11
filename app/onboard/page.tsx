@@ -26,7 +26,7 @@ const STAGES = ["Pre-seed", "Seed", "Series A", "Series B+"];
 
 export default function OnboardPage() {
   const router = useRouter();
-  const { signUp, user, loading } = useAuth();
+  const { signUp, signIn, user, loading } = useAuth();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -78,6 +78,18 @@ export default function OnboardPage() {
     // If user already exists with that email, direct them to login
     if (authError && authError.includes("already registered")) {
       setError("An account with this email already exists. Sign in instead.");
+      setSubmitting(false);
+      return;
+    }
+
+    // 1b. Auto-login after signup so saveProfileToDB has a session to write to DB.
+    // Without this, signUp returns session: null when email confirmation is pending,
+    // and the DB profile write is silently skipped (login later would fail to sync).
+    const { error: signInError } = await signIn(form.email.trim(), form.password);
+    if (signInError) {
+      // This will fail if email confirmation is still enabled in Supabase.
+      // Fix: Supabase Dashboard → Authentication → Settings → disable "Enable email confirmations".
+      setError(`Account created but sign-in failed: ${signInError}. Check your email to confirm your account, then sign in.`);
       setSubmitting(false);
       return;
     }
