@@ -102,8 +102,8 @@ export function Navbar() {
                 </span>
               </Link>
 
-              {/* Sign out */}
-              {(user || isLocalOnly) && (
+              {/* Sign out — visible whenever there's local data, even without a real session */}
+              {(user || isLocalOnly || !!firstName) && (
                 <button
                   onClick={handleSignOut}
                   className="hidden sm:block text-xs text-muted hover:text-ink transition-colors font-medium"
