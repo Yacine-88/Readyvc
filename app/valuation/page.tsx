@@ -237,6 +237,23 @@ export default function ValuationPage() {
     });
     setResult(summary);
     setCalculated(true);
+
+    // Auto-save to localStorage immediately on calculate so dashboard always shows the value
+    // even if the user navigates away without clicking the Save button.
+    const autoScore = computeValuationScore(
+      summary.blended.base,
+      form.baseGrowthRate,
+      !!(form.sector && form.stage)
+    );
+    localStorage.setItem("vcready_valuation", JSON.stringify({
+      score: autoScore,
+      estimated_valuation: summary.blended.base,
+      growth_rate: form.baseGrowthRate,
+      sector: form.sector,
+      stage: form.stage,
+    }));
+    localStorage.setItem("vcready_valuation_inputs", JSON.stringify(form));
+    saveReadinessSnapshot();
   }, [form]);
 
   const handleSave = useCallback(async () => {
