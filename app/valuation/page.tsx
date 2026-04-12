@@ -305,7 +305,12 @@ export default function ValuationPage() {
     // Persist full form inputs so navigating back restores exact state
     localStorage.setItem("vcready_valuation_inputs", JSON.stringify(form));
     saveReadinessSnapshot();
-    saveToolToDB("valuation", score, form as unknown as Record<string, unknown>).catch(console.error);
+    saveToolToDB("valuation", score, {
+      ...form,
+      estimated_valuation: result.blended.base,
+      valuation_low: result.blended.low,
+      valuation_high: result.blended.high,
+    } as unknown as Record<string, unknown>).catch(console.error);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   }, [form, result]);
