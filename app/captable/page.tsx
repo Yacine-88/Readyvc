@@ -169,8 +169,7 @@ export default function CapTablePage() {
     currentState.totalShares > 0 &&
     currentState.founderPercentage > 0 &&
     roundInputs.investmentAmount > 0 &&
-    roundInputs.preMoneyValuation > 0 &&
-    !!postRoundState;
+    roundInputs.preMoneyValuation > 0;
 
   useEffect(() => {
     if (isComplete) {
@@ -178,6 +177,16 @@ export default function CapTablePage() {
       setCompletedSteps(getCompletedSteps());
     }
   }, [isComplete]);
+
+  useEffect(() => {
+    if (
+      shareholders.length >= 2 &&
+      roundInputs.investmentAmount > 0 &&
+      roundInputs.preMoneyValuation > 0
+    ) {
+      setShowPostRound(true);
+    }
+  }, [shareholders, roundInputs]);
 
   const handleAddShareholder = useCallback(() => {
     if (!newShareholder.name || !newShareholder.shares) return;
@@ -281,7 +290,7 @@ export default function CapTablePage() {
   const handleLoadDemo = useCallback(() => {
     setShareholders(DEMO_SHAREHOLDERS);
     setRoundInputs(DEMO_ROUND);
-    setShowPostRound(false);
+    setShowPostRound(true);
     setSaved(false);
   }, []);
 
@@ -310,7 +319,7 @@ export default function CapTablePage() {
             Define your current shareholders and ownership structure.
           </p>
 
-          <div className="border border-border rounded-[var(--radius-md)] overflow-hidden">
+          <div className="border border-border rounded-[var(--radius-md)] overflow-hidden bg-card">
             <div className="bg-soft border-b border-border p-3 flex items-center gap-2">
               <Users className="w-4 h-4" />
               <span className="font-semibold text-sm">Current Shareholders</span>
@@ -323,7 +332,7 @@ export default function CapTablePage() {
               {currentState.shareholders.map((s) => (
                 <div
                   key={s.id}
-                  className="p-3 flex items-center justify-between hover:bg-soft transition-colors"
+                  className="p-3 flex items-center justify-between gap-3 hover:bg-soft transition-colors"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -335,7 +344,7 @@ export default function CapTablePage() {
                     <ProgressBar value={s.percentage} size="sm" />
                   </div>
 
-                  <div className="ml-4 text-right shrink-0">
+                  <div className="text-right shrink-0 min-w-[92px]">
                     <div className="font-mono text-sm font-semibold">
                       {s.percentage.toFixed(1)}%
                     </div>
@@ -346,7 +355,7 @@ export default function CapTablePage() {
 
                   <button
                     onClick={() => handleRemoveShareholder(s.id)}
-                    className="ml-3 p-1.5 text-muted hover:text-danger hover:bg-red-50 rounded transition-colors"
+                    className="p-1.5 text-muted hover:text-danger hover:bg-red-50 rounded transition-colors shrink-0"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -456,7 +465,16 @@ export default function CapTablePage() {
       </ToolSection>
 
       <div className="flex gap-2">
-        <Button onClick={() => setShowPostRound(true)} size="lg" className="flex-1">
+        <Button
+          onClick={() => setShowPostRound(true)}
+          size="lg"
+          className="flex-1"
+          disabled={
+            shareholders.length < 2 ||
+            roundInputs.investmentAmount <= 0 ||
+            roundInputs.preMoneyValuation <= 0
+          }
+        >
           Calculate Post-Round Cap Table
         </Button>
       </div>
@@ -647,7 +665,7 @@ export default function CapTablePage() {
       </div>
 
       <FlowContinue
-        isComplete={isComplete}
+        isComplete={isComplete || saved}
         nextHref="/pitch"
         nextLabel="Pitch"
       />
