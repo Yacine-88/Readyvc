@@ -1,20 +1,28 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Container } from "@/components/layout/section";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { refreshUnifiedProfile, getProfileCompletionPct } from "@/lib/foundation/profile";
 import { getLocalToolStates } from "@/lib/foundation/tool-states";
-import { getReadinessRedFlags, getGlobalVerdict, getSnapshotHistory, saveSnapshot, computeGlobalReadiness, loadSnapshotHistory } from "@/lib/foundation/readiness-engine";
+import {
+  getReadinessRedFlags,
+  getGlobalVerdict,
+  getSnapshotHistory,
+  saveSnapshot,
+  computeGlobalReadiness,
+  loadSnapshotHistory,
+} from "@/lib/foundation/readiness-engine";
 import { FLOW_STEPS, getCompletedSteps, type FlowStepId } from "@/lib/flow";
 import type {
   FoundationTool,
+  FounderStartupProfile,
   GlobalReadinessSnapshot,
   ToolState,
 } from "@/lib/foundation/types";
 
-// H. Rebalanced weights
+// ─── Weights ──────────────────────────────────────────────────────────────────
 const WEIGHTS: Record<FoundationTool, number> = {
   metrics:   0.25,
   valuation: 0.20,
@@ -26,7 +34,6 @@ const WEIGHTS: Record<FoundationTool, number> = {
 
 const CALENDLY_URL = "https://calendly.com/vcready/30min";
 
-// D. Human-readable tool labels
 const TOOL_LABELS: Record<FoundationTool, string> = {
   metrics:   "Metrics",
   valuation: "Valuation",
@@ -36,20 +43,16 @@ const TOOL_LABELS: Record<FoundationTool, string> = {
   dataroom:  "Data Room",
 };
 
-// E. Human-readable status labels
 const STATUS_LABELS: Record<ToolState["status"], string> = {
   not_started: "Not started",
   in_progress: "In progress",
   completed:   "Completed",
 };
 
-// F. Human-readable datetime
+// ─── Formatting helpers ───────────────────────────────────────────────────────
 function fmtDate(iso: string): string {
   return new Date(iso).toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
+    day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
   });
 }
 
@@ -61,6 +64,7 @@ function fmtMoney(value: number): string {
   return `$${Math.round(value)}`;
 }
 
+// ─── Verdict styling ──────────────────────────────────────────────────────────
 function verdictTone(verdict: string) {
   switch (verdict) {
     case "Strong":    return { badge: "bg-success/10 text-success border-success/20", bar: "bg-success" };
@@ -80,9 +84,9 @@ function toolHref(tool: FoundationTool): string {
 
 function statusTone(status: ToolState["status"]) {
   switch (status) {
-    case "completed":  return "bg-success";
+    case "completed":   return "bg-success";
     case "in_progress": return "bg-warning";
-    default:           return "bg-border";
+    default:            return "bg-border";
   }
 }
 
@@ -103,83 +107,305 @@ function getResumeStep(toolStates: Record<FoundationTool, ToolState>): {
   return null;
 }
 
-function buildSnapshot(): {
-  snapshot: GlobalReadinessSnapshot;
-  toolStates: Record<FoundationTool, ToolState>;
-  profile: ReturnType<typeof refreshUnifiedProfile>;
-} {
-  const profile = refreshUnifiedProfile();
-  const toolStates = getLocalToolStates();
+// ─── Advisory engine ──────────────────────────────────────────────────────────
 
-  const overall_score = Math.round(
-    (Object.entries(toolStates) as Array<[FoundationTool, ToolState]>).reduce(
-      (sum, [tool, state]) => sum + state.score * WEIGHTS[tool],
-      0
-    )
-  );
+interface AdvisoryItem { label: string; detail: string; href?: string; }
 
-  const red_flags = getReadinessRedFlags(toolStates);
-  const verdict = getGlobalVerdict(overall_score, red_flags);
-  const toolEntries = Object.entries(toolStates) as Array<[FoundationTool, ToolState]>;
+function getStrengths(
+  toolStates: Record<FoundationTool, ToolState>,
+  profile: FounderStartupProfile
+): AdvisoryItem[] {
+  const items: AdvisoryItem[] = [];
+  const m = toolStates.metrics;
+  const v = toolStates.valuation;
+  const qa = toolStates.qa;
+  const p = toolStates.pitch;
+  const ct = toolStates.captable;
+  const dr = toolStates.dataroom;
 
-  const strongest_tool =
-    toolEntries.slice().sort((a, b) => b[1].score - a[1].score).find(([, s]) => s.score > 0)?.[0] ?? null;
-  const weakest_tool =
-    toolEntries.slice().sort((a, b) => a[1].score - b[1].score).find(([, s]) => s.score < 70)?.[0] ?? null;
-  const missing_tools = toolEntries.filter(([, s]) => s.score === 0).map(([tool]) => tool);
-  const completed_tools_count = toolEntries.filter(([, s]) => s.score > 0).length;
-
-  const snapshot: GlobalReadinessSnapshot = {
-    overall_score, verdict,
-    blockers_count: red_flags.filter((f) => f.blocking).length,
-    red_flags,
-    source_scores: {
-      metrics: toolStates.metrics.score, valuation: toolStates.valuation.score,
-      qa: toolStates.qa.score, captable: toolStates.captable.score,
-      pitch: toolStates.pitch.score, dataroom: toolStates.dataroom.score,
-    },
-    profile_completion_pct: getProfileCompletionPct({ ...profile, overall_score }),
-    strongest_tool, weakest_tool, missing_tools, completed_tools_count,
-    saved_at: new Date().toISOString(),
-  };
-
-  return { snapshot, toolStates, profile };
+  if (m.score >= 70) {
+    const detail = profile.mrr > 0
+      ? `MRR ${fmtMoney(profile.mrr)}, ARR ${fmtMoney(profile.arr)}, ${profile.growth_rate}% growth — your traction story is compelling.`
+      : "Your operating metrics are above the investor bar for your stage.";
+    items.push({ label: "Strong traction metrics", detail, href: "/metrics" });
+  }
+  if (v.score >= 70) {
+    const detail = profile.estimated_valuation > 0
+      ? `Estimated pre-money valuation of ${fmtMoney(profile.estimated_valuation)} — well-supported by your growth assumptions.`
+      : "Your valuation model is solid and defensible.";
+    items.push({ label: "Compelling valuation", detail, href: "/valuation" });
+  }
+  if (qa.score >= 70) {
+    items.push({
+      label: "Investor Q&A readiness",
+      detail: "You can handle tough investor questions confidently. This is a real differentiator in live meetings.",
+      href: "/qa",
+    });
+  }
+  if (p.score >= 70) {
+    items.push({
+      label: "Strong pitch narrative",
+      detail: "Your pitch deck covers the key investor areas — problem, traction, team, and ask — at a high level.",
+      href: "/pitch",
+    });
+  }
+  if (ct.score >= 70) {
+    items.push({
+      label: "Clean cap table",
+      detail: "Your equity structure won't create friction in diligence. Founders maintain control.",
+      href: "/captable",
+    });
+  }
+  if (dr.score >= 70) {
+    items.push({
+      label: "Data room organized",
+      detail: "Your diligence documents are in order — this accelerates deal closure significantly.",
+      href: "/dataroom",
+    });
+  }
+  return items;
 }
+
+function getWeaknesses(
+  toolStates: Record<FoundationTool, ToolState>,
+  profile: FounderStartupProfile
+): AdvisoryItem[] {
+  const items: AdvisoryItem[] = [];
+
+  if (toolStates.metrics.score > 0 && toolStates.metrics.score < 50) {
+    const detail = profile.mrr === 0
+      ? "No MRR recorded. Investors need to see revenue before considering a Seed or Series A round."
+      : `MRR of ${fmtMoney(profile.mrr)} is below typical investor expectations. Target $20K+ MRR before raising.`;
+    items.push({ label: "Traction metrics need work", detail, href: "/metrics" });
+  }
+  if (toolStates.qa.score > 0 && toolStates.qa.score < 50) {
+    items.push({
+      label: "Investor Q&A preparation is weak",
+      detail: "Founders who struggle with investor questions lose deals — even with great metrics. Prioritize this.",
+      href: "/qa",
+    });
+  }
+  if (toolStates.valuation.score > 0 && toolStates.valuation.score < 50) {
+    items.push({
+      label: "Valuation model needs strengthening",
+      detail: "A weak valuation model signals lack of financial fluency. Investors will probe this hard.",
+      href: "/valuation",
+    });
+  }
+  if (toolStates.pitch.score > 0 && toolStates.pitch.score < 50) {
+    items.push({
+      label: "Pitch deck has critical gaps",
+      detail: "Key sections — team, traction, or the ask — are incomplete. Fix these before any investor meeting.",
+      href: "/pitch",
+    });
+  }
+  if (profile.runway > 0 && profile.runway < 9) {
+    items.push({
+      label: `Only ${profile.runway} months of runway`,
+      detail: "Fundraising under pressure weakens your negotiating position. Extend runway if possible before starting a formal process.",
+      href: "/metrics",
+    });
+  }
+  return items;
+}
+
+function getNextActions(
+  snapshot: GlobalReadinessSnapshot,
+  toolStates: Record<FoundationTool, ToolState>
+): AdvisoryItem[] {
+  const actions: AdvisoryItem[] = [];
+  const s = snapshot.overall_score;
+  const blockers = snapshot.red_flags.filter((f) => f.blocking);
+
+  // Critical blockers first
+  for (const b of blockers.slice(0, 2)) {
+    actions.push({ label: b.action, detail: b.reason, href: b.href });
+  }
+
+  // Missing high-weight tools
+  const highWeightMissing = (["metrics", "qa", "valuation", "pitch"] as FoundationTool[])
+    .filter((t) => toolStates[t].score === 0);
+  for (const tool of highWeightMissing.slice(0, 2 - Math.min(blockers.length, 2))) {
+    actions.push({
+      label: `Complete ${TOOL_LABELS[tool]}`,
+      detail: `${TOOL_LABELS[tool]} carries ${Math.round(WEIGHTS[tool] * 100)}% of your readiness score and hasn't been started yet.`,
+      href: toolHref(tool),
+    });
+  }
+
+  // Score-based advice
+  if (s >= 70 && toolStates.dataroom.score === 0) {
+    actions.push({
+      label: "Prepare your data room",
+      detail: "At your readiness level, investors will ask for documents. Be ready before they ask.",
+      href: "/dataroom",
+    });
+  }
+  if (s >= 75 && actions.length < 3) {
+    actions.push({
+      label: "Book a readiness review",
+      detail: "Your score is strong. Get a second opinion from an experienced VC advisor before starting outreach.",
+      href: CALENDLY_URL,
+    });
+  }
+
+  return actions.slice(0, 4);
+}
+
+function getFundraisingNarrative(
+  snapshot: GlobalReadinessSnapshot,
+  profile: FounderStartupProfile
+): string {
+  const name = profile.startup_name || "Your startup";
+  const stage = profile.stage || "early stage";
+  const s = snapshot.overall_score;
+  const v = snapshot.verdict;
+  const strongest = snapshot.strongest_tool ? TOOL_LABELS[snapshot.strongest_tool] : null;
+  const weakest = snapshot.weakest_tool ? TOOL_LABELS[snapshot.weakest_tool] : null;
+
+  if (s < 25) {
+    return `${name} is at the very start of its investor readiness journey. At this stage, the priority is to complete the core assessment modules — especially Metrics and Q&A — before approaching any investor. Focus on building the fundamentals first.`;
+  }
+  if (v === "Early") {
+    return `${name} is building investor readiness but has material gaps that would likely stop a deal early in diligence. ${weakest ? `The biggest area to address is ${weakest}.` : ""} Close these gaps before starting formal investor outreach.`;
+  }
+  if (v === "Improving") {
+    return `${name} is making solid progress toward fundraising readiness for a ${stage} round. ${strongest ? `Your strongest signal is ${strongest}.` : ""} ${weakest ? `The key area to improve is ${weakest} — addressing this could meaningfully increase your score and investor confidence.` : ""}`;
+  }
+  if (v === "Fundable") {
+    return `${name} is in a fundable position for a ${stage} round. ${strongest ? `Investors will be attracted by your ${strongest}.` : ""} ${snapshot.blockers_count === 0 ? "No critical blockers detected — you can start selective outreach while continuing to strengthen weaker areas." : "Address the remaining critical gaps before starting broad investor outreach."}`;
+  }
+  // Strong
+  return `${name} shows strong investor readiness for a ${stage} round. ${profile.estimated_valuation > 0 ? `With an estimated valuation of ${fmtMoney(profile.estimated_valuation)}, you have a credible anchor for term sheet discussions.` : ""} Your profile is compelling — focus your energy on building your investor pipeline and preparing for diligence.`;
+}
+
+function getSmartCTA(
+  snapshot: GlobalReadinessSnapshot,
+  toolStates: Record<FoundationTool, ToolState>
+): { label: string; href: string; description: string; external?: boolean } {
+  const s = snapshot.overall_score;
+  const blockers = snapshot.red_flags.filter((f) => f.blocking);
+
+  if (toolStates.metrics.score === 0) {
+    return {
+      label: "Start with Metrics →",
+      href: "/metrics",
+      description: "Metrics carry 25% of your score — complete this first.",
+    };
+  }
+  if (blockers.length >= 2) {
+    return {
+      label: "Fix critical gaps →",
+      href: blockers[0].href ?? "/metrics",
+      description: `${blockers.length} critical ${blockers.length === 1 ? "issue" : "issues"} blocking your readiness score.`,
+    };
+  }
+  if (s < 40) {
+    const next = (["metrics", "qa", "valuation", "pitch"] as FoundationTool[])
+      .find((t) => toolStates[t].score === 0);
+    return {
+      label: next ? `Complete ${TOOL_LABELS[next]} →` : "Keep building →",
+      href: next ? toolHref(next) : "/metrics",
+      description: "Complete the remaining tools to unlock your full score.",
+    };
+  }
+  if (s < 65) {
+    const weak = (Object.entries(toolStates) as Array<[FoundationTool, ToolState]>)
+      .filter(([, st]) => st.score > 0 && st.score < 60)
+      .sort((a, b) => WEIGHTS[b[0]] - WEIGHTS[a[0]])[0];
+    return {
+      label: weak ? `Strengthen ${TOOL_LABELS[weak[0]]} →` : "Strengthen your pitch →",
+      href: weak ? toolHref(weak[0]) : "/pitch",
+      description: "Improving your weakest areas has the highest score impact.",
+    };
+  }
+  if (s < 80 && toolStates.dataroom.score === 0) {
+    return {
+      label: "Prepare your data room →",
+      href: "/dataroom",
+      description: "Investors will ask for documents once conversations start.",
+    };
+  }
+  return {
+    label: "Book a readiness review →",
+    href: CALENDLY_URL,
+    description: "Your score is strong. Get expert feedback before starting outreach.",
+    external: true,
+  };
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardV2Page() {
   const [snapshot, setSnapshot] = useState<GlobalReadinessSnapshot | null>(null);
   const [toolStates, setToolStates] = useState<Record<FoundationTool, ToolState> | null>(null);
+  const [profile, setProfile] = useState<FounderStartupProfile | null>(null);
   const [history, setHistory] = useState<GlobalReadinessSnapshot[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
-        const snap = await computeGlobalReadiness();
-        const states = await import("@/lib/foundation/tool-states").then(m => m.getToolStates());
+        // Run main readiness compute and snapshot history in parallel
+        const [snap, hist] = await Promise.all([
+          computeGlobalReadiness(),   // hydrates localStorage from DB as side-effect
+          loadSnapshotHistory(),      // can run concurrently
+        ]);
+
+        // After computeGlobalReadiness() has hydrated localStorage, read sync functions
+        // — no extra DB round-trip needed
+        const states = getLocalToolStates();
+        const freshProfile = refreshUnifiedProfile();
+
         setSnapshot(snap);
         setToolStates(states);
-        saveSnapshot(snap);
-        const hist = await loadSnapshotHistory();
+        setProfile(freshProfile);
         setHistory(hist);
+        saveSnapshot(snap);
       } catch (err) {
-        console.error(err);
+        console.error("[dashboard-v2] load error:", err);
+        // Fallback: build from whatever is in localStorage right now
         try {
-          const { snapshot, toolStates } = buildSnapshot();
-          setSnapshot(snapshot);
-          setToolStates(toolStates);
-          saveSnapshot(snapshot);
+          const states = getLocalToolStates();
+          const freshProfile = refreshUnifiedProfile();
+          const redFlags = getReadinessRedFlags(states);
+          const overallScore = Math.round(
+            (Object.entries(states) as Array<[FoundationTool, ToolState]>).reduce(
+              (sum, [tool, state]) => sum + state.score * WEIGHTS[tool], 0
+            )
+          );
+          const fallback: GlobalReadinessSnapshot = {
+            overall_score: overallScore,
+            verdict: getGlobalVerdict(overallScore, redFlags),
+            blockers_count: redFlags.filter((f) => f.blocking).length,
+            red_flags: redFlags,
+            source_scores: {
+              metrics: states.metrics.score, valuation: states.valuation.score,
+              qa: states.qa.score, captable: states.captable.score,
+              pitch: states.pitch.score, dataroom: states.dataroom.score,
+            },
+            profile_completion_pct: getProfileCompletionPct({ ...freshProfile, overall_score: overallScore }),
+            strongest_tool: (Object.entries(states) as Array<[FoundationTool, ToolState]>)
+              .sort((a, b) => b[1].score - a[1].score).find(([, s]) => s.score > 0)?.[0] ?? null,
+            weakest_tool: (Object.entries(states) as Array<[FoundationTool, ToolState]>)
+              .sort((a, b) => a[1].score - b[1].score).find(([, s]) => s.score < 70)?.[0] ?? null,
+            missing_tools: (Object.entries(states) as Array<[FoundationTool, ToolState]>)
+              .filter(([, s]) => s.score === 0).map(([t]) => t),
+            completed_tools_count: Object.values(states).filter((s) => s.score > 0).length,
+            saved_at: new Date().toISOString(),
+          };
+          setSnapshot(fallback);
+          setToolStates(states);
+          setProfile(freshProfile);
           setHistory(getSnapshotHistory());
-        } catch (fallbackErr) {
-          setError(fallbackErr instanceof Error ? fallbackErr.message : "unknown error");
+          saveSnapshot(fallback);
+        } catch (fbErr) {
+          setError(fbErr instanceof Error ? fbErr.message : "unknown error");
         }
       }
     }
     load();
   }, []);
-
-  const profile = useMemo(() => refreshUnifiedProfile(), []);
-  const nextStep = useMemo(() => (toolStates ? getResumeStep(toolStates) : null), [toolStates]);
 
   if (error) {
     return (
@@ -194,60 +420,67 @@ export default function DashboardV2Page() {
     );
   }
 
-  if (!snapshot || !toolStates) {
+  if (!snapshot || !toolStates || !profile) {
     return (
       <div className="py-8">
         <Container>
-          <div className="animate-pulse h-96 rounded-[var(--radius-lg)] bg-soft" />
-        </Container>
-      </div>
-    );
-  }
-
-  // B. Empty state — no tool completed yet
-  if (snapshot.completed_tools_count === 0) {
-    return (
-      <div className="py-8">
-        <Container>
-          <div className="space-y-5">
-            <Card padding="lg">
-              <div className="flex flex-col items-center text-center py-8 max-w-md mx-auto">
-                <div className="w-14 h-14 rounded-full bg-soft border border-border flex items-center justify-center mb-5">
-                  <span className="text-2xl">📊</span>
-                </div>
-                <h1 className="text-xl font-bold tracking-tight mb-2">
-                  Complete your first tool to unlock your readiness score
-                </h1>
-                <p className="text-sm text-ink-secondary leading-relaxed mb-6">
-                  Your investor readiness score is calculated from 6 tools. Start with Metrics —
-                  it carries the most weight and unlocks the full dashboard.
-                </p>
-                <Link
-                  href="/metrics"
-                  className="inline-flex items-center h-11 px-6 rounded-[var(--radius-md)] bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
-                >
-                  Start with Metrics →
-                </Link>
-              </div>
-            </Card>
+          <div className="space-y-4">
+            <div className="animate-pulse h-48 rounded-[var(--radius-lg)] bg-soft" />
+            <div className="animate-pulse h-64 rounded-[var(--radius-lg)] bg-soft" />
+            <div className="animate-pulse h-40 rounded-[var(--radius-lg)] bg-soft" />
           </div>
         </Container>
       </div>
     );
   }
 
+  // Empty state — no tool completed yet
+  if (snapshot.completed_tools_count === 0) {
+    return (
+      <div className="py-8">
+        <Container>
+          <Card padding="lg">
+            <div className="flex flex-col items-center text-center py-8 max-w-md mx-auto">
+              <div className="w-14 h-14 rounded-full bg-soft border border-border flex items-center justify-center mb-5">
+                <span className="text-2xl">📊</span>
+              </div>
+              <h1 className="text-xl font-bold tracking-tight mb-2">
+                Complete your first tool to unlock your readiness score
+              </h1>
+              <p className="text-sm text-ink-secondary leading-relaxed mb-6">
+                Your investor readiness score is calculated from 6 tools. Start with Metrics —
+                it carries the most weight and unlocks the full dashboard.
+              </p>
+              <Link
+                href="/metrics"
+                className="inline-flex items-center h-11 px-6 rounded-[var(--radius-md)] bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
+              >
+                Start with Metrics →
+              </Link>
+            </div>
+          </Card>
+        </Container>
+      </div>
+    );
+  }
+
   const tone = verdictTone(snapshot.verdict);
+  const nextStep = getResumeStep(toolStates);
+  const strengths = getStrengths(toolStates, profile);
+  const weaknesses = getWeaknesses(toolStates, profile);
+  const nextActions = getNextActions(snapshot, toolStates);
+  const narrative = getFundraisingNarrative(snapshot, profile);
+  const smartCTA = getSmartCTA(snapshot, toolStates);
 
   return (
     <div className="py-8">
       <Container>
         <div className="space-y-5">
 
-          {/* Hero card */}
+          {/* ── Hero ── */}
           <Card padding="lg">
             <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-6">
               <div>
-                {/* C. Removed "Foundation Dashboard" jargon eyebrow */}
                 <p className="eyebrow mb-2">Investor Readiness</p>
                 <div className="flex flex-wrap items-center gap-3 mb-3">
                   <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
@@ -257,11 +490,9 @@ export default function DashboardV2Page() {
                     {snapshot.verdict}
                   </span>
                 </div>
-
                 <p className="text-sm text-ink-secondary max-w-2xl leading-relaxed">
                   {profile.founder_name || "Founder"} · {profile.country || "—"} · {profile.sector || "—"} · {profile.stage || "—"}
                 </p>
-
                 <div className="flex flex-wrap gap-2 mt-5">
                   {nextStep ? (
                     <Link
@@ -271,7 +502,6 @@ export default function DashboardV2Page() {
                       Continue: {nextStep.label} →
                     </Link>
                   ) : (
-                    // A. Fixed final CTA — book a call, not internal link
                     <a
                       href={CALENDLY_URL}
                       target="_blank"
@@ -319,8 +549,132 @@ export default function DashboardV2Page() {
             </div>
           </Card>
 
+          {/* ── Fundraising narrative + smart CTA ── */}
+          <Card padding="sm">
+            <CardHeader>
+              <CardTitle kicker="Analysis">Fundraising readiness summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-ink-secondary leading-relaxed mb-5">{narrative}</p>
+              <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-border">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted">{smartCTA.description}</p>
+                </div>
+                {smartCTA.external ? (
+                  <a
+                    href={smartCTA.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors shrink-0"
+                  >
+                    {smartCTA.label}
+                  </a>
+                ) : (
+                  <Link
+                    href={smartCTA.href}
+                    className="inline-flex items-center h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors shrink-0"
+                  >
+                    {smartCTA.label}
+                  </Link>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* ── Strengths & Weaknesses ── */}
+          {(strengths.length > 0 || weaknesses.length > 0) && (
+            <div className="grid lg:grid-cols-2 gap-5">
+              {strengths.length > 0 && (
+                <Card padding="sm">
+                  <CardHeader>
+                    <CardTitle kicker="What's working">Top strengths</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {strengths.map((s) => (
+                        <div key={s.label} className="bg-success/5 border border-success/15 rounded-[var(--radius-md)] p-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-sm font-semibold text-ink mb-1">✓ {s.label}</p>
+                              <p className="text-xs text-ink-secondary">{s.detail}</p>
+                            </div>
+                            {s.href && (
+                              <Link href={s.href} className="text-xs text-accent shrink-0 hover:underline">View →</Link>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {weaknesses.length > 0 && (
+                <Card padding="sm">
+                  <CardHeader>
+                    <CardTitle kicker="What to fix">Areas needing attention</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {weaknesses.map((w) => (
+                        <div key={w.label} className="bg-warning/5 border border-warning/15 rounded-[var(--radius-md)] p-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-sm font-semibold text-ink mb-1">⚠ {w.label}</p>
+                              <p className="text-xs text-ink-secondary">{w.detail}</p>
+                            </div>
+                            {w.href && (
+                              <Link href={w.href} className="text-xs text-accent shrink-0 hover:underline">Fix →</Link>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {/* ── Next actions ── */}
+          {nextActions.length > 0 && (
+            <Card padding="sm">
+              <CardHeader>
+                <CardTitle kicker="Action plan">Immediate next actions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {nextActions.map((action, i) => (
+                    <div key={action.label} className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
+                      <div className="flex items-start gap-3">
+                        <span className="w-6 h-6 rounded-full bg-accent/10 text-accent text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                          {i + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-ink mb-1">{action.label}</p>
+                          <p className="text-xs text-ink-secondary">{action.detail}</p>
+                          {action.href && (
+                            action.href.startsWith("http") ? (
+                              <a href={action.href} target="_blank" rel="noopener noreferrer" className="text-xs text-accent mt-2 inline-block hover:underline">
+                                Take action →
+                              </a>
+                            ) : (
+                              <Link href={action.href} className="text-xs text-accent mt-2 inline-block hover:underline">
+                                Take action →
+                              </Link>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="grid lg:grid-cols-2 gap-5">
-            {/* C. "Unified profile" → "Company profile" */}
+            {/* ── Company profile ── */}
             <Card padding="sm">
               <CardHeader>
                 <CardTitle kicker="Company profile">Founder & startup</CardTitle>
@@ -357,7 +711,7 @@ export default function DashboardV2Page() {
               </CardContent>
             </Card>
 
-            {/* C. "Tool states" → "Your tools" | E. Status labels | D. Tool labels already from state.label */}
+            {/* ── Your tools ── */}
             <Card padding="sm">
               <CardHeader>
                 <CardTitle kicker="Your tools">Assessment modules</CardTitle>
@@ -375,7 +729,6 @@ export default function DashboardV2Page() {
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <span className={`w-2 h-2 rounded-full ${statusTone(state.status)}`} />
-                            {/* D. Use TOOL_LABELS map, not raw state.label which may carry slug */}
                             <p className="text-sm font-semibold">{TOOL_LABELS[tool]}</p>
                           </div>
                           <span className="text-xs font-mono text-muted">{state.score}/100</span>
@@ -386,10 +739,7 @@ export default function DashboardV2Page() {
                             style={{ width: `${state.score}%` }}
                           />
                         </div>
-                        {/* E. Use STATUS_LABELS map */}
-                        <p className="text-[11px] text-muted mt-2">
-                          {STATUS_LABELS[state.status]}
-                        </p>
+                        <p className="text-[11px] text-muted mt-2">{STATUS_LABELS[state.status]}</p>
                       </Link>
                     );
                   })}
@@ -398,7 +748,7 @@ export default function DashboardV2Page() {
             </Card>
           </div>
 
-          {/* C. "Blocking logic" → "Critical gaps" */}
+          {/* ── Critical gaps ── */}
           <Card padding="sm">
             <CardHeader>
               <CardTitle kicker="Action needed">Critical gaps</CardTitle>
@@ -429,11 +779,11 @@ export default function DashboardV2Page() {
                           <p className="text-sm text-ink-secondary">{flag.reason}</p>
                           <p className="text-xs text-muted mt-2">{flag.action}</p>
                         </div>
-                        {flag.href ? (
+                        {flag.href && (
                           <Link href={flag.href} className="text-sm font-semibold text-accent shrink-0 hover:underline">
                             Fix →
                           </Link>
-                        ) : null}
+                        )}
                       </div>
                     </div>
                   ))}
@@ -443,7 +793,7 @@ export default function DashboardV2Page() {
           </Card>
 
           <div className="grid lg:grid-cols-2 gap-5">
-            {/* C. "Engine output" → "Your readiness at a glance" | F. formatted date | D. human tool labels */}
+            {/* ── Readiness at a glance ── */}
             <Card padding="sm">
               <CardHeader>
                 <CardTitle kicker="Summary">Your readiness at a glance</CardTitle>
@@ -456,12 +806,10 @@ export default function DashboardV2Page() {
                   </div>
                   <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
                     <p className="eyebrow mb-1">Last updated</p>
-                    {/* F. Human-readable date */}
                     <p className="font-semibold text-sm">{fmtDate(snapshot.saved_at)}</p>
                   </div>
                   <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
                     <p className="eyebrow mb-1">Strongest area</p>
-                    {/* D. human tool label */}
                     <p className="font-semibold">{snapshot.strongest_tool ? TOOL_LABELS[snapshot.strongest_tool] : "—"}</p>
                   </div>
                   <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
@@ -476,7 +824,6 @@ export default function DashboardV2Page() {
                       Not yet started
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {/* D. human-readable labels, no raw slugs */}
                       {snapshot.missing_tools.map((tool) => (
                         <Link
                           key={tool}
@@ -492,7 +839,7 @@ export default function DashboardV2Page() {
               </CardContent>
             </Card>
 
-            {/* C. "Foundation snapshots" → "Score history" | G. subtle improvements */}
+            {/* ── Score history ── */}
             <Card padding="sm">
               <CardHeader>
                 <CardTitle kicker="Progress">Score history</CardTitle>
@@ -530,13 +877,11 @@ export default function DashboardV2Page() {
                               <div className="flex-1 h-1.5 bg-border rounded-full overflow-hidden">
                                 <div className="h-full bg-accent rounded-full" style={{ width: `${item.overall_score}%` }} />
                               </div>
-                              {/* F. formatted date */}
                               <div className="text-xs text-muted shrink-0">{fmtDate(item.saved_at)}</div>
                             </div>
                           );
                         })}
                     </div>
-                    {/* G. subtle note if history is truncated */}
                     {history.length > 8 && (
                       <p className="text-xs text-muted mt-3">Showing last 8 of {history.length} entries.</p>
                     )}

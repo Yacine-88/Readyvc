@@ -104,10 +104,23 @@ function writeLocalCache(tool: FoundationTool, score: number, inputs: Record<str
         localStorage.setItem("vcready_metrics_inputs", JSON.stringify(inputs));
         break;
       }
-      case "valuation":
-        localStorage.setItem("vcready_valuation", JSON.stringify({ score, ...inputs }));
+      case "valuation": {
+        // inputs from saveToolToDB: { formData: {...}, derived: { estimated_valuation, ... } }
+        // local-readiness reads flat top-level keys — extract from nested structure
+        const derived = (inputs.derived as Record<string, unknown>) ?? {};
+        const fd = (inputs.formData as Record<string, unknown>) ?? {};
+        localStorage.setItem("vcready_valuation", JSON.stringify({
+          score,
+          estimated_valuation: derived.estimated_valuation ?? inputs.estimated_valuation ?? 0,
+          valuation_low: derived.valuation_low ?? inputs.valuation_low ?? 0,
+          valuation_high: derived.valuation_high ?? inputs.valuation_high ?? 0,
+          sector: fd.sector ?? inputs.sector ?? "",
+          stage: fd.stage ?? inputs.stage ?? "",
+          growth_rate: fd.baseGrowthRatePct ?? inputs.growth_rate ?? 0,
+        }));
         localStorage.setItem("vcready_valuation_inputs", JSON.stringify(inputs));
         break;
+      }
       case "qa":
         localStorage.setItem("vcready_qa", JSON.stringify({ score }));
         localStorage.setItem("vcready_qa_inputs", JSON.stringify(inputs));

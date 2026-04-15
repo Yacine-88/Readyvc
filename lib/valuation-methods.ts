@@ -98,36 +98,42 @@ const REVENUE_MULTIPLES: Record<
   Record<string, { low: number; median: number; high: number }>
 > = {
   SaaS: {
+    "Pre-seed": { low: 2, median: 5, high: 10 },
     Seed: { low: 4, median: 7, high: 12 },
     "Series A": { low: 6, median: 10, high: 16 },
     "Series B": { low: 8, median: 14, high: 22 },
     "Series C": { low: 10, median: 18, high: 28 },
   },
   Fintech: {
+    "Pre-seed": { low: 1.5, median: 3, high: 6 },
     Seed: { low: 3, median: 5, high: 9 },
     "Series A": { low: 4, median: 7, high: 12 },
     "Series B": { low: 6, median: 10, high: 16 },
     "Series C": { low: 8, median: 14, high: 20 },
   },
   AgriTech: {
+    "Pre-seed": { low: 1, median: 2.5, high: 5 },
     Seed: { low: 2, median: 4, high: 7 },
     "Series A": { low: 3, median: 5, high: 9 },
     "Series B": { low: 4, median: 8, high: 13 },
     "Series C": { low: 6, median: 11, high: 17 },
   },
   "Health Tech": {
+    "Pre-seed": { low: 1.5, median: 4, high: 8 },
     Seed: { low: 3, median: 6, high: 10 },
     "Series A": { low: 5, median: 8, high: 14 },
     "Series B": { low: 7, median: 12, high: 18 },
     "Series C": { low: 9, median: 16, high: 24 },
   },
   "Consumer Tech": {
+    "Pre-seed": { low: 1, median: 2.5, high: 5 },
     Seed: { low: 2, median: 4, high: 7 },
     "Series A": { low: 3, median: 6, high: 10 },
     "Series B": { low: 5, median: 9, high: 14 },
     "Series C": { low: 7, median: 12, high: 18 },
   },
   Other: {
+    "Pre-seed": { low: 1, median: 2.5, high: 5 },
     Seed: { low: 2, median: 4, high: 7 },
     "Series A": { low: 3, median: 6, high: 10 },
     "Series B": { low: 5, median: 9, high: 14 },
@@ -141,6 +147,7 @@ const REVENUE_MULTIPLES: Record<
  * Sources: Magnitt, Crunchbase, Pitchbook public reports.
  */
 const COMPARABLES_RANGE: Record<string, { low: number; median: number; high: number }> = {
+  "Pre-seed": { low: 500_000, median: 2_000_000, high: 6_000_000 },
   Seed: { low: 3_000_000, median: 8_000_000, high: 20_000_000 },
   "Series A": { low: 15_000_000, median: 35_000_000, high: 80_000_000 },
   "Series B": { low: 60_000_000, median: 120_000_000, high: 250_000_000 },

@@ -244,6 +244,7 @@ export default function ValuationPage() {
   ]);
 
   const stageOptions = [
+    { value: "Pre-seed", label: "Pre-seed" },
     { value: "Seed", label: "Seed" },
     { value: "Series A", label: "Series A" },
     { value: "Series B", label: "Series B" },
