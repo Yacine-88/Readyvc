@@ -1,41 +1,36 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "./auth-context";
 import { isOnboarded } from "./onboard";
 import { syncProfileFromDB } from "./db-user";
 import { syncAllToolsToLocalStorage } from "./db-tools";
 
-/**
- * Shared auth guard for all tool pages.
- *
- * Drop this at the top of any tool page component:
- *   useToolGuard();
- *
- * Behaviour:
- *  - Local-only mode (no Supabase): redirect to /onboard if no profile
- *  - Supabase mode: redirect to /auth/login (returning) or /onboard (new)
- *    if no session; sync DB → localStorage on first authenticated mount
- *
- * Returns { ready } — render nothing until ready is true.
- */
 export function useToolGuard(): { ready: boolean } {
-  const router   = useRouter();
+  const router = useRouter();
+  const pathname = usePathname();
   const { user, loading, isLocalOnly } = useAuth();
-  const synced   = useRef(false);
+  const synced = useRef(false);
 
   useEffect(() => {
     if (loading) return;
 
     async function check() {
       if (isLocalOnly) {
-        if (!isOnboarded()) router.replace("/onboard");
+        if (!isOnboarded()) {
+          router.replace("/onboard");
+        }
         return;
       }
 
       if (!user) {
-        router.replace(isOnboarded() ? "/auth/login" : "/onboard");
+        const redirectTo = pathname || "/dashboard-v2";
+        router.replace(
+          isOnboarded()
+            ? `/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`
+            : "/onboard"
+        );
         return;
       }
 
@@ -45,13 +40,14 @@ export function useToolGuard(): { ready: boolean } {
         await syncAllToolsToLocalStorage();
       }
 
-      if (!isOnboarded()) router.replace("/onboard");
+      if (!isOnboarded()) {
+        router.replace("/onboard");
+      }
     }
 
     check();
-  }, [user, loading, isLocalOnly, router]);
+  }, [user, loading, isLocalOnly, router, pathname]);
 
-  // ready = auth resolved AND user is allowed in
   const ready =
     !loading &&
     (isLocalOnly ? isOnboarded() : !!user && isOnboarded());
