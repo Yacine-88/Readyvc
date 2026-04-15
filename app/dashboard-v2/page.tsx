@@ -1,21 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Container } from "@/components/layout/section";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  computeAndSaveGlobalReadiness,
-  getResumeStep,
-  getSnapshotHistory,
-} from "@/lib/foundation/readiness-engine";
-import { getToolStates } from "@/lib/foundation/tool-states";
-import { getUnifiedProfile } from "@/lib/foundation/profile";
+import { refreshUnifiedProfile, getProfileCompletionPct } from "@/lib/foundation/profile";
+import { getLocalToolStates } from "@/lib/foundation/tool-states";
+import { getReadinessRedFlags, getGlobalVerdict, getSnapshotHistory, saveSnapshot } from "@/lib/foundation/readiness-engine";
+import { FLOW_STEPS, getCompletedSteps, type FlowStepId } from "@/lib/flow";
 import type {
   FoundationTool,
   GlobalReadinessSnapshot,
   ToolState,
 } from "@/lib/foundation/types";
+
+const WEIGHTS: Record<FoundationTool, number> = {
+  metrics: 0.35,
+  qa: 0.25,
+  valuation: 0.2,
+  captable: 0.1,
+  pitch: 0.05,
+  dataroom: 0.05,
+};
 
 function fmtMoney(value: number): string {
   if (!value) return "—";
@@ -80,45 +86,136 @@ function statusTone(status: ToolState["status"]) {
   }
 }
 
+function getResumeStep(toolStates: Record<FoundationTool, ToolState>): {
+  id: FlowStepId;
+  href: string;
+  label: string;
+} | null {
+  const completed = getCompletedSteps();
+
+  for (const step of FLOW_STEPS) {
+    if (step.id === "dashboard") continue;
+    const tool = step.id as FoundationTool;
+    if (toolStates[tool]?.status === "in_progress" && !completed.includes(step.id)) {
+      return step;
+    }
+  }
+
+  for (const step of FLOW_STEPS) {
+    if (step.id === "dashboard") continue;
+    const tool = step.id as FoundationTool;
+    if (toolStates[tool]?.status === "not_started") {
+      return step;
+    }
+  }
+
+  return null;
+}
+
+function buildSnapshot(): {
+  snapshot: GlobalReadinessSnapshot;
+  toolStates: Record<FoundationTool, ToolState>;
+  profile: ReturnType<typeof refreshUnifiedProfile>;
+} {
+  const profile = refreshUnifiedProfile();
+  const toolStates = getLocalToolStates();
+
+  const overall_score = Math.round(
+    (Object.entries(toolStates) as Array<[FoundationTool, ToolState]>).reduce(
+      (sum, [tool, state]) => sum + state.score * WEIGHTS[tool],
+      0
+    )
+  );
+
+  const red_flags = getReadinessRedFlags(toolStates);
+  const verdict = getGlobalVerdict(overall_score, red_flags);
+
+  const toolEntries = Object.entries(toolStates) as Array<[FoundationTool, ToolState]>;
+
+  const strongest_tool =
+    toolEntries
+      .slice()
+      .sort((a, b) => b[1].score - a[1].score)
+      .find(([, state]) => state.score > 0)?.[0] ?? null;
+
+  const weakest_tool =
+    toolEntries
+      .slice()
+      .sort((a, b) => a[1].score - b[1].score)
+      .find(([, state]) => state.score < 70)?.[0] ?? null;
+
+  const missing_tools = toolEntries
+    .filter(([, state]) => state.score === 0)
+    .map(([tool]) => tool);
+
+  const completed_tools_count = toolEntries.filter(([, state]) => state.score > 0).length;
+
+  const snapshot: GlobalReadinessSnapshot = {
+    overall_score,
+    verdict,
+    blockers_count: red_flags.filter((flag) => flag.blocking).length,
+    red_flags,
+    source_scores: {
+      metrics: toolStates.metrics.score,
+      valuation: toolStates.valuation.score,
+      qa: toolStates.qa.score,
+      captable: toolStates.captable.score,
+      pitch: toolStates.pitch.score,
+      dataroom: toolStates.dataroom.score,
+    },
+    profile_completion_pct: getProfileCompletionPct({
+      ...profile,
+      overall_score,
+    }),
+    strongest_tool,
+    weakest_tool,
+    missing_tools,
+    completed_tools_count,
+    saved_at: new Date().toISOString(),
+  };
+
+  return { snapshot, toolStates, profile };
+}
+
 export default function DashboardV2Page() {
   const [snapshot, setSnapshot] = useState<GlobalReadinessSnapshot | null>(null);
   const [toolStates, setToolStates] = useState<Record<FoundationTool, ToolState> | null>(null);
   const [history, setHistory] = useState<GlobalReadinessSnapshot[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function load() {
-      setLoading(true);
-      const snap = await computeAndSaveGlobalReadiness();
-      const tools = await getToolStates();
-      const past = getSnapshotHistory();
-      setSnapshot(snap);
-      setToolStates(tools);
-      setHistory(past);
-      setLoading(false);
+    try {
+      const { snapshot, toolStates } = buildSnapshot();
+      setSnapshot(snapshot);
+      setToolStates(toolStates);
+      saveSnapshot(snapshot);
+      setHistory(getSnapshotHistory());
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : "unknown error");
     }
-
-    load();
-
-    const refresh = async () => {
-      const snap = await computeAndSaveGlobalReadiness();
-      const tools = await getToolStates();
-      const past = getSnapshotHistory();
-      setSnapshot(snap);
-      setToolStates(tools);
-      setHistory(past);
-    };
-
-    window.addEventListener("vcready:foundation-profile-updated", refresh);
-    window.addEventListener("vcready:foundation-snapshot-updated", refresh);
-
-    return () => {
-      window.removeEventListener("vcready:foundation-profile-updated", refresh);
-      window.removeEventListener("vcready:foundation-snapshot-updated", refresh);
-    };
   }, []);
 
-  if (loading || !snapshot || !toolStates) {
+  const profile = useMemo(() => refreshUnifiedProfile(), []);
+  const nextStep = useMemo(
+    () => (toolStates ? getResumeStep(toolStates) : null),
+    [toolStates]
+  );
+
+  if (error) {
+    return (
+      <div className="py-8">
+        <Container>
+          <div className="rounded-[var(--radius-lg)] border border-danger/20 bg-danger/5 p-6">
+            <p className="text-sm font-semibold text-danger">Error</p>
+            <p className="text-sm text-ink-secondary mt-2">{error}</p>
+          </div>
+        </Container>
+      </div>
+    );
+  }
+
+  if (!snapshot || !toolStates) {
     return (
       <div className="py-8">
         <Container>
@@ -128,15 +225,12 @@ export default function DashboardV2Page() {
     );
   }
 
-  const profile = getUnifiedProfile();
-  const nextStep = getResumeStep(toolStates);
   const tone = verdictTone(snapshot.verdict);
 
   return (
     <div className="py-8">
       <Container>
         <div className="space-y-5">
-          {/* Hero */}
           <Card padding="lg">
             <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-6">
               <div>
@@ -226,7 +320,6 @@ export default function DashboardV2Page() {
             </div>
           </Card>
 
-          {/* Unified profile */}
           <div className="grid lg:grid-cols-2 gap-5">
             <Card padding="sm">
               <CardHeader>
@@ -310,7 +403,6 @@ export default function DashboardV2Page() {
             </Card>
           </div>
 
-          {/* Red flags */}
           <Card padding="sm">
             <CardHeader>
               <CardTitle kicker="Red flags">Blocking logic</CardTitle>
@@ -369,7 +461,6 @@ export default function DashboardV2Page() {
             </CardContent>
           </Card>
 
-          {/* Snapshot summary */}
           <div className="grid lg:grid-cols-2 gap-5">
             <Card padding="sm">
               <CardHeader>

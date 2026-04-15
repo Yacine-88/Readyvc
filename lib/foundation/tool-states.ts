@@ -1,4 +1,3 @@
-import { getAllToolsFromDB, type ToolName } from "@/lib/db-tools";
 import { getLocalReadinessScore } from "@/lib/local-readiness";
 import type { FoundationTool, ToolState, ToolStatus } from "./types";
 
@@ -91,20 +90,5 @@ export function getLocalToolStates(): Record<FoundationTool, ToolState> {
 }
 
 export async function getToolStates(): Promise<Record<FoundationTool, ToolState>> {
-  const localStates = getLocalToolStates();
-  const dbStates = await getAllToolsFromDB();
-
-  for (const [tool, save] of Object.entries(dbStates) as Array<
-    [ToolName, { score: number; saved_at: string; inputs: Record<string, unknown> }]
-  >) {
-    const typedTool = tool as FoundationTool;
-    localStates[typedTool] = normalizeToolState({
-      tool: typedTool,
-      score: save.score,
-      saved_at: save.saved_at,
-      inputs: save.inputs,
-    });
-  }
-
-  return localStates;
+  return getLocalToolStates();
 }

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { useI18n } from "@/lib/i18n";
 import { RotateCcw, Save, Check, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { saveMetrics, getMetrics } from "@/lib/db-metrics";
+import { saveMetrics } from "@/lib/db-metrics";
 import { computeMetricsScore, saveReadinessSnapshot } from "@/lib/local-readiness";
 import { saveToolToDB, getToolFromDB } from "@/lib/db-tools";
 import { FlowProgress } from "@/components/flow-progress";
@@ -147,7 +147,7 @@ const defaultSaaSData: SaaSFormData = {
   churnedCustomers: 0,
   cacSpend: 0,
   totalCustomers: 0,
-  grossMargin: 70,  // sensible default; user overrides
+  grossMargin: 70,
   avgRevenuePerCustomer: 0,
   cashBalance: 0,
   monthlyBurn: 0,
@@ -161,27 +161,46 @@ export default function MetricsPage() {
   const [saved, setSaved] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
 
-  // Restore saved form inputs on mount so navigating back shows last state
   useEffect(() => {
     setCompletedSteps(getCompletedSteps());
+
     try {
       const raw = localStorage.getItem("vcready_metrics_inputs");
       if (raw) {
-        const saved = JSON.parse(raw) as { sector?: SectorKey; formData?: SaaSFormData };
-        if (saved.sector) setSector(saved.sector);
-        if (saved.formData) setFormData(saved.formData);
+        const savedState = JSON.parse(raw) as {
+          sector?: SectorKey;
+          formData?: SaaSFormData;
+        };
+        if (savedState.sector) setSector(savedState.sector);
+        if (savedState.formData) setFormData(savedState.formData);
       }
-    } catch { /* ignore */ }
-    // DB restore (async — overwrites localStorage state if user is authenticated)
+    } catch {
+      // ignore
+    }
+
     getToolFromDB("metrics").then((db) => {
       if (!db?.inputs) return;
-      const inp = db.inputs as { sector?: SectorKey; formData?: SaaSFormData };
+      const inp = db.inputs as {
+        sector?: SectorKey;
+        formData?: SaaSFormData;
+      };
       if (inp.sector) setSector(inp.sector);
       if (inp.formData) setFormData(inp.formData);
     });
   }, []);
 
-  const isComplete = formData.mrr > 0;
+  const notifyFoundationRefresh = () => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(new Event("vcready:foundation-profile-updated"));
+    window.dispatchEvent(new Event("vcready:foundation-snapshot-updated"));
+  };
+
+  const isComplete =
+    formData.mrr > 0 &&
+    formData.totalCustomers > 0 &&
+    formData.avgRevenuePerCustomer > 0 &&
+    formData.cashBalance > 0 &&
+    formData.monthlyBurn > 0;
 
   useEffect(() => {
     if (isComplete) {
@@ -190,71 +209,60 @@ export default function MetricsPage() {
     }
   }, [isComplete]);
 
-  const updateField = useCallback(<K extends keyof SaaSFormData>(field: K, value: SaaSFormData[K]) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    setSaved(false);
-  }, []);
+  const updateField = useCallback(
+    <K extends keyof SaaSFormData>(field: K, value: SaaSFormData[K]) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+      setSaved(false);
+    },
+    []
+  );
 
   const handleReset = useCallback(() => {
     setFormData(defaultSaaSData);
     setSaved(false);
   }, []);
 
-  // Core calculations for SaaS (primary sector) - MUST be defined before handleSave
   const calculations = useMemo(() => {
-    const { mrr, newCustomers, churnedCustomers, cacSpend, totalCustomers, grossMargin, avgRevenuePerCustomer, cashBalance, monthlyBurn } = formData;
+    const {
+      mrr,
+      newCustomers,
+      churnedCustomers,
+      cacSpend,
+      totalCustomers,
+      grossMargin,
+      avgRevenuePerCustomer,
+      cashBalance,
+      monthlyBurn,
+    } = formData;
 
-    // ARR = MRR × 12
     const arr = mrr * 12;
-
-    // CAC = Total Sales & Marketing Spend / New Customers
     const cac = newCustomers > 0 ? cacSpend / newCustomers : 0;
-
-    // Churn Rate = Churned Customers / Total Customers
     const churnRate = totalCustomers > 0 ? (churnedCustomers / totalCustomers) * 100 : 0;
-
-    // Average Customer Lifetime (months) = 1 / Churn Rate
-    const avgLifetime = churnRate > 0 ? 100 / churnRate : 60; // Cap at 60 months if no churn
-
-    // LTV = ARPC × Gross Margin × Avg Lifetime
+    const avgLifetime = churnRate > 0 ? 100 / churnRate : 60;
     const ltv = avgRevenuePerCustomer * (grossMargin / 100) * avgLifetime;
-
-    // LTV:CAC Ratio
     const ltvCacRatio = cac > 0 ? ltv / cac : 0;
 
-    // Net Revenue Retention (simplified)
-    // NRR = (MRR at end - Churn + Expansion) / MRR at start
-    // Simplified: assume expansion equals 20% of retained revenue
     const retainedMRR = mrr * (1 - churnRate / 100);
     const expansionMRR = retainedMRR * 0.2;
     const nrr = mrr > 0 ? ((retainedMRR + expansionMRR) / mrr) * 100 : 100;
 
-    // Monthly Growth Rate
-    const netNewCustomers = newCustomers - churnedCustomers;
-    const customerGrowthRate = totalCustomers > 0 ? (netNewCustomers / totalCustomers) * 100 : 0;
-
-    // MRR Growth (monthly growth rate of MRR, compound)
-    // New MRR from new customers - Lost MRR from churn
     const newMRRFromNewCustomers = newCustomers * avgRevenuePerCustomer;
     const lostMRRFromChurn = churnedCustomers * avgRevenuePerCustomer;
     const netMRRGrowth = newMRRFromNewCustomers - lostMRRFromChurn;
     const mrrGrowth = mrr > 0 ? (netMRRGrowth / mrr) * 100 : 0;
 
-    // Magic Number = Net New ARR / S&M Spend (previous quarter)
     const netNewARR = (newCustomers - churnedCustomers) * avgRevenuePerCustomer * 12;
-    const magicNumber = cacSpend > 0 ? netNewARR / (cacSpend * 3) : 0; // Quarterly S&M
+    const magicNumber = cacSpend > 0 ? netNewARR / (cacSpend * 3) : 0;
 
-    // CAC Payback (months) = CAC / (ARPC × Gross Margin)
     const monthlyContribution = avgRevenuePerCustomer * (grossMargin / 100);
     const cacPayback = monthlyContribution > 0 ? cac / monthlyContribution : 0;
 
-    // Runway (months) = Cash Balance / Monthly Burn
     const runway = monthlyBurn > 0 ? cashBalance / monthlyBurn : 999;
 
-    // Quick Ratio = (New MRR + Expansion MRR) / (Churned MRR + Contraction MRR)
     const newMRR = newCustomers * avgRevenuePerCustomer;
     const churnedMRR = churnedCustomers * avgRevenuePerCustomer;
-    const quickRatio = churnedMRR > 0 ? (newMRR + expansionMRR) / churnedMRR : newMRR > 0 ? 10 : 0;
+    const quickRatio =
+      churnedMRR > 0 ? (newMRR + expansionMRR) / churnedMRR : newMRR > 0 ? 10 : 0;
 
     return {
       arr,
@@ -270,7 +278,6 @@ export default function MetricsPage() {
       runway,
       quickRatio,
       grossMargin,
-      netNewCustomers,
       avgLifetime,
     };
   }, [formData]);
@@ -286,36 +293,76 @@ export default function MetricsPage() {
         monthly_churn_rate: calculations.churnRate,
         magic_number: calculations.magicNumber,
         payback_period: Math.round(calculations.cacPayback),
-        rule_of_40_score: calculations.mrrGrowth + (calculations.churnRate > 0 ? 40 - calculations.churnRate : 40),
+        rule_of_40_score:
+          calculations.mrrGrowth +
+          (calculations.churnRate > 0 ? 40 - calculations.churnRate : 40),
       });
     } catch (error) {
       console.error("[v0] Error saving metrics:", error);
     }
-    // Persist score to localStorage for local readiness engine (works without auth)
+
     const score = computeMetricsScore(
       formData.mrr,
       calculations.mrrGrowth,
       calculations.ltvCacRatio,
       calculations.churnRate
     );
-    localStorage.setItem("vcready_metrics", JSON.stringify({
-      score,
-      mrr: formData.mrr,
-      arr: calculations.arr,
-      growth_rate: calculations.mrrGrowth,
-      ltv_cac: calculations.ltvCacRatio,
-      churn: calculations.churnRate,
-      runway: calculations.runway,
-    }));
-    // Persist full form so navigating back restores exact state
-    localStorage.setItem("vcready_metrics_inputs", JSON.stringify({ sector, formData }));
+
+    localStorage.setItem(
+      "vcready_metrics",
+      JSON.stringify({
+        score,
+        mrr: formData.mrr,
+        arr: calculations.arr,
+        growth_rate: calculations.mrrGrowth,
+        ltv_cac: calculations.ltvCacRatio,
+        churn: calculations.churnRate,
+        runway: calculations.runway,
+        gross_margin: formData.grossMargin,
+        sector,
+        saved_at: new Date().toISOString(),
+      })
+    );
+
+    localStorage.setItem(
+      "vcready_metrics_inputs",
+      JSON.stringify({
+        sector,
+        formData,
+      })
+    );
+
     saveReadinessSnapshot();
-    saveToolToDB("metrics", score, { sector, formData: formData as unknown as Record<string, unknown> }).catch(console.error);
+
+    saveToolToDB("metrics", score, {
+      sector,
+      formData: formData as unknown as Record<string, unknown>,
+      derived: {
+        arr: calculations.arr,
+        mrrGrowth: calculations.mrrGrowth,
+        cac: calculations.cac,
+        ltv: calculations.ltv,
+        ltvCacRatio: calculations.ltvCacRatio,
+        churnRate: calculations.churnRate,
+        nrr: calculations.nrr,
+        magicNumber: calculations.magicNumber,
+        cacPayback: calculations.cacPayback,
+        runway: calculations.runway,
+        quickRatio: calculations.quickRatio,
+        grossMargin: calculations.grossMargin,
+      } as unknown as Record<string, unknown>,
+    }).catch(console.error);
+
+    notifyFoundationRefresh();
+
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }, [formData, sector, calculations]);
 
-  const getStatus = (value: number, benchmark: { good: number; great: number; inverted?: boolean }): "good" | "warning" | "danger" => {
+  const getStatus = (
+    value: number,
+    benchmark: { good: number; great: number; inverted?: boolean }
+  ): "good" | "warning" | "danger" => {
     if (benchmark.inverted) {
       if (value <= benchmark.great) return "good";
       if (value <= benchmark.good) return "warning";
@@ -326,64 +373,70 @@ export default function MetricsPage() {
     return "danger";
   };
 
-  const getTrend = (value: number, benchmark: { good: number; great: number; inverted?: boolean }) => {
+  const getTrend = (
+    value: number,
+    benchmark: { good: number; great: number; inverted?: boolean }
+  ) => {
     const status = getStatus(value, benchmark);
     if (status === "good") return <TrendingUp className="w-4 h-4 text-success" />;
     if (status === "danger") return <TrendingDown className="w-4 h-4 text-danger" />;
     return <Minus className="w-4 h-4 text-warning" />;
   };
 
-  const sectorBenchmark = SECTOR_BENCHMARKS[sector];
-
-  // Generate insights based on calculations
   const insights = useMemo(() => {
     const list: { type: "good" | "warning"; text: string }[] = [];
-    
+
     if (calculations.ltvCacRatio >= 3) {
       list.push({
         type: "good",
-        text: locale === "en" 
-          ? `Your LTV:CAC ratio of ${calculations.ltvCacRatio.toFixed(1)}x is excellent. Investors typically look for 3x+ at your stage.`
-          : `Votre ratio LTV:CAC de ${calculations.ltvCacRatio.toFixed(1)}x est excellent. Les investisseurs recherchent generalement 3x+ a votre stade.`
+        text:
+          locale === "en"
+            ? `Your LTV:CAC ratio of ${calculations.ltvCacRatio.toFixed(1)}x is excellent. Investors typically look for 3x+ at your stage.`
+            : `Votre ratio LTV:CAC de ${calculations.ltvCacRatio.toFixed(1)}x est excellent. Les investisseurs recherchent generalement 3x+ a votre stade.`,
       });
     } else {
       list.push({
         type: "warning",
-        text: locale === "en"
-          ? `Your LTV:CAC ratio of ${calculations.ltvCacRatio.toFixed(1)}x is below the 3x benchmark. Consider reducing CAC or increasing customer lifetime value.`
-          : `Votre ratio LTV:CAC de ${calculations.ltvCacRatio.toFixed(1)}x est en dessous du benchmark de 3x. Reduisez le CAC ou augmentez la valeur vie client.`
+        text:
+          locale === "en"
+            ? `Your LTV:CAC ratio of ${calculations.ltvCacRatio.toFixed(1)}x is below the 3x benchmark. Consider reducing CAC or increasing customer lifetime value.`
+            : `Votre ratio LTV:CAC de ${calculations.ltvCacRatio.toFixed(1)}x est en dessous du benchmark de 3x. Reduisez le CAC ou augmentez la valeur vie client.`,
       });
     }
 
     if (calculations.churnRate <= 5) {
       list.push({
         type: "good",
-        text: locale === "en"
-          ? `Net revenue retention appears strong with ${calculations.churnRate.toFixed(1)}% churn. This signals product-market fit.`
-          : `La retention nette semble forte avec ${calculations.churnRate.toFixed(1)}% de churn. Cela signale un product-market fit.`
+        text:
+          locale === "en"
+            ? `Net revenue retention appears strong with ${calculations.churnRate.toFixed(1)}% churn. This signals product-market fit.`
+            : `La retention nette semble forte avec ${calculations.churnRate.toFixed(1)}% de churn. Cela signale un product-market fit.`,
       });
     } else {
       list.push({
         type: "warning",
-        text: locale === "en"
-          ? `Monthly churn of ${calculations.churnRate.toFixed(1)}% is high. Focus on customer success and onboarding to reduce churn.`
-          : `Un churn mensuel de ${calculations.churnRate.toFixed(1)}% est eleve. Concentrez-vous sur le succes client et l'onboarding.`
+        text:
+          locale === "en"
+            ? `Monthly churn of ${calculations.churnRate.toFixed(1)}% is high. Focus on customer success and onboarding to reduce churn.`
+            : `Un churn mensuel de ${calculations.churnRate.toFixed(1)}% est eleve. Concentrez-vous sur le succes client et l'onboarding.`,
       });
     }
 
     if (calculations.runway < 12) {
       list.push({
         type: "warning",
-        text: locale === "en"
-          ? `Consider extending runway to 18+ months before fundraising for better negotiating position. Current: ${Math.round(calculations.runway)} months.`
-          : `Etendez le runway a 18+ mois avant de lever pour une meilleure position de negociation. Actuel: ${Math.round(calculations.runway)} mois.`
+        text:
+          locale === "en"
+            ? `Consider extending runway to 18+ months before fundraising for better negotiating position. Current: ${Math.round(calculations.runway)} months.`
+            : `Etendez le runway a 18+ mois avant de lever pour une meilleure position de negociation. Actuel: ${Math.round(calculations.runway)} mois.`,
       });
     } else {
       list.push({
         type: "good",
-        text: locale === "en"
-          ? `Your runway of ${Math.round(calculations.runway)} months gives you flexibility in fundraising timing.`
-          : `Votre runway de ${Math.round(calculations.runway)} mois vous donne de la flexibilite pour le timing de levee.`
+        text:
+          locale === "en"
+            ? `Your runway of ${Math.round(calculations.runway)} months gives you flexibility in fundraising timing.`
+            : `Votre runway de ${Math.round(calculations.runway)} mois vous donne de la flexibilite pour le timing de levee.`,
       });
     }
 
@@ -395,229 +448,227 @@ export default function MetricsPage() {
   return (
     <div className="bg-background">
       <div className="max-w-[var(--container-max)] mx-auto px-6 py-12">
-          {/* Header */}
-          <div className="mb-10">
-            <p className="eyebrow mb-2">{t("metrics.kicker")}</p>
-            <h1 className="heading-display mb-3">{t("metrics.title")}</h1>
-            <p className="text-ink-secondary max-w-2xl">{t("metrics.description")}</p>
-          </div>
+        <div className="mb-10">
+          <p className="eyebrow mb-2">{t("metrics.kicker")}</p>
+          <h1 className="heading-display mb-3">{t("metrics.title")}</h1>
+          <p className="text-ink-secondary max-w-2xl">{t("metrics.description")}</p>
+        </div>
 
-          {/* Flow Progress */}
-          <FlowProgress currentStep="metrics" completedSteps={completedSteps} />
+        <FlowProgress currentStep="metrics" completedSteps={completedSteps} />
 
-          {/* Sector Tabs */}
-          <div className="flex flex-wrap gap-0 border-b border-border mb-8 -mt-2 overflow-x-auto">
-            {(Object.keys(SECTOR_BENCHMARKS) as SectorKey[]).map((key) => (
-              <button
-                key={key}
-                onClick={() => setSector(key)}
-                className={`px-5 py-3 text-xs font-semibold transition-colors border-b-2 whitespace-nowrap ${
-                  sector === key
-                    ? "text-ink border-ink"
-                    : "text-muted border-transparent hover:text-ink"
-                }`}
-              >
-                {SECTOR_BENCHMARKS[key].label[locale]}
-              </button>
-            ))}
-          </div>
+        <div className="flex flex-wrap gap-0 border-b border-border mb-8 -mt-2 overflow-x-auto">
+          {(Object.keys(SECTOR_BENCHMARKS) as SectorKey[]).map((key) => (
+            <button
+              key={key}
+              onClick={() => setSector(key)}
+              className={`px-5 py-3 text-xs font-semibold transition-colors border-b-2 whitespace-nowrap ${
+                sector === key
+                  ? "text-ink border-ink"
+                  : "text-muted border-transparent hover:text-ink"
+              }`}
+            >
+              {SECTOR_BENCHMARKS[key].label[locale]}
+            </button>
+          ))}
+        </div>
 
-          <div className="grid lg:grid-cols-[320px_1fr] gap-8">
-            {/* Input Panel */}
-            <div className="space-y-5">
-              <div className="bg-card border border-border rounded-[var(--radius-lg)] p-5 lg:sticky lg:top-24">
-                <h3 className="text-sm font-bold tracking-tight mb-4">{t("metrics.yourData")}</h3>
-                <div className="space-y-4">
-                  <InputField
-                    label={t("metrics.mrr")}
-                    value={formData.mrr}
-                    onChange={(v) => updateField("mrr", Number(v))}
-                    type="number"
-                    hint={t("metrics.mrrHint")}
-                  />
-                  <InputField
-                    label={t("metrics.newCustomers")}
-                    value={formData.newCustomers}
-                    onChange={(v) => updateField("newCustomers", Number(v))}
-                    type="number"
-                    hint={t("metrics.newCustomersHint")}
-                  />
-                  <InputField
-                    label={t("metrics.churnedCustomers")}
-                    value={formData.churnedCustomers}
-                    onChange={(v) => updateField("churnedCustomers", Number(v))}
-                    type="number"
-                    hint={t("metrics.churnedCustomersHint")}
-                  />
-                  <InputField
-                    label={t("metrics.cacSpend")}
-                    value={formData.cacSpend}
-                    onChange={(v) => updateField("cacSpend", Number(v))}
-                    type="number"
-                    hint={t("metrics.cacSpendHint")}
-                  />
-                  <InputField
-                    label={t("metrics.totalCustomers")}
-                    value={formData.totalCustomers}
-                    onChange={(v) => updateField("totalCustomers", Number(v))}
-                    type="number"
-                    hint={t("metrics.totalCustomersHint")}
-                  />
-                  <InputField
-                    label={t("metrics.grossMargin")}
-                    value={formData.grossMargin}
-                    onChange={(v) => updateField("grossMargin", Number(v))}
-                    type="number"
-                    hint={t("metrics.grossMarginHint")}
-                  />
-                  <InputField
-                    label={locale === "en" ? "Avg Revenue Per Customer ($)" : "CA Moyen par Client ($)"}
-                    value={formData.avgRevenuePerCustomer}
-                    onChange={(v) => updateField("avgRevenuePerCustomer", Number(v))}
-                    type="number"
-                  />
-                  <InputField
-                    label={locale === "en" ? "Cash Balance ($)" : "Tresorerie ($)"}
-                    value={formData.cashBalance}
-                    onChange={(v) => updateField("cashBalance", Number(v))}
-                    type="number"
-                  />
-                  <InputField
-                    label={locale === "en" ? "Monthly Burn ($)" : "Burn Mensuel ($)"}
-                    value={formData.monthlyBurn}
-                    onChange={(v) => updateField("monthlyBurn", Number(v))}
-                    type="number"
-                  />
-
-                  <div className="flex gap-3 pt-2">
-                    <Button onClick={handleReset} variant="secondary" className="flex-1">
-                      <RotateCcw className="w-4 h-4" />
-                      {t("common.reset")}
-                    </Button>
-                    <Button onClick={handleSave} className="flex-1">
-                      {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-                      {saved ? t("common.saved") : t("common.save")}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Results Panel */}
-            <div className="space-y-5">
-              {/* Metrics Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                <MetricCard
-                  label="MRR"
-                  value={`$${calculations.mrr.toLocaleString()}`}
-                  description={t("metrics.mrr").split("(")[0].trim()}
-                  status={getStatus(calculations.mrr, { good: 10000, great: 50000 })}
-                  benchmark={locale === "en" ? "Target: $10K-50K at seed" : "Cible: $10K-50K en seed"}
+        <div className="grid lg:grid-cols-[320px_1fr] gap-8">
+          <div className="space-y-5">
+            <div className="bg-card border border-border rounded-[var(--radius-lg)] p-5 lg:sticky lg:top-24">
+              <h3 className="text-sm font-bold tracking-tight mb-4">{t("metrics.yourData")}</h3>
+              <div className="space-y-4">
+                <InputField
+                  label={t("metrics.mrr")}
+                  value={formData.mrr}
+                  onChange={(v) => updateField("mrr", Number(v))}
+                  type="number"
+                  hint={t("metrics.mrrHint")}
                 />
-                <MetricCard
-                  label="ARR"
-                  value={`$${calculations.arr.toLocaleString()}`}
-                  description={t("metrics.arr")}
-                  status={getStatus(calculations.arr, { good: 100000, great: 500000 })}
-                  benchmark={locale === "en" ? `Growth: +${calculations.mrrGrowth.toFixed(0)}% MoM` : `Croissance: +${calculations.mrrGrowth.toFixed(0)}% MoM`}
+                <InputField
+                  label={t("metrics.newCustomers")}
+                  value={formData.newCustomers}
+                  onChange={(v) => updateField("newCustomers", Number(v))}
+                  type="number"
+                  hint={t("metrics.newCustomersHint")}
                 />
-                <MetricCard
-                  label="CAC"
-                  value={`$${calculations.cac.toFixed(0)}`}
-                  description={t("metrics.cac")}
-                  status={getStatus(calculations.cac, { good: 500, great: 200, inverted: true })}
-                  benchmark={locale === "en" ? "Target: < $500 for SaaS" : "Cible: < $500 pour SaaS"}
+                <InputField
+                  label={t("metrics.churnedCustomers")}
+                  value={formData.churnedCustomers}
+                  onChange={(v) => updateField("churnedCustomers", Number(v))}
+                  type="number"
+                  hint={t("metrics.churnedCustomersHint")}
                 />
-                <MetricCard
-                  label="LTV"
-                  value={`$${calculations.ltv.toFixed(0)}`}
-                  description={t("metrics.ltv")}
-                  status={getStatus(calculations.ltv, { good: 1000, great: 3000 })}
-                  benchmark={`LTV:CAC = ${calculations.ltvCacRatio.toFixed(1)}x`}
+                <InputField
+                  label={t("metrics.cacSpend")}
+                  value={formData.cacSpend}
+                  onChange={(v) => updateField("cacSpend", Number(v))}
+                  type="number"
+                  hint={t("metrics.cacSpendHint")}
                 />
-              </div>
+                <InputField
+                  label={t("metrics.totalCustomers")}
+                  value={formData.totalCustomers}
+                  onChange={(v) => updateField("totalCustomers", Number(v))}
+                  type="number"
+                  hint={t("metrics.totalCustomersHint")}
+                />
+                <InputField
+                  label={t("metrics.grossMargin")}
+                  value={formData.grossMargin}
+                  onChange={(v) => updateField("grossMargin", Number(v))}
+                  type="number"
+                  hint={t("metrics.grossMarginHint")}
+                />
+                <InputField
+                  label={locale === "en" ? "Avg Revenue Per Customer ($)" : "CA Moyen par Client ($)"}
+                  value={formData.avgRevenuePerCustomer}
+                  onChange={(v) => updateField("avgRevenuePerCustomer", Number(v))}
+                  type="number"
+                />
+                <InputField
+                  label={locale === "en" ? "Cash Balance ($)" : "Tresorerie ($)"}
+                  value={formData.cashBalance}
+                  onChange={(v) => updateField("cashBalance", Number(v))}
+                  type="number"
+                />
+                <InputField
+                  label={locale === "en" ? "Monthly Burn ($)" : "Burn Mensuel ($)"}
+                  value={formData.monthlyBurn}
+                  onChange={(v) => updateField("monthlyBurn", Number(v))}
+                  type="number"
+                />
 
-              {/* Runway Card */}
-              <div className="bg-card border border-border rounded-[var(--radius-lg)] p-5">
-                <h3 className="text-sm font-bold tracking-tight mb-4">{t("metrics.runway")}</h3>
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-sm text-muted">{t("metrics.runwayMonths")}</p>
-                  <p className="font-mono text-2xl font-bold tracking-tight">
-                    {Math.min(Math.round(calculations.runway), 99)} {locale === "en" ? "months" : "mois"}
-                  </p>
-                </div>
-                <ProgressBar 
-                  value={Math.min(calculations.runway, 24)} 
-                  max={24} 
-                  status={calculations.runway >= 18 ? "good" : calculations.runway >= 12 ? "warning" : "danger"} 
-                  size="md" 
-                />
-                <div className="flex justify-between mt-2">
-                  <span className="text-[10px] text-muted font-medium">0 {locale === "en" ? "mo" : "m"}</span>
-                  <span className="text-[10px] text-muted font-medium">12 {locale === "en" ? "mo" : "m"}</span>
-                  <span className="text-[10px] text-muted font-medium">24 {locale === "en" ? "mo" : "m"}</span>
-                </div>
-              </div>
-
-              {/* Additional Metrics */}
-              <div className="bg-card border border-border rounded-[var(--radius-lg)] p-5">
-                <h3 className="text-sm font-bold tracking-tight mb-4">
-                  {locale === "en" ? "Additional Metrics" : "Metriques Additionnelles"}
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <SmallMetric
-                    label={locale === "en" ? "Churn Rate" : "Taux de Churn"}
-                    value={`${calculations.churnRate.toFixed(1)}%`}
-                    trend={getTrend(calculations.churnRate, { good: 5, great: 2, inverted: true })}
-                  />
-                  <SmallMetric
-                    label="NRR"
-                    value={`${calculations.nrr.toFixed(0)}%`}
-                    trend={getTrend(calculations.nrr, { good: 100, great: 120 })}
-                  />
-                  <SmallMetric
-                    label={locale === "en" ? "Quick Ratio" : "Quick Ratio"}
-                    value={calculations.quickRatio.toFixed(1)}
-                    trend={getTrend(calculations.quickRatio, { good: 2, great: 4 })}
-                  />
-                  <SmallMetric
-                    label={locale === "en" ? "Magic Number" : "Magic Number"}
-                    value={calculations.magicNumber.toFixed(2)}
-                    trend={getTrend(calculations.magicNumber, { good: 0.75, great: 1 })}
-                  />
-                  <SmallMetric
-                    label={locale === "en" ? "CAC Payback" : "Payback CAC"}
-                    value={`${calculations.cacPayback.toFixed(0)} ${locale === "en" ? "mo" : "m"}`}
-                    trend={getTrend(calculations.cacPayback, { good: 12, great: 6, inverted: true })}
-                  />
-                  <SmallMetric
-                    label={locale === "en" ? "Avg Lifetime" : "Duree Moyenne"}
-                    value={`${calculations.avgLifetime.toFixed(0)} ${locale === "en" ? "mo" : "m"}`}
-                    trend={getTrend(calculations.avgLifetime, { good: 24, great: 48 })}
-                  />
-                </div>
-              </div>
-
-              {/* Analysis */}
-              <div className="bg-card border border-border rounded-[var(--radius-lg)] p-5">
-                <h3 className="text-sm font-bold tracking-tight mb-4">{t("metrics.analysis")}</h3>
-                <div className="space-y-4">
-                  {insights.map((insight, i) => (
-                    <AnalysisPoint key={i} type={insight.type} text={insight.text} />
-                  ))}
+                <div className="flex gap-3 pt-2">
+                  <Button onClick={handleReset} variant="secondary" className="flex-1">
+                    <RotateCcw className="w-4 h-4" />
+                    {t("common.reset")}
+                  </Button>
+                  <Button onClick={handleSave} className="flex-1">
+                    {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                    {saved ? t("common.saved") : t("common.save")}
+                  </Button>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Flow Continue */}
-          <FlowContinue isComplete={isComplete} nextHref="/valuation" nextLabel="Valuation" />
+          <div className="space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              <MetricCard
+                label="MRR"
+                value={`$${calculations.mrr.toLocaleString()}`}
+                description={t("metrics.mrr").split("(")[0].trim()}
+                status={getStatus(calculations.mrr, { good: 10000, great: 50000 })}
+                benchmark={locale === "en" ? "Target: $10K-50K at seed" : "Cible: $10K-50K en seed"}
+              />
+              <MetricCard
+                label="ARR"
+                value={`$${calculations.arr.toLocaleString()}`}
+                description={t("metrics.arr")}
+                status={getStatus(calculations.arr, { good: 100000, great: 500000 })}
+                benchmark={
+                  locale === "en"
+                    ? `Growth: +${calculations.mrrGrowth.toFixed(0)}% MoM`
+                    : `Croissance: +${calculations.mrrGrowth.toFixed(0)}% MoM`
+                }
+              />
+              <MetricCard
+                label="CAC"
+                value={`$${calculations.cac.toFixed(0)}`}
+                description={t("metrics.cac")}
+                status={getStatus(calculations.cac, { good: 500, great: 200, inverted: true })}
+                benchmark={locale === "en" ? "Target: < $500 for SaaS" : "Cible: < $500 pour SaaS"}
+              />
+              <MetricCard
+                label="LTV"
+                value={`$${calculations.ltv.toFixed(0)}`}
+                description={t("metrics.ltv")}
+                status={getStatus(calculations.ltv, { good: 1000, great: 3000 })}
+                benchmark={`LTV:CAC = ${calculations.ltvCacRatio.toFixed(1)}x`}
+              />
+            </div>
+
+            <div className="bg-card border border-border rounded-[var(--radius-lg)] p-5">
+              <h3 className="text-sm font-bold tracking-tight mb-4">{t("metrics.runway")}</h3>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted">{t("metrics.runwayMonths")}</p>
+                <p className="font-mono text-2xl font-bold tracking-tight">
+                  {Math.min(Math.round(calculations.runway), 99)} {locale === "en" ? "months" : "mois"}
+                </p>
+              </div>
+              <ProgressBar
+                value={Math.min(calculations.runway, 24)}
+                max={24}
+                status={
+                  calculations.runway >= 18
+                    ? "good"
+                    : calculations.runway >= 12
+                    ? "warning"
+                    : "danger"
+                }
+                size="md"
+              />
+              <div className="flex justify-between mt-2">
+                <span className="text-[10px] text-muted font-medium">0 {locale === "en" ? "mo" : "m"}</span>
+                <span className="text-[10px] text-muted font-medium">12 {locale === "en" ? "mo" : "m"}</span>
+                <span className="text-[10px] text-muted font-medium">24 {locale === "en" ? "mo" : "m"}</span>
+              </div>
+            </div>
+
+            <div className="bg-card border border-border rounded-[var(--radius-lg)] p-5">
+              <h3 className="text-sm font-bold tracking-tight mb-4">
+                {locale === "en" ? "Additional Metrics" : "Metriques Additionnelles"}
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <SmallMetric
+                  label={locale === "en" ? "Churn Rate" : "Taux de Churn"}
+                  value={`${calculations.churnRate.toFixed(1)}%`}
+                  trend={getTrend(calculations.churnRate, { good: 5, great: 2, inverted: true })}
+                />
+                <SmallMetric
+                  label="NRR"
+                  value={`${calculations.nrr.toFixed(0)}%`}
+                  trend={getTrend(calculations.nrr, { good: 100, great: 120 })}
+                />
+                <SmallMetric
+                  label={locale === "en" ? "Quick Ratio" : "Quick Ratio"}
+                  value={calculations.quickRatio.toFixed(1)}
+                  trend={getTrend(calculations.quickRatio, { good: 2, great: 4 })}
+                />
+                <SmallMetric
+                  label={locale === "en" ? "Magic Number" : "Magic Number"}
+                  value={calculations.magicNumber.toFixed(2)}
+                  trend={getTrend(calculations.magicNumber, { good: 0.75, great: 1 })}
+                />
+                <SmallMetric
+                  label={locale === "en" ? "CAC Payback" : "Payback CAC"}
+                  value={`${calculations.cacPayback.toFixed(0)} ${locale === "en" ? "mo" : "m"}`}
+                  trend={getTrend(calculations.cacPayback, { good: 12, great: 6, inverted: true })}
+                />
+                <SmallMetric
+                  label={locale === "en" ? "Avg Lifetime" : "Duree Moyenne"}
+                  value={`${calculations.avgLifetime.toFixed(0)} ${locale === "en" ? "mo" : "m"}`}
+                  trend={getTrend(calculations.avgLifetime, { good: 24, great: 48 })}
+                />
+              </div>
+            </div>
+
+            <div className="bg-card border border-border rounded-[var(--radius-lg)] p-5">
+              <h3 className="text-sm font-bold tracking-tight mb-4">{t("metrics.analysis")}</h3>
+              <div className="space-y-4">
+                {insights.map((insight, i) => (
+                  <AnalysisPoint key={i} type={insight.type} text={insight.text} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <FlowContinue isComplete={isComplete} nextHref="/valuation" nextLabel="Valuation" />
       </div>
     </div>
   );
 }
-
-// Components
 
 function InputField({
   label,
@@ -711,9 +762,7 @@ function AnalysisPoint({ type, text }: { type: "good" | "warning"; text: string 
     <div className="flex gap-3 items-start">
       <span
         className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 ${
-          type === "good"
-            ? "bg-success/10 text-success"
-            : "bg-warning/10 text-warning"
+          type === "good" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"
         }`}
       >
         {type === "good" ? "+" : "!"}
