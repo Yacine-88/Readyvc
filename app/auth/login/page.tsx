@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Container } from "@/components/layout/section";
 import { Button } from "@/components/ui/button";
@@ -12,39 +12,41 @@ import { isOnboarded } from "@/lib/onboard";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signIn, user, loading } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Redirect already-authenticated users
+  const redirectTo = searchParams.get("redirectTo") || "/dashboard-v2";
+
   useEffect(() => {
     if (!loading && user) {
-      router.replace(isOnboarded() ? "/dashboard" : "/onboard");
+      router.replace(isOnboarded() ? redirectTo : "/onboard");
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, redirectTo]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim() || !password.trim() || submitting) return;
+
     setError(null);
     setSubmitting(true);
 
     const { error: authError } = await signIn(email.trim(), password.trim());
+
     if (authError) {
       setError(authError);
       setSubmitting(false);
       return;
     }
 
-    // Sync profile and tool data from DB to localStorage (best effort)
     await syncProfileFromDB();
     await syncAllToolsToLocalStorage();
 
-    // Always go to dashboard after successful login — the user authenticated,
-    // they belong in their workspace regardless of localStorage state.
-    router.replace("/dashboard");
+    router.replace(redirectTo);
   }
 
   if (loading) return null;
@@ -78,6 +80,7 @@ export default function LoginPage() {
                 autoComplete="email"
               />
             </div>
+
             <div>
               <label className="block text-xs font-semibold text-ink mb-1.5">Password</label>
               <input
