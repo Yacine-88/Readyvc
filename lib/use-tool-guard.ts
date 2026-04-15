@@ -36,13 +36,12 @@ export function useToolGuard(): { ready: boolean } {
 
       if (!synced.current) {
         synced.current = true;
-        await syncProfileFromDB();
-        await syncAllToolsToLocalStorage();
+        await syncProfileFromDB().catch(() => false);
+        await syncAllToolsToLocalStorage().catch(() => undefined);
       }
 
-      if (!isOnboarded()) {
-        router.replace("/onboard");
-      }
+      // utilisateur connecté = accès autorisé
+      // même si le profil founder n'est pas encore sync côté local
     }
 
     check();
@@ -50,7 +49,7 @@ export function useToolGuard(): { ready: boolean } {
 
   const ready =
     !loading &&
-    (isLocalOnly ? isOnboarded() : !!user && isOnboarded());
+    (isLocalOnly ? isOnboarded() : !!user);
 
   return { ready };
 }
