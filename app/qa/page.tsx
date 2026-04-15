@@ -36,13 +36,15 @@ const allQuestions = [
   { category: "Fundraising", q: "Who else is investing?", weight: 0.8 },
 ];
 
-interface Question { category: string; q: string; weight: number }
+interface Question {
+  category: string;
+  q: string;
+  weight: number;
+}
 
 function groupQuestions(questions: Question[]) {
   const grouped = questions.reduce((acc: Record<string, Question[]>, q) => {
-    if (!acc[q.category]) {
-      acc[q.category] = [];
-    }
+    if (!acc[q.category]) acc[q.category] = [];
     acc[q.category].push(q);
     return acc;
   }, {});
@@ -50,7 +52,7 @@ function groupQuestions(questions: Question[]) {
   return Object.entries(grouped).map(([title, questions]) => ({
     title,
     count: questions.length,
-    questions: questions,
+    questions,
   }));
 }
 
@@ -60,79 +62,81 @@ export default function QAPage() {
   const [saved, setSaved] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
 
-  // Restore saved responses and perspective on mount
   useEffect(() => {
     setCompletedSteps(getCompletedSteps());
+
     try {
       const raw = localStorage.getItem("vcready_qa_inputs");
       if (raw) {
-        const data = JSON.parse(raw) as { responses?: Record<string, number>; perspective?: "founder" | "investor" };
-        if (data.responses && Object.keys(data.responses).length > 0) setResponses(data.responses);
+        const data = JSON.parse(raw) as {
+          responses?: Record<string, number>;
+          perspective?: "founder" | "investor";
+        };
+        if (data.responses && Object.keys(data.responses).length > 0) {
+          setResponses(data.responses);
+        }
         if (data.perspective) setPerspective(data.perspective);
       }
-    } catch { /* ignore */ }
-    // DB restore
+    } catch {
+      // ignore
+    }
+
     getToolFromDB("qa").then((db) => {
       if (!db?.inputs) return;
-      const inp = db.inputs as { responses?: Record<string, number>; perspective?: "founder" | "investor" };
-      if (inp.responses && Object.keys(inp.responses).length > 0) setResponses(inp.responses);
+      const inp = db.inputs as {
+        responses?: Record<string, number>;
+        perspective?: "founder" | "investor";
+      };
+      if (inp.responses && Object.keys(inp.responses).length > 0) {
+        setResponses(inp.responses);
+      }
       if (inp.perspective) setPerspective(inp.perspective);
     });
   }, []);
 
-  useEffect(() => {
-    if (saved) {
-      markStepComplete("qa");
-      setCompletedSteps(getCompletedSteps());
-    }
-  }, [saved]);
-
   const categories = useMemo(() => groupQuestions(allQuestions), []);
-  
+
+  const notifyFoundationRefresh = () => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(new Event("vcready:foundation-profile-updated"));
+    window.dispatchEvent(new Event("vcready:foundation-snapshot-updated"));
+  };
+
   const scores = useMemo(() => {
     const categoryScores: Record<string, number> = {};
     let totalWeightedScore = 0;
     let totalMaxScore = 0;
 
-    // Calculate scores: responses are 0-100, multiply by weight to get weighted score
     for (const category of categories) {
       let categoryTotalScore = 0;
       let categoryTotalMaxScore = 0;
 
       for (const q of category.questions) {
-        const qIndex = allQuestions.findIndex(aq => aq.q === q.q);
-        const response = responses[q.q] || 0; // 0-100 scale
+        const qIndex = allQuestions.findIndex((aq) => aq.q === q.q);
+        const response = responses[q.q] || 0;
         const weight = allQuestions[qIndex].weight;
 
-        // Score contribution = (response/100) * weight * 100 to get 0-100 scale
         const weighted = (response / 100) * weight * 100;
         categoryTotalScore += weighted;
-        
-        // Max possible = weight * 100
         categoryTotalMaxScore += weight * 100;
-        
         totalWeightedScore += weighted;
         totalMaxScore += weight * 100;
       }
 
-      // Category score: normalize to 0-100
-      categoryScores[category.title] = categoryTotalMaxScore > 0 ? Math.round((categoryTotalScore / categoryTotalMaxScore) * 100) : 0;
+      categoryScores[category.title] =
+        categoryTotalMaxScore > 0
+          ? Math.round((categoryTotalScore / categoryTotalMaxScore) * 100)
+          : 0;
     }
 
-    // Overall base score: normalize to 0-100
-    const baseScore = totalMaxScore > 0 ? Math.round((totalWeightedScore / totalMaxScore) * 100) : 0;
+    const baseScore =
+      totalMaxScore > 0 ? Math.round((totalWeightedScore / totalMaxScore) * 100) : 0;
 
-    // Investor perspective: emphasize metrics and market (these are most important to investors)
     let overallScore = baseScore;
     if (perspective === "investor") {
       const tractionScore = categoryScores["Traction & Metrics"] || 0;
       const marketScore = categoryScores["Market & Competition"] || 0;
-      // Investor weighting: 35% traction, 25% market, 40% other
-      overallScore = Math.round(
-        tractionScore * 0.35 + 
-        marketScore * 0.25 + 
-        baseScore * 0.4
-      );
+      overallScore = Math.round(tractionScore * 0.35 + marketScore * 0.25 + baseScore * 0.4);
     }
 
     return { categoryScores, overallScore };
@@ -141,26 +145,66 @@ export default function QAPage() {
   const answeredCount = useMemo(() => Object.keys(responses).length, [responses]);
   const totalQuestions = allQuestions.length;
 
+  const isComplete = answeredCount >= Math.ceil(totalQuestions * 0.7);
+
+  useEffect(() => {
+    if (isComplete) {
+      markStepComplete("qa");
+      setCompletedSteps(getCompletedSteps());
+    }
+  }, [isComplete]);
+
   const handleSave = useCallback(async () => {
     try {
       await saveQAAssessment({
         name: `qa_assessment_${new Date().toISOString()}`,
         total_score: scores.overallScore,
         category_scores: scores.categoryScores,
-        responses: responses,
-        perspective: perspective,
+        responses,
+        perspective,
       });
     } catch (error) {
       console.error("[v0] Error saving QA assessment:", error);
     }
-    // Persist score and full inputs for restoration on back-navigation
-    localStorage.setItem("vcready_qa", JSON.stringify({ score: scores.overallScore }));
-    localStorage.setItem("vcready_qa_inputs", JSON.stringify({ responses, perspective }));
+
+    localStorage.setItem(
+      "vcready_qa",
+      JSON.stringify({
+        score: scores.overallScore,
+        category_scores: scores.categoryScores,
+        answered_count: answeredCount,
+        total_questions: totalQuestions,
+        perspective,
+        saved_at: new Date().toISOString(),
+      })
+    );
+
+    localStorage.setItem(
+      "vcready_qa_inputs",
+      JSON.stringify({
+        responses,
+        perspective,
+      })
+    );
+
     saveReadinessSnapshot();
-    saveToolToDB("qa", scores.overallScore, { responses: responses as unknown as Record<string, unknown>, perspective }).catch(console.error);
+
+    saveToolToDB("qa", scores.overallScore, {
+      responses: responses as unknown as Record<string, unknown>,
+      perspective,
+      derived: {
+        category_scores: scores.categoryScores as unknown as Record<string, unknown>,
+        answered_count: answeredCount,
+        total_questions: totalQuestions,
+        completion_rate: Math.round((answeredCount / totalQuestions) * 100),
+      } as unknown as Record<string, unknown>,
+    }).catch(console.error);
+
+    notifyFoundationRefresh();
+
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
-  }, [scores, responses, perspective]);
+  }, [scores, responses, perspective, answeredCount, totalQuestions]);
 
   const handleReset = useCallback(() => {
     setResponses({});
@@ -171,10 +215,10 @@ export default function QAPage() {
     <ToolPageLayout
       kicker="Q&A Preparation"
       title="Be ready for every question."
-      description="The 50+ questions investors will ask. Prepare your answers and identify gaps in your story."
+      description="The core questions investors will ask. Score your preparedness and identify weak points before the meeting."
     >
       <FlowProgress currentStep="qa" completedSteps={completedSteps} />
-      {/* Perspective Toggle */}
+
       <ToolSection>
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <span className="text-sm text-muted shrink-0">Evaluation perspective:</span>
@@ -195,50 +239,92 @@ export default function QAPage() {
             </Button>
           </div>
         </div>
-        {/* Perspective explanation */}
+
         <div className="mt-3 grid sm:grid-cols-2 gap-2">
-          <div className={`rounded-[var(--radius-md)] p-3 border text-xs leading-relaxed transition-colors ${perspective === "founder" ? "bg-accent/5 border-accent/30 text-ink" : "bg-soft border-border text-muted"}`}>
+          <div
+            className={`rounded-[var(--radius-md)] p-3 border text-xs leading-relaxed transition-colors ${
+              perspective === "founder"
+                ? "bg-accent/5 border-accent/30 text-ink"
+                : "bg-soft border-border text-muted"
+            }`}
+          >
             <span className="font-semibold block mb-0.5">Founder view</span>
-            Self-assessment — how you rate your own answers. Use this to identify gaps in your preparation.
+            Self-assessment of your preparedness. Useful to identify gaps before real investor conversations.
           </div>
-          <div className={`rounded-[var(--radius-md)] p-3 border text-xs leading-relaxed transition-colors ${perspective === "investor" ? "bg-accent/5 border-accent/30 text-ink" : "bg-soft border-border text-muted"}`}>
+          <div
+            className={`rounded-[var(--radius-md)] p-3 border text-xs leading-relaxed transition-colors ${
+              perspective === "investor"
+                ? "bg-accent/5 border-accent/30 text-ink"
+                : "bg-soft border-border text-muted"
+            }`}
+          >
             <span className="font-semibold block mb-0.5">Investor view</span>
-            Applies VC weights — traction and market score 60% of the total. See how a VC would evaluate your answers.
+            Reweights the result toward traction and market, which are typically decisive in early-stage fundraising.
           </div>
         </div>
       </ToolSection>
 
-      {/* Progress Overview */}
       <ToolSection title="Assessment Progress">
         <div className="flex items-center justify-between gap-6 mb-4">
           <div>
             <p className="text-4xl font-extrabold tracking-tight mb-1">
-              {scores.overallScore}<span className="text-muted text-xl">/100</span>
+              {scores.overallScore}
+              <span className="text-muted text-xl">/100</span>
             </p>
-            <p className="text-sm text-ink-secondary">{answeredCount} of {totalQuestions} answered</p>
+            <p className="text-sm text-ink-secondary">
+              {answeredCount} of {totalQuestions} answered
+            </p>
           </div>
-          <Badge variant={scores.overallScore >= 70 ? "success" : scores.overallScore >= 50 ? "warning" : "danger"}>
-            {scores.overallScore >= 70 ? "Well prepared" : scores.overallScore >= 50 ? "Moderately prepared" : "Needs work"}
+          <Badge
+            variant={
+              scores.overallScore >= 70
+                ? "success"
+                : scores.overallScore >= 50
+                ? "warning"
+                : "danger"
+            }
+          >
+            {scores.overallScore >= 70
+              ? "Well prepared"
+              : scores.overallScore >= 50
+              ? "Moderately prepared"
+              : "Needs work"}
           </Badge>
         </div>
         <ProgressBar
           value={scores.overallScore}
-          status={scores.overallScore >= 70 ? "good" : scores.overallScore >= 50 ? "warning" : "danger"}
+          status={
+            scores.overallScore >= 70
+              ? "good"
+              : scores.overallScore >= 50
+              ? "warning"
+              : "danger"
+          }
         />
       </ToolSection>
 
-      {/* Category Scores */}
       <ToolSection title="Category Breakdown">
         <div className="grid md:grid-cols-2 gap-4">
           {categories.map((category) => (
-            <div key={category.title} className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
+            <div
+              key={category.title}
+              className="bg-soft border border-border rounded-[var(--radius-md)] p-4"
+            >
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-semibold">{category.title}</h4>
-                <span className="text-sm font-mono font-bold">{scores.categoryScores[category.title] || 0}/100</span>
+                <span className="text-sm font-mono font-bold">
+                  {scores.categoryScores[category.title] || 0}/100
+                </span>
               </div>
               <ProgressBar
                 value={scores.categoryScores[category.title] || 0}
-                status={(scores.categoryScores[category.title] || 0) >= 70 ? "good" : (scores.categoryScores[category.title] || 0) >= 50 ? "warning" : "danger"}
+                status={
+                  (scores.categoryScores[category.title] || 0) >= 70
+                    ? "good"
+                    : (scores.categoryScores[category.title] || 0) >= 50
+                    ? "warning"
+                    : "danger"
+                }
                 size="sm"
               />
             </div>
@@ -246,7 +332,6 @@ export default function QAPage() {
         </div>
       </ToolSection>
 
-      {/* Question Categories */}
       {categories.map((category) => (
         <ToolSection key={category.title} title={category.title}>
           <div className="space-y-3">
@@ -256,7 +341,7 @@ export default function QAPage() {
                 question={question.q}
                 score={responses[question.q] || 0}
                 onScore={(score) => {
-                  setResponses(prev => ({
+                  setResponses((prev) => ({
                     ...prev,
                     [question.q]: score,
                   }));
@@ -267,7 +352,6 @@ export default function QAPage() {
         </ToolSection>
       ))}
 
-      {/* Actions */}
       <div className="flex items-center justify-between gap-3 bg-card border border-border rounded-[var(--radius-lg)] p-6">
         <p className="text-sm text-muted">
           {answeredCount}/{totalQuestions} questions evaluated
@@ -283,7 +367,12 @@ export default function QAPage() {
           </Button>
         </div>
       </div>
-      <FlowContinue isComplete={completedSteps.includes("qa")} nextHref="/captable" nextLabel="Cap Table" />
+
+      <FlowContinue
+        isComplete={isComplete}
+        nextHref="/captable"
+        nextLabel="Cap Table"
+      />
     </ToolPageLayout>
   );
 }
