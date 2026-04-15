@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Container } from "@/components/layout/section";
@@ -45,7 +45,7 @@ const SECTORS = [
 
 const STAGES = ["Pre-seed", "Seed", "Series A", "Series B+"];
 
-export default function OnboardPage() {
+function OnboardPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { signUp, signIn, user, loading } = useAuth();
@@ -257,6 +257,14 @@ export default function OnboardPage() {
         </div>
       </Container>
     </div>
+  );
+}
+
+export default function OnboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <OnboardPageInner />
+    </Suspense>
   );
 }
 
