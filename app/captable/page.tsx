@@ -50,51 +50,62 @@ const DEMO_ROUND: RoundInputs = {
 
 export default function CapTablePage() {
   const [shareholders, setShareholders] = useState<Shareholder[]>([]);
-
   const [newShareholder, setNewShareholder] = useState({
     name: "",
     type: "founder",
     shares: "",
   });
-
   const [roundInputs, setRoundInputs] = useState<RoundInputs>({
     investmentAmount: 0,
     preMoneyValuation: 0,
     newEsopPercentage: 10,
   });
-
   const [saved, setSaved] = useState(false);
   const [showPostRound, setShowPostRound] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
 
-  // Restore saved cap table state on mount
   useEffect(() => {
     setCompletedSteps(getCompletedSteps());
+
     try {
       const raw = localStorage.getItem("vcready_captable_inputs");
       if (raw) {
-        const data = JSON.parse(raw) as { shareholders?: Shareholder[]; roundInputs?: RoundInputs };
-        if (data.shareholders && data.shareholders.length > 0) setShareholders(data.shareholders);
-        if (data.roundInputs) setRoundInputs(data.roundInputs);
+        const data = JSON.parse(raw) as {
+          shareholders?: Shareholder[];
+          roundInputs?: RoundInputs;
+        };
+        if (data.shareholders && data.shareholders.length > 0) {
+          setShareholders(data.shareholders);
+        }
+        if (data.roundInputs) {
+          setRoundInputs(data.roundInputs);
+        }
       }
-    } catch { /* ignore */ }
-    // DB restore
+    } catch {
+      // ignore
+    }
+
     getToolFromDB("captable").then((db) => {
       if (!db?.inputs) return;
-      const inp = db.inputs as { shareholders?: Shareholder[]; roundInputs?: RoundInputs };
-      if (inp.shareholders && inp.shareholders.length > 0) setShareholders(inp.shareholders);
-      if (inp.roundInputs) setRoundInputs(inp.roundInputs);
+      const inp = db.inputs as {
+        shareholders?: Shareholder[];
+        roundInputs?: RoundInputs;
+      };
+      if (inp.shareholders && inp.shareholders.length > 0) {
+        setShareholders(inp.shareholders);
+      }
+      if (inp.roundInputs) {
+        setRoundInputs(inp.roundInputs);
+      }
     });
   }, []);
 
-  useEffect(() => {
-    if (saved) {
-      markStepComplete("captable");
-      setCompletedSteps(getCompletedSteps());
-    }
-  }, [saved]);
+  const notifyFoundationRefresh = () => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(new Event("vcready:foundation-profile-updated"));
+    window.dispatchEvent(new Event("vcready:foundation-snapshot-updated"));
+  };
 
-  // Calculate current cap table state
   const currentState = useMemo(() => {
     const totalShares = shareholders.reduce((sum, s) => sum + s.shares, 0);
     const founderShares = shareholders
@@ -113,11 +124,10 @@ export default function CapTablePage() {
     };
   }, [shareholders]);
 
-  // Calculate post-round state
   const postRoundState = useMemo(() => {
     const { investmentAmount, preMoneyValuation, newEsopPercentage } = roundInputs;
 
-    if (!investmentAmount || !preMoneyValuation) {
+    if (!investmentAmount || !preMoneyValuation || !currentState.totalShares) {
       return null;
     }
 
@@ -125,12 +135,10 @@ export default function CapTablePage() {
     const investorOwnershipPercent = (investmentAmount / postMoneyValuation) * 100;
     const currentTotalShares = currentState.totalShares;
 
-    // Calculate price per share and investor shares
     const pricePerShare = preMoneyValuation / currentTotalShares;
     const investorShares = investmentAmount / pricePerShare;
     const newTotalSharesBeforeEsop = currentTotalShares + investorShares;
 
-    // Calculate final shares with ESOP
     let finalTotalShares = newTotalSharesBeforeEsop;
     let esopShares = 0;
 
@@ -139,7 +147,6 @@ export default function CapTablePage() {
       finalTotalShares = newTotalSharesBeforeEsop + esopShares;
     }
 
-    // Calculate post-round percentages
     const founderSharesPostRound = currentState.founderShares;
     const founderPercentagePostRound = (founderSharesPostRound / finalTotalShares) * 100;
     const dilution = currentState.founderPercentage - founderPercentagePostRound;
@@ -157,6 +164,21 @@ export default function CapTablePage() {
     };
   }, [roundInputs, currentState]);
 
+  const isComplete =
+    shareholders.length >= 2 &&
+    currentState.totalShares > 0 &&
+    currentState.founderPercentage > 0 &&
+    roundInputs.investmentAmount > 0 &&
+    roundInputs.preMoneyValuation > 0 &&
+    !!postRoundState;
+
+  useEffect(() => {
+    if (isComplete) {
+      markStepComplete("captable");
+      setCompletedSteps(getCompletedSteps());
+    }
+  }, [isComplete]);
+
   const handleAddShareholder = useCallback(() => {
     if (!newShareholder.name || !newShareholder.shares) return;
 
@@ -171,10 +193,12 @@ export default function CapTablePage() {
     ]);
 
     setNewShareholder({ name: "", type: "founder", shares: "" });
+    setSaved(false);
   }, [newShareholder]);
 
   const handleRemoveShareholder = useCallback((id: string) => {
     setShareholders((prev) => prev.filter((s) => s.id !== id));
+    setSaved(false);
   }, []);
 
   const handleSave = useCallback(async () => {
@@ -196,25 +220,63 @@ export default function CapTablePage() {
     } catch (error) {
       console.error("[v0] Error saving cap table:", error);
     }
-    // Persist score to localStorage for local readiness engine
+
     const hasEsop =
       roundInputs.newEsopPercentage > 0 ||
       currentState.shareholders.some((s) => s.type === "employee");
     const hasInvestors = currentState.shareholders.some(
       (s) => s.type === "angel" || s.type === "vc"
     );
+
     const score = computeCapTableScore(
       currentState.founderPercentage,
       hasEsop,
       hasInvestors
     );
-    localStorage.setItem("vcready_captable", JSON.stringify({ score }));
-    localStorage.setItem("vcready_captable_inputs", JSON.stringify({ shareholders, roundInputs }));
+
+    localStorage.setItem(
+      "vcready_captable",
+      JSON.stringify({
+        score,
+        founder_percentage: currentState.founderPercentage,
+        founder_percentage_post_round: postRoundState?.founderPercentagePostRound || 0,
+        dilution: postRoundState?.dilution || 0,
+        total_shares: currentState.totalShares,
+        post_money_valuation: postRoundState?.postMoneyValuation || 0,
+        saved_at: new Date().toISOString(),
+      })
+    );
+
+    localStorage.setItem(
+      "vcready_captable_inputs",
+      JSON.stringify({
+        shareholders,
+        roundInputs,
+      })
+    );
+
     saveReadinessSnapshot();
-    saveToolToDB("captable", score, { shareholders: shareholders as unknown as Record<string, unknown>[], roundInputs: roundInputs as unknown as Record<string, unknown> } as unknown as Record<string, unknown>).catch(console.error);
+
+    saveToolToDB("captable", score, {
+      shareholders: shareholders as unknown as Record<string, unknown>[],
+      roundInputs: roundInputs as unknown as Record<string, unknown>,
+      derived: {
+        founderPercentage: currentState.founderPercentage,
+        founderShares: currentState.founderShares,
+        totalShares: currentState.totalShares,
+        postRoundFounderPercentage: postRoundState?.founderPercentagePostRound || 0,
+        dilution: postRoundState?.dilution || 0,
+        investorOwnershipPercent: postRoundState?.investorOwnershipPercent || 0,
+        founderControlMaintained: postRoundState?.founderControlMaintained || false,
+        postMoneyValuation: postRoundState?.postMoneyValuation || 0,
+      } as unknown as Record<string, unknown>,
+    }).catch(console.error);
+
+    notifyFoundationRefresh();
+
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
-  }, [currentState, postRoundState, roundInputs]);
+  }, [currentState, postRoundState, roundInputs, shareholders]);
 
   const handleLoadDemo = useCallback(() => {
     setShareholders(DEMO_SHAREHOLDERS);
@@ -225,7 +287,11 @@ export default function CapTablePage() {
 
   const handleReset = useCallback(() => {
     setShareholders([]);
-    setRoundInputs({ investmentAmount: 0, preMoneyValuation: 0, newEsopPercentage: 10 });
+    setRoundInputs({
+      investmentAmount: 0,
+      preMoneyValuation: 0,
+      newEsopPercentage: 10,
+    });
     setShowPostRound(false);
     setSaved(false);
   }, []);
@@ -234,17 +300,16 @@ export default function CapTablePage() {
     <ToolPageLayout
       kicker="Cap Table"
       title="Model your ownership structure."
-      description="Understand current and post-round cap table, dilution impact, and founder control."
+      description="Understand your current and post-round cap table, dilution impact, and founder control."
     >
       <FlowProgress currentStep="captable" completedSteps={completedSteps} />
-      {/* Step 1: Current Cap Table */}
+
       <ToolSection title="Step 1: Current Cap Table">
         <div className="space-y-4">
           <p className="text-sm text-ink-secondary">
-            Your current shareholders and ownership structure
+            Define your current shareholders and ownership structure.
           </p>
 
-          {/* Current Holdings Table */}
           <div className="border border-border rounded-[var(--radius-md)] overflow-hidden">
             <div className="bg-soft border-b border-border p-3 flex items-center gap-2">
               <Users className="w-4 h-4" />
@@ -269,6 +334,7 @@ export default function CapTablePage() {
                     </div>
                     <ProgressBar value={s.percentage} size="sm" />
                   </div>
+
                   <div className="ml-4 text-right shrink-0">
                     <div className="font-mono text-sm font-semibold">
                       {s.percentage.toFixed(1)}%
@@ -277,6 +343,7 @@ export default function CapTablePage() {
                       {s.shares.toLocaleString()} shares
                     </div>
                   </div>
+
                   <button
                     onClick={() => handleRemoveShareholder(s.id)}
                     className="ml-3 p-1.5 text-muted hover:text-danger hover:bg-red-50 rounded transition-colors"
@@ -285,10 +352,15 @@ export default function CapTablePage() {
                   </button>
                 </div>
               ))}
+
+              {currentState.shareholders.length === 0 && (
+                <div className="p-5 text-sm text-muted text-center">
+                  No shareholders added yet.
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Add Shareholder Form */}
           <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
             <h4 className="font-semibold text-sm mb-3">Add Shareholder</h4>
             <FormGrid cols={2}>
@@ -336,10 +408,9 @@ export default function CapTablePage() {
         </div>
       </ToolSection>
 
-      {/* Step 2: New Round Assumptions */}
       <ToolSection title="Step 2: New Round Assumptions">
         <p className="text-sm text-ink-secondary mb-4">
-          Model the impact of a new funding round
+          Model the impact of a new funding round.
         </p>
         <FormGrid cols={3}>
           <InputField
@@ -384,18 +455,15 @@ export default function CapTablePage() {
         </FormGrid>
       </ToolSection>
 
-      {/* Step 3: Calculation Button */}
       <div className="flex gap-2">
         <Button onClick={() => setShowPostRound(true)} size="lg" className="flex-1">
           Calculate Post-Round Cap Table
         </Button>
       </div>
 
-      {/* Step 4: Post-Round Results */}
       {showPostRound && postRoundState && (
         <ToolSection title="Step 3: Post-Round Results">
           <div className="grid md:grid-cols-2 gap-4 mb-6">
-            {/* Financial Summary */}
             <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
               <h4 className="font-semibold text-sm mb-3">Financing Summary</h4>
               <div className="space-y-3">
@@ -426,7 +494,6 @@ export default function CapTablePage() {
               </div>
             </div>
 
-            {/* Ownership Summary */}
             <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
               <h4 className="font-semibold text-sm mb-3">Post-Round Ownership</h4>
               <div className="space-y-3">
@@ -479,7 +546,6 @@ export default function CapTablePage() {
             </div>
           </div>
 
-          {/* Control Analysis */}
           <div
             className={`border rounded-[var(--radius-md)] p-4 ${
               postRoundState.founderControlMaintained
@@ -501,23 +567,20 @@ export default function CapTablePage() {
               {postRoundState.founderControlMaintained
                 ? `Your team maintains majority control with ${postRoundState.founderPercentagePostRound.toFixed(
                     1
-                  )}% ownership after this round. Strong founder alignment with investors.`
+                  )}% ownership after this round.`
                 : `After this round, founders own ${postRoundState.founderPercentagePostRound.toFixed(
                     1
                   )}% of the company. Consider negotiating terms to maintain control.`}
             </p>
           </div>
 
-          {/* Dilution Details */}
           <div className="mt-6 grid md:grid-cols-2 gap-4 bg-soft border border-border rounded-[var(--radius-md)] p-4">
             <div>
               <h4 className="font-semibold text-sm mb-3">Share Count Changes</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-ink-secondary">Current Total</span>
-                  <span className="font-mono">
-                    {currentState.totalShares.toLocaleString()}
-                  </span>
+                  <span className="font-mono">{currentState.totalShares.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-ink-secondary">New Investor Shares</span>
@@ -567,7 +630,6 @@ export default function CapTablePage() {
         </ToolSection>
       )}
 
-      {/* Action Buttons */}
       <div className="flex flex-wrap items-center gap-2">
         {shareholders.length === 0 && (
           <Button onClick={handleLoadDemo} variant="secondary" size="sm">
@@ -583,7 +645,12 @@ export default function CapTablePage() {
           {saved ? "Saved" : "Save Cap Table"}
         </Button>
       </div>
-      <FlowContinue isComplete={completedSteps.includes("captable")} nextHref="/pitch" nextLabel="Pitch" />
+
+      <FlowContinue
+        isComplete={isComplete}
+        nextHref="/pitch"
+        nextLabel="Pitch"
+      />
     </ToolPageLayout>
   );
 }
