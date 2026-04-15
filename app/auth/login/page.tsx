@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Container } from "@/components/layout/section";
@@ -10,7 +10,9 @@ import { syncProfileFromDB } from "@/lib/db-user";
 import { syncAllToolsToLocalStorage } from "@/lib/db-tools";
 import { isOnboarded } from "@/lib/onboard";
 
-export default function LoginPage() {
+// ─── Inner component (uses useSearchParams — must be inside Suspense) ─────────
+
+function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { signIn, user, loading } = useAuth();
@@ -117,6 +119,16 @@ export default function LoginPage() {
         </div>
       </Container>
     </div>
+  );
+}
+
+// ─── Page wrapper (Suspense required for useSearchParams in Next.js) ──────────
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageInner />
+    </Suspense>
   );
 }
 
