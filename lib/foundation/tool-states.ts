@@ -1,4 +1,5 @@
 import { getLocalReadinessScore } from "@/lib/local-readiness";
+import { createClient } from "@/lib/supabase-client";
 import type { FoundationTool, ToolState, ToolStatus } from "./types";
 
 const TOOL_LABELS: Record<FoundationTool, string> = {
@@ -89,6 +90,106 @@ export function getLocalToolStates(): Record<FoundationTool, ToolState> {
   };
 }
 
+// ─── localStorage cache writer (mirrors db-tools.ts syncAllToolsToLocalStorage) ─
+
+function writeLocalCache(tool: FoundationTool, score: number, inputs: Record<string, unknown>, savedAt: string): void {
+  try {
+    switch (tool) {
+      case "metrics": {
+        const payload: Record<string, unknown> = { score };
+        for (const k of ["mrr", "arr", "growth_rate", "ltv_cac", "churn", "runway"]) {
+          if (inputs[k] !== undefined) payload[k] = inputs[k];
+        }
+        localStorage.setItem("vcready_metrics", JSON.stringify(payload));
+        localStorage.setItem("vcready_metrics_inputs", JSON.stringify(inputs));
+        break;
+      }
+      case "valuation":
+        localStorage.setItem("vcready_valuation", JSON.stringify({ score, ...inputs }));
+        localStorage.setItem("vcready_valuation_inputs", JSON.stringify(inputs));
+        break;
+      case "qa":
+        localStorage.setItem("vcready_qa", JSON.stringify({ score }));
+        localStorage.setItem("vcready_qa_inputs", JSON.stringify(inputs));
+        break;
+      case "captable":
+        localStorage.setItem("vcready_captable", JSON.stringify({ score }));
+        localStorage.setItem("vcready_captable_inputs", JSON.stringify(inputs));
+        break;
+      case "pitch": {
+        let existing: unknown[] = [];
+        try { existing = JSON.parse(localStorage.getItem("vcready_pitch") ?? "[]"); } catch {}
+        const entry = { overallScore: score, answers: (inputs.answers as Record<string, number>) ?? {}, timestamp: savedAt };
+        if (!existing.some((e) => (e as Record<string, unknown>).timestamp === savedAt)) {
+          existing.push(entry);
+          localStorage.setItem("vcready_pitch", JSON.stringify(existing));
+        }
+        break;
+      }
+      case "dataroom":
+        localStorage.setItem("dataroom_results", JSON.stringify({ readinessScore: score, ...inputs }));
+        localStorage.setItem("vcready_dataroom_inputs", JSON.stringify(inputs));
+        break;
+    }
+  } catch {}
+}
+
+/**
+ * C1: DB-first tool state loader.
+ * Fetches all tool_saves from Supabase, populates localStorage, returns ToolState map.
+ * Falls back to localStorage if unauthenticated or DB empty.
+ * Migrates localStorage → DB when DB is empty.
+ */
 export async function getToolStates(): Promise<Record<FoundationTool, ToolState>> {
+  try {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      const { data, error } = await supabase
+        .from("tool_saves")
+        .select("tool, score, inputs, saved_at")
+        .eq("user_id", user.id);
+
+      if (!error && data && data.length > 0) {
+        // DB has data — hydrate localStorage so sync functions see it
+        for (const row of data) {
+          writeLocalCache(
+            row.tool as FoundationTool,
+            row.score,
+            (row.inputs as Record<string, unknown>) ?? {},
+            row.saved_at
+          );
+        }
+        // Return normalized ToolState map from now-populated localStorage
+        return getLocalToolStates();
+      }
+
+      // DB empty — migrate localStorage → DB (fire-and-forget)
+      const local = getLocalToolStates();
+      const hasLocal = Object.values(local).some((s) => s.score > 0);
+      if (hasLocal) {
+        void (async () => {
+          try {
+            const rows = (Object.entries(local) as Array<[FoundationTool, ToolState]>)
+              .filter(([, state]) => state.score > 0)
+              .map(([tool, state]) => ({
+                user_id: user.id,
+                tool,
+                score: state.score,
+                inputs: state.inputs,
+                saved_at: state.saved_at ?? new Date().toISOString(),
+              }));
+            if (rows.length > 0) {
+              await supabase.from("tool_saves").upsert(rows, { onConflict: "user_id,tool" });
+            }
+          } catch {}
+        })();
+      }
+      return local;
+    }
+  } catch {}
+
+  // Unauthenticated or error — fallback to localStorage
   return getLocalToolStates();
 }

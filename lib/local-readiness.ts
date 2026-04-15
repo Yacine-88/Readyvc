@@ -259,6 +259,27 @@ export function saveReadinessSnapshot(): void {
   }
 
   localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-MAX_HISTORY)))
+
+  // C2: also persist to Supabase — fire-and-forget, never blocks, never throws
+  void (async () => {
+    try {
+      const { createClient } = await import("./supabase-client")
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      await supabase.from("readiness_history").insert({
+        user_id: user.id,
+        overall_score: snapshot.overall_score,
+        metrics_score: snapshot.metrics_score,
+        valuation_score: snapshot.valuation_score,
+        qa_score: snapshot.qa_score,
+        cap_table_score: snapshot.cap_table_score,
+        pitch_score: snapshot.pitch_score,
+        dataroom_score: snapshot.dataroom_score,
+        saved_at: snapshot.timestamp,
+      })
+    } catch {}
+  })()
 }
 
 export function getReadinessHistory(): ReadinessSnapshot[] {

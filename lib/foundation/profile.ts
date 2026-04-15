@@ -1,5 +1,6 @@
-import { getFounderProfile } from "@/lib/onboard";
+import { getFounderProfile, saveFounderProfile } from "@/lib/onboard";
 import { getLocalReadinessScore } from "@/lib/local-readiness";
+import { createClient } from "@/lib/supabase-client";
 import type { FounderStartupProfile } from "./types";
 
 const FOUNDATION_PROFILE_KEY = "vcready_foundation_profile";
@@ -104,7 +105,75 @@ export function saveUnifiedProfile(profile: FounderStartupProfile): FounderStart
     window.dispatchEvent(new Event("vcready:foundation-profile-updated"));
   }
 
+  // C1: also persist to Supabase — fire-and-forget, never blocks
+  void (async () => {
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.from("founder_profiles").upsert({
+        user_id: user.id,
+        name: next.founder_name,
+        email: next.founder_email,
+        startup_name: next.startup_name,
+        country: next.country || null,
+        sector: next.sector || null,
+        stage: next.stage || null,
+        has_raised_before: next.has_raised_before,
+        updated_at: next.updated_at,
+      }, { onConflict: "user_id" });
+    } catch {}
+  })();
+
   return next;
+}
+
+/**
+ * C1: Sync profile from Supabase into localStorage.
+ * Call this once on dashboard mount before reading sync profile functions.
+ * If DB has data → overwrites localStorage. If DB empty → migrates localStorage → DB.
+ */
+export async function syncProfileFromDB(): Promise<void> {
+  try {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("founder_profiles")
+      .select("name, email, startup_name, country, sector, stage, has_raised_before, updated_at")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!error && data) {
+      // DB has data — populate localStorage so sync functions see it
+      saveFounderProfile({
+        name: data.name,
+        email: data.email,
+        startupName: data.startup_name,
+        country: data.country ?? "",
+        sector: data.sector ?? "",
+        stage: data.stage ?? "",
+        hasRaisedBefore: data.has_raised_before ?? false,
+      });
+    } else {
+      // DB empty — migrate localStorage → DB (one-shot, best effort)
+      const local = getFounderProfile();
+      if (local) {
+        await supabase.from("founder_profiles").upsert({
+          user_id: user.id,
+          name: local.name,
+          email: local.email,
+          startup_name: local.startupName,
+          country: local.country || null,
+          sector: local.sector || null,
+          stage: local.stage || null,
+          has_raised_before: local.hasRaisedBefore,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "user_id" });
+      }
+    }
+  } catch {}
 }
 
 export function refreshUnifiedProfile(): FounderStartupProfile {

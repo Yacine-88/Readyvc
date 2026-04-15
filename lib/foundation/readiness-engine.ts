@@ -3,8 +3,10 @@ import {
   getProfileCompletionPct,
   getUnifiedProfile,
   refreshUnifiedProfile,
+  syncProfileFromDB,
 } from "./profile";
 import { getToolStates } from "./tool-states";
+import { createClient } from "@/lib/supabase-client";
 import type {
   FoundationTool,
   GlobalReadinessSnapshot,
@@ -161,8 +163,10 @@ export function getResumeStep(toolStates: Record<FoundationTool, ToolState>): {
 }
 
 export async function computeGlobalReadiness(): Promise<GlobalReadinessSnapshot> {
+  // C1: hydrate localStorage from DB before reading sync functions
+  await syncProfileFromDB();
   const profile = refreshUnifiedProfile();
-  const toolStates = await getToolStates();
+  const toolStates = await getToolStates(); // DB-first, populates localStorage as side-effect
 
   const overall_score = Math.round(
     Object.entries(toolStates).reduce((sum, [tool, state]) => {
@@ -223,11 +227,92 @@ export function getSnapshotHistory(): GlobalReadinessSnapshot[] {
 
 export function saveSnapshot(snapshot: GlobalReadinessSnapshot): void {
   const history = getSnapshotHistory();
-  const next = [...history, snapshot].slice(-30);
-  safeWrite(SNAPSHOT_HISTORY_KEY, next);
+  // Avoid duplicate entries within 60 seconds
+  const last = history[history.length - 1];
+  const isDuplicate = last && Math.abs(new Date(last.saved_at).getTime() - Date.now()) < 60_000;
+  const next = isDuplicate
+    ? [...history.slice(0, -1), snapshot]
+    : [...history, snapshot];
+  safeWrite(SNAPSHOT_HISTORY_KEY, next.slice(-30));
 
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("vcready:foundation-snapshot-updated"));
+  }
+
+  // C2: also persist to Supabase readiness_history — fire-and-forget
+  void (async () => {
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.from("readiness_history").insert({
+        user_id: user.id,
+        overall_score: snapshot.overall_score,
+        metrics_score: snapshot.source_scores.metrics,
+        valuation_score: snapshot.source_scores.valuation,
+        qa_score: snapshot.source_scores.qa,
+        cap_table_score: snapshot.source_scores.captable,
+        pitch_score: snapshot.source_scores.pitch,
+        dataroom_score: snapshot.source_scores.dataroom,
+        saved_at: snapshot.saved_at,
+      });
+    } catch {}
+  })();
+}
+
+/**
+ * C2: Load snapshot history — DB-first, merged with localStorage.
+ * Use this instead of getSnapshotHistory() when DB data matters.
+ */
+export async function loadSnapshotHistory(): Promise<GlobalReadinessSnapshot[]> {
+  const local = getSnapshotHistory();
+
+  try {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return local;
+
+    const { data, error } = await supabase
+      .from("readiness_history")
+      .select("overall_score, metrics_score, valuation_score, qa_score, cap_table_score, pitch_score, dataroom_score, saved_at")
+      .eq("user_id", user.id)
+      .order("saved_at", { ascending: false })
+      .limit(30);
+
+    if (error || !data) return local;
+
+    const dbHistory: GlobalReadinessSnapshot[] = data.map((row: Record<string, unknown>) => ({
+      overall_score: row.overall_score as number,
+      verdict: "Improving" as const, // not stored in DB, recomputed on load if needed
+      blockers_count: 0,
+      red_flags: [],
+      source_scores: {
+        metrics:   row.metrics_score as number,
+        valuation: row.valuation_score as number,
+        qa:        row.qa_score as number,
+        captable:  row.cap_table_score as number,
+        pitch:     row.pitch_score as number,
+        dataroom:  row.dataroom_score as number,
+      },
+      profile_completion_pct: 0,
+      strongest_tool: null,
+      weakest_tool: null,
+      missing_tools: [],
+      completed_tools_count: 0,
+      saved_at: row.saved_at as string,
+    }));
+
+    // Merge local + DB, deduplicate by saved_at, sort newest first
+    const seen = new Set<string>();
+    return [...local, ...dbHistory]
+      .filter((s) => {
+        if (seen.has(s.saved_at)) return false;
+        seen.add(s.saved_at);
+        return true;
+      })
+      .sort((a, b) => new Date(b.saved_at).getTime() - new Date(a.saved_at).getTime());
+  } catch {
+    return local;
   }
 }
 

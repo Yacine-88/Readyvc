@@ -6,7 +6,7 @@ import { Container } from "@/components/layout/section";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { refreshUnifiedProfile, getProfileCompletionPct } from "@/lib/foundation/profile";
 import { getLocalToolStates } from "@/lib/foundation/tool-states";
-import { getReadinessRedFlags, getGlobalVerdict, getSnapshotHistory, saveSnapshot } from "@/lib/foundation/readiness-engine";
+import { getReadinessRedFlags, getGlobalVerdict, getSnapshotHistory, saveSnapshot, computeGlobalReadiness, loadSnapshotHistory } from "@/lib/foundation/readiness-engine";
 import { FLOW_STEPS, getCompletedSteps, type FlowStepId } from "@/lib/flow";
 import type {
   FoundationTool,
@@ -184,16 +184,32 @@ export default function DashboardV2Page() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      const { snapshot, toolStates } = buildSnapshot();
-      setSnapshot(snapshot);
-      setToolStates(toolStates);
-      saveSnapshot(snapshot);
-      setHistory(getSnapshotHistory());
-    } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : "unknown error");
+    // C1+C2: DB-first hydration — computeGlobalReadiness syncs profile + tool states
+    // from Supabase into localStorage before reading sync functions.
+    async function load() {
+      try {
+        const snap = await computeGlobalReadiness();
+        const states = await import("@/lib/foundation/tool-states").then(m => m.getToolStates());
+        setSnapshot(snap);
+        setToolStates(states);
+        saveSnapshot(snap);
+        const hist = await loadSnapshotHistory();
+        setHistory(hist);
+      } catch (err) {
+        console.error(err);
+        // Fallback to localStorage-only path on any DB error
+        try {
+          const { snapshot, toolStates } = buildSnapshot();
+          setSnapshot(snapshot);
+          setToolStates(toolStates);
+          saveSnapshot(snapshot);
+          setHistory(getSnapshotHistory());
+        } catch (fallbackErr) {
+          setError(fallbackErr instanceof Error ? fallbackErr.message : "unknown error");
+        }
+      }
     }
+    load();
   }, []);
 
   const profile = useMemo(() => refreshUnifiedProfile(), []);
