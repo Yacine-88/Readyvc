@@ -129,16 +129,10 @@ function writeLocalCache(tool: FoundationTool, score: number, inputs: Record<str
         localStorage.setItem("vcready_captable", JSON.stringify({ score }));
         localStorage.setItem("vcready_captable_inputs", JSON.stringify(inputs));
         break;
-      case "pitch": {
-        let existing: unknown[] = [];
-        try { existing = JSON.parse(localStorage.getItem("vcready_pitch") ?? "[]"); } catch {}
-        const entry = { overallScore: score, answers: (inputs.answers as Record<string, number>) ?? {}, timestamp: savedAt };
-        if (!existing.some((e) => (e as Record<string, unknown>).timestamp === savedAt)) {
-          existing.push(entry);
-          localStorage.setItem("vcready_pitch", JSON.stringify(existing));
-        }
+      case "pitch":
+        localStorage.setItem("vcready_pitch", JSON.stringify({ score }));
+        localStorage.setItem("vcready_pitch_inputs", JSON.stringify(inputs));
         break;
-      }
       case "dataroom":
         localStorage.setItem("dataroom_results", JSON.stringify({ readinessScore: score, ...inputs }));
         localStorage.setItem("vcready_dataroom_inputs", JSON.stringify(inputs));

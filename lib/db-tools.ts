@@ -127,17 +127,10 @@ export async function syncAllToolsToLocalStorage(): Promise<void> {
           localStorage.setItem("vcready_captable", JSON.stringify({ score: save.score }));
           localStorage.setItem("vcready_captable_inputs", JSON.stringify(inputs));
           break;
-        case "pitch": {
-          // pitch uses an array of saves
-          const existing = (() => { try { return JSON.parse(localStorage.getItem("vcready_pitch") ?? "[]"); } catch { return []; } })();
-          const entry = { overallScore: save.score, answers: (inputs as any).answers ?? {}, timestamp: save.saved_at };
-          if (!existing.some((e: any) => e.timestamp === save.saved_at)) {
-            existing.push(entry);
-            localStorage.setItem("vcready_pitch", JSON.stringify(existing));
-          }
+        case "pitch":
+          localStorage.setItem("vcready_pitch", JSON.stringify({ score: save.score }));
           localStorage.setItem("vcready_pitch_inputs", JSON.stringify(inputs));
           break;
-        }
         case "dataroom":
           localStorage.setItem("dataroom_results", JSON.stringify({ readinessScore: save.score, ...inputs }));
           localStorage.setItem("vcready_dataroom_inputs", JSON.stringify(inputs));

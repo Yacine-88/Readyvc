@@ -82,10 +82,8 @@ interface CapTableLocal {
   score: number
 }
 
-interface PitchSave {
-  overallScore: number
-  answers: Record<string, number>
-  timestamp: string
+interface PitchLocal {
+  score: number
 }
 
 interface DataroomResults {
@@ -175,7 +173,7 @@ export function getLocalReadinessScore(): LocalReadinessData {
   })
   const qa = safeRead<QALocal>("vcready_qa", { score: 0 })
   const ct = safeRead<CapTableLocal>("vcready_captable", { score: 0 })
-  const pitchSaves = safeRead<PitchSave[]>("vcready_pitch", [])
+  const pitch = safeRead<PitchLocal>("vcready_pitch", { score: 0 })
   const dr = safeRead<DataroomResults>("dataroom_results", {
     readinessScore: 0, completionRate: 0, complete: 0, total: 0,
   })
@@ -184,9 +182,7 @@ export function getLocalReadinessScore(): LocalReadinessData {
   const valuation_score = clamp(v.score)
   const qa_score        = clamp(qa.score)
   const cap_table_score = clamp(ct.score)
-  const pitch_score     = pitchSaves.length
-    ? clamp(pitchSaves[pitchSaves.length - 1].overallScore ?? 0)
-    : 0
+  const pitch_score     = clamp(pitch.score)
   const dataroom_score  = clamp(dr.readinessScore)
 
   const overall_score = clamp(

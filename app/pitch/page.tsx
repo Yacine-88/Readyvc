@@ -379,17 +379,8 @@ export default function PitchPage() {
   }, [sectionScores, locale]);
 
   const handleSave = useCallback(() => {
-    // local-readiness reads vcready_pitch as array of {overallScore, answers, timestamp}
-    // Must write that exact format or pitch_score will always be 0 on dashboard
-    const now = new Date().toISOString();
-    const existing: Array<{ overallScore: number; answers: Record<string, number>; timestamp: string }> = (() => {
-      try { return JSON.parse(localStorage.getItem("vcready_pitch") ?? "[]"); } catch { return []; }
-    })();
-    const entry = { overallScore, answers: answers as Record<string, number>, timestamp: now };
-    const last = existing[existing.length - 1];
-    const isDuplicate = last && Math.abs(new Date(last.timestamp).getTime() - Date.now()) < 60_000;
-    const next = isDuplicate ? [...existing.slice(0, -1), entry] : [...existing, entry];
-    localStorage.setItem("vcready_pitch", JSON.stringify(next.slice(-20)));
+    // Same flat {score} pattern as qa and captable — simplest and most reliable
+    localStorage.setItem("vcready_pitch", JSON.stringify({ score: overallScore }));
 
     localStorage.setItem(
       "vcready_pitch_inputs",
