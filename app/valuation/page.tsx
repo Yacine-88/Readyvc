@@ -8,13 +8,14 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { Badge } from "@/components/ui/badge";
 import { Save, RotateCcw, Check } from "lucide-react";
 import { calculateFullValuation, type ProjectionInputs } from "@/lib/valuation-methods";
+import { saveValuation } from "@/lib/db-valuation";
 import { saveReadinessSnapshot } from "@/lib/local-readiness";
 import { saveToolToDB, getToolFromDB } from "@/lib/db-tools";
 import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
 
-type Stage = "Seed" | "Series A" | "Series B" | "Series C";
+type Stage = "Pre-Seed" | "Seed" | "Series A" | "Series B" | "Series C";
 type Sector = "SaaS" | "Fintech" | "AgriTech" | "Health Tech" | "Consumer Tech" | "Other";
 
 interface ValuationFormData {
