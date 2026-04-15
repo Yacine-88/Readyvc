@@ -276,17 +276,17 @@ export default function DataRoomPage() {
 
                     <div className="flex flex-col items-end gap-2">
                       <Badge
-                        variant={
-                          doc.status === "complete"
-                            ? "success"
-                            : doc.status === "incomplete"
-                            ? "warning"
-                            : "secondary"
-                        }
-                        className="text-[11px]"
-                      >
-                        {statusLabel(doc.status)}
-                      </Badge>
+  variant={
+    doc.status === "complete"
+      ? "success"
+      : doc.status === "incomplete"
+      ? "warning"
+      : "default"
+  }
+  className="text-[11px]"
+>
+  {statusLabel(doc.status)}
+</Badge>
 
                       {doc.required && doc.status !== "complete" && (
                         <Badge variant="danger" className="text-[11px]">
