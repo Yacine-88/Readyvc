@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Container } from "@/components/layout/section";
 import { Button } from "@/components/ui/button";
@@ -10,29 +10,24 @@ import { saveProfileToDB } from "@/lib/db-user";
 import { useAuth } from "@/lib/auth-context";
 
 const SECTORS = [
-  // AI & Software
   "AI / Machine Learning",
   "SaaS / B2B Software",
   "Developer Tools",
   "Cybersecurity",
   "Data & Analytics",
   "Cloud Infrastructure",
-  // Fintech & Finance
   "Fintech",
   "Crypto / Web3",
   "InsurTech",
   "RegTech",
-  // Health & Bio
   "Healthtech / Digital Health",
   "Biotech",
   "MedTech",
-  // Consumer & Commerce
   "Consumer App",
   "E-commerce",
   "Marketplace",
   "Gaming / Entertainment",
   "Media & Content",
-  // Industry Verticals
   "Edtech",
   "Legaltech",
   "HRtech / Future of Work",
@@ -40,13 +35,11 @@ const SECTORS = [
   "Logistics / Supply Chain",
   "Foodtech",
   "Traveltech",
-  // Deep Tech
   "DeepTech",
   "Cleantech / Climate",
   "SpaceTech",
   "Hardware / IoT",
   "Robotics / Automation",
-  // Other
   "Other",
 ];
 
@@ -54,7 +47,9 @@ const STAGES = ["Pre-seed", "Seed", "Series A", "Series B+"];
 
 export default function OnboardPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signUp, signIn, user, loading } = useAuth();
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -68,12 +63,13 @@ export default function OnboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // If already onboarded (and authenticated), go straight to dashboard
+  const redirectTo = searchParams.get("redirectTo") || "/metrics";
+
   useEffect(() => {
     if (!loading && user && isOnboarded()) {
-      router.replace("/dashboard");
+      router.replace(redirectTo);
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, redirectTo]);
 
   function set(field: string, value: string | boolean) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -92,13 +88,13 @@ export default function OnboardPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!valid || submitting) return;
+
     setError(null);
     setSubmitting(true);
 
-    // 1. If already authenticated (e.g. returning user with no DB profile),
-    //    skip signup/login — just save the profile below.
     if (!user) {
       const { error: authError } = await signUp(form.email.trim(), form.password);
+
       if (authError && !authError.includes("already registered")) {
         setError(authError);
         setSubmitting(false);
@@ -111,7 +107,6 @@ export default function OnboardPage() {
         return;
       }
 
-      // Auto-login after signup so saveProfileToDB has a real session.
       const { error: signInError } = await signIn(form.email.trim(), form.password);
       if (signInError) {
         setError(`Account created but sign-in failed: ${signInError}.`);
@@ -120,7 +115,6 @@ export default function OnboardPage() {
       }
     }
 
-    // 2. Save profile to localStorage + DB
     const profileData = {
       name: form.name.trim(),
       email: form.email.trim(),
@@ -130,9 +124,10 @@ export default function OnboardPage() {
       stage: form.stage,
       hasRaisedBefore: form.hasRaisedBefore!,
     };
+
     await saveProfileToDB(profileData);
 
-    router.push("/metrics");
+    router.replace(redirectTo);
   }
 
   if (loading) return null;
@@ -141,7 +136,6 @@ export default function OnboardPage() {
     <div className="min-h-[calc(100vh-64px)] flex flex-col justify-center py-12">
       <Container narrow>
         <div className="max-w-lg mx-auto">
-          {/* Header */}
           <div className="mb-8">
             <p className="eyebrow inline-flex items-center gap-2.5 mb-4">
               <span className="w-5 h-px bg-border-strong" aria-hidden="true" />
@@ -156,7 +150,6 @@ export default function OnboardPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Name + Email */}
             <div className="grid sm:grid-cols-2 gap-4">
               <Field
                 label="Full name"
@@ -174,7 +167,6 @@ export default function OnboardPage() {
               />
             </div>
 
-            {/* Password */}
             <Field
               label="Password (min. 8 characters)"
               type="password"
@@ -183,7 +175,6 @@ export default function OnboardPage() {
               placeholder="••••••••"
             />
 
-            {/* Startup + Country */}
             <div className="grid sm:grid-cols-2 gap-4">
               <Field
                 label="Startup name"
@@ -201,7 +192,6 @@ export default function OnboardPage() {
               />
             </div>
 
-            {/* Sector + Stage */}
             <div className="grid sm:grid-cols-2 gap-4">
               <SelectField
                 label="Sector"
@@ -219,7 +209,6 @@ export default function OnboardPage() {
               />
             </div>
 
-            {/* Raised before */}
             <div>
               <p className="text-sm font-semibold text-ink mb-3">
                 Have you raised funding before?
@@ -249,7 +238,6 @@ export default function OnboardPage() {
               </div>
             )}
 
-            {/* Submit */}
             <div className="pt-2">
               <Button
                 type="submit"
@@ -271,8 +259,6 @@ export default function OnboardPage() {
     </div>
   );
 }
-
-// ─── Form primitives ──────────────────────────────────────────────────────────
 
 const INPUT_BASE =
   "w-full h-12 px-4 text-sm bg-card border border-border rounded-[var(--radius-md)] " +
