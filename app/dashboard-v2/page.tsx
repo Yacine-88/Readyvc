@@ -14,14 +14,44 @@ import type {
   ToolState,
 } from "@/lib/foundation/types";
 
+// H. Rebalanced weights
 const WEIGHTS: Record<FoundationTool, number> = {
-  metrics: 0.35,
-  qa: 0.25,
-  valuation: 0.2,
-  captable: 0.1,
-  pitch: 0.05,
-  dataroom: 0.05,
+  metrics:   0.25,
+  valuation: 0.20,
+  qa:        0.20,
+  pitch:     0.15,
+  dataroom:  0.10,
+  captable:  0.10,
 };
+
+const CALENDLY_URL = "https://calendly.com/vcready/30min";
+
+// D. Human-readable tool labels
+const TOOL_LABELS: Record<FoundationTool, string> = {
+  metrics:   "Metrics",
+  valuation: "Valuation",
+  qa:        "Q&A",
+  captable:  "Cap Table",
+  pitch:     "Pitch",
+  dataroom:  "Data Room",
+};
+
+// E. Human-readable status labels
+const STATUS_LABELS: Record<ToolState["status"], string> = {
+  not_started: "Not started",
+  in_progress: "In progress",
+  completed:   "Completed",
+};
+
+// F. Human-readable datetime
+function fmtDate(iso: string): string {
+  return new Date(iso).toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 function fmtMoney(value: number): string {
   if (!value) return "—";
@@ -33,82 +63,43 @@ function fmtMoney(value: number): string {
 
 function verdictTone(verdict: string) {
   switch (verdict) {
-    case "Strong":
-      return {
-        badge: "bg-success/10 text-success border-success/20",
-        bar: "bg-success",
-      };
-    case "Fundable":
-      return {
-        badge: "bg-accent/10 text-accent border-accent/20",
-        bar: "bg-accent",
-      };
-    case "Improving":
-      return {
-        badge: "bg-warning/10 text-warning border-warning/20",
-        bar: "bg-warning",
-      };
-    default:
-      return {
-        badge: "bg-danger/10 text-danger border-danger/20",
-        bar: "bg-danger",
-      };
+    case "Strong":    return { badge: "bg-success/10 text-success border-success/20", bar: "bg-success" };
+    case "Fundable":  return { badge: "bg-accent/10 text-accent border-accent/20",   bar: "bg-accent"  };
+    case "Improving": return { badge: "bg-warning/10 text-warning border-warning/20", bar: "bg-warning" };
+    default:          return { badge: "bg-danger/10 text-danger border-danger/20",   bar: "bg-danger"  };
   }
 }
 
 function toolHref(tool: FoundationTool): string {
-  switch (tool) {
-    case "metrics":
-      return "/metrics";
-    case "valuation":
-      return "/valuation";
-    case "qa":
-      return "/qa";
-    case "captable":
-      return "/captable";
-    case "pitch":
-      return "/pitch";
-    case "dataroom":
-      return "/dataroom";
-    default:
-      return "/dashboard";
-  }
+  const map: Record<FoundationTool, string> = {
+    metrics: "/metrics", valuation: "/valuation", qa: "/qa",
+    captable: "/captable", pitch: "/pitch", dataroom: "/dataroom",
+  };
+  return map[tool];
 }
 
 function statusTone(status: ToolState["status"]) {
   switch (status) {
-    case "completed":
-      return "bg-success";
-    case "in_progress":
-      return "bg-warning";
-    default:
-      return "bg-border";
+    case "completed":  return "bg-success";
+    case "in_progress": return "bg-warning";
+    default:           return "bg-border";
   }
 }
 
 function getResumeStep(toolStates: Record<FoundationTool, ToolState>): {
-  id: FlowStepId;
-  href: string;
-  label: string;
+  id: FlowStepId; href: string; label: string;
 } | null {
   const completed = getCompletedSteps();
-
   for (const step of FLOW_STEPS) {
     if (step.id === "dashboard") continue;
     const tool = step.id as FoundationTool;
-    if (toolStates[tool]?.status === "in_progress" && !completed.includes(step.id)) {
-      return step;
-    }
+    if (toolStates[tool]?.status === "in_progress" && !completed.includes(step.id)) return step;
   }
-
   for (const step of FLOW_STEPS) {
     if (step.id === "dashboard") continue;
     const tool = step.id as FoundationTool;
-    if (toolStates[tool]?.status === "not_started") {
-      return step;
-    }
+    if (toolStates[tool]?.status === "not_started") return step;
   }
-
   return null;
 }
 
@@ -129,48 +120,26 @@ function buildSnapshot(): {
 
   const red_flags = getReadinessRedFlags(toolStates);
   const verdict = getGlobalVerdict(overall_score, red_flags);
-
   const toolEntries = Object.entries(toolStates) as Array<[FoundationTool, ToolState]>;
 
   const strongest_tool =
-    toolEntries
-      .slice()
-      .sort((a, b) => b[1].score - a[1].score)
-      .find(([, state]) => state.score > 0)?.[0] ?? null;
-
+    toolEntries.slice().sort((a, b) => b[1].score - a[1].score).find(([, s]) => s.score > 0)?.[0] ?? null;
   const weakest_tool =
-    toolEntries
-      .slice()
-      .sort((a, b) => a[1].score - b[1].score)
-      .find(([, state]) => state.score < 70)?.[0] ?? null;
-
-  const missing_tools = toolEntries
-    .filter(([, state]) => state.score === 0)
-    .map(([tool]) => tool);
-
-  const completed_tools_count = toolEntries.filter(([, state]) => state.score > 0).length;
+    toolEntries.slice().sort((a, b) => a[1].score - b[1].score).find(([, s]) => s.score < 70)?.[0] ?? null;
+  const missing_tools = toolEntries.filter(([, s]) => s.score === 0).map(([tool]) => tool);
+  const completed_tools_count = toolEntries.filter(([, s]) => s.score > 0).length;
 
   const snapshot: GlobalReadinessSnapshot = {
-    overall_score,
-    verdict,
-    blockers_count: red_flags.filter((flag) => flag.blocking).length,
+    overall_score, verdict,
+    blockers_count: red_flags.filter((f) => f.blocking).length,
     red_flags,
     source_scores: {
-      metrics: toolStates.metrics.score,
-      valuation: toolStates.valuation.score,
-      qa: toolStates.qa.score,
-      captable: toolStates.captable.score,
-      pitch: toolStates.pitch.score,
-      dataroom: toolStates.dataroom.score,
+      metrics: toolStates.metrics.score, valuation: toolStates.valuation.score,
+      qa: toolStates.qa.score, captable: toolStates.captable.score,
+      pitch: toolStates.pitch.score, dataroom: toolStates.dataroom.score,
     },
-    profile_completion_pct: getProfileCompletionPct({
-      ...profile,
-      overall_score,
-    }),
-    strongest_tool,
-    weakest_tool,
-    missing_tools,
-    completed_tools_count,
+    profile_completion_pct: getProfileCompletionPct({ ...profile, overall_score }),
+    strongest_tool, weakest_tool, missing_tools, completed_tools_count,
     saved_at: new Date().toISOString(),
   };
 
@@ -184,8 +153,6 @@ export default function DashboardV2Page() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // C1+C2: DB-first hydration — computeGlobalReadiness syncs profile + tool states
-    // from Supabase into localStorage before reading sync functions.
     async function load() {
       try {
         const snap = await computeGlobalReadiness();
@@ -197,7 +164,6 @@ export default function DashboardV2Page() {
         setHistory(hist);
       } catch (err) {
         console.error(err);
-        // Fallback to localStorage-only path on any DB error
         try {
           const { snapshot, toolStates } = buildSnapshot();
           setSnapshot(snapshot);
@@ -213,17 +179,14 @@ export default function DashboardV2Page() {
   }, []);
 
   const profile = useMemo(() => refreshUnifiedProfile(), []);
-  const nextStep = useMemo(
-    () => (toolStates ? getResumeStep(toolStates) : null),
-    [toolStates]
-  );
+  const nextStep = useMemo(() => (toolStates ? getResumeStep(toolStates) : null), [toolStates]);
 
   if (error) {
     return (
       <div className="py-8">
         <Container>
           <div className="rounded-[var(--radius-lg)] border border-danger/20 bg-danger/5 p-6">
-            <p className="text-sm font-semibold text-danger">Error</p>
+            <p className="text-sm font-semibold text-danger">Something went wrong</p>
             <p className="text-sm text-ink-secondary mt-2">{error}</p>
           </div>
         </Container>
@@ -241,30 +204,62 @@ export default function DashboardV2Page() {
     );
   }
 
+  // B. Empty state — no tool completed yet
+  if (snapshot.completed_tools_count === 0) {
+    return (
+      <div className="py-8">
+        <Container>
+          <div className="space-y-5">
+            <Card padding="lg">
+              <div className="flex flex-col items-center text-center py-8 max-w-md mx-auto">
+                <div className="w-14 h-14 rounded-full bg-soft border border-border flex items-center justify-center mb-5">
+                  <span className="text-2xl">📊</span>
+                </div>
+                <h1 className="text-xl font-bold tracking-tight mb-2">
+                  Complete your first tool to unlock your readiness score
+                </h1>
+                <p className="text-sm text-ink-secondary leading-relaxed mb-6">
+                  Your investor readiness score is calculated from 6 tools. Start with Metrics —
+                  it carries the most weight and unlocks the full dashboard.
+                </p>
+                <Link
+                  href="/metrics"
+                  className="inline-flex items-center h-11 px-6 rounded-[var(--radius-md)] bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
+                >
+                  Start with Metrics →
+                </Link>
+              </div>
+            </Card>
+          </div>
+        </Container>
+      </div>
+    );
+  }
+
   const tone = verdictTone(snapshot.verdict);
 
   return (
     <div className="py-8">
       <Container>
         <div className="space-y-5">
+
+          {/* Hero card */}
           <Card padding="lg">
             <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-6">
               <div>
-                <p className="eyebrow mb-2">Foundation Dashboard</p>
+                {/* C. Removed "Foundation Dashboard" jargon eyebrow */}
+                <p className="eyebrow mb-2">Investor Readiness</p>
                 <div className="flex flex-wrap items-center gap-3 mb-3">
                   <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
                     {profile.startup_name || "Your startup"}
                   </h1>
-                  <span
-                    className={`inline-flex items-center h-8 px-3 rounded-full border text-sm font-semibold ${tone.badge}`}
-                  >
+                  <span className={`inline-flex items-center h-8 px-3 rounded-full border text-sm font-semibold ${tone.badge}`}>
                     {snapshot.verdict}
                   </span>
                 </div>
 
                 <p className="text-sm text-ink-secondary max-w-2xl leading-relaxed">
-                  Founder: {profile.founder_name || "—"} · {profile.country || "—"} ·{" "}
-                  {profile.sector || "—"} · {profile.stage || "—"}
+                  {profile.founder_name || "Founder"} · {profile.country || "—"} · {profile.sector || "—"} · {profile.stage || "—"}
                 </p>
 
                 <div className="flex flex-wrap gap-2 mt-5">
@@ -273,17 +268,19 @@ export default function DashboardV2Page() {
                       href={nextStep.href}
                       className="inline-flex items-center h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
                     >
-                      Resume: {nextStep.label} →
+                      Continue: {nextStep.label} →
                     </Link>
                   ) : (
-                    <Link
-                      href="/dashboard"
+                    // A. Fixed final CTA — book a call, not internal link
+                    <a
+                      href={CALENDLY_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="inline-flex items-center h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
                     >
-                      Open current dashboard →
-                    </Link>
+                      Book a readiness review →
+                    </a>
                   )}
-
                   <Link
                     href="/onboard"
                     className="inline-flex items-center h-10 px-4 rounded-[var(--radius-md)] border border-border bg-soft text-sm font-semibold text-ink hover:border-ink/20 transition-colors"
@@ -295,41 +292,27 @@ export default function DashboardV2Page() {
 
               <div className="grid gap-3">
                 <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
-                  <p className="eyebrow mb-1">Global score</p>
+                  <p className="eyebrow mb-1">Readiness score</p>
                   <p className="text-4xl font-extrabold tracking-tight font-mono">
                     {snapshot.overall_score}
                     <span className="text-base text-muted">/100</span>
                   </p>
                   <div className="mt-3 h-2 bg-border rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${tone.bar}`}
-                      style={{ width: `${snapshot.overall_score}%` }}
-                    />
+                    <div className={`h-full rounded-full ${tone.bar}`} style={{ width: `${snapshot.overall_score}%` }} />
                   </div>
                 </div>
-
                 <div className="grid grid-cols-3 gap-3">
                   <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                    <p className="text-[10px] uppercase tracking-[0.16em] text-muted mb-1">
-                      Blockers
-                    </p>
+                    <p className="text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Gaps</p>
                     <p className="text-xl font-bold font-mono">{snapshot.blockers_count}</p>
                   </div>
                   <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                    <p className="text-[10px] uppercase tracking-[0.16em] text-muted mb-1">
-                      Tools
-                    </p>
-                    <p className="text-xl font-bold font-mono">
-                      {snapshot.completed_tools_count}/6
-                    </p>
+                    <p className="text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Tools</p>
+                    <p className="text-xl font-bold font-mono">{snapshot.completed_tools_count}/6</p>
                   </div>
                   <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                    <p className="text-[10px] uppercase tracking-[0.16em] text-muted mb-1">
-                      Profile
-                    </p>
-                    <p className="text-xl font-bold font-mono">
-                      {snapshot.profile_completion_pct}%
-                    </p>
+                    <p className="text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Profile</p>
+                    <p className="text-xl font-bold font-mono">{snapshot.profile_completion_pct}%</p>
                   </div>
                 </div>
               </div>
@@ -337,9 +320,10 @@ export default function DashboardV2Page() {
           </Card>
 
           <div className="grid lg:grid-cols-2 gap-5">
+            {/* C. "Unified profile" → "Company profile" */}
             <Card padding="sm">
               <CardHeader>
-                <CardTitle kicker="Unified profile">Founder / Startup</CardTitle>
+                <CardTitle kicker="Company profile">Founder & startup</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid sm:grid-cols-2 gap-3 text-sm">
@@ -357,9 +341,7 @@ export default function DashboardV2Page() {
                   </div>
                   <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
                     <p className="eyebrow mb-1">Traction</p>
-                    <p className="font-semibold">
-                      ARR {fmtMoney(profile.arr)} · MRR {fmtMoney(profile.mrr)}
-                    </p>
+                    <p className="font-semibold">ARR {fmtMoney(profile.arr)} · MRR {fmtMoney(profile.mrr)}</p>
                     <p className="text-muted text-xs mt-1">
                       Growth {profile.growth_rate || 0}% · Runway {profile.runway || 0} mo
                     </p>
@@ -375,9 +357,10 @@ export default function DashboardV2Page() {
               </CardContent>
             </Card>
 
+            {/* C. "Tool states" → "Your tools" | E. Status labels | D. Tool labels already from state.label */}
             <Card padding="sm">
               <CardHeader>
-                <CardTitle kicker="Tool states">Connected modules</CardTitle>
+                <CardTitle kicker="Your tools">Assessment modules</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid sm:grid-cols-2 gap-3">
@@ -392,24 +375,20 @@ export default function DashboardV2Page() {
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <span className={`w-2 h-2 rounded-full ${statusTone(state.status)}`} />
-                            <p className="text-sm font-semibold">{state.label}</p>
+                            {/* D. Use TOOL_LABELS map, not raw state.label which may carry slug */}
+                            <p className="text-sm font-semibold">{TOOL_LABELS[tool]}</p>
                           </div>
                           <span className="text-xs font-mono text-muted">{state.score}/100</span>
                         </div>
                         <div className="h-1.5 bg-border rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full ${
-                              state.score >= 70
-                                ? "bg-success"
-                                : state.score >= 40
-                                ? "bg-warning"
-                                : "bg-danger"
-                            }`}
+                            className={`h-full rounded-full ${state.score >= 70 ? "bg-success" : state.score >= 40 ? "bg-warning" : "bg-danger"}`}
                             style={{ width: `${state.score}%` }}
                           />
                         </div>
-                        <p className="text-[11px] text-muted mt-2 capitalize">
-                          {state.status.replace("_", " ")}
+                        {/* E. Use STATUS_LABELS map */}
+                        <p className="text-[11px] text-muted mt-2">
+                          {STATUS_LABELS[state.status]}
                         </p>
                       </Link>
                     );
@@ -419,18 +398,17 @@ export default function DashboardV2Page() {
             </Card>
           </div>
 
+          {/* C. "Blocking logic" → "Critical gaps" */}
           <Card padding="sm">
             <CardHeader>
-              <CardTitle kicker="Red flags">Blocking logic</CardTitle>
+              <CardTitle kicker="Action needed">Critical gaps</CardTitle>
             </CardHeader>
             <CardContent>
               {snapshot.red_flags.length === 0 ? (
                 <div className="bg-success/5 border border-success/20 rounded-[var(--radius-md)] p-4">
-                  <p className="text-sm font-semibold text-success">
-                    No active red flags detected.
-                  </p>
+                  <p className="text-sm font-semibold text-success">No critical gaps detected.</p>
                   <p className="text-xs text-muted mt-1">
-                    The current profile does not expose explicit blocking issues.
+                    Your current profile does not show any blocking issues.
                   </p>
                 </div>
               ) : (
@@ -438,35 +416,22 @@ export default function DashboardV2Page() {
                   {snapshot.red_flags.map((flag) => (
                     <div
                       key={flag.id}
-                      className={`rounded-[var(--radius-md)] border p-4 ${
-                        flag.blocking
-                          ? "bg-danger/5 border-danger/20"
-                          : "bg-warning/5 border-warning/20"
-                      }`}
+                      className={`rounded-[var(--radius-md)] border p-4 ${flag.blocking ? "bg-danger/5 border-danger/20" : "bg-warning/5 border-warning/20"}`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <p className="text-sm font-bold text-ink">{flag.label}</p>
-                            <span
-                              className={`inline-flex items-center h-6 px-2 rounded-full text-[11px] font-semibold ${
-                                flag.blocking
-                                  ? "bg-danger/10 text-danger"
-                                  : "bg-warning/10 text-warning"
-                              }`}
-                            >
-                              {flag.blocking ? "Blocking" : "Warning"}
+                            <span className={`inline-flex items-center h-6 px-2 rounded-full text-[11px] font-semibold ${flag.blocking ? "bg-danger/10 text-danger" : "bg-warning/10 text-warning"}`}>
+                              {flag.blocking ? "Critical" : "Warning"}
                             </span>
                           </div>
                           <p className="text-sm text-ink-secondary">{flag.reason}</p>
                           <p className="text-xs text-muted mt-2">{flag.action}</p>
                         </div>
                         {flag.href ? (
-                          <Link
-                            href={flag.href}
-                            className="text-sm font-semibold text-accent shrink-0 hover:underline"
-                          >
-                            Open →
+                          <Link href={flag.href} className="text-sm font-semibold text-accent shrink-0 hover:underline">
+                            Fix →
                           </Link>
                         ) : null}
                       </div>
@@ -478,9 +443,10 @@ export default function DashboardV2Page() {
           </Card>
 
           <div className="grid lg:grid-cols-2 gap-5">
+            {/* C. "Engine output" → "Your readiness at a glance" | F. formatted date | D. human tool labels */}
             <Card padding="sm">
               <CardHeader>
-                <CardTitle kicker="Engine output">Global snapshot</CardTitle>
+                <CardTitle kicker="Summary">Your readiness at a glance</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-3 text-sm">
@@ -489,32 +455,36 @@ export default function DashboardV2Page() {
                     <p className="font-semibold">{snapshot.verdict}</p>
                   </div>
                   <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                    <p className="eyebrow mb-1">Saved at</p>
-                    <p className="font-semibold font-mono text-xs">{snapshot.saved_at}</p>
+                    <p className="eyebrow mb-1">Last updated</p>
+                    {/* F. Human-readable date */}
+                    <p className="font-semibold text-sm">{fmtDate(snapshot.saved_at)}</p>
                   </div>
                   <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                    <p className="eyebrow mb-1">Strongest tool</p>
-                    <p className="font-semibold">{snapshot.strongest_tool || "—"}</p>
+                    <p className="eyebrow mb-1">Strongest area</p>
+                    {/* D. human tool label */}
+                    <p className="font-semibold">{snapshot.strongest_tool ? TOOL_LABELS[snapshot.strongest_tool] : "—"}</p>
                   </div>
                   <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                    <p className="eyebrow mb-1">Weakest tool</p>
-                    <p className="font-semibold">{snapshot.weakest_tool || "—"}</p>
+                    <p className="eyebrow mb-1">Needs most work</p>
+                    <p className="font-semibold">{snapshot.weakest_tool ? TOOL_LABELS[snapshot.weakest_tool] : "—"}</p>
                   </div>
                 </div>
 
                 {snapshot.missing_tools.length > 0 && (
                   <div className="mt-4 pt-4 border-t border-border">
                     <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
-                      Missing tools
+                      Not yet started
                     </p>
                     <div className="flex flex-wrap gap-2">
+                      {/* D. human-readable labels, no raw slugs */}
                       {snapshot.missing_tools.map((tool) => (
-                        <span
+                        <Link
                           key={tool}
-                          className="inline-flex items-center px-2.5 py-1 rounded-full border border-border bg-soft text-xs font-medium"
+                          href={toolHref(tool)}
+                          className="inline-flex items-center px-2.5 py-1 rounded-full border border-border bg-soft text-xs font-medium hover:border-ink/20 transition-colors"
                         >
-                          {tool}
-                        </span>
+                          {TOOL_LABELS[tool]} →
+                        </Link>
                       ))}
                     </div>
                   </div>
@@ -522,70 +492,60 @@ export default function DashboardV2Page() {
               </CardContent>
             </Card>
 
+            {/* C. "Foundation snapshots" → "Score history" | G. subtle improvements */}
             <Card padding="sm">
               <CardHeader>
-                <CardTitle kicker="History">Foundation snapshots</CardTitle>
+                <CardTitle kicker="Progress">Score history</CardTitle>
               </CardHeader>
               <CardContent>
                 {history.length === 0 ? (
-                  <p className="text-sm text-muted">No snapshots saved yet.</p>
+                  <p className="text-sm text-muted">No history saved yet. Scores are recorded each time you save a tool.</p>
                 ) : (
-                  <div className="space-y-2">
-                    {history
-                      .slice()
-                      .reverse()
-                      .slice(0, 8)
-                      .map((item, index, arr) => {
-                        const prev = arr[index + 1];
-                        const delta = prev ? item.overall_score - prev.overall_score : 0;
-
-                        return (
-                          <div
-                            key={`${item.saved_at}-${index}`}
-                            className="flex items-center gap-3 py-2 border-b border-border last:border-0"
-                          >
-                            <div className="w-14 text-2xl font-extrabold font-mono tracking-tight">
-                              {item.overall_score}
+                  <>
+                    <div className="space-y-2">
+                      {history
+                        .slice()
+                        .reverse()
+                        .slice(0, 8)
+                        .map((item, index, arr) => {
+                          const prev = arr[index + 1];
+                          const delta = prev ? item.overall_score - prev.overall_score : 0;
+                          return (
+                            <div
+                              key={`${item.saved_at}-${index}`}
+                              className="flex items-center gap-3 py-2 border-b border-border last:border-0"
+                            >
+                              <div className="w-14 text-2xl font-extrabold font-mono tracking-tight">
+                                {item.overall_score}
+                              </div>
+                              <div className="w-10 text-xs font-semibold">
+                                {prev ? (
+                                  <span className={delta > 0 ? "text-success" : delta < 0 ? "text-danger" : "text-muted"}>
+                                    {delta > 0 ? `+${delta}` : delta !== 0 ? `${delta}` : "—"}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted text-[10px]">first</span>
+                                )}
+                              </div>
+                              <div className="flex-1 h-1.5 bg-border rounded-full overflow-hidden">
+                                <div className="h-full bg-accent rounded-full" style={{ width: `${item.overall_score}%` }} />
+                              </div>
+                              {/* F. formatted date */}
+                              <div className="text-xs text-muted shrink-0">{fmtDate(item.saved_at)}</div>
                             </div>
-                            <div className="w-12 text-xs font-semibold">
-                              {prev ? (
-                                <span
-                                  className={
-                                    delta > 0
-                                      ? "text-success"
-                                      : delta < 0
-                                      ? "text-danger"
-                                      : "text-muted"
-                                  }
-                                >
-                                  {delta > 0 ? `+${delta}` : `${delta}`}
-                                </span>
-                              ) : (
-                                <span className="text-muted">—</span>
-                              )}
-                            </div>
-                            <div className="flex-1 h-1.5 bg-border rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-accent rounded-full"
-                                style={{ width: `${item.overall_score}%` }}
-                              />
-                            </div>
-                            <div className="text-xs text-muted shrink-0">
-                              {new Date(item.saved_at).toLocaleString("en-GB", {
-                                day: "2-digit",
-                                month: "short",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
+                          );
+                        })}
+                    </div>
+                    {/* G. subtle note if history is truncated */}
+                    {history.length > 8 && (
+                      <p className="text-xs text-muted mt-3">Showing last 8 of {history.length} entries.</p>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
           </div>
+
         </div>
       </Container>
     </div>
