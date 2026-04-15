@@ -162,7 +162,7 @@ export default function ValuationPage() {
 
   const handleSave = useCallback(async () => {
     try {
-      await saveValuationResult({
+      await saveValuation({
         name: `valuation_${new Date().toISOString()}`,
         valuation_low: valuationLow,
         valuation_base: estimatedValuation,
