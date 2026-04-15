@@ -324,7 +324,6 @@ export default function ValuationPage() {
             id="target-irr"
             label="Target IRR"
             type="number"
-            step="0.01"
             value={formData.targetIRR}
             onChange={(e) => updateField("targetIRR", Number(e.target.value))}
             hint="Investor target return (e.g. 0.30)"
@@ -341,7 +340,6 @@ export default function ValuationPage() {
             id="exit-revenue-multiple"
             label="Exit Revenue Multiple"
             type="number"
-            step="0.1"
             value={formData.exitRevenueMultiple}
             onChange={(e) => updateField("exitRevenueMultiple", Number(e.target.value))}
             hint="Revenue multiple at exit"
@@ -371,7 +369,6 @@ export default function ValuationPage() {
             id="margin-2026"
             label="Margin 2026"
             type="number"
-            step="0.01"
             value={formData.margin2026}
             onChange={(e) => updateField("margin2026", Number(e.target.value))}
           />
@@ -379,7 +376,6 @@ export default function ValuationPage() {
             id="margin-2027"
             label="Margin 2027"
             type="number"
-            step="0.01"
             value={formData.margin2027}
             onChange={(e) => updateField("margin2027", Number(e.target.value))}
           />
@@ -387,7 +383,6 @@ export default function ValuationPage() {
             id="margin-2028"
             label="Margin 2028"
             type="number"
-            step="0.01"
             value={formData.margin2028}
             onChange={(e) => updateField("margin2028", Number(e.target.value))}
           />
@@ -395,7 +390,6 @@ export default function ValuationPage() {
             id="margin-2029"
             label="Margin 2029"
             type="number"
-            step="0.01"
             value={formData.margin2029}
             onChange={(e) => updateField("margin2029", Number(e.target.value))}
           />
@@ -403,7 +397,6 @@ export default function ValuationPage() {
             id="margin-2030"
             label="Margin 2030"
             type="number"
-            step="0.01"
             value={formData.margin2030}
             onChange={(e) => updateField("margin2030", Number(e.target.value))}
           />
