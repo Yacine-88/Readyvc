@@ -162,25 +162,33 @@ export default function ValuationPage() {
 
   const handleSave = useCallback(async () => {
     try {
-      await saveValuation({
-        name: `valuation_${new Date().toISOString()}`,
-        valuation_low: valuationLow,
-        valuation_base: estimatedValuation,
-        valuation_high: valuationHigh,
-        sector: formData.sector,
-        stage: formData.stage,
-        methodology: "VC Method + Revenue Multiple + Comparables",
-        assumptions: {
-          currentRevenue: formData.currentRevenue,
-          growthRatePct: formData.baseGrowthRatePct,
-          investmentAmount: formData.investmentAmount,
-          investorEquity: formData.investorEquity,
-          targetIRR: formData.targetIRR,
-          exitYears: formData.exitYears,
-          exitRevenueMultiple: formData.exitRevenueMultiple,
-        },
-        results: summary,
-      });
+     await saveValuation({
+  name: `valuation_${new Date().toISOString()}`,
+  current_revenue: formData.currentRevenue,
+  growth_rate: formData.baseGrowthRatePct,
+  sector: formData.sector,
+  stage: formData.stage,
+  investment_amount: formData.investmentAmount,
+  investor_equity: formData.investorEquity,
+  target_irr: formData.targetIRR,
+  exit_years: formData.exitYears,
+  exit_revenue_multiple: formData.exitRevenueMultiple,
+  revenue_multiple: summary.averageMultiple,
+  estimated_valuation: estimatedValuation,
+  valuation_low: valuationLow,
+  valuation_high: valuationHigh,
+  vc_method_valuation: summary.vcMethod.valuation,
+  comparables_valuation: summary.comparables.valuation,
+  blended_low: summary.blended.low,
+  blended_base: summary.blended.base,
+  blended_high: summary.blended.high,
+  pre_money: estimatedValuation,
+  post_money: estimatedValuation + formData.investmentAmount,
+  investor_equity_at_exit: formData.investorEquity,
+  exit_proceeds: 0,
+  cash_on_cash: 0,
+  implied_irr: summary.investor.impliedIRR,
+});
     } catch (error) {
       console.error("[v0] Error saving valuation:", error);
     }
