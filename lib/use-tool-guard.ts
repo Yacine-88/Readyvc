@@ -25,12 +25,11 @@ export function useToolGuard(): { ready: boolean } {
       }
 
       if (!user) {
-        const redirectTo = pathname || "/dashboard-v2";
-        router.replace(
-          isOnboarded()
-            ? `/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`
-            : "/onboard"
-        );
+        // Always redirect to login — never to /onboard.
+        // /onboard is only for new users actively signing up, not for returning
+        // users who are logged out (even if their localStorage is empty).
+        const redirectTo = pathname || "/dashboard";
+        router.replace(`/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`);
         return;
       }
 

@@ -60,47 +60,83 @@ function verdictConfig(v: string) {
 }
 
 // ─── Country flag ─────────────────────────────────────────────────────────────
+// Maps country names (English + French + aliases) to ISO 3166-1 alpha-2 codes.
+// Flag emoji is generated dynamically from the code — no hardcoded emoji needed.
 
-const FLAG_MAP: Record<string, string> = {
-  // ISO 2-letter codes
-  "us": "🇺🇸", "gb": "🇬🇧", "fr": "🇫🇷", "de": "🇩🇪", "ca": "🇨🇦", "au": "🇦🇺",
-  "in": "🇮🇳", "br": "🇧🇷", "sg": "🇸🇬", "ae": "🇦🇪", "nl": "🇳🇱", "se": "🇸🇪",
-  "ch": "🇨🇭", "es": "🇪🇸", "it": "🇮🇹", "jp": "🇯🇵", "cn": "🇨🇳", "kr": "🇰🇷",
-  "il": "🇮🇱", "ng": "🇳🇬", "za": "🇿🇦", "mx": "🇲🇽", "ar": "🇦🇷", "co": "🇨🇴",
-  "ke": "🇰🇪", "eg": "🇪🇬", "pk": "🇵🇰", "id": "🇮🇩", "tr": "🇹🇷", "ma": "🇲🇦",
-  "pt": "🇵🇹", "ie": "🇮🇪", "dk": "🇩🇰", "fi": "🇫🇮", "no": "🇳🇴", "pl": "🇵🇱",
-  "nz": "🇳🇿", "ru": "🇷🇺", "ua": "🇺🇦", "gh": "🇬🇭", "tn": "🇹🇳", "be": "🇧🇪",
-  "at": "🇦🇹", "cz": "🇨🇿", "ro": "🇷🇴", "hu": "🇭🇺", "gr": "🇬🇷", "rs": "🇷🇸",
-  "sa": "🇸🇦", "qa": "🇶🇦", "kw": "🇰🇼", "bh": "🇧🇭", "jo": "🇯🇴", "lb": "🇱🇧",
-  "th": "🇹🇭", "vn": "🇻🇳", "ph": "🇵🇭", "my": "🇲🇾", "bd": "🇧🇩", "lk": "🇱🇰",
-  "cl": "🇨🇱", "pe": "🇵🇪", "uy": "🇺🇾", "ec": "🇪🇨", "ve": "🇻🇪", "cr": "🇨🇷",
-  "tz": "🇹🇿", "ug": "🇺🇬", "et": "🇪🇹", "ci": "🇨🇮", "sn": "🇸🇳", "cm": "🇨🇲",
-  // Country names (as typed in free-text fields)
-  "united states": "🇺🇸", "united states of america": "🇺🇸", "usa": "🇺🇸", "u.s.a.": "🇺🇸",
-  "united kingdom": "🇬🇧", "uk": "🇬🇧", "england": "🇬🇧", "britain": "🇬🇧", "great britain": "🇬🇧",
-  "france": "🇫🇷", "germany": "🇩🇪", "canada": "🇨🇦", "australia": "🇦🇺",
-  "india": "🇮🇳", "brazil": "🇧🇷", "singapore": "🇸🇬",
-  "united arab emirates": "🇦🇪", "uae": "🇦🇪", "dubai": "🇦🇪",
-  "netherlands": "🇳🇱", "holland": "🇳🇱", "sweden": "🇸🇪", "switzerland": "🇨🇭",
-  "spain": "🇪🇸", "italy": "🇮🇹", "japan": "🇯🇵", "china": "🇨🇳",
-  "south korea": "🇰🇷", "korea": "🇰🇷", "israel": "🇮🇱", "nigeria": "🇳🇬",
-  "south africa": "🇿🇦", "mexico": "🇲🇽", "argentina": "🇦🇷", "colombia": "🇨🇴",
-  "kenya": "🇰🇪", "egypt": "🇪🇬", "pakistan": "🇵🇰", "indonesia": "🇮🇩",
-  "turkey": "🇹🇷", "türkiye": "🇹🇷", "morocco": "🇲🇦", "portugal": "🇵🇹",
-  "ireland": "🇮🇪", "denmark": "🇩🇰", "finland": "🇫🇮", "norway": "🇳🇴",
-  "poland": "🇵🇱", "new zealand": "🇳🇿", "russia": "🇷🇺", "ukraine": "🇺🇦",
-  "ghana": "🇬🇭", "tunisia": "🇹🇳", "belgium": "🇧🇪", "austria": "🇦🇹",
-  "czech republic": "🇨🇿", "czechia": "🇨🇿", "romania": "🇷🇴", "hungary": "🇭🇺",
-  "greece": "🇬🇷", "serbia": "🇷🇸", "saudi arabia": "🇸🇦", "ksa": "🇸🇦",
-  "qatar": "🇶🇦", "kuwait": "🇰🇼", "bahrain": "🇧🇭", "jordan": "🇯🇴", "lebanon": "🇱🇧",
-  "thailand": "🇹🇭", "vietnam": "🇻🇳", "philippines": "🇵🇭", "malaysia": "🇲🇾",
-  "bangladesh": "🇧🇩", "sri lanka": "🇱🇰", "chile": "🇨🇱", "peru": "🇵🇪",
+const COUNTRY_TO_CODE: Record<string, string> = {
+  // ── Aliases & abbreviations ─────────────────────────────────────────────────
+  "us": "US", "usa": "US", "u.s.a.": "US", "uk": "GB", "uae": "AE",
+  "dubai": "AE", "abu dhabi": "AE", "england": "GB", "britain": "GB",
+  "great britain": "GB", "ksa": "SA", "korea": "KR", "holland": "NL",
+  "türkiye": "TR",
+  // ── English country names (A–Z) ─────────────────────────────────────────────
+  "afghanistan": "AF", "albania": "AL", "algeria": "DZ", "angola": "AO",
+  "argentina": "AR", "armenia": "AM", "australia": "AU", "austria": "AT",
+  "azerbaijan": "AZ", "bahrain": "BH", "bangladesh": "BD", "belarus": "BY",
+  "belgium": "BE", "benin": "BJ", "bolivia": "BO", "bosnia": "BA",
+  "brazil": "BR", "bulgaria": "BG", "burkina faso": "BF", "cameroon": "CM",
+  "canada": "CA", "chile": "CL", "china": "CN", "colombia": "CO",
+  "congo": "CG", "costa rica": "CR", "croatia": "HR", "czechia": "CZ",
+  "czech republic": "CZ", "denmark": "DK", "ecuador": "EC", "egypt": "EG",
+  "estonia": "EE", "ethiopia": "ET", "finland": "FI", "france": "FR",
+  "georgia": "GE", "germany": "DE", "ghana": "GH", "greece": "GR",
+  "guatemala": "GT", "guinea": "GN", "honduras": "HN", "hungary": "HU",
+  "india": "IN", "indonesia": "ID", "iraq": "IQ", "ireland": "IE",
+  "israel": "IL", "italy": "IT", "ivory coast": "CI", "jamaica": "JM",
+  "japan": "JP", "jordan": "JO", "kazakhstan": "KZ", "kenya": "KE",
+  "kuwait": "KW", "latvia": "LV", "lebanon": "LB", "libya": "LY",
+  "lithuania": "LT", "luxembourg": "LU", "madagascar": "MG", "malaysia": "MY",
+  "mali": "ML", "mauritania": "MR", "mauritius": "MU", "mexico": "MX",
+  "moldova": "MD", "morocco": "MA", "mozambique": "MZ", "myanmar": "MM",
+  "nepal": "NP", "netherlands": "NL", "new zealand": "NZ", "nicaragua": "NI",
+  "niger": "NE", "nigeria": "NG", "norway": "NO", "oman": "OM",
+  "pakistan": "PK", "panama": "PA", "paraguay": "PY", "peru": "PE",
+  "philippines": "PH", "poland": "PL", "portugal": "PT", "qatar": "QA",
+  "romania": "RO", "russia": "RU", "rwanda": "RW", "saudi arabia": "SA",
+  "senegal": "SN", "serbia": "RS", "singapore": "SG", "slovakia": "SK",
+  "slovenia": "SI", "somalia": "SO", "south africa": "ZA", "south korea": "KR",
+  "spain": "ES", "sri lanka": "LK", "sudan": "SD", "sweden": "SE",
+  "switzerland": "CH", "syria": "SY", "taiwan": "TW", "tanzania": "TZ",
+  "thailand": "TH", "togo": "TG", "tunisia": "TN", "turkey": "TR",
+  "uganda": "UG", "ukraine": "UA", "united arab emirates": "AE",
+  "united kingdom": "GB", "united states": "US",
+  "united states of america": "US", "uruguay": "UY", "uzbekistan": "UZ",
+  "venezuela": "VE", "vietnam": "VN", "yemen": "YE", "zambia": "ZM",
+  "zimbabwe": "ZW",
+  // ── French country names (common for MENA/Africa founders) ──────────────────
+  "algérie": "DZ", "maroc": "MA", "tunisie": "TN", "égypte": "EG",
+  "libye": "LY", "mauritanie": "MR", "sénégal": "SN", "guinée": "GN",
+  "côte d'ivoire": "CI", "cote d'ivoire": "CI", "cameroun": "CM",
+  "soudan": "SD", "éthiopie": "ET",
+  "allemagne": "DE", "espagne": "ES", "italie": "IT", "belgique": "BE",
+  "pays-bas": "NL", "suisse": "CH", "suède": "SE", "norvège": "NO",
+  "danemark": "DK", "finlande": "FI", "irlande": "IE", "pologne": "PL",
+  "roumanie": "RO", "grèce": "GR", "autriche": "AT",
+  "arabie saoudite": "SA", "emirats arabes unis": "AE", "émirats arabes unis": "AE",
+  "jordanie": "JO", "liban": "LB", "irak": "IQ", "syrie": "SY",
+  "inde": "IN", "chine": "CN", "japon": "JP", "brésil": "BR",
+  "mexique": "MX", "argentine": "AR", "colombie": "CO", "chili": "CL",
 };
 
+/** Convert a 2-letter ISO 3166-1 alpha-2 code to the corresponding flag emoji. */
+function isoToFlag(code: string): string {
+  return [...code.toUpperCase()]
+    .map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65))
+    .join("");
+}
+
+/**
+ * Return a flag emoji for a free-text country name or ISO code.
+ * Case-insensitive. Falls back to "" if unknown.
+ */
 function getCountryFlag(country: string): string {
   if (!country) return "";
-  const flag = FLAG_MAP[country.trim().toLowerCase()];
-  return flag ?? "";
+  const key = country.trim().toLowerCase();
+  // Direct 2-letter ISO code (e.g. "fr", "DZ")
+  if (/^[a-z]{2}$/.test(key)) return isoToFlag(key);
+  // Name lookup
+  const iso = COUNTRY_TO_CODE[key];
+  return iso ? isoToFlag(iso) : "";
 }
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
