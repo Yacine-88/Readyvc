@@ -252,12 +252,27 @@ export default function ValuationPage() {
   ];
 
   const sectorOptions = [
-    { value: "SaaS", label: "SaaS" },
-    { value: "Fintech", label: "Fintech" },
-    { value: "AgriTech", label: "AgriTech" },
-    { value: "Health Tech", label: "Health Tech" },
-    { value: "Consumer Tech", label: "Consumer Tech" },
-    { value: "Other", label: "Other" },
+    { value: "AI / Machine Learning",       label: "AI / Machine Learning" },
+    { value: "SaaS / B2B Software",         label: "SaaS / B2B Software" },
+    { value: "Developer Tools",             label: "Developer Tools" },
+    { value: "Cybersecurity",               label: "Cybersecurity" },
+    { value: "Fintech",                     label: "Fintech" },
+    { value: "InsurTech",                   label: "InsurTech" },
+    { value: "Healthtech / Digital Health", label: "Healthtech / Digital Health" },
+    { value: "Biotech",                     label: "Biotech" },
+    { value: "MedTech",                     label: "MedTech" },
+    { value: "Marketplace",                 label: "Marketplace" },
+    { value: "Consumer App",                label: "Consumer App" },
+    { value: "E-commerce",                  label: "E-commerce" },
+    { value: "Edtech",                      label: "Edtech" },
+    { value: "Legaltech",                   label: "Legaltech" },
+    { value: "HRtech / Future of Work",     label: "HRtech / Future of Work" },
+    { value: "Proptech",                    label: "Proptech" },
+    { value: "Logistics / Supply Chain",    label: "Logistics / Supply Chain" },
+    { value: "Cleantech / Climate",         label: "Cleantech / Climate" },
+    { value: "AgriTech",                    label: "AgriTech" },
+    { value: "DeepTech",                    label: "DeepTech" },
+    { value: "Other",                       label: "Other" },
   ];
 
   return (

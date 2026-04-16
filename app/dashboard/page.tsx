@@ -59,6 +59,50 @@ function verdictConfig(v: string) {
   }
 }
 
+// ─── Country flag ─────────────────────────────────────────────────────────────
+
+const FLAG_MAP: Record<string, string> = {
+  // ISO 2-letter codes
+  "us": "🇺🇸", "gb": "🇬🇧", "fr": "🇫🇷", "de": "🇩🇪", "ca": "🇨🇦", "au": "🇦🇺",
+  "in": "🇮🇳", "br": "🇧🇷", "sg": "🇸🇬", "ae": "🇦🇪", "nl": "🇳🇱", "se": "🇸🇪",
+  "ch": "🇨🇭", "es": "🇪🇸", "it": "🇮🇹", "jp": "🇯🇵", "cn": "🇨🇳", "kr": "🇰🇷",
+  "il": "🇮🇱", "ng": "🇳🇬", "za": "🇿🇦", "mx": "🇲🇽", "ar": "🇦🇷", "co": "🇨🇴",
+  "ke": "🇰🇪", "eg": "🇪🇬", "pk": "🇵🇰", "id": "🇮🇩", "tr": "🇹🇷", "ma": "🇲🇦",
+  "pt": "🇵🇹", "ie": "🇮🇪", "dk": "🇩🇰", "fi": "🇫🇮", "no": "🇳🇴", "pl": "🇵🇱",
+  "nz": "🇳🇿", "ru": "🇷🇺", "ua": "🇺🇦", "gh": "🇬🇭", "tn": "🇹🇳", "be": "🇧🇪",
+  "at": "🇦🇹", "cz": "🇨🇿", "ro": "🇷🇴", "hu": "🇭🇺", "gr": "🇬🇷", "rs": "🇷🇸",
+  "sa": "🇸🇦", "qa": "🇶🇦", "kw": "🇰🇼", "bh": "🇧🇭", "jo": "🇯🇴", "lb": "🇱🇧",
+  "th": "🇹🇭", "vn": "🇻🇳", "ph": "🇵🇭", "my": "🇲🇾", "bd": "🇧🇩", "lk": "🇱🇰",
+  "cl": "🇨🇱", "pe": "🇵🇪", "uy": "🇺🇾", "ec": "🇪🇨", "ve": "🇻🇪", "cr": "🇨🇷",
+  "tz": "🇹🇿", "ug": "🇺🇬", "et": "🇪🇹", "ci": "🇨🇮", "sn": "🇸🇳", "cm": "🇨🇲",
+  // Country names (as typed in free-text fields)
+  "united states": "🇺🇸", "united states of america": "🇺🇸", "usa": "🇺🇸", "u.s.a.": "🇺🇸",
+  "united kingdom": "🇬🇧", "uk": "🇬🇧", "england": "🇬🇧", "britain": "🇬🇧", "great britain": "🇬🇧",
+  "france": "🇫🇷", "germany": "🇩🇪", "canada": "🇨🇦", "australia": "🇦🇺",
+  "india": "🇮🇳", "brazil": "🇧🇷", "singapore": "🇸🇬",
+  "united arab emirates": "🇦🇪", "uae": "🇦🇪", "dubai": "🇦🇪",
+  "netherlands": "🇳🇱", "holland": "🇳🇱", "sweden": "🇸🇪", "switzerland": "🇨🇭",
+  "spain": "🇪🇸", "italy": "🇮🇹", "japan": "🇯🇵", "china": "🇨🇳",
+  "south korea": "🇰🇷", "korea": "🇰🇷", "israel": "🇮🇱", "nigeria": "🇳🇬",
+  "south africa": "🇿🇦", "mexico": "🇲🇽", "argentina": "🇦🇷", "colombia": "🇨🇴",
+  "kenya": "🇰🇪", "egypt": "🇪🇬", "pakistan": "🇵🇰", "indonesia": "🇮🇩",
+  "turkey": "🇹🇷", "türkiye": "🇹🇷", "morocco": "🇲🇦", "portugal": "🇵🇹",
+  "ireland": "🇮🇪", "denmark": "🇩🇰", "finland": "🇫🇮", "norway": "🇳🇴",
+  "poland": "🇵🇱", "new zealand": "🇳🇿", "russia": "🇷🇺", "ukraine": "🇺🇦",
+  "ghana": "🇬🇭", "tunisia": "🇹🇳", "belgium": "🇧🇪", "austria": "🇦🇹",
+  "czech republic": "🇨🇿", "czechia": "🇨🇿", "romania": "🇷🇴", "hungary": "🇭🇺",
+  "greece": "🇬🇷", "serbia": "🇷🇸", "saudi arabia": "🇸🇦", "ksa": "🇸🇦",
+  "qatar": "🇶🇦", "kuwait": "🇰🇼", "bahrain": "🇧🇭", "jordan": "🇯🇴", "lebanon": "🇱🇧",
+  "thailand": "🇹🇭", "vietnam": "🇻🇳", "philippines": "🇵🇭", "malaysia": "🇲🇾",
+  "bangladesh": "🇧🇩", "sri lanka": "🇱🇰", "chile": "🇨🇱", "peru": "🇵🇪",
+};
+
+function getCountryFlag(country: string): string {
+  if (!country) return "";
+  const flag = FLAG_MAP[country.trim().toLowerCase()];
+  return flag ?? "";
+}
+
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
 function fmtMoney(v: number): string {
@@ -645,7 +689,14 @@ export default function DashboardV2Page() {
                       </span>
                     </div>
                     <p className="text-sm text-ink-secondary mb-1">
-                      {[profile.founder_name, profile.country, profile.sector, profile.stage].filter(Boolean).join(" · ") || "Complete your profile"}
+                      {[
+                        profile.founder_name,
+                        profile.country
+                          ? `${getCountryFlag(profile.country) ? getCountryFlag(profile.country) + "\u202F" : ""}${profile.country}`
+                          : null,
+                        profile.sector,
+                        profile.stage,
+                      ].filter(Boolean).join(" · ") || "Complete your profile"}
                     </p>
                     <p className="text-sm text-muted italic">{vc.tagline}</p>
                     <div className="flex flex-wrap gap-2 mt-4">
@@ -953,7 +1004,29 @@ export default function DashboardV2Page() {
             </Card>
           </div>
 
-          {/* ─── 7. PROGRESS ─────────────────────────────────────────────── */}
+          {/* ─── 7. EXPERT CTA ───────────────────────────────────────────── */}
+          <div className="rounded-[var(--radius-lg)] bg-ink overflow-hidden">
+            <div className="px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-bold text-white mb-0.5">
+                  Get expert guidance on your fundraising
+                </p>
+                <p className="text-xs text-white/55 leading-relaxed">
+                  Book a 30-minute session with a VCReady expert — review your score, validate your strategy, and get actionable feedback before investor meetings.
+                </p>
+              </div>
+              <a
+                href={CALENDLY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 inline-flex items-center justify-center h-10 px-5 rounded-[var(--radius-md)] bg-white text-ink text-sm font-bold hover:bg-white/90 transition-colors whitespace-nowrap"
+              >
+                Book a meeting →
+              </a>
+            </div>
+          </div>
+
+          {/* ─── 8. PROGRESS ─────────────────────────────────────────────── */}
           {(() => {
             const sorted = [...history].sort(
               (a, b) => new Date(a.saved_at).getTime() - new Date(b.saved_at).getTime()

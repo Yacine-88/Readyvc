@@ -15,11 +15,12 @@ import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow
 import { computeCapTableScore, saveReadinessSnapshot } from "@/lib/local-readiness";
 
 const shareholderTypes = [
-  { value: "founder", label: "Founder" },
-  { value: "employee", label: "Employee (ESOP)" },
-  { value: "angel", label: "Angel Investor" },
-  { value: "vc", label: "VC / Institution" },
-  { value: "advisor", label: "Advisor" },
+  { value: "founder",    label: "Founder" },
+  { value: "co-founder", label: "Co-founder" },
+  { value: "employee",   label: "Employee (ESOP)" },
+  { value: "angel",      label: "Angel Investor" },
+  { value: "vc",         label: "VC / Institution" },
+  { value: "advisor",    label: "Advisor" },
 ];
 
 interface Shareholder {

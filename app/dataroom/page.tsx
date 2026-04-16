@@ -13,6 +13,7 @@ import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow
 import { ExpertMeetingModal } from "@/components/ui/expert-meeting-modal";
 import { getLocalReadinessScore, saveReadinessSnapshot } from "@/lib/local-readiness";
 import { saveToolToDB, getToolFromDB } from "@/lib/db-tools";
+import { createClient } from "@/lib/supabase-client";
 
 interface Document {
   id: string;
@@ -55,16 +56,34 @@ export default function DataRoomPage() {
   useEffect(() => {
     setCompletedSteps(getCompletedSteps());
 
-    const savedDocs = localStorage.getItem("dataroom_documents");
-    if (savedDocs) {
-      setDocuments(JSON.parse(savedDocs));
-    }
+    // Auth-aware data loading:
+    // - Authenticated users: DB is source of truth. If DB has no data, start fresh
+    //   (never load stale localStorage from a previous user/session).
+    // - Unauthenticated users: fall back to localStorage as before.
+    const loadDocuments = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
 
-    getToolFromDB("dataroom").then((db) => {
-      if (!db?.inputs) return;
-      const inp = db.inputs as { documents?: Document[] };
-      if (inp.documents && inp.documents.length > 0) setDocuments(inp.documents);
-    });
+      const db = await getToolFromDB("dataroom");
+      if (db?.inputs) {
+        const inp = db.inputs as { documents?: Document[] };
+        if (inp.documents && inp.documents.length > 0) {
+          setDocuments(inp.documents);
+          return;
+        }
+      }
+
+      if (!user) {
+        // Unauthenticated — localStorage is acceptable fallback
+        const savedDocs = localStorage.getItem("dataroom_documents");
+        if (savedDocs) {
+          try { setDocuments(JSON.parse(savedDocs)); } catch {}
+        }
+      }
+      // Authenticated user with no DB data → start with INITIAL_DOCUMENTS (clean slate)
+    };
+
+    loadDocuments();
   }, []);
 
   const notifyFoundationRefresh = () => {
