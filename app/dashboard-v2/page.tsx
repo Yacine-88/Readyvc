@@ -85,6 +85,68 @@ function fmtDateShort(iso: string): string {
   } catch { return "—"; }
 }
 
+// ─── Country flag ─────────────────────────────────────────────────────────────
+
+const COUNTRY_TO_CODE: Record<string, string> = {
+  "us": "US", "usa": "US", "u.s.a.": "US", "uk": "GB", "uae": "AE",
+  "dubai": "AE", "abu dhabi": "AE", "england": "GB", "britain": "GB",
+  "great britain": "GB", "ksa": "SA", "korea": "KR", "holland": "NL",
+  "türkiye": "TR",
+  "afghanistan": "AF", "albania": "AL", "algeria": "DZ", "angola": "AO",
+  "argentina": "AR", "armenia": "AM", "australia": "AU", "austria": "AT",
+  "azerbaijan": "AZ", "bahrain": "BH", "bangladesh": "BD", "belarus": "BY",
+  "belgium": "BE", "benin": "BJ", "bolivia": "BO", "brazil": "BR",
+  "bulgaria": "BG", "cameroon": "CM", "canada": "CA", "chile": "CL",
+  "china": "CN", "colombia": "CO", "costa rica": "CR", "croatia": "HR",
+  "czechia": "CZ", "czech republic": "CZ", "denmark": "DK", "ecuador": "EC",
+  "egypt": "EG", "estonia": "EE", "ethiopia": "ET", "finland": "FI",
+  "france": "FR", "georgia": "GE", "germany": "DE", "ghana": "GH",
+  "greece": "GR", "hungary": "HU", "india": "IN", "indonesia": "ID",
+  "iraq": "IQ", "ireland": "IE", "israel": "IL", "italy": "IT",
+  "ivory coast": "CI", "japan": "JP", "jordan": "JO", "kazakhstan": "KZ",
+  "kenya": "KE", "kuwait": "KW", "latvia": "LV", "lebanon": "LB",
+  "libya": "LY", "lithuania": "LT", "luxembourg": "LU", "malaysia": "MY",
+  "mali": "ML", "mauritius": "MU", "mexico": "MX", "morocco": "MA",
+  "myanmar": "MM", "nepal": "NP", "netherlands": "NL", "new zealand": "NZ",
+  "nigeria": "NG", "norway": "NO", "oman": "OM", "pakistan": "PK",
+  "peru": "PE", "philippines": "PH", "poland": "PL", "portugal": "PT",
+  "qatar": "QA", "romania": "RO", "russia": "RU", "rwanda": "RW",
+  "saudi arabia": "SA", "senegal": "SN", "serbia": "RS", "singapore": "SG",
+  "slovakia": "SK", "south africa": "ZA", "south korea": "KR", "spain": "ES",
+  "sri lanka": "LK", "sweden": "SE", "switzerland": "CH", "taiwan": "TW",
+  "tanzania": "TZ", "thailand": "TH", "tunisia": "TN", "turkey": "TR",
+  "uganda": "UG", "ukraine": "UA", "united arab emirates": "AE",
+  "united kingdom": "GB", "united states": "US",
+  "united states of america": "US", "uruguay": "UY", "vietnam": "VN",
+  "zambia": "ZM", "zimbabwe": "ZW",
+  "algérie": "DZ", "maroc": "MA", "tunisie": "TN", "égypte": "EG",
+  "libye": "LY", "mauritanie": "MR", "sénégal": "SN", "guinée": "GN",
+  "côte d'ivoire": "CI", "cote d'ivoire": "CI", "cameroun": "CM",
+  "soudan": "SD", "éthiopie": "ET",
+  "allemagne": "DE", "espagne": "ES", "italie": "IT", "belgique": "BE",
+  "pays-bas": "NL", "suisse": "CH", "suède": "SE", "norvège": "NO",
+  "danemark": "DK", "finlande": "FI", "irlande": "IE", "pologne": "PL",
+  "roumanie": "RO", "grèce": "GR", "autriche": "AT",
+  "arabie saoudite": "SA", "emirats arabes unis": "AE", "émirats arabes unis": "AE",
+  "jordanie": "JO", "liban": "LB", "irak": "IQ", "syrie": "SY",
+  "inde": "IN", "chine": "CN", "japon": "JP", "brésil": "BR",
+  "mexique": "MX", "argentine": "AR", "colombie": "CO", "chili": "CL",
+};
+
+function isoToFlag(code: string): string {
+  return [...code.toUpperCase()]
+    .map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65))
+    .join("");
+}
+
+function getCountryFlag(country: string): string {
+  if (!country) return "";
+  const key = country.trim().toLowerCase();
+  if (/^[a-z]{2}$/.test(key)) return isoToFlag(key);
+  const iso = COUNTRY_TO_CODE[key];
+  return iso ? isoToFlag(iso) : "";
+}
+
 // ─── Count-up animation ───────────────────────────────────────────────────────
 
 function useCountUp(target: number, duration = 700): number {
@@ -645,7 +707,18 @@ export default function DashboardV2Page() {
                       </span>
                     </div>
                     <p className="text-sm text-ink-secondary mb-1">
-                      {[profile.founder_name, profile.country, profile.sector, profile.stage].filter(Boolean).join(" · ") || "Complete your profile"}
+                      {(() => {
+                        const flag = profile.country ? getCountryFlag(profile.country) : "";
+                        const countryDisplay = profile.country
+                          ? (flag ? `${flag} ${profile.country}` : profile.country)
+                          : "";
+                        return [
+                          profile.founder_name,
+                          countryDisplay,
+                          profile.sector,
+                          profile.stage,
+                        ].filter(Boolean).join(" · ") || "Complete your profile";
+                      })()}
                     </p>
                     <p className="text-sm text-muted italic">{vc.tagline}</p>
                     <div className="flex flex-wrap gap-2 mt-4">

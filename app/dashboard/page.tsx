@@ -725,14 +725,18 @@ export default function DashboardV2Page() {
                       </span>
                     </div>
                     <p className="text-sm text-ink-secondary mb-1">
-                      {[
-                        profile.founder_name,
-                        profile.country
-                          ? `${getCountryFlag(profile.country) ? getCountryFlag(profile.country) + "\u202F" : ""}${profile.country}`
-                          : null,
-                        profile.sector,
-                        profile.stage,
-                      ].filter(Boolean).join(" · ") || "Complete your profile"}
+                      {(() => {
+                        const flag = profile.country ? getCountryFlag(profile.country) : "";
+                        const countryDisplay = profile.country
+                          ? (flag ? `${flag} ${profile.country}` : profile.country)
+                          : "";
+                        return [
+                          profile.founder_name,
+                          countryDisplay,
+                          profile.sector,
+                          profile.stage,
+                        ].filter(Boolean).join(" · ") || "Complete your profile";
+                      })()}
                     </p>
                     <p className="text-sm text-muted italic">{vc.tagline}</p>
                     <div className="flex flex-wrap gap-2 mt-4">

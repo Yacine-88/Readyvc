@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { syncProfileFromDB } from "@/lib/db-user";
 import { syncAllToolsToLocalStorage } from "@/lib/db-tools";
-import { isOnboarded } from "@/lib/onboard";
 
 // ─── Inner component (uses useSearchParams — must be inside Suspense) ─────────
 
@@ -22,11 +21,14 @@ function LoginPageInner() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const redirectTo = searchParams.get("redirectTo") || "/dashboard-v2";
+  const redirectTo = searchParams.get("redirectTo") || "/dashboard";
 
   useEffect(() => {
     if (!loading && user) {
-      router.replace(isOnboarded() ? redirectTo : "/onboard");
+      // Authenticated users always go to their intended destination.
+      // /onboard is only for brand-new users creating an account, not for
+      // returning users who just logged in (even on a fresh device).
+      router.replace(redirectTo);
     }
   }, [user, loading, router, redirectTo]);
 
@@ -51,7 +53,8 @@ function LoginPageInner() {
     router.replace(redirectTo);
   }
 
-  if (loading) return null;
+  // Suppress the form while auth is resolving or a redirect is in progress.
+  if (loading || user) return null;
 
   return (
     <div className="min-h-[calc(100vh-64px)] flex flex-col justify-center py-12">
