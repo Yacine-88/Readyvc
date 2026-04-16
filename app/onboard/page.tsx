@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { isOnboarded } from "@/lib/onboard";
 import { saveProfileToDB } from "@/lib/db-user";
 import { useAuth } from "@/lib/auth-context";
+import { track } from "@/lib/analytics";
 
 const SECTORS = [
   "AI / Machine Learning",
@@ -92,6 +93,11 @@ function OnboardPageInner() {
     setError(null);
     setSubmitting(true);
 
+    const isNewSignup = !user;
+    if (isNewSignup) {
+      track("signup_started", { sector: form.sector, stage: form.stage, country: form.country });
+    }
+
     if (!user) {
       const { error: authError } = await signUp(form.email.trim(), form.password);
 
@@ -126,6 +132,11 @@ function OnboardPageInner() {
     };
 
     await saveProfileToDB(profileData);
+
+    if (isNewSignup) {
+      track("signup_completed", { sector: form.sector, stage: form.stage, country: form.country });
+      track("onboarding_completed", { sector: form.sector, stage: form.stage, country: form.country });
+    }
 
     router.replace(redirectTo);
   }

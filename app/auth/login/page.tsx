@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { syncProfileFromDB } from "@/lib/db-user";
 import { syncAllToolsToLocalStorage } from "@/lib/db-tools";
+import { track } from "@/lib/analytics";
 
 // ─── Inner component (uses useSearchParams — must be inside Suspense) ─────────
 
@@ -49,6 +50,8 @@ function LoginPageInner() {
 
     await syncProfileFromDB();
     await syncAllToolsToLocalStorage();
+
+    track("login_completed", { route: redirectTo });
 
     router.replace(redirectTo);
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -12,6 +12,7 @@ import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow
 import { saveReadinessSnapshot } from "@/lib/local-readiness";
 import { saveToolToDB, getToolFromDB } from "@/lib/db-tools";
 import { useToolGuard } from "@/lib/use-tool-guard";
+import { track } from "@/lib/analytics";
 
 const PITCH_SECTIONS = {
   problem: {
@@ -212,6 +213,14 @@ export default function PitchPage() {
   const [expandedSection, setExpandedSection] = useState<SectionKey | null>("problem");
   const [saved, setSaved] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
+  const trackedOpen = useRef(false);
+
+  useEffect(() => {
+    if (ready && !trackedOpen.current) {
+      trackedOpen.current = true;
+      track("tool_opened", { tool: "pitch" });
+    }
+  }, [ready]);
 
   useEffect(() => {
     setCompletedSteps(getCompletedSteps());
@@ -407,6 +416,10 @@ export default function PitchPage() {
     }).catch(console.error);
 
     notifyFoundationRefresh();
+
+    track("tool_saved", { tool: "pitch", score: overallScore });
+    track("pitch_saved", { score: overallScore });
+    if (overallScore >= 70) track("tool_completed", { tool: "pitch", score: overallScore });
 
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);

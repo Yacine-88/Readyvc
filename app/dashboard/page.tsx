@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Container } from "@/components/layout/section";
+import { track } from "@/lib/analytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { refreshUnifiedProfile, getProfileCompletionPct } from "@/lib/foundation/profile";
 import { getLocalToolStates } from "@/lib/foundation/tool-states";
@@ -586,6 +587,7 @@ export default function DashboardV2Page() {
   const [history, setHistory] = useState<GlobalReadinessSnapshot[]>([]);
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const trackedView = useRef(false);
 
   // ── Animated counters ────────────────────────────────────────────────────────
   const animatedScore    = useCountUp(snap?.overall_score          ?? 0, 850);
@@ -611,6 +613,17 @@ export default function DashboardV2Page() {
         setProfile(freshProfile);
         setHistory(hist);
         saveSnapshot(globalSnap);
+        if (!trackedView.current) {
+          trackedView.current = true;
+          track("dashboard_viewed", {
+            score: globalSnap.overall_score,
+            verdict: globalSnap.verdict,
+            completed_tools_count: globalSnap.completed_tools_count,
+            stage: freshProfile.stage,
+            sector: freshProfile.sector,
+            country: freshProfile.country,
+          });
+        }
       } catch (err) {
         console.error("[dashboard-v2]", err);
         try {
@@ -643,6 +656,7 @@ export default function DashboardV2Page() {
 
   const handleExport = useCallback(async () => {
     if (!snap || !profile || !ts || exporting) return;
+    track("pdf_export_clicked", { score: snap.overall_score, verdict: snap.verdict });
     setExporting(true);
     try { await exportPDF(snap, profile, ts); }
     finally { setExporting(false); }
@@ -747,6 +761,7 @@ export default function DashboardV2Page() {
                       ) : (
                         <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors"
+                          onClick={() => track("expert_meeting_cta_clicked", { score: snap?.overall_score, verdict: snap?.verdict, location: "hero" })}
                         >Book a readiness review →</a>
                       )}
                       <button
@@ -1060,6 +1075,7 @@ export default function DashboardV2Page() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="shrink-0 inline-flex items-center justify-center h-10 px-5 rounded-[var(--radius-md)] bg-white text-ink text-sm font-bold hover:bg-white/90 transition-colors whitespace-nowrap"
+                onClick={() => track("expert_meeting_cta_clicked", { score: snap?.overall_score, verdict: snap?.verdict, location: "cta_banner" })}
               >
                 Book a meeting →
               </a>

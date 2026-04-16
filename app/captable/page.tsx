@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { ToolPageLayout, ToolSection } from "@/components/tools/tool-page-layout";
 import { InputField, SelectField, FormGrid } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
 import { computeCapTableScore, saveReadinessSnapshot } from "@/lib/local-readiness";
+import { track } from "@/lib/analytics";
 
 const shareholderTypes = [
   { value: "founder",    label: "Founder" },
@@ -64,6 +65,14 @@ export default function CapTablePage() {
   const [saved, setSaved] = useState(false);
   const [showPostRound, setShowPostRound] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
+  const trackedOpen = useRef(false);
+
+  useEffect(() => {
+    if (!trackedOpen.current) {
+      trackedOpen.current = true;
+      track("tool_opened", { tool: "captable" });
+    }
+  }, []);
 
   useEffect(() => {
     setCompletedSteps(getCompletedSteps());
@@ -283,6 +292,10 @@ export default function CapTablePage() {
     }).catch(console.error);
 
     notifyFoundationRefresh();
+
+    track("tool_saved", { tool: "captable", score });
+    track("captable_saved", { score });
+    if (score >= 70) track("tool_completed", { tool: "captable", score });
 
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);

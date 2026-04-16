@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ToolPageLayout, ToolSection } from "@/components/tools/tool-page-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ import { ExpertMeetingModal } from "@/components/ui/expert-meeting-modal";
 import { getLocalReadinessScore, saveReadinessSnapshot } from "@/lib/local-readiness";
 import { saveToolToDB, getToolFromDB } from "@/lib/db-tools";
 import { createClient } from "@/lib/supabase-client";
+import { track } from "@/lib/analytics";
 
 interface Document {
   id: string;
@@ -52,6 +53,14 @@ export default function DataRoomPage() {
   const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [overallScore, setOverallScore] = useState(0);
+  const trackedOpen = useRef(false);
+
+  useEffect(() => {
+    if (!trackedOpen.current) {
+      trackedOpen.current = true;
+      track("tool_opened", { tool: "dataroom" });
+    }
+  }, []);
 
   useEffect(() => {
     setCompletedSteps(getCompletedSteps());
@@ -162,6 +171,10 @@ export default function DataRoomPage() {
     }).catch(console.error);
 
     notifyFoundationRefresh();
+
+    track("tool_saved", { tool: "dataroom", score: readinessScore });
+    track("dataroom_saved", { score: readinessScore });
+    if (readinessScore >= 70) track("tool_completed", { tool: "dataroom", score: readinessScore });
 
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);

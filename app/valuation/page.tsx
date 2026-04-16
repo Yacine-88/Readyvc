@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ToolPageLayout, ToolSection } from "@/components/tools/tool-page-layout";
 import { InputField, SelectField, FormGrid } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { saveToolToDB, getToolFromDB } from "@/lib/db-tools";
 import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
+import { track } from "@/lib/analytics";
 
 type Stage = "Pre-Seed" | "Seed" | "Series A" | "Series B" | "Series C";
 type Sector = "SaaS" | "Fintech" | "AgriTech" | "Health Tech" | "Consumer Tech" | "Other";
@@ -60,6 +61,14 @@ export default function ValuationPage() {
   const [formData, setFormData] = useState<ValuationFormData>(defaultFormData);
   const [saved, setSaved] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
+  const trackedOpen = useRef(false);
+
+  useEffect(() => {
+    if (!trackedOpen.current) {
+      trackedOpen.current = true;
+      track("tool_opened", { tool: "valuation" });
+    }
+  }, []);
 
   useEffect(() => {
     setCompletedSteps(getCompletedSteps());
@@ -231,6 +240,10 @@ export default function ValuationPage() {
     }).catch(console.error);
 
     notifyFoundationRefresh();
+
+    track("tool_saved", { tool: "valuation", score: readinessScore });
+    track("valuation_saved", { score: readinessScore, sector: formData.sector, stage: formData.stage });
+    if (readinessScore >= 70) track("tool_completed", { tool: "valuation", score: readinessScore });
 
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);

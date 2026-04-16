@@ -10,6 +10,7 @@ import {
 } from "react";
 import type { User, Session } from "@supabase/supabase-js";
 import { createClient, isSupabaseConfigured } from "./supabase-client";
+import { identify, resetIdentity } from "./analytics";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -62,6 +63,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (_event: string, session: Session | null) => {
         setSession(session);
         setUser(session?.user ?? null);
+        if (session?.user) {
+          identify(session.user.id, { email: session.user.email });
+        } else {
+          resetIdentity();
+        }
       }
     );
 

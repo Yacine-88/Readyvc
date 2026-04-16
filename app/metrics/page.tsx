@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { useI18n } from "@/lib/i18n";
@@ -12,6 +12,7 @@ import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
 import { useToolGuard } from "@/lib/use-tool-guard";
+import { track } from "@/lib/analytics";
 
 // Sector-specific benchmarks
 const SECTOR_BENCHMARKS = {
@@ -160,6 +161,14 @@ export default function MetricsPage() {
   const [formData, setFormData] = useState<SaaSFormData>(defaultSaaSData);
   const [saved, setSaved] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
+  const trackedOpen = useRef(false);
+
+  useEffect(() => {
+    if (ready && !trackedOpen.current) {
+      trackedOpen.current = true;
+      track("tool_opened", { tool: "metrics" });
+    }
+  }, [ready]);
 
   useEffect(() => {
     setCompletedSteps(getCompletedSteps());
@@ -354,6 +363,10 @@ export default function MetricsPage() {
     }).catch(console.error);
 
     notifyFoundationRefresh();
+
+    track("tool_saved", { tool: "metrics", score });
+    track("metrics_saved", { score, sector });
+    if (score >= 70) track("tool_completed", { tool: "metrics", score });
 
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);

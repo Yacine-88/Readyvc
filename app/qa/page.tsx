@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { ToolPageLayout, ToolSection } from "@/components/tools/tool-page-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { FlowProgress } from "@/components/flow-progress";
 import { FlowContinue } from "@/components/flow-continue";
 import { getCompletedSteps, markStepComplete, type FlowStepId } from "@/lib/flow";
 import { saveReadinessSnapshot } from "@/lib/local-readiness";
+import { track } from "@/lib/analytics";
 
 const allQuestions = [
   { category: "Business Model", q: "How do you make money?", weight: 1.2 },
@@ -61,6 +62,14 @@ export default function QAPage() {
   const [perspective, setPerspective] = useState<"founder" | "investor">("founder");
   const [saved, setSaved] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<FlowStepId[]>([]);
+  const trackedOpen = useRef(false);
+
+  useEffect(() => {
+    if (!trackedOpen.current) {
+      trackedOpen.current = true;
+      track("tool_opened", { tool: "qa" });
+    }
+  }, []);
 
   useEffect(() => {
     setCompletedSteps(getCompletedSteps());
@@ -201,6 +210,10 @@ export default function QAPage() {
     }).catch(console.error);
 
     notifyFoundationRefresh();
+
+    track("tool_saved", { tool: "qa", score: scores.overallScore });
+    track("qa_saved", { score: scores.overallScore, perspective });
+    if (scores.overallScore >= 70) track("tool_completed", { tool: "qa", score: scores.overallScore });
 
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
