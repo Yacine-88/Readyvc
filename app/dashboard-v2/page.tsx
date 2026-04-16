@@ -79,15 +79,41 @@ function fmtPct(v: number): string {
   return v > 0 ? `${Math.round(v)}%` : "—";
 }
 
+function fmtDateShort(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+  } catch { return "—"; }
+}
+
+// ─── Count-up animation ───────────────────────────────────────────────────────
+
+function useCountUp(target: number, duration = 700): number {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (target === 0) { setValue(0); return; }
+    let raf: number;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      setValue(Math.round(target * eased));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+  return value;
+}
+
 // ─── Score Arc (SVG) ──────────────────────────────────────────────────────────
 
-function ScoreArc({ score, size = 96 }: { score: number; size?: number }) {
+function ScoreArc({ score, colorScore, size = 96 }: { score: number; colorScore?: number; size?: number }) {
   const sw = 9;
   const r = (size - sw * 2) / 2;
   const cx = size / 2;
   const circ = 2 * Math.PI * r;
   const offset = circ - (score / 100) * circ;
-  const { hex } = scoreBand(score);
+  const { hex } = scoreBand(colorScore ?? score);
   return (
     <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: "rotate(-90deg)", display: "block" }}>
@@ -100,6 +126,46 @@ function ScoreArc({ score, size = 96 }: { score: number; size?: number }) {
         <span className="text-[10px] text-muted font-medium leading-none mt-0.5">/100</span>
       </div>
     </div>
+  );
+}
+
+// ─── Sparkline ────────────────────────────────────────────────────────────────
+
+function Sparkline({ data, height = 52 }: { data: number[]; height?: number }) {
+  if (data.length < 2) return null;
+  const PAD = 6;
+  const H = height - PAD * 2;
+  // Auto-scale with small padding around the range
+  const min = Math.max(0, Math.min(...data) - 4);
+  const max = Math.min(100, Math.max(...data) + 4);
+  const range = max - min || 1;
+  // Responsive width — use viewBox and let SVG scale
+  const VW = 280;
+  const px = (i: number) => PAD + (i / (data.length - 1)) * (VW - PAD * 2);
+  const py = (v: number) => PAD + H - ((v - min) / range) * H;
+  const pts = data.map((v, i) => `${px(i)},${py(v)}`).join(" ");
+  // Area fill path
+  const areaPath =
+    `M${px(0)},${py(data[0])} ` +
+    data.slice(1).map((v, i) => `L${px(i + 1)},${py(v)}`).join(" ") +
+    ` L${px(data.length - 1)},${PAD + H} L${px(0)},${PAD + H} Z`;
+  const trend = data[data.length - 1] >= data[0];
+  const color = trend ? "#0F6A46" : "#8C4343";
+  const lastX = px(data.length - 1);
+  const lastY = py(data[data.length - 1]);
+  return (
+    <svg viewBox={`0 0 ${VW} ${height}`} className="w-full" style={{ height }}>
+      <defs>
+        <linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.14" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={areaPath} fill="url(#spark-fill)" />
+      <polyline fill="none" stroke={color} strokeWidth="1.75" strokeLinejoin="round"
+        strokeLinecap="round" points={pts} />
+      <circle cx={lastX} cy={lastY} r="3.5" fill={color} />
+    </svg>
   );
 }
 
@@ -441,6 +507,15 @@ export default function DashboardV2Page() {
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ── Animated counters ────────────────────────────────────────────────────────
+  const animatedScore    = useCountUp(snap?.overall_score          ?? 0, 850);
+  const animatedTools    = useCountUp(snap?.completed_tools_count  ?? 0, 500);
+  const animatedBlockers = useCountUp(snap?.blockers_count         ?? 0, 400);
+  const animatedProfile  = useCountUp(snap?.profile_completion_pct ?? 0, 700);
+  const animatedARR      = useCountUp(profile?.arr                 ?? 0, 950);
+  const animatedMRR      = useCountUp(profile?.mrr                 ?? 0, 950);
+  const animatedVal      = useCountUp(profile?.estimated_valuation ?? 0, 1050);
+
   useEffect(() => {
     (async () => {
       try {
@@ -559,7 +634,7 @@ export default function DashboardV2Page() {
               <div className="grid lg:grid-cols-[1fr_auto] gap-6 items-start">
                 {/* Left: identity + score */}
                 <div className="flex gap-5 items-start">
-                  <ScoreArc score={snap.overall_score} size={96} />
+                  <ScoreArc score={animatedScore} colorScore={snap.overall_score} size={96} />
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
                       <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight leading-tight">
@@ -601,22 +676,22 @@ export default function DashboardV2Page() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2 lg:w-44">
                   <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 text-center">
                     <p className="text-[10px] uppercase tracking-wide text-muted font-semibold">Score</p>
-                    <p className={`text-2xl font-black font-mono ${band.text}`}>{snap.overall_score}</p>
+                    <p className={`text-2xl font-black font-mono ${band.text}`}>{animatedScore}</p>
                     <p className="text-[10px] text-muted">/100</p>
                   </div>
                   <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 text-center">
                     <p className="text-[10px] uppercase tracking-wide text-muted font-semibold">Tools</p>
-                    <p className="text-2xl font-black font-mono text-ink">{snap.completed_tools_count}</p>
+                    <p className="text-2xl font-black font-mono text-ink">{animatedTools}</p>
                     <p className="text-[10px] text-muted">of 6</p>
                   </div>
                   <div className={`rounded-[var(--radius-md)] p-3 text-center border ${snap.blockers_count > 0 ? "bg-danger/5 border-danger/20" : "bg-soft border-border"}`}>
                     <p className="text-[10px] uppercase tracking-wide text-muted font-semibold">Gaps</p>
-                    <p className={`text-2xl font-black font-mono ${snap.blockers_count > 0 ? "text-danger" : "text-ink"}`}>{snap.blockers_count}</p>
+                    <p className={`text-2xl font-black font-mono ${snap.blockers_count > 0 ? "text-danger" : "text-ink"}`}>{animatedBlockers}</p>
                     <p className="text-[10px] text-muted">critical</p>
                   </div>
                   <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 text-center">
                     <p className="text-[10px] uppercase tracking-wide text-muted font-semibold">Profile</p>
-                    <p className="text-2xl font-black font-mono text-ink">{snap.profile_completion_pct}%</p>
+                    <p className="text-2xl font-black font-mono text-ink">{animatedProfile}%</p>
                     <p className="text-[10px] text-muted">done</p>
                   </div>
                 </div>
@@ -653,8 +728,8 @@ export default function DashboardV2Page() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-3">
-                    <MetricStat label="ARR" value={fmtMoney(profile.arr)} sub="Annual recurring" tone={profile.arr >= 240_000 ? "good" : profile.arr > 0 ? "warn" : "neutral"} />
-                    <MetricStat label="MRR" value={fmtMoney(profile.mrr)} sub="Monthly recurring" tone={profile.mrr >= 20_000 ? "good" : profile.mrr > 0 ? "warn" : "neutral"} />
+                    <MetricStat label="ARR" value={fmtMoney(animatedARR)} sub="Annual recurring" tone={profile.arr >= 240_000 ? "good" : profile.arr > 0 ? "warn" : "neutral"} />
+                    <MetricStat label="MRR" value={fmtMoney(animatedMRR)} sub="Monthly recurring" tone={profile.mrr >= 20_000 ? "good" : profile.mrr > 0 ? "warn" : "neutral"} />
                     <MetricStat label="Growth" value={fmtPct(profile.growth_rate)} sub="MoM growth rate" tone={profile.growth_rate >= 15 ? "good" : profile.growth_rate >= 5 ? "warn" : profile.growth_rate > 0 ? "bad" : "neutral"} />
                     <MetricStat label="Runway" value={profile.runway > 0 ? `${Math.round(profile.runway)} mo` : "—"} sub="Months of cash" tone={profile.runway >= 18 ? "good" : profile.runway >= 9 ? "warn" : profile.runway > 0 ? "bad" : "neutral"} />
                   </div>
@@ -688,7 +763,7 @@ export default function DashboardV2Page() {
                     <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4 text-center">
                       <p className="text-[10px] uppercase tracking-wide text-muted font-semibold mb-1">Estimated pre-money</p>
                       <p className={`text-3xl font-black font-mono ${scoreBand(ts.valuation.score).text}`}>
-                        {fmtMoney(profile.estimated_valuation)}
+                        {fmtMoney(animatedVal)}
                       </p>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
@@ -878,41 +953,99 @@ export default function DashboardV2Page() {
             </Card>
           </div>
 
-          {/* ─── 7. SCORE HISTORY ────────────────────────────────────────── */}
-          <Card padding="sm">
-            <CardHeader>
-              <CardTitle kicker="Progress">Score history</CardTitle>
-              {history.length > 8 && <span className="text-xs text-muted">Last 8 of {history.length}</span>}
-            </CardHeader>
-            <CardContent>
-              {history.length === 0 ? (
-                <p className="text-sm text-muted py-2">No history yet. Scores are recorded each time you save a tool.</p>
-              ) : (
-                <div className="space-y-0">
-                  {[...history].reverse().slice(0, 8).map((item, idx, arr) => {
-                    const prev = arr[idx + 1];
-                    const delta = prev ? item.overall_score - prev.overall_score : 0;
-                    const b = scoreBand(item.overall_score);
-                    return (
-                      <div key={`${item.saved_at}-${idx}`} className="flex items-center gap-3 py-2.5 border-b border-border last:border-0">
-                        <div className={`w-12 text-xl font-black font-mono ${b.text}`}>{item.overall_score}</div>
-                        <div className="w-12 text-xs font-bold">
-                          {!prev ? <span className="text-muted text-[10px]">first</span>
-                            : delta > 0 ? <span className="text-success">+{delta}</span>
-                            : delta < 0 ? <span className="text-danger">{delta}</span>
-                            : <span className="text-muted">—</span>}
+          {/* ─── 7. PROGRESS ─────────────────────────────────────────────── */}
+          {(() => {
+            const sorted = [...history].sort(
+              (a, b) => new Date(a.saved_at).getTime() - new Date(b.saved_at).getTime()
+            );
+            const scores = sorted.map(h => h.overall_score);
+            const best = scores.length > 0 ? Math.max(...scores) : snap.overall_score;
+            const prev = sorted.length >= 2 ? sorted[sorted.length - 2].overall_score : null;
+            const delta = prev !== null ? snap.overall_score - prev : null;
+            const firstSeen = sorted.length > 0 ? sorted[0].saved_at : null;
+            const lastSeen  = sorted.length > 0 ? sorted[sorted.length - 1].saved_at : null;
+            const trend = scores.length >= 2 ? scores[scores.length - 1] - scores[0] : 0;
+
+            return (
+              <Card padding="sm">
+                <CardHeader>
+                  <CardTitle kicker="Progress">Score over time</CardTitle>
+                  {history.length > 0 && (
+                    <span className="text-xs text-muted">
+                      {history.length} {history.length === 1 ? "snapshot" : "snapshots"}
+                    </span>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  {history.length === 0 ? (
+                    <div className="py-5 text-center">
+                      <p className="text-sm font-semibold text-muted mb-1">No history yet</p>
+                      <p className="text-xs text-muted">Your score is recorded each time you save a tool.</p>
+                    </div>
+                  ) : (
+                    <div>
+                      {/* Stats row */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                        <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
+                          <p className="text-[10px] uppercase tracking-wide text-muted font-semibold mb-1">Current</p>
+                          <p className={`text-xl font-extrabold font-mono ${scoreBand(snap.overall_score).text}`}>{snap.overall_score}</p>
                         </div>
-                        <div className="flex-1 h-2 bg-border rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full ${b.bg}`} style={{ width: `${item.overall_score}%` }} />
+                        <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
+                          <p className="text-[10px] uppercase tracking-wide text-muted font-semibold mb-1">Best ever</p>
+                          <p className={`text-xl font-extrabold font-mono ${scoreBand(best).text}`}>{best}</p>
                         </div>
-                        <span className="text-xs text-muted shrink-0 w-28 text-right">{fmtDate(item.saved_at)}</span>
+                        <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
+                          <p className="text-[10px] uppercase tracking-wide text-muted font-semibold mb-1">vs Previous</p>
+                          <p className={`text-xl font-extrabold font-mono ${
+                            delta === null ? "text-muted"
+                            : delta > 0   ? "text-success"
+                            : delta < 0   ? "text-danger"
+                            : "text-muted"
+                          }`}>
+                            {delta === null ? "—" : delta > 0 ? `+${delta}` : delta === 0 ? "→" : `${delta}`}
+                          </p>
+                        </div>
+                        <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
+                          <p className="text-[10px] uppercase tracking-wide text-muted font-semibold mb-1">Last saved</p>
+                          <p className="text-xs font-semibold text-ink leading-snug mt-1">
+                            {lastSeen ? fmtDate(lastSeen) : "—"}
+                          </p>
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+
+                      {/* Sparkline or limited-history prompt */}
+                      {scores.length >= 3 ? (
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-[10px] text-muted uppercase tracking-wide font-medium">Score trend</span>
+                            <span className={`text-xs font-bold ${trend > 0 ? "text-success" : trend < 0 ? "text-danger" : "text-muted"}`}>
+                              {trend > 0 ? `↑ Improving (+${trend} total)` : trend < 0 ? `↓ Declining (${trend} total)` : "→ Stable"}
+                            </span>
+                          </div>
+                          <div className="bg-soft border border-border rounded-[var(--radius-md)] px-3 pt-3 pb-2">
+                            <Sparkline data={scores} />
+                            <div className="flex justify-between mt-1.5">
+                              <span className="text-[10px] text-muted">{firstSeen ? fmtDateShort(firstSeen) : ""}</span>
+                              <span className="text-[10px] text-muted">{lastSeen  ? fmtDateShort(lastSeen)  : ""}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-soft border border-border rounded-[var(--radius-md)] px-4 py-3 flex items-center gap-2">
+                          <span className="text-muted">◦</span>
+                          <p className="text-xs text-muted">
+                            {scores.length === 1
+                              ? "Save more tools to start tracking your progress chart."
+                              : "One more save will unlock your progress chart."}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })()}
 
         </div>
       </Container>
