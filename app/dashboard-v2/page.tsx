@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Container } from "@/components/layout/section";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,877 +19,900 @@ import type {
   FoundationTool,
   FounderStartupProfile,
   GlobalReadinessSnapshot,
+  ReadinessRedFlag,
   ToolState,
 } from "@/lib/foundation/types";
 
-// ─── Weights ──────────────────────────────────────────────────────────────────
+// ─── Config ───────────────────────────────────────────────────────────────────
+
 const WEIGHTS: Record<FoundationTool, number> = {
-  metrics:   0.25,
-  valuation: 0.20,
-  qa:        0.20,
-  pitch:     0.15,
-  dataroom:  0.10,
-  captable:  0.10,
+  metrics: 0.25, valuation: 0.20, qa: 0.20,
+  pitch: 0.15, dataroom: 0.10, captable: 0.10,
 };
 
 const CALENDLY_URL = "https://calendly.com/vcready/30min";
 
 const TOOL_LABELS: Record<FoundationTool, string> = {
-  metrics:   "Metrics",
-  valuation: "Valuation",
-  qa:        "Q&A",
-  captable:  "Cap Table",
-  pitch:     "Pitch",
-  dataroom:  "Data Room",
+  metrics: "Metrics", valuation: "Valuation", qa: "Q&A",
+  captable: "Cap Table", pitch: "Pitch", dataroom: "Data Room",
 };
 
-const STATUS_LABELS: Record<ToolState["status"], string> = {
-  not_started: "Not started",
-  in_progress: "In progress",
-  completed:   "Completed",
+const TOOL_HREFS: Record<FoundationTool, string> = {
+  metrics: "/metrics", valuation: "/valuation", qa: "/qa",
+  captable: "/captable", pitch: "/pitch", dataroom: "/dataroom",
 };
 
-// ─── Formatting helpers ───────────────────────────────────────────────────────
+// Semantic color classes by score band
+function scoreBand(s: number): { text: string; bg: string; soft: string; border: string; hex: string } {
+  if (s >= 80) return { text: "text-success", bg: "bg-success", soft: "bg-success/10", border: "border-success/25", hex: "#0F6A46" };
+  if (s >= 60) return { text: "text-success", bg: "bg-success", soft: "bg-success/10", border: "border-success/25", hex: "#0F6A46" };
+  if (s >= 35) return { text: "text-warning", bg: "bg-warning", soft: "bg-warning/10", border: "border-warning/25", hex: "#8A6B1F" };
+  return { text: "text-danger", bg: "bg-danger", soft: "bg-danger/10", border: "border-danger/25", hex: "#8C4343" };
+}
+
+function verdictConfig(v: string) {
+  switch (v) {
+    case "Strong":    return { badge: "bg-success/10 text-success border-success/20", bar: "bg-success",  tagline: "Ready for serious investor conversations." };
+    case "Fundable":  return { badge: "bg-success/10 text-success border-success/20", bar: "bg-success",  tagline: "A solid profile — start targeted outreach." };
+    case "Improving": return { badge: "bg-warning/10 text-warning border-warning/20", bar: "bg-warning",  tagline: "Good progress — close the remaining gaps before raising." };
+    default:          return { badge: "bg-danger/10  text-danger  border-danger/20",  bar: "bg-danger",   tagline: "Focus on building the fundamentals before investor meetings." };
+  }
+}
+
+// ─── Formatters ───────────────────────────────────────────────────────────────
+
+function fmtMoney(v: number): string {
+  if (!v || v <= 0) return "—";
+  if (v >= 1_000_000_000) return `$${(v / 1_000_000_000).toFixed(1)}B`;
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `$${(v / 1_000).toFixed(0)}K`;
+  return `$${Math.round(v)}`;
+}
+
 function fmtDate(iso: string): string {
-  return new Date(iso).toLocaleString("en-GB", {
-    day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
-  });
+  try {
+    return new Date(iso).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  } catch { return "—"; }
 }
 
-function fmtMoney(value: number): string {
-  if (!value) return "—";
-  if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(1)}B`;
-  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
-  return `$${Math.round(value)}`;
+function fmtPct(v: number): string {
+  return v > 0 ? `${Math.round(v)}%` : "—";
 }
 
-// ─── Verdict styling ──────────────────────────────────────────────────────────
-function verdictTone(verdict: string) {
-  switch (verdict) {
-    case "Strong":    return { badge: "bg-success/10 text-success border-success/20", bar: "bg-success" };
-    case "Fundable":  return { badge: "bg-accent/10 text-accent border-accent/20",   bar: "bg-accent"  };
-    case "Improving": return { badge: "bg-warning/10 text-warning border-warning/20", bar: "bg-warning" };
-    default:          return { badge: "bg-danger/10 text-danger border-danger/20",   bar: "bg-danger"  };
-  }
+// ─── Score Arc (SVG) ──────────────────────────────────────────────────────────
+
+function ScoreArc({ score, size = 96 }: { score: number; size?: number }) {
+  const sw = 9;
+  const r = (size - sw * 2) / 2;
+  const cx = size / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (score / 100) * circ;
+  const { hex } = scoreBand(score);
+  return (
+    <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)", display: "block" }}>
+        <circle cx={cx} cy={cx} r={r} fill="none" stroke="#E7E3DA" strokeWidth={sw} />
+        <circle cx={cx} cy={cx} r={r} fill="none" stroke={hex} strokeWidth={sw}
+          strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-2xl font-black font-mono leading-none">{score}</span>
+        <span className="text-[10px] text-muted font-medium leading-none mt-0.5">/100</span>
+      </div>
+    </div>
+  );
 }
 
-function toolHref(tool: FoundationTool): string {
-  const map: Record<FoundationTool, string> = {
-    metrics: "/metrics", valuation: "/valuation", qa: "/qa",
-    captable: "/captable", pitch: "/pitch", dataroom: "/dataroom",
-  };
-  return map[tool];
+// ─── Metric Stat chip ─────────────────────────────────────────────────────────
+
+function MetricStat({ label, value, sub, tone = "neutral" }: {
+  label: string; value: string; sub?: string;
+  tone?: "good" | "warn" | "bad" | "neutral";
+}) {
+  const color = tone === "good" ? "text-success" : tone === "warn" ? "text-warning" : tone === "bad" ? "text-danger" : "text-ink";
+  return (
+    <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
+      <p className="text-[10px] uppercase tracking-[0.14em] text-muted font-semibold mb-1">{label}</p>
+      <p className={`text-lg font-extrabold font-mono leading-none ${color}`}>{value}</p>
+      {sub && <p className="text-[11px] text-muted mt-1 leading-snug">{sub}</p>}
+    </div>
+  );
 }
 
-function statusTone(status: ToolState["status"]) {
-  switch (status) {
-    case "completed":   return "bg-success";
-    case "in_progress": return "bg-warning";
-    default:            return "bg-border";
-  }
+// ─── Mini tool card ───────────────────────────────────────────────────────────
+
+function ToolCard({ tool, state }: { tool: FoundationTool; state: ToolState }) {
+  const band = scoreBand(state.score);
+  const dot = state.status === "completed" ? "bg-success" : state.status === "in_progress" ? "bg-warning" : "bg-border";
+  return (
+    <Link href={TOOL_HREFS[tool]}
+      className="bg-card border border-border rounded-[var(--radius-md)] p-3 hover:border-ink/20 transition-colors flex flex-col gap-2"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dot}`} />
+          <span className="text-sm font-semibold text-ink">{TOOL_LABELS[tool]}</span>
+        </div>
+        <span className={`text-sm font-bold font-mono ${band.text}`}>{state.score}</span>
+      </div>
+      <div className="h-1.5 bg-border rounded-full overflow-hidden">
+        <div className={`h-full rounded-full ${state.score > 0 ? band.bg : "bg-border"}`}
+          style={{ width: `${state.score}%` }} />
+      </div>
+      <p className="text-[11px] text-muted">
+        {state.status === "not_started" ? "Not started" : state.status === "in_progress" ? "In progress" : "Completed"}
+      </p>
+    </Link>
+  );
 }
 
-function getResumeStep(toolStates: Record<FoundationTool, ToolState>): {
-  id: FlowStepId; href: string; label: string;
-} | null {
-  const completed = getCompletedSteps();
-  for (const step of FLOW_STEPS) {
-    if (step.id === "dashboard") continue;
-    const tool = step.id as FoundationTool;
-    if (toolStates[tool]?.status === "in_progress" && !completed.includes(step.id)) return step;
-  }
-  for (const step of FLOW_STEPS) {
-    if (step.id === "dashboard") continue;
-    const tool = step.id as FoundationTool;
-    if (toolStates[tool]?.status === "not_started") return step;
-  }
-  return null;
+// ─── Alert card ───────────────────────────────────────────────────────────────
+
+function AlertCard({ flag }: { flag: ReadinessRedFlag }) {
+  return (
+    <div className={`rounded-[var(--radius-md)] border-l-[3px] px-4 py-3 flex items-start justify-between gap-4 ${
+      flag.blocking
+        ? "bg-danger/5 border-l-danger border-danger/15 border border-l-[3px]"
+        : "bg-warning/5 border-l-warning border-warning/15 border border-l-[3px]"
+    }`}>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className={`inline-flex h-5 px-1.5 rounded text-[10px] font-bold uppercase tracking-wide ${
+            flag.blocking ? "bg-danger/15 text-danger" : "bg-warning/15 text-warning"
+          }`}>
+            {flag.blocking ? "Blocker" : "Warning"}
+          </span>
+          <p className="text-sm font-bold text-ink">{flag.label}</p>
+        </div>
+        <p className="text-xs text-ink-secondary mt-1">{flag.reason}</p>
+        <p className="text-xs text-muted mt-1 italic">{flag.action}</p>
+      </div>
+      {flag.href && (
+        <Link href={flag.href}
+          className="text-xs font-bold text-accent hover:underline shrink-0 mt-0.5"
+        >Fix →</Link>
+      )}
+    </div>
+  );
 }
 
 // ─── Advisory engine ──────────────────────────────────────────────────────────
 
-interface AdvisoryItem { label: string; detail: string; href?: string; }
+interface Advisory { label: string; detail: string; href?: string }
 
-function getStrengths(
-  toolStates: Record<FoundationTool, ToolState>,
-  profile: FounderStartupProfile
-): AdvisoryItem[] {
-  const items: AdvisoryItem[] = [];
-  const m = toolStates.metrics;
-  const v = toolStates.valuation;
-  const qa = toolStates.qa;
-  const p = toolStates.pitch;
-  const ct = toolStates.captable;
-  const dr = toolStates.dataroom;
-
-  if (m.score >= 70) {
-    const detail = profile.mrr > 0
-      ? `MRR ${fmtMoney(profile.mrr)}, ARR ${fmtMoney(profile.arr)}, ${profile.growth_rate}% growth — your traction story is compelling.`
-      : "Your operating metrics are above the investor bar for your stage.";
-    items.push({ label: "Strong traction metrics", detail, href: "/metrics" });
-  }
-  if (v.score >= 70) {
-    const detail = profile.estimated_valuation > 0
-      ? `Estimated pre-money valuation of ${fmtMoney(profile.estimated_valuation)} — well-supported by your growth assumptions.`
-      : "Your valuation model is solid and defensible.";
-    items.push({ label: "Compelling valuation", detail, href: "/valuation" });
-  }
-  if (qa.score >= 70) {
-    items.push({
-      label: "Investor Q&A readiness",
-      detail: "You can handle tough investor questions confidently. This is a real differentiator in live meetings.",
-      href: "/qa",
+function buildStrengths(ts: Record<FoundationTool, ToolState>, p: FounderStartupProfile): Advisory[] {
+  const out: Advisory[] = [];
+  if (ts.metrics.score >= 70) {
+    out.push({
+      label: "Strong traction metrics",
+      detail: p.mrr > 0 ? `MRR ${fmtMoney(p.mrr)} · ARR ${fmtMoney(p.arr)} · ${fmtPct(p.growth_rate)} growth` : "Operating metrics are above investor bar.",
+      href: "/metrics",
     });
   }
-  if (p.score >= 70) {
-    items.push({
-      label: "Strong pitch narrative",
-      detail: "Your pitch deck covers the key investor areas — problem, traction, team, and ask — at a high level.",
-      href: "/pitch",
-    });
-  }
-  if (ct.score >= 70) {
-    items.push({
-      label: "Clean cap table",
-      detail: "Your equity structure won't create friction in diligence. Founders maintain control.",
-      href: "/captable",
-    });
-  }
-  if (dr.score >= 70) {
-    items.push({
-      label: "Data room organized",
-      detail: "Your diligence documents are in order — this accelerates deal closure significantly.",
-      href: "/dataroom",
-    });
-  }
-  return items;
-}
-
-function getWeaknesses(
-  toolStates: Record<FoundationTool, ToolState>,
-  profile: FounderStartupProfile
-): AdvisoryItem[] {
-  const items: AdvisoryItem[] = [];
-
-  if (toolStates.metrics.score > 0 && toolStates.metrics.score < 50) {
-    const detail = profile.mrr === 0
-      ? "No MRR recorded. Investors need to see revenue before considering a Seed or Series A round."
-      : `MRR of ${fmtMoney(profile.mrr)} is below typical investor expectations. Target $20K+ MRR before raising.`;
-    items.push({ label: "Traction metrics need work", detail, href: "/metrics" });
-  }
-  if (toolStates.qa.score > 0 && toolStates.qa.score < 50) {
-    items.push({
-      label: "Investor Q&A preparation is weak",
-      detail: "Founders who struggle with investor questions lose deals — even with great metrics. Prioritize this.",
-      href: "/qa",
-    });
-  }
-  if (toolStates.valuation.score > 0 && toolStates.valuation.score < 50) {
-    items.push({
-      label: "Valuation model needs strengthening",
-      detail: "A weak valuation model signals lack of financial fluency. Investors will probe this hard.",
+  if (ts.valuation.score >= 70) {
+    out.push({
+      label: "Compelling valuation",
+      detail: p.estimated_valuation > 0 ? `Estimated pre-money: ${fmtMoney(p.estimated_valuation)}` : "Valuation model is solid and defensible.",
       href: "/valuation",
     });
   }
-  if (toolStates.pitch.score > 0 && toolStates.pitch.score < 50) {
-    items.push({
-      label: "Pitch deck has critical gaps",
-      detail: "Key sections — team, traction, or the ask — are incomplete. Fix these before any investor meeting.",
-      href: "/pitch",
-    });
+  if (ts.qa.score >= 70) {
+    out.push({ label: "Investor Q&A readiness", detail: "You can handle tough investor questions — a real differentiator in live meetings.", href: "/qa" });
   }
-  if (profile.runway > 0 && profile.runway < 9) {
-    items.push({
-      label: `Only ${profile.runway} months of runway`,
-      detail: "Fundraising under pressure weakens your negotiating position. Extend runway if possible before starting a formal process.",
+  if (ts.pitch.score >= 70) {
+    out.push({ label: "Strong pitch narrative", detail: "Problem, traction, team and ask are covered at a high level.", href: "/pitch" });
+  }
+  if (ts.captable.score >= 70) {
+    out.push({ label: "Clean cap table", detail: "Equity structure won't create diligence friction.", href: "/captable" });
+  }
+  if (ts.dataroom.score >= 70) {
+    out.push({ label: "Data room ready", detail: "Diligence documents are organized — accelerates deal closure.", href: "/dataroom" });
+  }
+  return out;
+}
+
+function buildWeaknesses(ts: Record<FoundationTool, ToolState>, p: FounderStartupProfile): Advisory[] {
+  const out: Advisory[] = [];
+  if (ts.metrics.score > 0 && ts.metrics.score < 50) {
+    out.push({
+      label: "Traction needs work",
+      detail: p.mrr === 0 ? "No MRR recorded. Investors need revenue before a Seed round." : `MRR ${fmtMoney(p.mrr)} is below typical investor expectations. Aim for $20K+ MRR.`,
       href: "/metrics",
     });
   }
-  return items;
+  if (ts.qa.score > 0 && ts.qa.score < 50) {
+    out.push({ label: "Investor Q&A is weak", detail: "Founders who struggle with investor questions lose deals. Prioritize this.", href: "/qa" });
+  }
+  if (ts.valuation.score > 0 && ts.valuation.score < 50) {
+    out.push({ label: "Valuation model is thin", detail: "A weak valuation signals lack of financial fluency. Investors probe this hard.", href: "/valuation" });
+  }
+  if (ts.pitch.score > 0 && ts.pitch.score < 50) {
+    out.push({ label: "Pitch has critical gaps", detail: "Key sections — team, traction, or the ask — are incomplete.", href: "/pitch" });
+  }
+  if (p.runway > 0 && p.runway < 9) {
+    out.push({ label: `Runway at ${Math.round(p.runway)} months`, detail: "Fundraising under pressure weakens your negotiating position.", href: "/metrics" });
+  }
+  return out;
 }
 
-function getNextActions(
-  snapshot: GlobalReadinessSnapshot,
-  toolStates: Record<FoundationTool, ToolState>
-): AdvisoryItem[] {
-  const actions: AdvisoryItem[] = [];
-  const s = snapshot.overall_score;
-  const blockers = snapshot.red_flags.filter((f) => f.blocking);
+function buildNextActions(snap: GlobalReadinessSnapshot, ts: Record<FoundationTool, ToolState>): Advisory[] {
+  const actions: Advisory[] = [];
+  const blockers = snap.red_flags.filter(f => f.blocking);
+  for (const b of blockers.slice(0, 2)) actions.push({ label: b.action, detail: b.reason, href: b.href });
 
-  // Critical blockers first
-  for (const b of blockers.slice(0, 2)) {
-    actions.push({ label: b.action, detail: b.reason, href: b.href });
-  }
-
-  // Missing high-weight tools
-  const highWeightMissing = (["metrics", "qa", "valuation", "pitch"] as FoundationTool[])
-    .filter((t) => toolStates[t].score === 0);
-  for (const tool of highWeightMissing.slice(0, 2 - Math.min(blockers.length, 2))) {
+  const highWeightMissing = (["metrics", "qa", "valuation", "pitch"] as FoundationTool[]).filter(t => ts[t].score === 0);
+  const toFill = Math.max(0, 3 - actions.length);
+  for (const t of highWeightMissing.slice(0, toFill)) {
     actions.push({
-      label: `Complete ${TOOL_LABELS[tool]}`,
-      detail: `${TOOL_LABELS[tool]} carries ${Math.round(WEIGHTS[tool] * 100)}% of your readiness score and hasn't been started yet.`,
-      href: toolHref(tool),
+      label: `Complete ${TOOL_LABELS[t]}`,
+      detail: `${TOOL_LABELS[t]} carries ${Math.round(WEIGHTS[t] * 100)}% of your score and hasn't been started.`,
+      href: TOOL_HREFS[t],
     });
   }
-
-  // Score-based advice
-  if (s >= 70 && toolStates.dataroom.score === 0) {
-    actions.push({
-      label: "Prepare your data room",
-      detail: "At your readiness level, investors will ask for documents. Be ready before they ask.",
-      href: "/dataroom",
-    });
+  if (snap.overall_score >= 70 && ts.dataroom.score === 0 && actions.length < 3) {
+    actions.push({ label: "Prepare your data room", detail: "At your score level, investors will ask for documents. Be ready.", href: "/dataroom" });
   }
-  if (s >= 75 && actions.length < 3) {
-    actions.push({
-      label: "Book a readiness review",
-      detail: "Your score is strong. Get a second opinion from an experienced VC advisor before starting outreach.",
-      href: CALENDLY_URL,
-    });
+  if (snap.overall_score >= 75 && actions.length < 3) {
+    actions.push({ label: "Book a readiness review", detail: "Your score is strong. Get expert feedback before starting outreach.", href: CALENDLY_URL });
   }
-
   return actions.slice(0, 4);
 }
 
-function getFundraisingNarrative(
-  snapshot: GlobalReadinessSnapshot,
-  profile: FounderStartupProfile
-): string {
-  const name = profile.startup_name || "Your startup";
-  const stage = profile.stage || "early stage";
-  const s = snapshot.overall_score;
-  const v = snapshot.verdict;
-  const strongest = snapshot.strongest_tool ? TOOL_LABELS[snapshot.strongest_tool] : null;
-  const weakest = snapshot.weakest_tool ? TOOL_LABELS[snapshot.weakest_tool] : null;
+function buildNarrative(snap: GlobalReadinessSnapshot, p: FounderStartupProfile): string {
+  const name = p.startup_name || "Your startup";
+  const stage = p.stage || "early stage";
+  const s = snap.overall_score;
+  const strongest = snap.strongest_tool ? TOOL_LABELS[snap.strongest_tool] : null;
+  const weakest = snap.weakest_tool ? TOOL_LABELS[snap.weakest_tool] : null;
 
-  if (s < 25) {
-    return `${name} is at the very start of its investor readiness journey. At this stage, the priority is to complete the core assessment modules — especially Metrics and Q&A — before approaching any investor. Focus on building the fundamentals first.`;
-  }
-  if (v === "Early") {
-    return `${name} is building investor readiness but has material gaps that would likely stop a deal early in diligence. ${weakest ? `The biggest area to address is ${weakest}.` : ""} Close these gaps before starting formal investor outreach.`;
-  }
-  if (v === "Improving") {
-    return `${name} is making solid progress toward fundraising readiness for a ${stage} round. ${strongest ? `Your strongest signal is ${strongest}.` : ""} ${weakest ? `The key area to improve is ${weakest} — addressing this could meaningfully increase your score and investor confidence.` : ""}`;
-  }
-  if (v === "Fundable") {
-    return `${name} is in a fundable position for a ${stage} round. ${strongest ? `Investors will be attracted by your ${strongest}.` : ""} ${snapshot.blockers_count === 0 ? "No critical blockers detected — you can start selective outreach while continuing to strengthen weaker areas." : "Address the remaining critical gaps before starting broad investor outreach."}`;
-  }
-  // Strong
-  return `${name} shows strong investor readiness for a ${stage} round. ${profile.estimated_valuation > 0 ? `With an estimated valuation of ${fmtMoney(profile.estimated_valuation)}, you have a credible anchor for term sheet discussions.` : ""} Your profile is compelling — focus your energy on building your investor pipeline and preparing for diligence.`;
+  if (s < 25) return `${name} is at the very start of its investor readiness journey. Complete Metrics and Q&A first — these two tools alone drive 45% of your score.`;
+  if (snap.verdict === "Early") return `${name} has material gaps that would stop a deal early in diligence. ${weakest ? `The most important area to fix is ${weakest}.` : ""} Close these gaps before any investor outreach.`;
+  if (snap.verdict === "Improving") return `${name} is building investor readiness for a ${stage} round. ${strongest ? `Your strongest signal is ${strongest}.` : ""} ${weakest ? `Improving ${weakest} would have the highest score impact right now.` : ""}`;
+  if (snap.verdict === "Fundable") return `${name} is in a fundable position for a ${stage} round. ${strongest ? `Investors will be drawn to your ${strongest}.` : ""} ${snap.blockers_count === 0 ? "No critical blockers — you can start selective outreach while shoring up weaker areas." : "Address the remaining critical gaps before broad investor outreach."}`;
+  return `${name} shows strong investor readiness${p.estimated_valuation > 0 ? ` with an estimated valuation of ${fmtMoney(p.estimated_valuation)}` : ""} for a ${stage} round. Focus on building your investor pipeline and preparing for diligence.`;
 }
 
-function getSmartCTA(
-  snapshot: GlobalReadinessSnapshot,
-  toolStates: Record<FoundationTool, ToolState>
-): { label: string; href: string; description: string; external?: boolean } {
-  const s = snapshot.overall_score;
-  const blockers = snapshot.red_flags.filter((f) => f.blocking);
-
-  if (toolStates.metrics.score === 0) {
-    return {
-      label: "Start with Metrics →",
-      href: "/metrics",
-      description: "Metrics carry 25% of your score — complete this first.",
-    };
-  }
-  if (blockers.length >= 2) {
-    return {
-      label: "Fix critical gaps →",
-      href: blockers[0].href ?? "/metrics",
-      description: `${blockers.length} critical ${blockers.length === 1 ? "issue" : "issues"} blocking your readiness score.`,
-    };
-  }
+function buildSmartCTA(snap: GlobalReadinessSnapshot, ts: Record<FoundationTool, ToolState>): { label: string; href: string; description: string; ext?: boolean } {
+  const s = snap.overall_score;
+  const blockers = snap.red_flags.filter(f => f.blocking);
+  if (ts.metrics.score === 0) return { label: "Start with Metrics →", href: "/metrics", description: "Metrics carry 25% of your score. Complete this first." };
+  if (blockers.length >= 2) return { label: "Fix critical gaps →", href: blockers[0].href ?? "/metrics", description: `${blockers.length} critical issues are blocking your score.` };
   if (s < 40) {
-    const next = (["metrics", "qa", "valuation", "pitch"] as FoundationTool[])
-      .find((t) => toolStates[t].score === 0);
-    return {
-      label: next ? `Complete ${TOOL_LABELS[next]} →` : "Keep building →",
-      href: next ? toolHref(next) : "/metrics",
-      description: "Complete the remaining tools to unlock your full score.",
-    };
+    const next = (["metrics", "qa", "valuation", "pitch"] as FoundationTool[]).find(t => ts[t].score === 0);
+    return { label: next ? `Complete ${TOOL_LABELS[next]} →` : "Keep building →", href: next ? TOOL_HREFS[next] : "/metrics", description: "Complete more tools to unlock your full readiness score." };
   }
   if (s < 65) {
-    const weak = (Object.entries(toolStates) as Array<[FoundationTool, ToolState]>)
-      .filter(([, st]) => st.score > 0 && st.score < 60)
-      .sort((a, b) => WEIGHTS[b[0]] - WEIGHTS[a[0]])[0];
-    return {
-      label: weak ? `Strengthen ${TOOL_LABELS[weak[0]]} →` : "Strengthen your pitch →",
-      href: weak ? toolHref(weak[0]) : "/pitch",
-      description: "Improving your weakest areas has the highest score impact.",
-    };
+    const weak = (Object.entries(ts) as [FoundationTool, ToolState][]).filter(([, st]) => st.score > 0 && st.score < 60).sort((a, b) => WEIGHTS[b[0]] - WEIGHTS[a[0]])[0];
+    return { label: weak ? `Strengthen ${TOOL_LABELS[weak[0]]} →` : "Strengthen your pitch →", href: weak ? TOOL_HREFS[weak[0]] : "/pitch", description: "Improving your weakest area has the highest score impact right now." };
   }
-  if (s < 80 && toolStates.dataroom.score === 0) {
-    return {
-      label: "Prepare your data room →",
-      href: "/dataroom",
-      description: "Investors will ask for documents once conversations start.",
+  if (s < 80 && ts.dataroom.score === 0) return { label: "Prepare your data room →", href: "/dataroom", description: "Investors will request documents once conversations start." };
+  return { label: "Book a readiness review →", href: CALENDLY_URL, description: "Your score is strong. Get expert feedback before starting outreach.", ext: true };
+}
+
+// ─── PDF Export ───────────────────────────────────────────────────────────────
+
+async function exportPDF(
+  snap: GlobalReadinessSnapshot,
+  profile: FounderStartupProfile,
+  toolStates: Record<FoundationTool, ToolState>
+): Promise<void> {
+  try {
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+    const W = 210, PL = 20, PR = 190;
+    let y = 20;
+
+    const line = (text: string, size = 11, bold = false, color: [number, number, number] = [14, 14, 12]) => {
+      doc.setFontSize(size);
+      doc.setFont("helvetica", bold ? "bold" : "normal");
+      doc.setTextColor(...color);
+      doc.text(text, PL, y);
+      y += size * 0.45 + 2;
     };
+    const gap = (n = 4) => { y += n; };
+    const rule = () => {
+      doc.setDrawColor(231, 227, 218);
+      doc.line(PL, y, PR, y);
+      y += 5;
+    };
+
+    // Header
+    doc.setFillColor(15, 106, 70);
+    doc.rect(0, 0, W, 28, "F");
+    doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
+    doc.text("VCReady — Investor Readiness Report", PL, 13);
+    doc.setFontSize(9); doc.setFont("helvetica", "normal");
+    doc.text(`Generated ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}`, PL, 21);
+    y = 38;
+
+    // Startup + score
+    line(profile.startup_name || "Unnamed Startup", 18, true);
+    line(`${profile.founder_name || "—"}  ·  ${profile.country || "—"}  ·  ${profile.sector || "—"}  ·  ${profile.stage || "—"}`, 10, false, [107, 110, 102]);
+    gap(3);
+    line(`Readiness Score: ${snap.overall_score}/100  —  ${snap.verdict}`, 13, true);
+    line(verdictConfig(snap.verdict).tagline, 10, false, [107, 110, 102]);
+    gap(); rule();
+
+    // Traction
+    line("Traction", 12, true);
+    gap(1);
+    const trItems = [["ARR", fmtMoney(profile.arr)], ["MRR", fmtMoney(profile.mrr)], ["Growth", fmtPct(profile.growth_rate)], ["Runway", profile.runway > 0 ? `${Math.round(profile.runway)} mo` : "—"]];
+    for (const [k, v] of trItems) { doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(14, 14, 12); doc.text(`${k}:`, PL, y); doc.setFont("helvetica", "bold"); doc.text(v, PL + 28, y); y += 6; }
+    gap(); rule();
+
+    // Valuation
+    line("Valuation", 12, true);
+    gap(1);
+    line(`Estimated pre-money: ${fmtMoney(profile.estimated_valuation)}`, 10);
+    line(`Stage: ${profile.stage || "—"}`, 10);
+    gap(); rule();
+
+    // Tool scores
+    line("Tool Scores", 12, true);
+    gap(1);
+    for (const [t, st] of Object.entries(toolStates) as [FoundationTool, ToolState][]) {
+      doc.setFontSize(10); doc.setFont("helvetica", "normal"); doc.setTextColor(14, 14, 12);
+      doc.text(`${TOOL_LABELS[t]}:`, PL, y);
+      doc.setFont("helvetica", "bold");
+      const sc = st.score;
+      if (sc >= 70) doc.setTextColor(15, 106, 70);
+      else if (sc >= 35) doc.setTextColor(138, 107, 31);
+      else doc.setTextColor(140, 67, 67);
+      doc.text(`${sc}/100`, PL + 40, y);
+      doc.setTextColor(14, 14, 12);
+      doc.setFont("helvetica", "normal");
+      doc.text(st.status === "not_started" ? "Not started" : st.status === "in_progress" ? "In progress" : "Completed", PL + 65, y);
+      y += 6;
+    }
+    gap(); rule();
+
+    // Critical gaps
+    const blockers = snap.red_flags.filter(f => f.blocking);
+    const warnings = snap.red_flags.filter(f => !f.blocking);
+    if (snap.red_flags.length > 0) {
+      line("Critical Gaps", 12, true);
+      gap(1);
+      for (const f of blockers) {
+        doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.setTextColor(140, 67, 67);
+        doc.text(`[BLOCKER] ${f.label}`, PL, y); y += 5;
+        doc.setFont("helvetica", "normal"); doc.setTextColor(107, 110, 102);
+        const lines = doc.splitTextToSize(f.reason, 155) as string[];
+        doc.text(lines, PL + 4, y); y += lines.length * 5;
+      }
+      for (const f of warnings) {
+        doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.setTextColor(138, 107, 31);
+        doc.text(`[WARNING] ${f.label}`, PL, y); y += 5;
+        doc.setFont("helvetica", "normal"); doc.setTextColor(107, 110, 102);
+        const lines = doc.splitTextToSize(f.reason, 155) as string[];
+        doc.text(lines, PL + 4, y); y += lines.length * 5;
+      }
+      gap(); rule();
+    }
+
+    // Next actions
+    const actions = buildNextActions(snap, toolStates);
+    if (actions.length > 0) {
+      line("Recommended Next Actions", 12, true);
+      gap(1);
+      for (let i = 0; i < actions.length; i++) {
+        doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.setTextColor(14, 14, 12);
+        doc.text(`${i + 1}. ${actions[i].label}`, PL, y); y += 5;
+        doc.setFont("helvetica", "normal"); doc.setTextColor(107, 110, 102);
+        const lines = doc.splitTextToSize(actions[i].detail, 155) as string[];
+        doc.text(lines, PL + 4, y); y += lines.length * 5;
+      }
+    }
+
+    // Footer
+    doc.setFontSize(8); doc.setTextColor(175, 172, 165); doc.setFont("helvetica", "normal");
+    doc.text("VCReady · vcready.com · Confidential", PL, 285);
+    doc.text(`Score: ${snap.overall_score}/100`, 160, 285);
+
+    doc.save(`${(profile.startup_name || "vcready").replace(/\s+/g, "-").toLowerCase()}-readiness-report.pdf`);
+  } catch (err) {
+    console.error("[PDF export]", err);
+    window.print();
   }
-  return {
-    label: "Book a readiness review →",
-    href: CALENDLY_URL,
-    description: "Your score is strong. Get expert feedback before starting outreach.",
-    external: true,
-  };
+}
+
+// ─── getResumeStep ────────────────────────────────────────────────────────────
+
+function getResumeStep(ts: Record<FoundationTool, ToolState>): { id: FlowStepId; href: string; label: string } | null {
+  const done = getCompletedSteps();
+  for (const step of FLOW_STEPS) {
+    if (step.id === "dashboard") continue;
+    if (ts[step.id as FoundationTool]?.status === "in_progress" && !done.includes(step.id)) return step;
+  }
+  for (const step of FLOW_STEPS) {
+    if (step.id === "dashboard") continue;
+    if (ts[step.id as FoundationTool]?.status === "not_started") return step;
+  }
+  return null;
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardV2Page() {
-  const [snapshot, setSnapshot] = useState<GlobalReadinessSnapshot | null>(null);
-  const [toolStates, setToolStates] = useState<Record<FoundationTool, ToolState> | null>(null);
+  const [snap, setSnap] = useState<GlobalReadinessSnapshot | null>(null);
+  const [ts, setTs] = useState<Record<FoundationTool, ToolState> | null>(null);
   const [profile, setProfile] = useState<FounderStartupProfile | null>(null);
   const [history, setHistory] = useState<GlobalReadinessSnapshot[]>([]);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function load() {
+    (async () => {
       try {
-        // Run main readiness compute and snapshot history in parallel
-        const [snap, hist] = await Promise.all([
+        const [globalSnap, hist] = await Promise.all([
           computeGlobalReadiness(),   // hydrates localStorage from DB as side-effect
-          loadSnapshotHistory(),      // can run concurrently
+          loadSnapshotHistory(),
         ]);
-
-        // After computeGlobalReadiness() has hydrated localStorage, read sync functions
-        // — no extra DB round-trip needed
-        const states = getLocalToolStates();
+        // After DB hydration, read sync functions — no extra round-trip
+        const toolStates = getLocalToolStates();
         const freshProfile = refreshUnifiedProfile();
-
-        setSnapshot(snap);
-        setToolStates(states);
+        setSnap(globalSnap);
+        setTs(toolStates);
         setProfile(freshProfile);
         setHistory(hist);
-        saveSnapshot(snap);
+        saveSnapshot(globalSnap);
       } catch (err) {
-        console.error("[dashboard-v2] load error:", err);
-        // Fallback: build from whatever is in localStorage right now
+        console.error("[dashboard-v2]", err);
         try {
-          const states = getLocalToolStates();
+          const toolStates = getLocalToolStates();
           const freshProfile = refreshUnifiedProfile();
-          const redFlags = getReadinessRedFlags(states);
-          const overallScore = Math.round(
-            (Object.entries(states) as Array<[FoundationTool, ToolState]>).reduce(
-              (sum, [tool, state]) => sum + state.score * WEIGHTS[tool], 0
-            )
+          const redFlags = getReadinessRedFlags(toolStates);
+          const overall = Math.round(
+            (Object.entries(toolStates) as [FoundationTool, ToolState][]).reduce((sum, [t, s]) => sum + s.score * WEIGHTS[t], 0)
           );
           const fallback: GlobalReadinessSnapshot = {
-            overall_score: overallScore,
-            verdict: getGlobalVerdict(overallScore, redFlags),
-            blockers_count: redFlags.filter((f) => f.blocking).length,
+            overall_score: overall,
+            verdict: getGlobalVerdict(overall, redFlags),
+            blockers_count: redFlags.filter(f => f.blocking).length,
             red_flags: redFlags,
-            source_scores: {
-              metrics: states.metrics.score, valuation: states.valuation.score,
-              qa: states.qa.score, captable: states.captable.score,
-              pitch: states.pitch.score, dataroom: states.dataroom.score,
-            },
-            profile_completion_pct: getProfileCompletionPct({ ...freshProfile, overall_score: overallScore }),
-            strongest_tool: (Object.entries(states) as Array<[FoundationTool, ToolState]>)
-              .sort((a, b) => b[1].score - a[1].score).find(([, s]) => s.score > 0)?.[0] ?? null,
-            weakest_tool: (Object.entries(states) as Array<[FoundationTool, ToolState]>)
-              .sort((a, b) => a[1].score - b[1].score).find(([, s]) => s.score < 70)?.[0] ?? null,
-            missing_tools: (Object.entries(states) as Array<[FoundationTool, ToolState]>)
-              .filter(([, s]) => s.score === 0).map(([t]) => t),
-            completed_tools_count: Object.values(states).filter((s) => s.score > 0).length,
+            source_scores: { metrics: toolStates.metrics.score, valuation: toolStates.valuation.score, qa: toolStates.qa.score, captable: toolStates.captable.score, pitch: toolStates.pitch.score, dataroom: toolStates.dataroom.score },
+            profile_completion_pct: getProfileCompletionPct({ ...freshProfile, overall_score: overall }),
+            strongest_tool: (Object.entries(toolStates) as [FoundationTool, ToolState][]).sort((a, b) => b[1].score - a[1].score).find(([, s]) => s.score > 0)?.[0] ?? null,
+            weakest_tool: (Object.entries(toolStates) as [FoundationTool, ToolState][]).sort((a, b) => a[1].score - b[1].score).find(([, s]) => s.score < 70)?.[0] ?? null,
+            missing_tools: (Object.entries(toolStates) as [FoundationTool, ToolState][]).filter(([, s]) => s.score === 0).map(([t]) => t),
+            completed_tools_count: Object.values(toolStates).filter(s => s.score > 0).length,
             saved_at: new Date().toISOString(),
           };
-          setSnapshot(fallback);
-          setToolStates(states);
-          setProfile(freshProfile);
+          setSnap(fallback); setTs(toolStates); setProfile(freshProfile);
           setHistory(getSnapshotHistory());
           saveSnapshot(fallback);
-        } catch (fbErr) {
-          setError(fbErr instanceof Error ? fbErr.message : "unknown error");
-        }
+        } catch (e2) { setError(e2 instanceof Error ? e2.message : "unknown error"); }
       }
-    }
-    load();
+    })();
   }, []);
 
-  if (error) {
-    return (
-      <div className="py-8">
-        <Container>
-          <div className="rounded-[var(--radius-lg)] border border-danger/20 bg-danger/5 p-6">
-            <p className="text-sm font-semibold text-danger">Something went wrong</p>
-            <p className="text-sm text-ink-secondary mt-2">{error}</p>
+  const handleExport = useCallback(async () => {
+    if (!snap || !profile || !ts || exporting) return;
+    setExporting(true);
+    try { await exportPDF(snap, profile, ts); }
+    finally { setExporting(false); }
+  }, [snap, profile, ts, exporting]);
+
+  // ── Loading ─────────────────────────────────────────────────────────────────
+  if (error) return (
+    <div className="py-8"><Container>
+      <div className="rounded-[var(--radius-lg)] border border-danger/20 bg-danger/5 p-6">
+        <p className="text-sm font-bold text-danger">Something went wrong</p>
+        <p className="text-sm text-ink-secondary mt-1">{error}</p>
+      </div>
+    </Container></div>
+  );
+
+  if (!snap || !ts || !profile) return (
+    <div className="py-8"><Container>
+      <div className="space-y-4">
+        <div className="animate-pulse h-48 rounded-[var(--radius-lg)] bg-soft border border-border" />
+        <div className="grid lg:grid-cols-2 gap-4">
+          <div className="animate-pulse h-44 rounded-[var(--radius-lg)] bg-soft border border-border" />
+          <div className="animate-pulse h-44 rounded-[var(--radius-lg)] bg-soft border border-border" />
+        </div>
+        <div className="animate-pulse h-32 rounded-[var(--radius-lg)] bg-soft border border-border" />
+      </div>
+    </Container></div>
+  );
+
+  // ── Empty state ─────────────────────────────────────────────────────────────
+  if (snap.completed_tools_count === 0) return (
+    <div className="py-8"><Container>
+      <Card padding="lg">
+        <div className="flex flex-col items-center text-center py-10 max-w-md mx-auto">
+          <div className="w-16 h-16 rounded-full bg-soft border-2 border-border flex items-center justify-center mb-5">
+            <span className="text-3xl">📊</span>
           </div>
-        </Container>
-      </div>
-    );
-  }
+          <h1 className="text-xl font-bold tracking-tight mb-2">Complete your first tool to unlock your score</h1>
+          <p className="text-sm text-ink-secondary leading-relaxed mb-6">
+            Your investor readiness score is calculated from 6 tools. Metrics carries 25% of the score — start here.
+          </p>
+          <Link href="/metrics"
+            className="inline-flex items-center h-11 px-6 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors"
+          >Start with Metrics →</Link>
+        </div>
+      </Card>
+    </Container></div>
+  );
 
-  if (!snapshot || !toolStates || !profile) {
-    return (
-      <div className="py-8">
-        <Container>
-          <div className="space-y-4">
-            <div className="animate-pulse h-48 rounded-[var(--radius-lg)] bg-soft" />
-            <div className="animate-pulse h-64 rounded-[var(--radius-lg)] bg-soft" />
-            <div className="animate-pulse h-40 rounded-[var(--radius-lg)] bg-soft" />
-          </div>
-        </Container>
-      </div>
-    );
-  }
-
-  // Empty state — no tool completed yet
-  if (snapshot.completed_tools_count === 0) {
-    return (
-      <div className="py-8">
-        <Container>
-          <Card padding="lg">
-            <div className="flex flex-col items-center text-center py-8 max-w-md mx-auto">
-              <div className="w-14 h-14 rounded-full bg-soft border border-border flex items-center justify-center mb-5">
-                <span className="text-2xl">📊</span>
-              </div>
-              <h1 className="text-xl font-bold tracking-tight mb-2">
-                Complete your first tool to unlock your readiness score
-              </h1>
-              <p className="text-sm text-ink-secondary leading-relaxed mb-6">
-                Your investor readiness score is calculated from 6 tools. Start with Metrics —
-                it carries the most weight and unlocks the full dashboard.
-              </p>
-              <Link
-                href="/metrics"
-                className="inline-flex items-center h-11 px-6 rounded-[var(--radius-md)] bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
-              >
-                Start with Metrics →
-              </Link>
-            </div>
-          </Card>
-        </Container>
-      </div>
-    );
-  }
-
-  const tone = verdictTone(snapshot.verdict);
-  const nextStep = getResumeStep(toolStates);
-  const strengths = getStrengths(toolStates, profile);
-  const weaknesses = getWeaknesses(toolStates, profile);
-  const nextActions = getNextActions(snapshot, toolStates);
-  const narrative = getFundraisingNarrative(snapshot, profile);
-  const smartCTA = getSmartCTA(snapshot, toolStates);
+  // ── Main render ─────────────────────────────────────────────────────────────
+  const vc = verdictConfig(snap.verdict);
+  const band = scoreBand(snap.overall_score);
+  const nextStep = getResumeStep(ts);
+  const strengths = buildStrengths(ts, profile);
+  const weaknesses = buildWeaknesses(ts, profile);
+  const actions = buildNextActions(snap, ts);
+  const narrative = buildNarrative(snap, profile);
+  const smartCTA = buildSmartCTA(snap, ts);
 
   return (
-    <div className="py-8">
+    <div className="py-8 bg-background min-h-screen">
       <Container>
         <div className="space-y-5">
 
-          {/* ── Hero ── */}
-          <Card padding="lg">
-            <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-6">
-              <div>
-                <p className="eyebrow mb-2">Investor Readiness</p>
-                <div className="flex flex-wrap items-center gap-3 mb-3">
-                  <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-                    {profile.startup_name || "Your startup"}
-                  </h1>
-                  <span className={`inline-flex items-center h-8 px-3 rounded-full border text-sm font-semibold ${tone.badge}`}>
-                    {snapshot.verdict}
-                  </span>
+          {/* ─── 1. HERO ──────────────────────────────────────────────────── */}
+          <div className="bg-card border border-border rounded-[var(--radius-lg)] overflow-hidden">
+            {/* Top accent bar */}
+            <div className={`h-1 w-full ${vc.bar}`} />
+            <div className="p-6">
+              <div className="grid lg:grid-cols-[1fr_auto] gap-6 items-start">
+                {/* Left: identity + score */}
+                <div className="flex gap-5 items-start">
+                  <ScoreArc score={snap.overall_score} size={96} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight leading-tight">
+                        {profile.startup_name || "Your startup"}
+                      </h1>
+                      <span className={`inline-flex items-center h-7 px-2.5 rounded-full border text-xs font-bold ${vc.badge}`}>
+                        {snap.verdict}
+                      </span>
+                    </div>
+                    <p className="text-sm text-ink-secondary mb-1">
+                      {[profile.founder_name, profile.country, profile.sector, profile.stage].filter(Boolean).join(" · ") || "Complete your profile"}
+                    </p>
+                    <p className="text-sm text-muted italic">{vc.tagline}</p>
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      {nextStep ? (
+                        <Link href={nextStep.href}
+                          className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors"
+                        >Continue: {nextStep.label} →</Link>
+                      ) : (
+                        <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors"
+                        >Book a readiness review →</a>
+                      )}
+                      <button
+                        onClick={handleExport}
+                        disabled={exporting}
+                        className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] border border-border bg-soft text-sm font-semibold text-ink hover:border-ink/20 transition-colors disabled:opacity-50"
+                      >
+                        {exporting ? "Generating…" : "↓ Export PDF"}
+                      </button>
+                      <Link href="/onboard"
+                        className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] border border-border bg-soft text-sm font-semibold text-ink hover:border-ink/20 transition-colors"
+                      >Edit profile</Link>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm text-ink-secondary max-w-2xl leading-relaxed">
-                  {profile.founder_name || "Founder"} · {profile.country || "—"} · {profile.sector || "—"} · {profile.stage || "—"}
-                </p>
-                <div className="flex flex-wrap gap-2 mt-5">
-                  {nextStep ? (
-                    <Link
-                      href={nextStep.href}
-                      className="inline-flex items-center h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
-                    >
-                      Continue: {nextStep.label} →
-                    </Link>
-                  ) : (
-                    <a
-                      href={CALENDLY_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
-                    >
-                      Book a readiness review →
-                    </a>
-                  )}
-                  <Link
-                    href="/onboard"
-                    className="inline-flex items-center h-10 px-4 rounded-[var(--radius-md)] border border-border bg-soft text-sm font-semibold text-ink hover:border-ink/20 transition-colors"
-                  >
-                    Edit profile
-                  </Link>
+
+                {/* Right: stat chips */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2 lg:w-44">
+                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 text-center">
+                    <p className="text-[10px] uppercase tracking-wide text-muted font-semibold">Score</p>
+                    <p className={`text-2xl font-black font-mono ${band.text}`}>{snap.overall_score}</p>
+                    <p className="text-[10px] text-muted">/100</p>
+                  </div>
+                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 text-center">
+                    <p className="text-[10px] uppercase tracking-wide text-muted font-semibold">Tools</p>
+                    <p className="text-2xl font-black font-mono text-ink">{snap.completed_tools_count}</p>
+                    <p className="text-[10px] text-muted">of 6</p>
+                  </div>
+                  <div className={`rounded-[var(--radius-md)] p-3 text-center border ${snap.blockers_count > 0 ? "bg-danger/5 border-danger/20" : "bg-soft border-border"}`}>
+                    <p className="text-[10px] uppercase tracking-wide text-muted font-semibold">Gaps</p>
+                    <p className={`text-2xl font-black font-mono ${snap.blockers_count > 0 ? "text-danger" : "text-ink"}`}>{snap.blockers_count}</p>
+                    <p className="text-[10px] text-muted">critical</p>
+                  </div>
+                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 text-center">
+                    <p className="text-[10px] uppercase tracking-wide text-muted font-semibold">Profile</p>
+                    <p className="text-2xl font-black font-mono text-ink">{snap.profile_completion_pct}%</p>
+                    <p className="text-[10px] text-muted">done</p>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid gap-3">
-                <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
-                  <p className="eyebrow mb-1">Readiness score</p>
-                  <p className="text-4xl font-extrabold tracking-tight font-mono">
-                    {snapshot.overall_score}
-                    <span className="text-base text-muted">/100</span>
-                  </p>
-                  <div className="mt-3 h-2 bg-border rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full ${tone.bar}`} style={{ width: `${snapshot.overall_score}%` }} />
-                  </div>
+              {/* Score bar */}
+              <div className="mt-5 pt-4 border-t border-border">
+                <div className="flex items-center justify-between text-xs text-muted mb-1.5">
+                  <span>Investor readiness</span>
+                  <span>{snap.overall_score}/100 · {snap.verdict}</span>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                    <p className="text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Gaps</p>
-                    <p className="text-xl font-bold font-mono">{snapshot.blockers_count}</p>
-                  </div>
-                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                    <p className="text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Tools</p>
-                    <p className="text-xl font-bold font-mono">{snapshot.completed_tools_count}/6</p>
-                  </div>
-                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                    <p className="text-[10px] uppercase tracking-[0.16em] text-muted mb-1">Profile</p>
-                    <p className="text-xl font-bold font-mono">{snapshot.profile_completion_pct}%</p>
-                  </div>
+                <div className="h-2 bg-border rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full transition-all ${vc.bar}`} style={{ width: `${snap.overall_score}%` }} />
+                </div>
+                <div className="flex justify-between text-[10px] text-muted mt-1">
+                  <span>0 — Early</span><span>35 — Improving</span><span>60 — Fundable</span><span>80+ — Strong</span>
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
 
-          {/* ── Fundraising narrative + smart CTA ── */}
+          {/* ─── 2. TRACTION + VALUATION ──────────────────────────────────── */}
+          <div className="grid lg:grid-cols-2 gap-5">
+
+            {/* Traction */}
+            <Card padding="sm">
+              <CardHeader><CardTitle kicker="Traction">Revenue & growth metrics</CardTitle></CardHeader>
+              <CardContent>
+                {profile.mrr === 0 && profile.arr === 0 ? (
+                  <div className="flex flex-col items-center py-6 text-center">
+                    <p className="text-sm font-semibold text-muted mb-2">No traction data yet</p>
+                    <p className="text-xs text-muted mb-4">Complete the Metrics tool to see ARR, MRR, Growth, and Runway here.</p>
+                    <Link href="/metrics" className="text-sm font-bold text-accent hover:underline">Go to Metrics →</Link>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <MetricStat label="ARR" value={fmtMoney(profile.arr)} sub="Annual recurring" tone={profile.arr >= 240_000 ? "good" : profile.arr > 0 ? "warn" : "neutral"} />
+                    <MetricStat label="MRR" value={fmtMoney(profile.mrr)} sub="Monthly recurring" tone={profile.mrr >= 20_000 ? "good" : profile.mrr > 0 ? "warn" : "neutral"} />
+                    <MetricStat label="Growth" value={fmtPct(profile.growth_rate)} sub="MoM growth rate" tone={profile.growth_rate >= 15 ? "good" : profile.growth_rate >= 5 ? "warn" : profile.growth_rate > 0 ? "bad" : "neutral"} />
+                    <MetricStat label="Runway" value={profile.runway > 0 ? `${Math.round(profile.runway)} mo` : "—"} sub="Months of cash" tone={profile.runway >= 18 ? "good" : profile.runway >= 9 ? "warn" : profile.runway > 0 ? "bad" : "neutral"} />
+                  </div>
+                )}
+                {ts.metrics.score > 0 && (
+                  <div className="mt-3 flex items-center justify-between pt-3 border-t border-border">
+                    <div className="flex items-center gap-2">
+                      <div className="h-1.5 w-24 bg-border rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${scoreBand(ts.metrics.score).bg}`} style={{ width: `${ts.metrics.score}%` }} />
+                      </div>
+                      <span className={`text-xs font-bold ${scoreBand(ts.metrics.score).text}`}>{ts.metrics.score}/100</span>
+                    </div>
+                    <Link href="/metrics" className="text-xs text-accent font-semibold hover:underline">Update →</Link>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Valuation */}
+            <Card padding="sm">
+              <CardHeader><CardTitle kicker="Valuation">Pre-money estimate</CardTitle></CardHeader>
+              <CardContent>
+                {profile.estimated_valuation === 0 ? (
+                  <div className="flex flex-col items-center py-6 text-center">
+                    <p className="text-sm font-semibold text-muted mb-2">No valuation data yet</p>
+                    <p className="text-xs text-muted mb-4">Run the Valuation tool to get a blended pre-money estimate with range.</p>
+                    <Link href="/valuation" className="text-sm font-bold text-accent hover:underline">Go to Valuation →</Link>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4 text-center">
+                      <p className="text-[10px] uppercase tracking-wide text-muted font-semibold mb-1">Estimated pre-money</p>
+                      <p className={`text-3xl font-black font-mono ${scoreBand(ts.valuation.score).text}`}>
+                        {fmtMoney(profile.estimated_valuation)}
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <MetricStat label="Stage" value={profile.stage || "—"} />
+                      <MetricStat label="Sector" value={profile.sector || "—"} />
+                    </div>
+                  </div>
+                )}
+                {ts.valuation.score > 0 && (
+                  <div className="mt-3 flex items-center justify-between pt-3 border-t border-border">
+                    <div className="flex items-center gap-2">
+                      <div className="h-1.5 w-24 bg-border rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${scoreBand(ts.valuation.score).bg}`} style={{ width: `${ts.valuation.score}%` }} />
+                      </div>
+                      <span className={`text-xs font-bold ${scoreBand(ts.valuation.score).text}`}>{ts.valuation.score}/100</span>
+                    </div>
+                    <Link href="/valuation" className="text-xs text-accent font-semibold hover:underline">Update →</Link>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* ─── 3. TOOL GRID ────────────────────────────────────────────── */}
           <Card padding="sm">
             <CardHeader>
-              <CardTitle kicker="Analysis">Fundraising readiness summary</CardTitle>
+              <CardTitle kicker="Assessment modules">Tool performance overview</CardTitle>
+              <span className="text-xs text-muted">{snap.completed_tools_count}/6 completed</span>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-ink-secondary leading-relaxed mb-5">{narrative}</p>
-              <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-border">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted">{smartCTA.description}</p>
-                </div>
-                {smartCTA.external ? (
-                  <a
-                    href={smartCTA.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors shrink-0"
-                  >
-                    {smartCTA.label}
-                  </a>
-                ) : (
-                  <Link
-                    href={smartCTA.href}
-                    className="inline-flex items-center h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors shrink-0"
-                  >
-                    {smartCTA.label}
-                  </Link>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                {(Object.keys(ts) as FoundationTool[]).map(t => <ToolCard key={t} tool={t} state={ts[t]} />)}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* ─── 4. ANALYSIS ─────────────────────────────────────────────── */}
+          <Card padding="sm">
+            <CardHeader><CardTitle kicker="Fundraising analysis">Readiness breakdown</CardTitle></CardHeader>
+            <CardContent>
+              {/* Narrative */}
+              <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4 mb-4">
+                <p className="text-xs font-bold text-muted uppercase tracking-wide mb-2">Summary</p>
+                <p className="text-sm text-ink-secondary leading-relaxed">{narrative}</p>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                {/* Strengths */}
+                {strengths.length > 0 && (
+                  <div>
+                    <p className="text-xs font-bold text-success uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                      <span className="inline-block w-2 h-2 rounded-full bg-success" />
+                      What&apos;s working
+                    </p>
+                    <div className="space-y-2">
+                      {strengths.map(s => (
+                        <div key={s.label} className="bg-success/5 border border-success/15 rounded-[var(--radius-md)] px-3 py-2.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-sm font-semibold text-ink">✓ {s.label}</p>
+                              <p className="text-xs text-ink-secondary mt-0.5">{s.detail}</p>
+                            </div>
+                            {s.href && <Link href={s.href} className="text-xs text-accent shrink-0 hover:underline">View →</Link>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Weaknesses */}
+                {weaknesses.length > 0 && (
+                  <div>
+                    <p className="text-xs font-bold text-warning uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                      <span className="inline-block w-2 h-2 rounded-full bg-warning" />
+                      Needs attention
+                    </p>
+                    <div className="space-y-2">
+                      {weaknesses.map(w => (
+                        <div key={w.label} className="bg-warning/5 border border-warning/15 rounded-[var(--radius-md)] px-3 py-2.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-sm font-semibold text-ink">⚠ {w.label}</p>
+                              <p className="text-xs text-ink-secondary mt-0.5">{w.detail}</p>
+                            </div>
+                            {w.href && <Link href={w.href} className="text-xs text-accent shrink-0 hover:underline">Fix →</Link>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             </CardContent>
           </Card>
 
-          {/* ── Strengths & Weaknesses ── */}
-          {(strengths.length > 0 || weaknesses.length > 0) && (
-            <div className="grid lg:grid-cols-2 gap-5">
-              {strengths.length > 0 && (
-                <Card padding="sm">
-                  <CardHeader>
-                    <CardTitle kicker="What's working">Top strengths</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {strengths.map((s) => (
-                        <div key={s.label} className="bg-success/5 border border-success/15 rounded-[var(--radius-md)] p-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <p className="text-sm font-semibold text-ink mb-1">✓ {s.label}</p>
-                              <p className="text-xs text-ink-secondary">{s.detail}</p>
-                            </div>
-                            {s.href && (
-                              <Link href={s.href} className="text-xs text-accent shrink-0 hover:underline">View →</Link>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+          {/* ─── 5. CRITICAL ALERTS ──────────────────────────────────────── */}
+          <Card padding="sm">
+            <CardHeader>
+              <CardTitle kicker="Action needed">Critical alerts</CardTitle>
+              {snap.red_flags.length > 0 && (
+                <span className={`text-xs font-bold px-2 py-1 rounded-full ${snap.blockers_count > 0 ? "bg-danger/10 text-danger" : "bg-warning/10 text-warning"}`}>
+                  {snap.red_flags.length} {snap.red_flags.length === 1 ? "issue" : "issues"}
+                </span>
               )}
-
-              {weaknesses.length > 0 && (
-                <Card padding="sm">
-                  <CardHeader>
-                    <CardTitle kicker="What to fix">Areas needing attention</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {weaknesses.map((w) => (
-                        <div key={w.label} className="bg-warning/5 border border-warning/15 rounded-[var(--radius-md)] p-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <p className="text-sm font-semibold text-ink mb-1">⚠ {w.label}</p>
-                              <p className="text-xs text-ink-secondary">{w.detail}</p>
-                            </div>
-                            {w.href && (
-                              <Link href={w.href} className="text-xs text-accent shrink-0 hover:underline">Fix →</Link>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+            </CardHeader>
+            <CardContent>
+              {snap.red_flags.length === 0 ? (
+                <div className="bg-success/5 border border-success/20 rounded-[var(--radius-md)] px-4 py-3 flex items-center gap-3">
+                  <span className="text-success text-lg">✓</span>
+                  <div>
+                    <p className="text-sm font-bold text-success">No critical gaps</p>
+                    <p className="text-xs text-muted mt-0.5">Your profile has no blocking issues at this time.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {snap.red_flags.map(f => <AlertCard key={f.id} flag={f} />)}
+                </div>
               )}
-            </div>
-          )}
+            </CardContent>
+          </Card>
 
-          {/* ── Next actions ── */}
-          {nextActions.length > 0 && (
-            <Card padding="sm">
-              <CardHeader>
-                <CardTitle kicker="Action plan">Immediate next actions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {nextActions.map((action, i) => (
-                    <div key={action.label} className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
-                      <div className="flex items-start gap-3">
-                        <span className="w-6 h-6 rounded-full bg-accent/10 text-accent text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+          {/* ─── 6. NEXT ACTIONS + SMART CTA ─────────────────────────────── */}
+          <div className="grid lg:grid-cols-[1fr_340px] gap-5">
+            {/* Next actions */}
+            {actions.length > 0 && (
+              <Card padding="sm">
+                <CardHeader><CardTitle kicker="Your action plan">Immediate next actions</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {actions.map((a, i) => (
+                      <div key={a.label} className="flex gap-3 bg-soft border border-border rounded-[var(--radius-md)] p-3">
+                        <span className="w-6 h-6 rounded-full bg-accent/10 text-accent text-xs font-black flex items-center justify-center shrink-0 mt-0.5">
                           {i + 1}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-ink mb-1">{action.label}</p>
-                          <p className="text-xs text-ink-secondary">{action.detail}</p>
-                          {action.href && (
-                            action.href.startsWith("http") ? (
-                              <a href={action.href} target="_blank" rel="noopener noreferrer" className="text-xs text-accent mt-2 inline-block hover:underline">
-                                Take action →
-                              </a>
+                          <p className="text-sm font-bold text-ink">{a.label}</p>
+                          <p className="text-xs text-ink-secondary mt-0.5">{a.detail}</p>
+                          {a.href && (
+                            a.href.startsWith("http") ? (
+                              <a href={a.href} target="_blank" rel="noopener noreferrer" className="text-xs text-accent mt-1.5 inline-block hover:underline font-semibold">Take action →</a>
                             ) : (
-                              <Link href={action.href} className="text-xs text-accent mt-2 inline-block hover:underline">
-                                Take action →
-                              </Link>
+                              <Link href={a.href} className="text-xs text-accent mt-1.5 inline-block hover:underline font-semibold">Take action →</Link>
                             )
                           )}
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-          <div className="grid lg:grid-cols-2 gap-5">
-            {/* ── Company profile ── */}
+            {/* Smart CTA */}
             <Card padding="sm">
-              <CardHeader>
-                <CardTitle kicker="Company profile">Founder & startup</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle kicker="Recommended next step">What to do now</CardTitle></CardHeader>
               <CardContent>
-                <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                    <p className="eyebrow mb-1">Founder</p>
-                    <p className="font-semibold">{profile.founder_name || "—"}</p>
-                    <p className="text-muted text-xs mt-1">{profile.founder_email || "—"}</p>
-                  </div>
-                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                    <p className="eyebrow mb-1">Startup</p>
-                    <p className="font-semibold">{profile.startup_name || "—"}</p>
-                    <p className="text-muted text-xs mt-1">
-                      {profile.country || "—"} · {profile.sector || "—"} · {profile.stage || "—"}
-                    </p>
-                  </div>
-                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                    <p className="eyebrow mb-1">Traction</p>
-                    <p className="font-semibold">ARR {fmtMoney(profile.arr)} · MRR {fmtMoney(profile.mrr)}</p>
-                    <p className="text-muted text-xs mt-1">
-                      Growth {profile.growth_rate || 0}% · Runway {profile.runway || 0} mo
-                    </p>
-                  </div>
-                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                    <p className="eyebrow mb-1">Valuation</p>
-                    <p className="font-semibold">{fmtMoney(profile.estimated_valuation)}</p>
-                    <p className="text-muted text-xs mt-1">
-                      Raised before: {profile.has_raised_before ? "Yes" : "No"}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* ── Your tools ── */}
-            <Card padding="sm">
-              <CardHeader>
-                <CardTitle kicker="Your tools">Assessment modules</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {(Object.keys(toolStates) as FoundationTool[]).map((tool) => {
-                    const state = toolStates[tool];
-                    return (
-                      <Link
-                        key={tool}
-                        href={toolHref(tool)}
-                        className="bg-soft border border-border rounded-[var(--radius-md)] p-3 hover:border-ink/20 transition-colors"
+                <div className="flex flex-col h-full">
+                  <p className="text-xs text-muted leading-relaxed mb-4">{smartCTA.description}</p>
+                  {smartCTA.ext ? (
+                    <a href={smartCTA.href} target="_blank" rel="noopener noreferrer"
+                      className="w-full inline-flex items-center justify-center h-11 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors"
+                    >{smartCTA.label}</a>
+                  ) : (
+                    <Link href={smartCTA.href}
+                      className="w-full inline-flex items-center justify-center h-11 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors"
+                    >{smartCTA.label}</Link>
+                  )}
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <p className="text-xs text-muted mb-3">Also available</p>
+                    <div className="space-y-2">
+                      <button onClick={handleExport} disabled={exporting}
+                        className="w-full h-9 px-3 rounded-[var(--radius-md)] border border-border bg-soft text-xs font-semibold text-ink hover:border-ink/20 transition-colors disabled:opacity-50 text-left flex items-center gap-2"
                       >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className={`w-2 h-2 rounded-full ${statusTone(state.status)}`} />
-                            <p className="text-sm font-semibold">{TOOL_LABELS[tool]}</p>
-                          </div>
-                          <span className="text-xs font-mono text-muted">{state.score}/100</span>
-                        </div>
-                        <div className="h-1.5 bg-border rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${state.score >= 70 ? "bg-success" : state.score >= 40 ? "bg-warning" : "bg-danger"}`}
-                            style={{ width: `${state.score}%` }}
-                          />
-                        </div>
-                        <p className="text-[11px] text-muted mt-2">{STATUS_LABELS[state.status]}</p>
+                        <span>↓</span> {exporting ? "Generating PDF…" : "Export PDF report"}
+                      </button>
+                      <Link href="/onboard"
+                        className="w-full h-9 px-3 rounded-[var(--radius-md)] border border-border bg-soft text-xs font-semibold text-ink hover:border-ink/20 transition-colors flex items-center gap-2"
+                      >
+                        <span>✎</span> Update founder profile
                       </Link>
-                    );
-                  })}
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* ── Critical gaps ── */}
+          {/* ─── 7. SCORE HISTORY ────────────────────────────────────────── */}
           <Card padding="sm">
             <CardHeader>
-              <CardTitle kicker="Action needed">Critical gaps</CardTitle>
+              <CardTitle kicker="Progress">Score history</CardTitle>
+              {history.length > 8 && <span className="text-xs text-muted">Last 8 of {history.length}</span>}
             </CardHeader>
             <CardContent>
-              {snapshot.red_flags.length === 0 ? (
-                <div className="bg-success/5 border border-success/20 rounded-[var(--radius-md)] p-4">
-                  <p className="text-sm font-semibold text-success">No critical gaps detected.</p>
-                  <p className="text-xs text-muted mt-1">
-                    Your current profile does not show any blocking issues.
-                  </p>
-                </div>
+              {history.length === 0 ? (
+                <p className="text-sm text-muted py-2">No history yet. Scores are recorded each time you save a tool.</p>
               ) : (
-                <div className="space-y-3">
-                  {snapshot.red_flags.map((flag) => (
-                    <div
-                      key={flag.id}
-                      className={`rounded-[var(--radius-md)] border p-4 ${flag.blocking ? "bg-danger/5 border-danger/20" : "bg-warning/5 border-warning/20"}`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="text-sm font-bold text-ink">{flag.label}</p>
-                            <span className={`inline-flex items-center h-6 px-2 rounded-full text-[11px] font-semibold ${flag.blocking ? "bg-danger/10 text-danger" : "bg-warning/10 text-warning"}`}>
-                              {flag.blocking ? "Critical" : "Warning"}
-                            </span>
-                          </div>
-                          <p className="text-sm text-ink-secondary">{flag.reason}</p>
-                          <p className="text-xs text-muted mt-2">{flag.action}</p>
+                <div className="space-y-0">
+                  {[...history].reverse().slice(0, 8).map((item, idx, arr) => {
+                    const prev = arr[idx + 1];
+                    const delta = prev ? item.overall_score - prev.overall_score : 0;
+                    const b = scoreBand(item.overall_score);
+                    return (
+                      <div key={`${item.saved_at}-${idx}`} className="flex items-center gap-3 py-2.5 border-b border-border last:border-0">
+                        <div className={`w-12 text-xl font-black font-mono ${b.text}`}>{item.overall_score}</div>
+                        <div className="w-12 text-xs font-bold">
+                          {!prev ? <span className="text-muted text-[10px]">first</span>
+                            : delta > 0 ? <span className="text-success">+{delta}</span>
+                            : delta < 0 ? <span className="text-danger">{delta}</span>
+                            : <span className="text-muted">—</span>}
                         </div>
-                        {flag.href && (
-                          <Link href={flag.href} className="text-sm font-semibold text-accent shrink-0 hover:underline">
-                            Fix →
-                          </Link>
-                        )}
+                        <div className="flex-1 h-2 bg-border rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full ${b.bg}`} style={{ width: `${item.overall_score}%` }} />
+                        </div>
+                        <span className="text-xs text-muted shrink-0 w-28 text-right">{fmtDate(item.saved_at)}</span>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
           </Card>
-
-          <div className="grid lg:grid-cols-2 gap-5">
-            {/* ── Readiness at a glance ── */}
-            <Card padding="sm">
-              <CardHeader>
-                <CardTitle kicker="Summary">Your readiness at a glance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                    <p className="eyebrow mb-1">Verdict</p>
-                    <p className="font-semibold">{snapshot.verdict}</p>
-                  </div>
-                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                    <p className="eyebrow mb-1">Last updated</p>
-                    <p className="font-semibold text-sm">{fmtDate(snapshot.saved_at)}</p>
-                  </div>
-                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                    <p className="eyebrow mb-1">Strongest area</p>
-                    <p className="font-semibold">{snapshot.strongest_tool ? TOOL_LABELS[snapshot.strongest_tool] : "—"}</p>
-                  </div>
-                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                    <p className="eyebrow mb-1">Needs most work</p>
-                    <p className="font-semibold">{snapshot.weakest_tool ? TOOL_LABELS[snapshot.weakest_tool] : "—"}</p>
-                  </div>
-                </div>
-
-                {snapshot.missing_tools.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
-                      Not yet started
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {snapshot.missing_tools.map((tool) => (
-                        <Link
-                          key={tool}
-                          href={toolHref(tool)}
-                          className="inline-flex items-center px-2.5 py-1 rounded-full border border-border bg-soft text-xs font-medium hover:border-ink/20 transition-colors"
-                        >
-                          {TOOL_LABELS[tool]} →
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* ── Score history ── */}
-            <Card padding="sm">
-              <CardHeader>
-                <CardTitle kicker="Progress">Score history</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {history.length === 0 ? (
-                  <p className="text-sm text-muted">No history saved yet. Scores are recorded each time you save a tool.</p>
-                ) : (
-                  <>
-                    <div className="space-y-2">
-                      {history
-                        .slice()
-                        .reverse()
-                        .slice(0, 8)
-                        .map((item, index, arr) => {
-                          const prev = arr[index + 1];
-                          const delta = prev ? item.overall_score - prev.overall_score : 0;
-                          return (
-                            <div
-                              key={`${item.saved_at}-${index}`}
-                              className="flex items-center gap-3 py-2 border-b border-border last:border-0"
-                            >
-                              <div className="w-14 text-2xl font-extrabold font-mono tracking-tight">
-                                {item.overall_score}
-                              </div>
-                              <div className="w-10 text-xs font-semibold">
-                                {prev ? (
-                                  <span className={delta > 0 ? "text-success" : delta < 0 ? "text-danger" : "text-muted"}>
-                                    {delta > 0 ? `+${delta}` : delta !== 0 ? `${delta}` : "—"}
-                                  </span>
-                                ) : (
-                                  <span className="text-muted text-[10px]">first</span>
-                                )}
-                              </div>
-                              <div className="flex-1 h-1.5 bg-border rounded-full overflow-hidden">
-                                <div className="h-full bg-accent rounded-full" style={{ width: `${item.overall_score}%` }} />
-                              </div>
-                              <div className="text-xs text-muted shrink-0">{fmtDate(item.saved_at)}</div>
-                            </div>
-                          );
-                        })}
-                    </div>
-                    {history.length > 8 && (
-                      <p className="text-xs text-muted mt-3">Showing last 8 of {history.length} entries.</p>
-                    )}
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </div>
 
         </div>
       </Container>
