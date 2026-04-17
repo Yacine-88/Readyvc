@@ -275,42 +275,65 @@ export function compareToMarket(
   yourValuation: number | null,
   benchmark: BenchmarkResult
 ): YouVsMarket {
-  if (benchmark.peerCount === 0 || yourRaised === null) {
+  // Only fully bail out when there are no peers at all — never because raise is missing.
+  if (benchmark.peerCount === 0) {
     return {
       raisedVsMedian: "unknown", raisedVsP75: "unknown",
       valuationVsMedian: "unknown", raisedPercentile: null,
-      summary: "Complete more tools to enable market comparison.",
+      summary: "No comparable deals found — broaden your filters.",
     };
   }
 
-  // Raised position
   const tol = 0.05;
-  const raisedVsMedian =
+
+  // ── Valuation position (independent of raised) ────────────────────────────
+  const valuationVsMedian: YouVsMarket["valuationVsMedian"] =
+    !yourValuation || !benchmark.medianValuation ? "unknown" :
+    yourValuation > benchmark.medianValuation * (1 + tol) ? "above" :
+    yourValuation < benchmark.medianValuation * (1 - tol) ? "below" : "at";
+
+  // ── No raise target — return valuation-only result ────────────────────────
+  if (yourRaised === null) {
+    const valLabel =
+      valuationVsMedian === "above" ? "above" :
+      valuationVsMedian === "below" ? "below" :
+      valuationVsMedian === "at"    ? "in line with" : null;
+
+    return {
+      raisedVsMedian:   "unknown",
+      raisedVsP75:      "unknown",
+      valuationVsMedian,
+      raisedPercentile: null,
+      summary: valLabel
+        ? `Your valuation is ${valLabel} the peer median of ${fmtM(benchmark.medianValuation!)}.`
+        : "Add a target raise in the Valuation tool to enable full market comparison.",
+    };
+  }
+
+  // ── Raised position ───────────────────────────────────────────────────────
+  const raisedVsMedian: YouVsMarket["raisedVsMedian"] =
     yourRaised > benchmark.medianRaised * (1 + tol) ? "above" :
     yourRaised < benchmark.medianRaised * (1 - tol) ? "below" : "at";
   const raisedVsP75 = yourRaised >= benchmark.p75Raised ? "above" : "below";
 
   // Rough percentile (linear interpolation across P25/median/P75)
   let raisedPercentile: number | null = null;
-  if (yourRaised <= benchmark.p25Raised)       raisedPercentile = Math.round((yourRaised / benchmark.p25Raised) * 25);
-  else if (yourRaised <= benchmark.medianRaised) raisedPercentile = Math.round(25 + ((yourRaised - benchmark.p25Raised) / (benchmark.medianRaised - benchmark.p25Raised + 0.01)) * 25);
-  else if (yourRaised <= benchmark.p75Raised)  raisedPercentile = Math.round(50 + ((yourRaised - benchmark.medianRaised) / (benchmark.p75Raised - benchmark.medianRaised + 0.01)) * 25);
-  else                                          raisedPercentile = Math.min(99, Math.round(75 + ((yourRaised - benchmark.p75Raised) / (benchmark.p75Raised + 0.01)) * 15));
+  if (yourRaised <= benchmark.p25Raised)
+    raisedPercentile = Math.round((yourRaised / benchmark.p25Raised) * 25);
+  else if (yourRaised <= benchmark.medianRaised)
+    raisedPercentile = Math.round(25 + ((yourRaised - benchmark.p25Raised) / (benchmark.medianRaised - benchmark.p25Raised + 0.01)) * 25);
+  else if (yourRaised <= benchmark.p75Raised)
+    raisedPercentile = Math.round(50 + ((yourRaised - benchmark.medianRaised) / (benchmark.p75Raised - benchmark.medianRaised + 0.01)) * 25);
+  else
+    raisedPercentile = Math.min(99, Math.round(75 + ((yourRaised - benchmark.p75Raised) / (benchmark.p75Raised + 0.01)) * 15));
 
-  // Valuation position
-  const valuationVsMedian: YouVsMarket["valuationVsMedian"] =
-    !yourValuation || !benchmark.medianValuation ? "unknown" :
-    yourValuation > benchmark.medianValuation * (1 + tol) ? "above" :
-    yourValuation < benchmark.medianValuation * (1 - tol) ? "below" : "at";
-
-  // Summary sentence
+  // ── Summary sentence ──────────────────────────────────────────────────────
   const raisedLabel = raisedVsMedian === "above" ? "above" : raisedVsMedian === "below" ? "below" : "in line with";
   const valPart =
     valuationVsMedian === "unknown" ? "" :
     ` Your valuation is ${valuationVsMedian === "above" ? "above" : valuationVsMedian === "below" ? "below" : "in line with"} the peer median.`;
 
-  const summary =
-    `Your raise is ${raisedLabel} the peer median of ${fmtM(benchmark.medianRaised)}.${valPart}`;
+  const summary = `Your raise is ${raisedLabel} the peer median of ${fmtM(benchmark.medianRaised)}.${valPart}`;
 
   return { raisedVsMedian, raisedVsP75, valuationVsMedian, raisedPercentile, summary };
 }

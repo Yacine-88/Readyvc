@@ -679,30 +679,52 @@ function YouVsMarketCard({ profile, ts }: YouVsMarketCardProps) {
   const yvm = compareToMarket(yourRaised, yourValuation, bm);
 
   // ── Positioning label ─────────────────────────────────────────────────────
+  // Primary signal: raised comparison. Fallback: valuation comparison.
+  // Only show "No data" when neither is available.
   let posLabel: string;
   let posColor: string;
   let posDesc: string;
+  let posBasis: "raised" | "valuation" | "none" = "none";
 
-  if (yvm.raisedVsMedian === "unknown") {
+  if (yvm.raisedVsMedian !== "unknown") {
+    posBasis = "raised";
+    if (yvm.raisedVsP75 === "above") {
+      posLabel = "Aggressive";
+      posColor = "text-warning";
+      posDesc  = "Your target raise is above the P75 for comparable deals. Ensure your story justifies the ask.";
+    } else if (yvm.raisedVsMedian === "above") {
+      posLabel = "Above median";
+      posColor = "text-success";
+      posDesc  = "Your raise target is above market median — a strong signal if your traction supports it.";
+    } else if (yvm.raisedVsMedian === "at") {
+      posLabel = "In range";
+      posColor = "text-success";
+      posDesc  = "Your raise target aligns well with the market median for comparable deals.";
+    } else {
+      posLabel = "Conservative";
+      posColor = "text-ink-secondary";
+      posDesc  = "Your raise target is below market median. This can work for earlier rounds, but consider if it matches your ambition.";
+    }
+  } else if (yvm.valuationVsMedian !== "unknown") {
+    // Raise data absent — derive positioning from valuation vs market
+    posBasis = "valuation";
+    if (yvm.valuationVsMedian === "above") {
+      posLabel = "Above median";
+      posColor = "text-success";
+      posDesc  = "Your valuation is above the peer median. Strong signal — make sure your traction narrative supports this.";
+    } else if (yvm.valuationVsMedian === "below") {
+      posLabel = "Below median";
+      posColor = "text-ink-secondary";
+      posDesc  = "Your valuation is below the peer market median. This may be appropriate for an earlier-stage raise.";
+    } else {
+      posLabel = "In range";
+      posColor = "text-success";
+      posDesc  = "Your valuation is in line with the peer median — well-positioned for your market.";
+    }
+  } else {
     posLabel = "No data";
     posColor = "text-muted";
     posDesc  = "Complete the Valuation tool to unlock market positioning.";
-  } else if (yvm.raisedVsP75 === "above") {
-    posLabel = "Aggressive";
-    posColor = "text-warning";
-    posDesc  = "Your target raise is above the P75 for comparable deals. Ensure your story justifies the ask.";
-  } else if (yvm.raisedVsMedian === "above") {
-    posLabel = "Above median";
-    posColor = "text-success";
-    posDesc  = "Your raise target is above market median — a strong signal if your traction supports it.";
-  } else if (yvm.raisedVsMedian === "at") {
-    posLabel = "In range";
-    posColor = "text-success";
-    posDesc  = "Your raise target aligns well with the market median for comparable deals.";
-  } else {
-    posLabel = "Conservative";
-    posColor = "text-ink-secondary";
-    posDesc  = "Your raise target is below market median. This can work for earlier rounds, but consider if it matches your ambition.";
   }
 
   const confidenceCfg = {
@@ -727,78 +749,97 @@ function YouVsMarketCard({ profile, ts }: YouVsMarketCardProps) {
               {confidenceCfg.label}
             </span>
             <Link href="/comparables" className="text-xs text-accent font-semibold hover:underline">
-              Explore →
+              Full explorer →
             </Link>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid sm:grid-cols-3 gap-4">
+        {/* ── Asymmetric layout: market context left, positioning right ── */}
+        <div className="grid lg:grid-cols-[1fr_280px] gap-4">
 
-          {/* ── Peer set ─────────────────────────────────────────── */}
-          <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
-            <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">Peer set</p>
-            <p className="text-2xl font-mono font-bold text-foreground">{bm.peerCount}</p>
-            <p className="text-xs text-ink-secondary mt-1">{scopeLabel}</p>
-            <p className="text-xs text-muted mt-1">
-              {bm.yearRange[0] > 0 ? `${bm.yearRange[0]}–${bm.yearRange[1]}` : ""}
-              {bm.countriesCount > 1 ? ` · ${bm.countriesCount} countries` : ""}
-            </p>
+          {/* Left: peer context + market data */}
+          <div className="space-y-3">
+            {/* Peer meta row */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-secondary">
+              <span className="font-semibold text-foreground">{bm.peerCount} comparable deals</span>
+              <span className="text-muted">·</span>
+              <span>{scopeLabel}</span>
+              {bm.yearRange[0] > 0 && (
+                <><span className="text-muted">·</span><span>{bm.yearRange[0]}–{bm.yearRange[1]}</span></>
+              )}
+              {bm.countriesCount > 1 && (
+                <><span className="text-muted">·</span><span>{bm.countriesCount} countries</span></>
+              )}
+            </div>
+
+            {/* Raise + valuation stats */}
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
+                <p className="text-[10px] font-semibold text-muted uppercase tracking-wide mb-1">Typical raise (P25–P75)</p>
+                <p className="text-base font-mono font-bold text-foreground">{bm.raisedBracket}</p>
+                <p className="text-xs text-ink-secondary mt-1">
+                  Median <span className="font-semibold text-foreground">{fmtM(bm.medianRaised)}</span>
+                </p>
+                {yourRaised !== null && (
+                  <p className="text-xs mt-0.5">
+                    Your target:{" "}
+                    <span className={`font-semibold ${posColor}`}>{fmtM(yourRaised)}</span>
+                  </p>
+                )}
+              </div>
+
+              <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
+                <p className="text-[10px] font-semibold text-muted uppercase tracking-wide mb-1">Market valuation</p>
+                {bm.medianValuation !== null ? (
+                  <>
+                    <p className="text-base font-mono font-bold text-foreground">{fmtM(bm.medianValuation)}</p>
+                    <p className="text-xs text-ink-secondary mt-1">
+                      {bm.p25Valuation !== null && bm.p75Valuation !== null
+                        ? `P25 ${fmtM(bm.p25Valuation)} – P75 ${fmtM(bm.p75Valuation)}`
+                        : `${bm.valuationCoverage}% coverage`}
+                    </p>
+                    {yourValuation !== null && (
+                      <p className="text-xs mt-0.5">
+                        Yours:{" "}
+                        <span className={`font-semibold ${
+                          yvm.valuationVsMedian === "above" ? "text-success" :
+                          yvm.valuationVsMedian === "below" ? "text-warning" : "text-foreground"
+                        }`}>{fmtM(yourValuation)}</span>
+                        {yvm.valuationVsMedian !== "unknown" && (
+                          <span className="text-muted"> ({yvm.valuationVsMedian})</span>
+                        )}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-xs text-muted mt-1">No valuation data in peer set</p>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* ── Market raise bracket ─────────────────────────────── */}
-          <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
-            <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">Typical raise (P25–P75)</p>
-            <p className="text-lg font-mono font-bold text-foreground">{bm.raisedBracket}</p>
-            <p className="text-xs text-ink-secondary mt-1">
-              Median: <span className="font-semibold">{fmtM(bm.medianRaised)}</span>
-            </p>
-            {yourRaised !== null && (
-              <p className="text-xs text-ink-secondary mt-0.5">
-                Your target: <span className={`font-semibold ${posColor}`}>{fmtM(yourRaised)}</span>
+          {/* Right: positioning — the key insight */}
+          <div className={`rounded-[var(--radius-md)] p-4 border flex flex-col justify-between ${
+            posLabel === "Aggressive"    ? "bg-warning/5 border-warning/25" :
+            posLabel === "No data"       ? "bg-soft border-border" :
+            posLabel === "Below median"  ? "bg-soft border-border" :
+            posLabel === "Conservative"  ? "bg-soft border-border" :
+                                           "bg-success/5 border-success/15"
+          }`}>
+            <div>
+              <p className="text-[10px] font-semibold text-muted uppercase tracking-wide mb-2">Your positioning</p>
+              <p className={`text-2xl font-extrabold leading-tight ${posColor} mb-2`}>{posLabel}</p>
+              <p className="text-xs text-ink-secondary leading-relaxed">{posDesc}</p>
+            </div>
+            {posBasis !== "none" && (
+              <p className="text-[10px] text-muted mt-3 pt-2 border-t border-border/60">
+                {posBasis === "raised" ? "Based on raise target vs peers" : "Based on valuation vs peers"}
               </p>
             )}
           </div>
 
-          {/* ── Your positioning ─────────────────────────────────── */}
-          <div className={`rounded-[var(--radius-md)] p-4 border ${
-            posLabel === "Aggressive"   ? "bg-warning/5 border-warning/25" :
-            posLabel === "No data"      ? "bg-soft border-border" :
-            posLabel === "Conservative" ? "bg-soft border-border" :
-                                          "bg-success/5 border-success/15"
-          }`}>
-            <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">Positioning</p>
-            <p className={`text-xl font-bold ${posColor} mb-1`}>{posLabel}</p>
-            <p className="text-xs text-ink-secondary leading-relaxed">{posDesc}</p>
-          </div>
-
         </div>
-
-        {/* ── Valuation row (only if data available) ────────────────────── */}
-        {bm.medianValuation !== null && (
-          <div className="mt-3 pt-3 border-t border-border flex flex-wrap gap-4 text-xs text-ink-secondary">
-            <span>
-              Market median valuation:{" "}
-              <span className="font-semibold text-foreground">{fmtM(bm.medianValuation)}</span>
-              {bm.p25Valuation !== null && bm.p75Valuation !== null && (
-                <span className="text-muted"> (P25 {fmtM(bm.p25Valuation)} – P75 {fmtM(bm.p75Valuation)})</span>
-              )}
-            </span>
-            {yourValuation !== null && (
-              <span>
-                Your valuation:{" "}
-                <span className={`font-semibold ${
-                  yvm.valuationVsMedian === "above" ? "text-success" :
-                  yvm.valuationVsMedian === "below" ? "text-warning" : "text-foreground"
-                }`}>{fmtM(yourValuation)}</span>
-                {yvm.valuationVsMedian !== "unknown" && (
-                  <span className="text-muted"> ({yvm.valuationVsMedian} median)</span>
-                )}
-              </span>
-            )}
-            <span className="ml-auto text-muted">{bm.valuationCoverage}% valuation coverage</span>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
@@ -950,17 +991,17 @@ export default function DashboardV2Page() {
   return (
     <div className="py-8 bg-background min-h-screen">
       <Container>
-        <div className="space-y-5">
+        <div className="space-y-6">
 
           {/* ─── 1. HERO ──────────────────────────────────────────────────── */}
           <div className="bg-card border border-border rounded-[var(--radius-lg)] overflow-hidden">
-            {/* Top accent bar */}
-            <div className={`h-1 w-full ${vc.bar}`} />
-            <div className="p-6">
+            {/* Top accent bar — thicker for more presence */}
+            <div className={`h-1.5 w-full ${vc.bar}`} />
+            <div className="p-6 pb-5">
               <div className="grid lg:grid-cols-[1fr_auto] gap-6 items-start">
                 {/* Left: identity + score */}
                 <div className="flex gap-5 items-start">
-                  <ScoreArc score={animatedScore} colorScore={snap.overall_score} size={96} />
+                  <ScoreArc score={animatedScore} colorScore={snap.overall_score} size={104} />
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
                       <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight leading-tight">
@@ -1010,49 +1051,46 @@ export default function DashboardV2Page() {
                   </div>
                 </div>
 
-                {/* Right: stat chips */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2 lg:w-44">
-                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 text-center">
-                    <p className="text-[10px] uppercase tracking-wide text-muted font-semibold">Score</p>
-                    <p className={`text-2xl font-black font-mono ${band.text}`}>{animatedScore}</p>
-                    <p className="text-[10px] text-muted">/100</p>
-                  </div>
+                {/* Right: stat chips — compact vertical stack on desktop */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2 lg:w-40">
                   <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 text-center">
                     <p className="text-[10px] uppercase tracking-wide text-muted font-semibold">Tools</p>
-                    <p className="text-2xl font-black font-mono text-ink">{animatedTools}</p>
-                    <p className="text-[10px] text-muted">of 6</p>
+                    <p className="text-2xl font-black font-mono text-ink">{animatedTools}<span className="text-sm font-normal text-muted">/6</span></p>
                   </div>
                   <div className={`rounded-[var(--radius-md)] p-3 text-center border ${snap.blockers_count > 0 ? "bg-danger/5 border-danger/20" : "bg-soft border-border"}`}>
                     <p className="text-[10px] uppercase tracking-wide text-muted font-semibold">Gaps</p>
                     <p className={`text-2xl font-black font-mono ${snap.blockers_count > 0 ? "text-danger" : "text-ink"}`}>{animatedBlockers}</p>
-                    <p className="text-[10px] text-muted">critical</p>
                   </div>
-                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 text-center">
-                    <p className="text-[10px] uppercase tracking-wide text-muted font-semibold">Profile</p>
-                    <p className="text-2xl font-black font-mono text-ink">{animatedProfile}%</p>
-                    <p className="text-[10px] text-muted">done</p>
+                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 text-center col-span-2 lg:col-span-2">
+                    <p className="text-[10px] uppercase tracking-wide text-muted font-semibold mb-0.5">Profile completeness</p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 bg-border rounded-full overflow-hidden">
+                        <div className="h-full rounded-full bg-accent" style={{ width: `${snap.profile_completion_pct}%` }} />
+                      </div>
+                      <span className="text-xs font-bold text-ink">{animatedProfile}%</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Score bar */}
+              {/* Score progress bar */}
               <div className="mt-5 pt-4 border-t border-border">
-                <div className="flex items-center justify-between text-xs text-muted mb-1.5">
-                  <span>Investor readiness</span>
-                  <span>{snap.overall_score}/100 · {snap.verdict}</span>
+                <div className="flex items-center justify-between text-xs text-muted mb-2">
+                  <span className="font-medium text-ink-secondary">Investor readiness score</span>
+                  <span className={`font-bold ${band.text}`}>{snap.overall_score}/100 — {snap.verdict}</span>
                 </div>
-                <div className="h-2 bg-border rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-all ${vc.bar}`} style={{ width: `${snap.overall_score}%` }} />
+                <div className="h-2.5 bg-border rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full transition-all duration-700 ${vc.bar}`} style={{ width: `${snap.overall_score}%` }} />
                 </div>
-                <div className="flex justify-between text-[10px] text-muted mt-1">
-                  <span>0 — Early</span><span>35 — Improving</span><span>60 — Fundable</span><span>80+ — Strong</span>
+                <div className="flex justify-between text-[10px] text-muted mt-1.5">
+                  <span>0 Early</span><span>35 Improving</span><span>60 Fundable</span><span>80+ Strong</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* ─── 2. TRACTION + VALUATION ──────────────────────────────────── */}
-          <div className="grid lg:grid-cols-2 gap-5">
+          <div className="grid lg:grid-cols-[3fr_2fr] gap-5">
 
             {/* Traction */}
             <Card padding="sm">
@@ -1141,154 +1179,149 @@ export default function DashboardV2Page() {
             </CardContent>
           </Card>
 
-          {/* ─── 4. ANALYSIS ─────────────────────────────────────────────── */}
-          <Card padding="sm">
-            <CardHeader><CardTitle kicker="Fundraising analysis">Readiness breakdown</CardTitle></CardHeader>
-            <CardContent>
-              {/* Narrative */}
-              <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4 mb-4">
-                <p className="text-xs font-bold text-muted uppercase tracking-wide mb-2">Summary</p>
-                <p className="text-sm text-ink-secondary leading-relaxed">{narrative}</p>
-              </div>
+          {/* ─── 4. CRITICAL ALERTS (surfaced early — blockers first) ──────── */}
+          {snap.red_flags.length > 0 && (
+            <Card padding="sm">
+              <CardHeader>
+                <CardTitle kicker="Action needed">Critical alerts</CardTitle>
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${snap.blockers_count > 0 ? "bg-danger/10 text-danger" : "bg-warning/10 text-warning"}`}>
+                  {snap.red_flags.length} {snap.red_flags.length === 1 ? "issue" : "issues"}
+                </span>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {snap.red_flags.map(f => <AlertCard key={f.id} flag={f} />)}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-              <div className="grid sm:grid-cols-2 gap-4">
-                {/* Strengths */}
+          {/* ─── 5. ANALYSIS ─────────────────────────────────────────────── */}
+          <div className="grid lg:grid-cols-[1fr_1fr] gap-5">
+
+            {/* Narrative + strengths */}
+            <Card padding="sm">
+              <CardHeader><CardTitle kicker="Fundraising analysis">What the data says</CardTitle></CardHeader>
+              <CardContent>
+                {/* Narrative — left-border accent for premium feel */}
+                <div className="border-l-[3px] border-accent pl-4 mb-5">
+                  <p className="text-sm text-ink-secondary leading-relaxed">{narrative}</p>
+                </div>
+
                 {strengths.length > 0 && (
-                  <div>
+                  <>
                     <p className="text-xs font-bold text-success uppercase tracking-wide mb-2 flex items-center gap-1.5">
                       <span className="inline-block w-2 h-2 rounded-full bg-success" />
                       What&apos;s working
                     </p>
                     <div className="space-y-2">
                       {strengths.map(s => (
-                        <div key={s.label} className="bg-success/5 border border-success/15 rounded-[var(--radius-md)] px-3 py-2.5">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <p className="text-sm font-semibold text-ink">✓ {s.label}</p>
-                              <p className="text-xs text-ink-secondary mt-0.5">{s.detail}</p>
-                            </div>
-                            {s.href && <Link href={s.href} className="text-xs text-accent shrink-0 hover:underline">View →</Link>}
+                        <div key={s.label} className="flex items-start justify-between gap-2 bg-success/5 border border-success/15 rounded-[var(--radius-md)] px-3 py-2.5">
+                          <div>
+                            <p className="text-sm font-semibold text-ink">✓ {s.label}</p>
+                            <p className="text-xs text-ink-secondary mt-0.5">{s.detail}</p>
                           </div>
+                          {s.href && <Link href={s.href} className="text-xs text-accent shrink-0 hover:underline mt-0.5">View →</Link>}
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </>
                 )}
+              </CardContent>
+            </Card>
 
-                {/* Weaknesses */}
+            {/* Next actions + weaknesses */}
+            <Card padding="sm">
+              <CardHeader><CardTitle kicker="Your action plan">What to fix next</CardTitle></CardHeader>
+              <CardContent>
                 {weaknesses.length > 0 && (
-                  <div>
+                  <div className="mb-5">
                     <p className="text-xs font-bold text-warning uppercase tracking-wide mb-2 flex items-center gap-1.5">
                       <span className="inline-block w-2 h-2 rounded-full bg-warning" />
                       Needs attention
                     </p>
                     <div className="space-y-2">
                       {weaknesses.map(w => (
-                        <div key={w.label} className="bg-warning/5 border border-warning/15 rounded-[var(--radius-md)] px-3 py-2.5">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <p className="text-sm font-semibold text-ink">⚠ {w.label}</p>
-                              <p className="text-xs text-ink-secondary mt-0.5">{w.detail}</p>
-                            </div>
-                            {w.href && <Link href={w.href} className="text-xs text-accent shrink-0 hover:underline">Fix →</Link>}
+                        <div key={w.label} className="flex items-start justify-between gap-2 bg-warning/5 border border-warning/15 rounded-[var(--radius-md)] px-3 py-2.5">
+                          <div>
+                            <p className="text-sm font-semibold text-ink">⚠ {w.label}</p>
+                            <p className="text-xs text-ink-secondary mt-0.5">{w.detail}</p>
                           </div>
+                          {w.href && <Link href={w.href} className="text-xs text-accent shrink-0 hover:underline mt-0.5">Fix →</Link>}
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* ─── 5. CRITICAL ALERTS ──────────────────────────────────────── */}
-          <Card padding="sm">
-            <CardHeader>
-              <CardTitle kicker="Action needed">Critical alerts</CardTitle>
-              {snap.red_flags.length > 0 && (
-                <span className={`text-xs font-bold px-2 py-1 rounded-full ${snap.blockers_count > 0 ? "bg-danger/10 text-danger" : "bg-warning/10 text-warning"}`}>
-                  {snap.red_flags.length} {snap.red_flags.length === 1 ? "issue" : "issues"}
-                </span>
-              )}
-            </CardHeader>
-            <CardContent>
-              {snap.red_flags.length === 0 ? (
-                <div className="bg-success/5 border border-success/20 rounded-[var(--radius-md)] px-4 py-3 flex items-center gap-3">
-                  <span className="text-success text-lg">✓</span>
-                  <div>
-                    <p className="text-sm font-bold text-success">No critical gaps</p>
-                    <p className="text-xs text-muted mt-0.5">Your profile has no blocking issues at this time.</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {snap.red_flags.map(f => <AlertCard key={f.id} flag={f} />)}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* ─── 6. NEXT ACTIONS + SMART CTA ─────────────────────────────── */}
-          <div className="grid lg:grid-cols-[1fr_340px] gap-5">
-            {/* Next actions */}
-            {actions.length > 0 && (
-              <Card padding="sm">
-                <CardHeader><CardTitle kicker="Your action plan">Immediate next actions</CardTitle></CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {actions.map((a, i) => (
-                      <div key={a.label} className="flex gap-3 bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                        <span className="w-6 h-6 rounded-full bg-accent/10 text-accent text-xs font-black flex items-center justify-center shrink-0 mt-0.5">
-                          {i + 1}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-ink">{a.label}</p>
-                          <p className="text-xs text-ink-secondary mt-0.5">{a.detail}</p>
-                          {a.href && (
-                            a.href.startsWith("http") ? (
-                              <a href={a.href} target="_blank" rel="noopener noreferrer" className="text-xs text-accent mt-1.5 inline-block hover:underline font-semibold">Take action →</a>
-                            ) : (
-                              <Link href={a.href} className="text-xs text-accent mt-1.5 inline-block hover:underline font-semibold">Take action →</Link>
-                            )
-                          )}
+                {actions.length > 0 && (
+                  <>
+                    <p className="text-xs font-bold text-muted uppercase tracking-wide mb-3">Immediate actions</p>
+                    <div className="space-y-2">
+                      {actions.map((a, i) => (
+                        <div key={a.label} className="flex gap-3 items-start">
+                          <span className="w-6 h-6 rounded-full bg-accent text-white text-xs font-black flex items-center justify-center shrink-0 mt-0.5">
+                            {i + 1}
+                          </span>
+                          <div className="flex-1 min-w-0 pb-2 border-b border-border last:border-0">
+                            <p className="text-sm font-semibold text-ink leading-snug">{a.label}</p>
+                            <p className="text-xs text-ink-secondary mt-0.5">{a.detail}</p>
+                            {a.href && (
+                              a.href.startsWith("http") ? (
+                                <a href={a.href} target="_blank" rel="noopener noreferrer" className="text-xs text-accent mt-1 inline-block hover:underline font-semibold">Go →</a>
+                              ) : (
+                                <Link href={a.href} className="text-xs text-accent mt-1 inline-block hover:underline font-semibold">Go →</Link>
+                              )
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+          </div>
+
+          {/* ─── 6. SMART CTA ────────────────────────────────────────────── */}
+          <div className="grid lg:grid-cols-[1fr_320px] gap-5">
+            {/* No critical gaps — show the success state here */}
+            {snap.red_flags.length === 0 && (
+              <div className="bg-success/5 border border-success/20 rounded-[var(--radius-lg)] px-5 py-4 flex items-center gap-4">
+                <div className="w-9 h-9 rounded-full bg-success/15 flex items-center justify-center shrink-0">
+                  <span className="text-success text-base font-bold">✓</span>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-success">No critical gaps</p>
+                  <p className="text-xs text-ink-secondary mt-0.5">Your profile has no blocking issues — you&apos;re ready for selective investor outreach.</p>
+                </div>
+              </div>
             )}
 
-            {/* Smart CTA */}
+            {/* Recommended action */}
             <Card padding="sm">
-              <CardHeader><CardTitle kicker="Recommended next step">What to do now</CardTitle></CardHeader>
+              <CardHeader><CardTitle kicker="Recommended">What to do now</CardTitle></CardHeader>
               <CardContent>
-                <div className="flex flex-col h-full">
-                  <p className="text-xs text-muted leading-relaxed mb-4">{smartCTA.description}</p>
-                  {smartCTA.ext ? (
-                    <a href={smartCTA.href} target="_blank" rel="noopener noreferrer"
-                      className="w-full inline-flex items-center justify-center h-11 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors"
-                    >{smartCTA.label}</a>
-                  ) : (
-                    <Link href={smartCTA.href}
-                      className="w-full inline-flex items-center justify-center h-11 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors"
-                    >{smartCTA.label}</Link>
-                  )}
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <p className="text-xs text-muted mb-3">Also available</p>
-                    <div className="space-y-2">
-                      <button onClick={handleExport} disabled={exporting}
-                        className="w-full h-9 px-3 rounded-[var(--radius-md)] border border-border bg-soft text-xs font-semibold text-ink hover:border-ink/20 transition-colors disabled:opacity-50 text-left flex items-center gap-2"
-                      >
-                        <span>↓</span> {exporting ? "Generating PDF…" : "Export PDF report"}
-                      </button>
-                      <Link href="/onboard"
-                        className="w-full h-9 px-3 rounded-[var(--radius-md)] border border-border bg-soft text-xs font-semibold text-ink hover:border-ink/20 transition-colors flex items-center gap-2"
-                      >
-                        <span>✎</span> Update founder profile
-                      </Link>
-                    </div>
-                  </div>
+                <p className="text-xs text-ink-secondary leading-relaxed mb-4">{smartCTA.description}</p>
+                {smartCTA.ext ? (
+                  <a href={smartCTA.href} target="_blank" rel="noopener noreferrer"
+                    className="w-full inline-flex items-center justify-center h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors mb-3"
+                  >{smartCTA.label}</a>
+                ) : (
+                  <Link href={smartCTA.href}
+                    className="w-full inline-flex items-center justify-center h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors mb-3"
+                  >{smartCTA.label}</Link>
+                )}
+                <div className="flex gap-2">
+                  <button onClick={handleExport} disabled={exporting}
+                    className="flex-1 h-8 px-3 rounded-[var(--radius-md)] border border-border bg-soft text-xs font-semibold text-ink hover:border-ink/20 transition-colors disabled:opacity-50"
+                  >
+                    {exporting ? "Generating…" : "↓ Export PDF"}
+                  </button>
+                  <Link href="/onboard"
+                    className="flex-1 h-8 px-3 rounded-[var(--radius-md)] border border-border bg-soft text-xs font-semibold text-ink hover:border-ink/20 transition-colors text-center flex items-center justify-center"
+                  >✎ Edit profile</Link>
                 </div>
               </CardContent>
             </Card>
