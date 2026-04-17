@@ -228,6 +228,99 @@ required.
 
 ---
 
+## Investor Intelligence — Phase 2
+
+Phase 2 adds the matching engine on top of the Phase 1 schema. New migration:
+
+```bash
+# Run supabase/migrations/0002_add_matching.sql against your Supabase project
+supabase db push   # or paste the SQL into the Supabase SQL editor
+```
+
+Two new tables are created:
+
+- `startup_profiles` — founder-side inputs (sectors, stage, geo, fundraising target)
+- `investor_matches` — scoring outputs, versioned by `scoring_version` (currently `'v1'`). Unique on `(startup_profile_id, investor_id, scoring_version)` so reruns overwrite their own version but historical versions are preserved.
+
+### Scoring model
+
+Every candidate investor is scored on five dimensions, clamped to `[0, 1]`,
+then combined via a fixed weighted sum:
+
+| Dimension    | Weight | What it measures                                                          |
+|--------------|--------|---------------------------------------------------------------------------|
+| `geo`        | 0.25   | Startup country/region vs investor HQ + explicit geo focus + inferred deal countries |
+| `sector`     | 0.25   | Overlap of startup sectors with explicit sector focus + inferred top sectors         |
+| `stage`      | 0.20   | Share of investor's recent deals at the startup's canonical stage                    |
+| `activity`   | 0.20   | Saturating curve over recent yearly deal counts (recent years weighted heavier)      |
+| `check_size` | 0.10   | Fundraising target vs explicit min/max OR typical deal p25–p75 band                  |
+
+When data is missing we return neutral scores (0.3–0.5) rather than zero, so
+an investor with unknown sector focus is not automatically ranked below one
+with a known mismatch. Reasoning strings are template-driven and grounded:
+they only reference facts that exist in the `InvestorContext` for that row.
+
+### Inferred fields
+
+`InvestorContext` is assembled in `lib/investors/inference.ts`. For each
+investor we compute:
+
+- `inferred_countries` / `inferred_regions` / `inferred_sectors` — top-5 by
+  deal count, derived from linked deals
+- `inferred_stages` — histogram over canonical stages (pre-seed / seed /
+  series-a / growth / other), via `mapRoundTypeToStage`
+- `activity_by_year` — per-year deal counts
+- `activity_score_raw` — `1 − exp(−Σ(count × year_weight) / SAT)` with SAT=20
+- `typical_check_usd` — p25 / median / p75 over known `amount_raised_usd`
+
+The loader uses at most three batched queries (investors → activity → deal_investors×deals) — never N+1.
+
+### API endpoints
+
+All endpoints run on the Node runtime and return `{ ok, data?, error? }`.
+
+```bash
+# List investors (filters: search, region, country, sector, stage, minActivity)
+curl 'http://localhost:3000/api/investors?country=Nigeria&sector=fintech&page=1&pageSize=25'
+
+# Single investor detail (profile + yearly activity + recent deals + inferred fields)
+curl 'http://localhost:3000/api/investors/<investor-id>'
+
+# Create a startup profile
+curl -X POST http://localhost:3000/api/startup-profiles \
+  -H 'content-type: application/json' \
+  -d '{
+    "startup_name": "Acme",
+    "country": "Nigeria",
+    "region": "West Africa",
+    "stage": "Seed",
+    "sectors": ["fintech"],
+    "fundraising_target_usd": 2000000
+  }'
+
+# Fetch a startup profile
+curl 'http://localhost:3000/api/startup-profiles/<profile-id>'
+
+# Run matching (persisted when startup_profile_id is provided)
+curl -X POST http://localhost:3000/api/matching/run \
+  -H 'content-type: application/json' \
+  -d '{"startup_profile_id": "<profile-id>", "topK": 50}'
+
+# Preview matching without saving (use a raw profile body instead)
+curl -X POST http://localhost:3000/api/matching/run \
+  -H 'content-type: application/json' \
+  -d '{"profile": {"startup_name":"Acme","country":"Nigeria","stage":"Seed","sectors":["fintech"]}, "topK": 20}'
+
+# Fetch latest saved matches for a profile
+curl 'http://localhost:3000/api/matching/<profile-id>'
+```
+
+`scoring_version` is currently `'v1'`. Future scoring tweaks should bump the
+version rather than overwrite history, so older saved matches remain
+reproducible and comparable.
+
+---
+
 ## License
 
 Free to use and share. If you build on this, a mention is appreciated.
