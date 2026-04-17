@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { useI18n } from "@/lib/i18n";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, TrendingUp, Info, CheckCircle2, AlertTriangle, AlertCircle } from "lucide-react";
+import { computeBenchmark } from "@/lib/benchmark-engine";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -171,6 +172,128 @@ const ALL_SECTORS = [
   "healthtech", "deeptech", "retail", "edtech", "marketplace", "travel", "telecom",
 ] as const;
 
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+import type { BenchmarkResult } from "@/lib/benchmark-engine";
+
+function StatCell({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div className="bg-surface/60 p-4">
+      <div className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">{label}</div>
+      <div className="font-mono text-base font-semibold text-foreground leading-tight">{value}</div>
+      {sub && <div className="text-[11px] text-muted mt-0.5">{sub}</div>}
+    </div>
+  );
+}
+
+const CONFIDENCE_CONFIG = {
+  high:   { label: "High confidence",   icon: CheckCircle2,   cls: "text-success bg-success/10 border-success/20" },
+  medium: { label: "Medium confidence", icon: AlertTriangle,  cls: "text-warning bg-warning/10 border-warning/20" },
+  low:    { label: "Low confidence",    icon: AlertCircle,    cls: "text-danger  bg-danger/10  border-danger/20"  },
+} as const;
+
+const SECTOR_LABEL_MAP: Record<string, string> = {
+  fintech: "Fintech", saas: "SaaS", agritech: "AgriTech", logistics: "Logistics",
+  energy: "Energy", deeptech: "DeepTech", edtech: "EdTech", healthtech: "HealthTech",
+  retail: "Retail", marketplace: "Marketplace", travel: "Travel", telecom: "Telecom",
+};
+
+const STAGE_LABEL_MAP: Record<string, string> = {
+  preSeed: "Pre-Seed", seed: "Seed", seriesA: "Series A", seriesB: "Series B",
+  seriesC: "Series C", seriesD: "Series D", seriesE: "Series E", seriesG: "Series G",
+  ventureRound: "Venture", ipo: "IPO",
+};
+
+function BenchmarkIntelligence({ bm }: { bm: BenchmarkResult }) {
+  const conf = CONFIDENCE_CONFIG[bm.confidence];
+  const ConfIcon = conf.icon;
+
+  return (
+    <div className="border border-border rounded-lg overflow-hidden">
+      {/* Header bar */}
+      <div className="flex items-center justify-between gap-4 px-5 py-3 border-b border-border bg-surface/40">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-muted" />
+          <span className="text-xs font-semibold text-foreground uppercase tracking-wider">Benchmark Intelligence</span>
+        </div>
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded border text-[11px] font-semibold ${conf.cls}`}>
+          <ConfIcon className="w-3 h-3" />
+          {conf.label}
+        </span>
+      </div>
+
+      <div className="grid md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-border">
+
+        {/* Left: insights list (3 cols) */}
+        <div className="md:col-span-3 px-5 py-4 space-y-2">
+          <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-3">Market Insights</p>
+          {bm.insights.map((ins, i) => (
+            <div key={i} className="flex items-start gap-2 text-sm text-ink-secondary leading-snug">
+              <span className="mt-1 w-1.5 h-1.5 rounded-full bg-accent/60 flex-shrink-0" />
+              {ins}
+            </div>
+          ))}
+          <p className="text-[11px] text-muted pt-1 border-t border-border/50 mt-3">
+            <Info className="w-3 h-3 inline mr-1 opacity-60" />
+            {bm.confidenceReason}
+          </p>
+        </div>
+
+        {/* Right: quick stats (2 cols) */}
+        <div className="md:col-span-2 px-5 py-4">
+          <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-3">Peer Set Breakdown</p>
+          <div className="space-y-3">
+            {/* Top sectors mini-bars */}
+            <div>
+              <p className="text-[10px] text-muted mb-1.5 font-medium">Top sectors</p>
+              <div className="space-y-1.5">
+                {bm.sectorBreakdown.slice(0, 4).map((s) => (
+                  <div key={s.sector} className="flex items-center gap-2">
+                    <div className="w-20 shrink-0 text-[11px] text-muted truncate">
+                      {SECTOR_LABEL_MAP[s.sector] ?? s.sector}
+                    </div>
+                    <div className="flex-1 h-1.5 bg-border rounded-full overflow-hidden">
+                      <div className="h-full bg-accent/70 rounded-full" style={{ width: `${s.pct}%` }} />
+                    </div>
+                    <div className="w-7 text-right text-[11px] font-mono text-muted shrink-0">{s.pct}%</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Top stages mini-bars */}
+            <div className="pt-2 border-t border-border/50">
+              <p className="text-[10px] text-muted mb-1.5 font-medium">Top stages</p>
+              <div className="space-y-1.5">
+                {bm.stageBreakdown.slice(0, 4).map((s) => (
+                  <div key={s.sector} className="flex items-center gap-2">
+                    <div className="w-20 shrink-0 text-[11px] text-muted truncate">
+                      {STAGE_LABEL_MAP[s.sector] ?? s.sector}
+                    </div>
+                    <div className="flex-1 h-1.5 bg-border rounded-full overflow-hidden">
+                      <div className="h-full bg-foreground/30 rounded-full" style={{ width: `${s.pct}%` }} />
+                    </div>
+                    <div className="w-7 text-right text-[11px] font-mono text-muted shrink-0">{s.pct}%</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Meta */}
+            <div className="pt-2 border-t border-border/50 flex flex-wrap gap-x-4 gap-y-1">
+              <span className="text-[11px] text-muted">{bm.countriesCount} countr{bm.countriesCount === 1 ? "y" : "ies"}</span>
+              <span className="text-[11px] text-muted">{bm.sectorsCount} sector{bm.sectorsCount === 1 ? "" : "s"}</span>
+              {bm.yearRange[0] > 0 && (
+                <span className="text-[11px] text-muted">{bm.yearRange[0]}–{bm.yearRange[1]}</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ComparablesPage() {
@@ -209,19 +332,7 @@ export default function ComparablesPage() {
     else { setSortCol(col); setSortDir(-1); }
   };
 
-  const benchmarks = useMemo(() => {
-    if (filtered.length === 0) return { medianValuation: 0, medianMultiple: 0, avgRaised: 0, medianYear: 0 };
-    const valuations = filtered.filter((d) => d.valuation !== null).map((d) => d.valuation as number).sort((a, b) => a - b);
-    const multiples  = filtered.filter((d) => d.multiple  !== null).map((d) => d.multiple  as number).sort((a, b) => a - b);
-    const raised     = filtered.map((d) => d.raised);
-    const years      = filtered.map((d) => d.year).sort((a, b) => a - b);
-    return {
-      medianValuation: valuations.length > 0 ? valuations[Math.floor(valuations.length / 2)] : 0,
-      medianMultiple:  multiples.length  > 0 ? multiples [Math.floor(multiples.length  / 2)] : 0,
-      avgRaised:       raised.reduce((a, b) => a + b, 0) / raised.length,
-      medianYear:      years[Math.floor(years.length / 2)],
-    };
-  }, [filtered]);
+  const bm = useMemo(() => computeBenchmark(filtered), [filtered]);
 
   // Counts for the header stats
   const sectorCount = new Set(COMPARABLES_DATA.map((d) => d.sector)).size;
@@ -335,32 +446,29 @@ export default function ComparablesPage() {
         </div>
       </section>
 
-      {/* ── Benchmarks ──────────────────────────────────────────── */}
+      {/* ── Benchmark summary row ────────────────────────────────── */}
       {filtered.length > 0 && (
         <section className="border-b border-border">
-          <div className="max-w-6xl mx-auto px-6 py-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 border border-border rounded-lg p-6 bg-surface/50">
-              <div>
-                <div className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">Median Valuation</div>
-                <div className="font-mono text-lg font-medium text-foreground">
-                  {benchmarks.medianValuation > 0 ? `$${benchmarks.medianValuation}M` : "—"}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">Median EV/Rev</div>
-                <div className="font-mono text-lg font-medium text-foreground">
-                  {benchmarks.medianMultiple > 0 ? `${benchmarks.medianMultiple.toFixed(1)}x` : "—"}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">Avg Raised</div>
-                <div className="font-mono text-lg font-medium text-foreground">${benchmarks.avgRaised.toFixed(0)}M</div>
-              </div>
-              <div>
-                <div className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">Median Year</div>
-                <div className="font-mono text-lg font-medium text-foreground">{benchmarks.medianYear}</div>
-              </div>
+          <div className="max-w-6xl mx-auto px-6 py-6 space-y-4">
+
+            {/* 4-stat summary */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-px border border-border rounded-lg overflow-hidden bg-border">
+              <StatCell label="Median Valuation"
+                value={bm.medianValuation !== null ? `$${bm.medianValuation}M` : "—"}
+                sub={bm.valuationCoverage > 0 ? `${bm.valuationCoverage}% coverage` : "no data"} />
+              <StatCell label="Median EV / Rev"
+                value={bm.medianMultiple !== null ? `${bm.medianMultiple.toFixed(1)}x` : "—"}
+                sub={bm.multipleCoverage > 0 ? `${bm.multipleCoverage}% coverage` : "no data"} />
+              <StatCell label="Median Raised"
+                value={`$${Math.round(bm.medianRaised)}M`}
+                sub={`avg $${Math.round(bm.avgRaised)}M`} />
+              <StatCell label="Raised Range (P25–P75)"
+                value={bm.raisedBracket}
+                sub={`${bm.peerCount} peers`} />
             </div>
+
+            {/* Intelligence panel */}
+            <BenchmarkIntelligence bm={bm} />
           </div>
         </section>
       )}
