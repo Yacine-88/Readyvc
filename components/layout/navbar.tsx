@@ -130,7 +130,7 @@ export function Navbar() {
                 aria-expanded={menuOpen}
                 aria-haspopup="menu"
                 aria-label="Open menu"
-                className="flex items-center gap-2 h-9 pl-1 pr-2 sm:pr-3 rounded-full border border-border bg-soft text-xs font-semibold text-ink hover:border-ink/30 transition-colors"
+                className="flex items-center gap-1.5 sm:gap-2 h-9 pl-1 pr-2 sm:pr-3 rounded-full border border-border bg-soft text-xs font-semibold text-ink hover:border-ink/30 active:bg-soft/80 transition-colors"
               >
                 <span className="w-7 h-7 rounded-full bg-accent text-white text-[11px] font-bold flex items-center justify-center shrink-0">
                   {avatarLetter}
@@ -138,11 +138,12 @@ export function Navbar() {
                 <span className="hidden sm:inline max-w-[120px] truncate">
                   {showConnected ? (startupName ?? firstName) : (user?.email ?? "Account")}
                 </span>
+                {/* Caret: visible on ALL widths so the pill reads as a menu trigger */}
                 <svg
-                  className={`hidden sm:block w-3 h-3 text-muted transition-transform ${menuOpen ? "rotate-180" : ""}`}
+                  className={`w-3 h-3 text-muted transition-transform ${menuOpen ? "rotate-180" : ""}`}
                   viewBox="0 0 12 12" fill="none" aria-hidden="true"
                 >
-                  <path d="M3 4.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M3 4.5l3 3 3-3" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
 
