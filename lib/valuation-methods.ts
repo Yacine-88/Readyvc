@@ -731,3 +731,473 @@ export function calculateFullValuation(params: {
     analysis,
   };
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// V2 Engine — multi-method valuation with methodology transparency
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Berkus Method ────────────────────────────────────────────────────────────
+
+/**
+ * Berkus Method (Dave Berkus, 1996)
+ *
+ * Pre-revenue framework. Five risk-reduction factors, each contributing up to
+ * a cap ($500K by default → max ~$2.5M pre-money). Frames the valuation
+ * conversation around risk reduction rather than revenue projections.
+ *
+ * Use when:
+ *   - Pre-seed or very early seed
+ *   - Pre-revenue or minimal revenue
+ *   - You want to anchor against qualitative risk factors
+ *
+ * Limitations:
+ *   - Original $2.5M cap is low for 2024 — inflation-adjusted closer to $3.5–4M
+ *   - All inputs are self-reported and qualitative
+ *   - Ignores sector dynamics and market size
+ */
+
+export interface BerkusFactors {
+  soundIdea: number;              // 0–100
+  prototype: number;              // 0–100
+  qualityTeam: number;            // 0–100
+  strategicRelationships: number; // 0–100
+  productRollout: number;         // 0–100
+}
+
+export function calculateBerkusMethod(
+  factors: BerkusFactors,
+  maxPerFactor: number = 500_000,
+): ValuationMethodResult {
+  const total =
+    (factors.soundIdea / 100) * maxPerFactor +
+    (factors.prototype / 100) * maxPerFactor +
+    (factors.qualityTeam / 100) * maxPerFactor +
+    (factors.strategicRelationships / 100) * maxPerFactor +
+    (factors.productRollout / 100) * maxPerFactor;
+
+  return {
+    method: "Berkus Method",
+    valuation: total,
+    low: total * 0.7,
+    high: total * 1.3,
+    reasoning: `5 risk factors × up to $${Math.round(maxPerFactor / 1000)}K each. Caps pre-money near ~$${((maxPerFactor * 5) / 1_000_000).toFixed(1)}M.`,
+    source: "Dave Berkus (1996) — pre-revenue framework",
+  };
+}
+
+// ─── Scorecard Method ─────────────────────────────────────────────────────────
+
+/**
+ * Scorecard Method (Bill Payne, 2001)
+ *
+ * Takes a regional/sector base valuation (typically the stage median) and
+ * adjusts by seven weighted qualitative factors. Each factor is rated
+ * against the average peer: 100 = average, 150 = 50% above, 50 = 50% below.
+ *
+ * Use when:
+ *   - Pre-seed or seed with peer comparables available
+ *   - As a reality check against method-driven valuations
+ *
+ * Limitations:
+ *   - Output only as good as the peer base
+ *   - Founders tend to over-rate their own factors by 10–20%
+ *   - Doesn't price growth or revenue directly
+ */
+
+export interface ScorecardFactors {
+  team: number;          // 0–200, 100 = average peer
+  opportunity: number;   // 0–200
+  product: number;       // 0–200
+  competition: number;   // 0–200
+  marketing: number;     // 0–200
+  capitalNeeds: number;  // 0–200
+  other: number;         // 0–200
+}
+
+const SCORECARD_WEIGHTS: Record<keyof ScorecardFactors, number> = {
+  team: 0.30,
+  opportunity: 0.25,
+  product: 0.15,
+  competition: 0.10,
+  marketing: 0.10,
+  capitalNeeds: 0.05,
+  other: 0.05,
+};
+
+export function calculateScorecardMethod(
+  baseValuation: number,
+  factors: ScorecardFactors,
+): ValuationMethodResult {
+  const keys = Object.keys(SCORECARD_WEIGHTS) as (keyof ScorecardFactors)[];
+  const multiplier = keys.reduce(
+    (acc, key) => acc + (factors[key] / 100) * SCORECARD_WEIGHTS[key],
+    0,
+  );
+
+  const valuation = baseValuation * multiplier;
+
+  return {
+    method: "Scorecard Method",
+    valuation,
+    low: valuation * 0.75,
+    high: valuation * 1.25,
+    reasoning: `Peer base $${(baseValuation / 1_000_000).toFixed(1)}M × ${multiplier.toFixed(2)}x composite factor (team ${factors.team}, market ${factors.opportunity}, product ${factors.product}).`,
+    source: "Bill Payne (2001) — Scorecard Valuation Method",
+  };
+}
+
+// ─── Stage-based method weighting ─────────────────────────────────────────────
+
+export interface MethodWeights {
+  vcMethod: number;
+  revenueMultiple: number;
+  comparables: number;
+  berkus: number;
+  scorecard: number;
+}
+
+export type MethodKey = keyof MethodWeights;
+
+/**
+ * Returns how much each method contributes to the blended valuation,
+ * based on stage and whether the company has meaningful revenue.
+ *
+ *   Pre-seed, no revenue:  Scorecard 40% · Berkus 30% · Comps 25% · VC 5%
+ *   Pre-seed, w/ revenue:  Scorecard 30% · Berkus 20% · Comps 25% · VC 10% · RevMult 15%
+ *   Seed, no revenue:      Scorecard 35% · Berkus 20% · Comps 30% · VC 10% · RevMult 5%
+ *   Seed, w/ revenue:      Scorecard 20% · Berkus 10% · Comps 25% · VC 15% · RevMult 30%
+ *   Series A:              Scorecard 10% · Comps 25% · VC 30% · RevMult 35%
+ *   Series B+:             Comps 25% · VC 35% · RevMult 40%
+ */
+export function getMethodWeights(stage: string, hasRevenue: boolean): MethodWeights {
+  const s = stage.toLowerCase();
+
+  if (s.includes("pre")) {
+    return hasRevenue
+      ? { scorecard: 0.30, berkus: 0.20, comparables: 0.25, vcMethod: 0.10, revenueMultiple: 0.15 }
+      : { scorecard: 0.40, berkus: 0.30, comparables: 0.25, vcMethod: 0.05, revenueMultiple: 0.00 };
+  }
+  if (s === "seed") {
+    return hasRevenue
+      ? { scorecard: 0.20, berkus: 0.10, comparables: 0.25, vcMethod: 0.15, revenueMultiple: 0.30 }
+      : { scorecard: 0.35, berkus: 0.20, comparables: 0.30, vcMethod: 0.10, revenueMultiple: 0.05 };
+  }
+  if (s.includes("series a")) {
+    return { scorecard: 0.10, berkus: 0.00, comparables: 0.25, vcMethod: 0.30, revenueMultiple: 0.35 };
+  }
+  // Series B, C, or later
+  return { scorecard: 0.00, berkus: 0.00, comparables: 0.25, vcMethod: 0.35, revenueMultiple: 0.40 };
+}
+
+function normalizeStageKey(stage: string): string {
+  const s = stage.toLowerCase().replace(/\s+/g, "");
+  if (s.includes("pre")) return "Pre-seed";
+  if (s.includes("seed")) return "Seed";
+  if (s.includes("seriesa")) return "Series A";
+  if (s.includes("seriesb")) return "Series B";
+  if (s.includes("seriesc")) return "Series C";
+  return stage;
+}
+
+// ─── Method metadata (for UI explanation) ─────────────────────────────────────
+
+export const METHOD_META: Record<MethodKey, {
+  title: string;
+  tagline: string;
+  description: string;
+  whenRelevant: string;
+  limitations: string[];
+}> = {
+  vcMethod: {
+    title: "VC Method",
+    tagline: "Backward from target IRR and exit value",
+    description:
+      "Projects exit revenue at year N, applies an exit multiple to derive enterprise value, then discounts back at the investor's required IRR to solve for today's pre-money.",
+    whenRelevant:
+      "When the business has a clear exit path and a credible revenue trajectory. Strongest from Series A onwards.",
+    limitations: [
+      "Highly sensitive to exit multiple and IRR assumptions",
+      "Dilution from future rounds is modelled linearly — reality is messier",
+      "At pre-seed it over-weights speculative exit modelling",
+    ],
+  },
+  revenueMultiple: {
+    title: "Revenue Multiple",
+    tagline: "Current ARR × sector/stage benchmark",
+    description:
+      "Applies the median EV/Revenue multiple for your sector and stage to current annualised revenue.",
+    whenRelevant:
+      "When revenue is meaningful and a relevant sector peer set exists. Most reliable from seed with revenue onwards.",
+    limitations: [
+      "Not applicable if revenue ≈ 0 (any multiple × 0 is still 0)",
+      "Sector medians vary widely between public and private markets",
+      "Doesn't capture growth rate or unit economics directly",
+    ],
+  },
+  comparables: {
+    title: "Comparables Range",
+    tagline: "Stage-median pre-money with growth premium",
+    description:
+      "Uses disclosed round data for your stage to set a baseline, then applies a growth premium (up to +40% for >50% YoY growth).",
+    whenRelevant:
+      "Across all stages. Particularly useful when revenue is immaterial but stage benchmarks exist.",
+    limitations: [
+      "Median ≠ your deal — outliers often drive how investors actually price",
+      "Geography matters (African pre-seed prices differently from US)",
+      "Survivorship bias: only closed rounds are reported",
+    ],
+  },
+  berkus: {
+    title: "Berkus Method",
+    tagline: "5-factor pre-revenue risk framework",
+    description:
+      "Assigns up to $500K to each of 5 risk-reduction factors: sound idea, prototype, team, strategic relationships, product rollout. Caps pre-money near $2.5M.",
+    whenRelevant:
+      "Pre-seed and very early seed, especially pre-revenue. Frames the valuation around risk reduction, not financial projections.",
+    limitations: [
+      "Original $2.5M cap is low for 2024 — inflation-adjusted closer to $3.5–4M",
+      "All inputs are subjective and self-reported",
+      "Ignores market size and sector dynamics entirely",
+    ],
+  },
+  scorecard: {
+    title: "Scorecard Method",
+    tagline: "Peer base × weighted qualitative factors",
+    description:
+      "Starts from the regional/sector median valuation for your stage, then adjusts with 7 weighted factors: team (30%), market (25%), product (15%), competition, marketing, capital need, other.",
+    whenRelevant:
+      "Pre-seed and seed with access to peer comparables. Excellent reality check against method-driven numbers.",
+    limitations: [
+      "Only as good as the peer base valuation chosen",
+      "Founders consistently rate their factors 10–20% higher than investors would",
+      "Doesn't directly price growth or unit economics",
+    ],
+  },
+};
+
+// ─── Founder-facing interpretation ────────────────────────────────────────────
+
+export interface FounderInterpretation {
+  positioning: "conservative" | "in-range" | "aggressive" | "unclear";
+  positioningText: string;
+  rangeLogic: string;
+  primaryMethod: string;
+  primaryWeight: number;
+  leastReliable: string;
+  challenges: string[];
+  strengthen: string[];
+}
+
+function medianOf(arr: number[]): number {
+  if (arr.length === 0) return 0;
+  const s = [...arr].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 === 0 ? (s[mid - 1] + s[mid]) / 2 : s[mid];
+}
+
+export interface MethodContribution {
+  key: MethodKey;
+  result: ValuationMethodResult;
+  weight: number;       // original stage weight (before re-normalisation)
+  normWeight: number;   // after re-normalisation across applicable methods
+  applicable: boolean;
+  reasonSkipped?: string;
+}
+
+export function interpretValuation(params: {
+  stage: string;
+  currentRevenue: number;
+  growthRate: number;
+  blended: { low: number; base: number; high: number };
+  methods: MethodContribution[];
+}): FounderInterpretation {
+  const { stage, currentRevenue, growthRate, blended, methods } = params;
+
+  const applicable = methods.filter(m => m.applicable && m.normWeight > 0);
+  const sorted = [...applicable].sort((a, b) => b.normWeight - a.normWeight);
+  const primary = sorted[0];
+  const least = sorted[sorted.length - 1];
+
+  const applicableBases = applicable.map(m => m.result.valuation).filter(v => v > 0);
+  const methodsMedian = medianOf(applicableBases);
+  const gap = methodsMedian > 0 ? (blended.base - methodsMedian) / methodsMedian : 0;
+
+  let positioning: FounderInterpretation["positioning"];
+  let positioningText: string;
+  if (applicable.length === 0 || blended.base <= 0) {
+    positioning = "unclear";
+    positioningText = "Not enough applicable inputs to position this valuation. Add revenue, qualitative inputs, or deal terms.";
+  } else if (Math.abs(gap) < 0.15) {
+    positioning = "in-range";
+    positioningText = `Your valuation sits within 15% of the median across applicable methods — investors will see this as reasonable and defensible.`;
+  } else if (gap >= 0.15) {
+    positioning = "aggressive";
+    positioningText = `Your valuation is ~${Math.round(gap * 100)}% above the method median. Expect investors to probe every input feeding the higher-end methods.`;
+  } else {
+    positioning = "conservative";
+    positioningText = `Your valuation is ~${Math.round(Math.abs(gap) * 100)}% below the method median. You may be leaving money on the table — double-check your inputs.`;
+  }
+
+  const challenges: string[] = [];
+  const strengthen: string[] = [];
+  const stageLower = stage.toLowerCase();
+  const isPreSeed = stageLower.includes("pre");
+  const isEarly = isPreSeed || stageLower === "seed";
+
+  if (isPreSeed && currentRevenue === 0) {
+    challenges.push("Pre-revenue pre-seed valuations hinge on team credibility and market thesis. Expect deep questioning on why you specifically win this market.");
+    strengthen.push("Surface 2–3 unambiguous team credentials: prior exits, decade-plus domain expertise, insider relationships, or proprietary data access.");
+  }
+
+  if (!isPreSeed && growthRate > 0 && growthRate < 0.3) {
+    challenges.push("Sub-30% growth at seed+ invites pushback. Investors want to see acceleration or a clear unlock planned.");
+    strengthen.push("Show MoM cohort retention, a specific growth unlock (new channel, pricing change, geographic expansion), or a signed enterprise pipeline.");
+  }
+
+  if (positioning === "aggressive") {
+    challenges.push("Your ask is above the method median — be ready to defend every high-end assumption with data, not narrative.");
+    strengthen.push("Bring external validation: signed LOIs, strategic investor interest, or a competitive round signal.");
+  }
+
+  if (isEarly && currentRevenue > 0) {
+    strengthen.push("Include a 6-month MRR history chart in your data room — early traction is the strongest defence for a premium early-stage valuation.");
+  }
+
+  const rangeRatio = blended.low > 0 ? blended.high / blended.low : 0;
+  if (rangeRatio > 4) {
+    challenges.push(`Your range spans ${rangeRatio.toFixed(1)}× from low to high — investors read this as uncertainty about what you're worth.`);
+    strengthen.push(`Narrow the range by committing to the primary method (${primary?.result.method ?? "—"}) and justifying why it dominates for your profile.`);
+  }
+
+  if (isPreSeed && !isEarly) {
+    // unreachable, placeholder
+  }
+
+  if (challenges.length === 0) {
+    challenges.push("No obvious red flags — but every investor will still challenge your growth trajectory and market size assumptions.");
+  }
+  if (strengthen.length === 0) {
+    strengthen.push(`Tighten the narrative around your primary method (${primary?.result.method ?? "—"}). Have two independent data points ready for every claim.`);
+  }
+
+  const rangeLogic =
+    applicable.length > 0
+      ? `Weighted blend of ${applicable.length} applicable method${applicable.length === 1 ? "" : "s"}. Primary: ${primary?.result.method ?? "—"} (${Math.round((primary?.normWeight ?? 0) * 100)}% of the blend).`
+      : "No methods currently applicable — add inputs to activate the engine.";
+
+  return {
+    positioning,
+    positioningText,
+    rangeLogic,
+    primaryMethod: primary?.result.method ?? "—",
+    primaryWeight: primary?.normWeight ?? 0,
+    leastReliable: least?.result.method ?? "—",
+    challenges,
+    strengthen,
+  };
+}
+
+// ─── V2 Master Calculator ─────────────────────────────────────────────────────
+
+export interface ValuationSummaryV2 extends ValuationSummary {
+  berkus: ValuationMethodResult;
+  scorecard: ValuationMethodResult;
+  methodWeights: MethodWeights;
+  methodContributions: MethodContribution[];
+  interpretation: FounderInterpretation;
+  peerBase: number;
+  hasRevenue: boolean;
+}
+
+export function calculateValuationV2(params: {
+  currentRevenue: number;
+  sector: string;
+  stage: string;
+  baseGrowthRate: number;
+  projectionInputs: ProjectionInputs;
+  investmentAmount: number;
+  investorEquity: number;
+  targetIRR: number;
+  exitYears: number;
+  exitRevenueMultiple: number;
+  dilutionPerRound: number;
+  futureRounds: number;
+  qualitative: {
+    berkus: BerkusFactors;
+    scorecard: ScorecardFactors;
+  };
+  peerBase?: number;
+}): ValuationSummaryV2 {
+  const v1 = calculateFullValuation(params);
+
+  const hasRevenue = params.currentRevenue > 0;
+  const weights = getMethodWeights(params.stage, hasRevenue);
+
+  // Berkus
+  const berkus = calculateBerkusMethod(params.qualitative.berkus);
+
+  // Scorecard — anchor on stage comparables median unless explicit override
+  const stageKey = normalizeStageKey(params.stage);
+  const compRange = COMPARABLES_RANGE[stageKey] ?? COMPARABLES_RANGE["Seed"];
+  const peerBase = params.peerBase ?? compRange.median;
+  const scorecard = calculateScorecardMethod(peerBase, params.qualitative.scorecard);
+
+  // Applicability
+  const applicable: Record<MethodKey, boolean> = {
+    vcMethod:        params.investmentAmount > 0 && params.investorEquity > 0 && params.exitYears > 0,
+    revenueMultiple: hasRevenue,
+    comparables:     true,
+    berkus:          weights.berkus > 0,
+    scorecard:       weights.scorecard > 0 && peerBase > 0,
+  };
+
+  const reasons: Partial<Record<MethodKey, string>> = {
+    vcMethod:        !applicable.vcMethod ? "Missing investment / equity / exit inputs" : undefined,
+    revenueMultiple: !applicable.revenueMultiple ? "No current revenue — revenue multiples require meaningful ARR" : undefined,
+    berkus:          !applicable.berkus ? "Berkus is most relevant at pre-seed / seed stage" : undefined,
+    scorecard:       !applicable.scorecard ? "Scorecard is most relevant at pre-seed / seed stage" : undefined,
+  };
+
+  const raw: MethodContribution[] = [
+    { key: "vcMethod",        result: v1.vcMethod,        weight: weights.vcMethod,        normWeight: 0, applicable: applicable.vcMethod,        reasonSkipped: reasons.vcMethod },
+    { key: "revenueMultiple", result: v1.revenueMultiple, weight: weights.revenueMultiple, normWeight: 0, applicable: applicable.revenueMultiple, reasonSkipped: reasons.revenueMultiple },
+    { key: "comparables",     result: v1.comparables,     weight: weights.comparables,     normWeight: 0, applicable: applicable.comparables },
+    { key: "berkus",          result: berkus,             weight: weights.berkus,          normWeight: 0, applicable: applicable.berkus,          reasonSkipped: reasons.berkus },
+    { key: "scorecard",       result: scorecard,          weight: weights.scorecard,       normWeight: 0, applicable: applicable.scorecard,       reasonSkipped: reasons.scorecard },
+  ];
+
+  const sumActive = raw.filter(m => m.applicable && m.weight > 0).reduce((s, m) => s + m.weight, 0);
+  for (const m of raw) {
+    m.normWeight = m.applicable && sumActive > 0 ? m.weight / sumActive : 0;
+  }
+
+  // Weighted blend
+  let blendedBase = 0, blendedLow = 0, blendedHigh = 0;
+  for (const m of raw) {
+    if (m.normWeight <= 0) continue;
+    blendedBase += m.result.valuation * m.normWeight;
+    blendedLow  += m.result.low       * m.normWeight;
+    blendedHigh += m.result.high      * m.normWeight;
+  }
+  const blended = { low: blendedLow, base: blendedBase, high: blendedHigh };
+
+  const interpretation = interpretValuation({
+    stage: params.stage,
+    currentRevenue: params.currentRevenue,
+    growthRate: params.baseGrowthRate,
+    blended,
+    methods: raw,
+  });
+
+  return {
+    ...v1,
+    blended,
+    berkus,
+    scorecard,
+    methodWeights: weights,
+    methodContributions: raw,
+    interpretation,
+    peerBase,
+    hasRevenue,
+  };
+}
