@@ -11,40 +11,67 @@ import { useAuth } from "@/lib/auth-context";
 import { track } from "@/lib/analytics";
 
 const SECTORS = [
+  // ── Core Software ───────────────────────────────────────────
   "AI / Machine Learning",
   "SaaS / B2B Software",
-  "Developer Tools",
+  "Developer Tools & APIs",
   "Cybersecurity",
   "Data & Analytics",
   "Cloud Infrastructure",
-  "Fintech",
-  "Crypto / Web3",
+  "No-Code / Low-Code",
+  // ── Financial Services ──────────────────────────────────────
+  "Fintech / Payments",
+  "Crypto / Web3 / DeFi",
   "InsurTech",
-  "RegTech",
+  "RegTech / Compliance",
+  "Wealthtech / Investment",
+  // ── Health & Life Sciences ──────────────────────────────────
   "Healthtech / Digital Health",
-  "Biotech",
-  "MedTech",
-  "Consumer App",
-  "E-commerce",
+  "Biotech / Life Sciences",
+  "MedTech / Medical Devices",
+  "Mental Health & Wellness",
+  // ── Commerce & Marketplace ──────────────────────────────────
+  "E-commerce / D2C",
   "Marketplace",
+  "Retail Tech",
+  // ── Consumer & Media ────────────────────────────────────────
+  "Consumer App",
   "Gaming / Entertainment",
   "Media & Content",
+  "Sports & Fitness",
+  // ── Education & Future of Work ──────────────────────────────
   "Edtech",
-  "Legaltech",
   "HRtech / Future of Work",
-  "Proptech",
+  "Legaltech",
+  // ── Real World & Physical ───────────────────────────────────
+  "Proptech / Real Estate",
   "Logistics / Supply Chain",
-  "Foodtech",
-  "Traveltech",
+  "Mobility & Transportation",
+  "Automotive Tech",
+  "Foodtech & Restaurant Tech",
+  "Agritech / FarmTech",
+  "Traveltech & Hospitality",
+  // ── Deep Tech & Hardware ────────────────────────────────────
   "DeepTech",
   "Cleantech / Climate",
+  "Energy & Renewables",
   "SpaceTech",
   "Hardware / IoT",
-  "Robotics / Automation",
+  "Robotics & Automation",
+  // ── Infrastructure & Gov ────────────────────────────────────
+  "GovTech / CivicTech",
+  "Telecom / Connectivity",
+  // ────────────────────────────────────────────────────────────
   "Other",
 ];
 
-const STAGES = ["Pre-seed", "Seed", "Series A", "Series B+"];
+const STAGES = [
+  "Pre-seed",
+  "Seed",
+  "Series A",
+  "Series B",
+  "Series B+",
+];
 
 function OnboardPageInner() {
   const router = useRouter();

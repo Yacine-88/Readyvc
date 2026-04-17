@@ -45,6 +45,16 @@ const TOOL_HREFS: Record<FoundationTool, string> = {
   captable: "/captable", pitch: "/pitch", dataroom: "/dataroom",
 };
 
+const TOOL_ICONS: Record<FoundationTool, string> = {
+  metrics: "📈", valuation: "💰", qa: "🎯",
+  captable: "🧩", pitch: "🎤", dataroom: "📂",
+};
+
+const TOOL_WEIGHTS_LABEL: Record<FoundationTool, string> = {
+  metrics: "25%", valuation: "20%", qa: "20%",
+  captable: "10%", pitch: "15%", dataroom: "10%",
+};
+
 // Semantic color classes by score band
 function scoreBand(s: number): { text: string; bg: string; soft: string; border: string; hex: string } {
   if (s >= 80) return { text: "text-success", bg: "bg-success", soft: "bg-success/10", border: "border-success/25", hex: "#0F6A46" };
@@ -191,21 +201,23 @@ function useCountUp(target: number, duration = 700): number {
 // ─── Score Arc (SVG) ──────────────────────────────────────────────────────────
 
 function ScoreArc({ score, colorScore, size = 96 }: { score: number; colorScore?: number; size?: number }) {
-  const sw = 9;
+  const sw = size >= 110 ? 10 : 9;
   const r = (size - sw * 2) / 2;
   const cx = size / 2;
   const circ = 2 * Math.PI * r;
   const offset = circ - (score / 100) * circ;
   const { hex } = scoreBand(colorScore ?? score);
+  const numSize = size >= 110 ? "text-3xl" : "text-2xl";
   return (
     <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: "rotate(-90deg)", display: "block" }}>
         <circle cx={cx} cy={cx} r={r} fill="none" stroke="#E7E3DA" strokeWidth={sw} />
         <circle cx={cx} cy={cx} r={r} fill="none" stroke={hex} strokeWidth={sw}
-          strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" />
+          strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
+          style={{ transition: "stroke-dashoffset 0.8s cubic-bezier(0.25,0.46,0.45,0.94)" }} />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-black font-mono leading-none">{score}</span>
+        <span className={`${numSize} font-black font-mono leading-none`}>{score}</span>
         <span className="text-[10px] text-muted font-medium leading-none mt-0.5">/100</span>
       </div>
     </div>
@@ -252,6 +264,65 @@ function Sparkline({ data, height = 52 }: { data: number[]; height?: number }) {
   );
 }
 
+// ─── Range Bar ────────────────────────────────────────────────────────────────
+// Shows P25 / median / P75 distribution with an optional "you" marker
+
+function RangeBar({ p25, median, p75, you, label = "Your target" }: {
+  p25: number; median: number; p75: number; you?: number | null; label?: string;
+}) {
+  const min = 0;
+  const max = Math.max(p75 * 1.4, (you ?? 0) * 1.1, 1);
+  const pct = (v: number) => Math.min(100, Math.max(0, ((v - min) / (max - min)) * 100));
+
+  function fmtM(v: number) {
+    if (v >= 1000) return `$${(v / 1000).toFixed(1)}B`;
+    if (v >= 1)    return `$${Math.round(v)}M`;
+    return `$${(v * 1000).toFixed(0)}K`;
+  }
+
+  const youPct = you != null ? pct(you) : null;
+  const youColor = you == null ? null :
+    you >= p75 ? "#8A6B1F" :
+    you >= median ? "#0F6A46" : "#6B7280";
+
+  return (
+    <div className="w-full">
+      {/* Track */}
+      <div className="relative h-2 bg-border rounded-full overflow-visible my-2">
+        {/* P25→P75 band */}
+        <div
+          className="absolute top-0 h-full rounded-full bg-accent/20"
+          style={{ left: `${pct(p25)}%`, width: `${pct(p75) - pct(p25)}%` }}
+        />
+        {/* Median tick */}
+        <div
+          className="absolute top-[-2px] bottom-[-2px] w-0.5 bg-accent rounded-full"
+          style={{ left: `${pct(median)}%` }}
+        />
+        {/* You marker */}
+        {youPct != null && (
+          <div
+            className="absolute top-[-4px] w-3 h-3 rounded-full border-2 border-white shadow-sm"
+            style={{ left: `calc(${youPct}% - 6px)`, backgroundColor: youColor! }}
+          />
+        )}
+      </div>
+      {/* Labels */}
+      <div className="flex justify-between text-[10px] text-muted mt-1">
+        <span>P25 {fmtM(p25)}</span>
+        <span className="text-accent font-semibold">Median {fmtM(median)}</span>
+        <span>P75 {fmtM(p75)}</span>
+      </div>
+      {youPct != null && (
+        <p className="text-[10px] mt-1" style={{ color: youColor! }}>
+          <span className="font-semibold">● {label}:</span> {fmtM(you!)}
+          {you! >= p75 ? " — above P75" : you! >= median ? " — above median" : " — below median"}
+        </p>
+      )}
+    </div>
+  );
+}
+
 // ─── Metric Stat chip ─────────────────────────────────────────────────────────
 
 function MetricStat({ label, value, sub, tone = "neutral" }: {
@@ -272,24 +343,30 @@ function MetricStat({ label, value, sub, tone = "neutral" }: {
 
 function ToolCard({ tool, state }: { tool: FoundationTool; state: ToolState }) {
   const band = scoreBand(state.score);
-  const dot = state.status === "completed" ? "bg-success" : state.status === "in_progress" ? "bg-warning" : "bg-border";
+  const isComplete = state.status === "completed";
+  const isInProgress = state.status === "in_progress";
   return (
     <Link href={TOOL_HREFS[tool]}
-      className="bg-card border border-border rounded-[var(--radius-md)] p-3 hover:border-ink/20 transition-colors flex flex-col gap-2"
+      className="bg-card border border-border rounded-[var(--radius-md)] p-3 hover:border-ink/20 hover:shadow-sm transition-all flex flex-col gap-2 group"
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dot}`} />
-          <span className="text-sm font-semibold text-ink">{TOOL_LABELS[tool]}</span>
-        </div>
-        <span className={`text-sm font-bold font-mono ${band.text}`}>{state.score}</span>
+      <div className="flex items-start justify-between gap-1">
+        <span className="text-xl leading-none">{TOOL_ICONS[tool]}</span>
+        <span className={`text-sm font-black font-mono ${state.score > 0 ? band.text : "text-muted"}`}>
+          {state.score > 0 ? state.score : "—"}
+        </span>
       </div>
-      <div className="h-1.5 bg-border rounded-full overflow-hidden">
-        <div className={`h-full rounded-full ${state.score > 0 ? band.bg : "bg-border"}`}
+      <div>
+        <p className="text-xs font-bold text-ink leading-snug">{TOOL_LABELS[tool]}</p>
+        <p className="text-[10px] text-muted mt-0.5">{TOOL_WEIGHTS_LABEL[tool]} weight</p>
+      </div>
+      <div className="h-1 bg-border rounded-full overflow-hidden">
+        <div className={`h-full rounded-full transition-all ${state.score > 0 ? band.bg : "bg-border"}`}
           style={{ width: `${state.score}%` }} />
       </div>
-      <p className="text-[11px] text-muted">
-        {state.status === "not_started" ? "Not started" : state.status === "in_progress" ? "In progress" : "Completed"}
+      <p className={`text-[10px] font-semibold ${
+        isComplete ? "text-success" : isInProgress ? "text-warning" : "text-muted"
+      }`}>
+        {isComplete ? "✓ Complete" : isInProgress ? "In progress" : "Not started"}
       </p>
     </Link>
   );
@@ -584,33 +661,72 @@ function getResumeStep(ts: Record<FoundationTool, ToolState>): { id: FlowStepId;
 
 /** Map profile free-text sectors (from onboarding) → comparables sector keys */
 const SECTOR_NORMALIZE: Record<string, string> = {
+  // Core Software
   "ai / machine learning": "deeptech",
   "saas / b2b software": "saas",
+  "developer tools & apis": "saas",
   "developer tools": "saas",
   "cybersecurity": "saas",
   "data & analytics": "saas",
   "cloud infrastructure": "saas",
+  "no-code / low-code": "saas",
+  // Financial Services
+  "fintech / payments": "fintech",
   "fintech": "fintech",
+  "crypto / web3 / defi": "fintech",
   "crypto / web3": "fintech",
   "insurtech": "fintech",
+  "regtech / compliance": "fintech",
   "regtech": "fintech",
-  "edtech": "edtech",
+  "wealthtech / investment": "fintech",
+  "wealthtech": "fintech",
+  // Health & Life Sciences
+  "healthtech / digital health": "healthtech",
   "healthtech": "healthtech",
-  "agritech": "agritech",
+  "biotech / life sciences": "healthtech",
+  "medtech / medical devices": "healthtech",
+  "mental health & wellness": "healthtech",
+  // Commerce & Marketplace
+  "e-commerce / d2c": "retail",
+  "e-commerce": "retail",
+  "retail tech": "retail",
+  "retail": "retail",
+  "marketplace": "marketplace",
+  // Consumer & Media
+  "consumer app": "marketplace",
+  "gaming / entertainment": "saas",
+  "media & content": "saas",
+  "sports & fitness": "healthtech",
+  // Education & Future of Work
+  "edtech": "edtech",
+  "hrtech / future of work": "saas",
+  "legaltech": "saas",
+  // Real World & Physical
+  "proptech / real estate": "saas",
+  "logistics / supply chain": "logistics",
+  "logistics": "logistics",
+  "mobility & transportation": "logistics",
+  "automotive tech": "logistics",
+  "foodtech & restaurant tech": "agritech",
   "foodtech": "agritech",
+  "agritech / farmtech": "agritech",
+  "agritech": "agritech",
+  "traveltech & hospitality": "travel",
   "traveltech": "travel",
   "travel": "travel",
+  // Deep Tech & Hardware
   "deeptech": "deeptech",
   "cleantech / climate": "cleantech",
   "cleantech": "cleantech",
+  "energy & renewables": "energy",
+  "energy": "energy",
   "spacetech": "deeptech",
   "hardware / iot": "deeptech",
+  "robotics & automation": "deeptech",
   "robotics / automation": "deeptech",
-  "logistics": "logistics",
-  "energy": "energy",
-  "retail": "retail",
-  "e-commerce": "retail",
-  "marketplace": "marketplace",
+  // Infrastructure & Gov
+  "govtech / civictech": "saas",
+  "telecom / connectivity": "telecom",
   "telecom": "telecom",
 };
 
@@ -773,49 +889,45 @@ function YouVsMarketCard({ profile, ts }: YouVsMarketCardProps) {
               )}
             </div>
 
-            {/* Raise + valuation stats */}
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                <p className="text-[10px] font-semibold text-muted uppercase tracking-wide mb-1">Typical raise (P25–P75)</p>
-                <p className="text-base font-mono font-bold text-foreground">{bm.raisedBracket}</p>
-                <p className="text-xs text-ink-secondary mt-1">
-                  Median <span className="font-semibold text-foreground">{fmtM(bm.medianRaised)}</span>
-                </p>
-                {yourRaised !== null && (
-                  <p className="text-xs mt-0.5">
-                    Your target:{" "}
-                    <span className={`font-semibold ${posColor}`}>{fmtM(yourRaised)}</span>
-                  </p>
-                )}
-              </div>
+            {/* Raise distribution + range bar */}
+            <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
+              <p className="text-[10px] font-semibold text-muted uppercase tracking-wide mb-1">Raise distribution (P25–P75)</p>
+              <RangeBar
+                p25={bm.p25Raised}
+                median={bm.medianRaised}
+                p75={bm.p75Raised}
+                you={yourRaised}
+                label="Your target"
+              />
+            </div>
 
-              <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                <p className="text-[10px] font-semibold text-muted uppercase tracking-wide mb-1">Market valuation</p>
-                {bm.medianValuation !== null ? (
-                  <>
-                    <p className="text-base font-mono font-bold text-foreground">{fmtM(bm.medianValuation)}</p>
-                    <p className="text-xs text-ink-secondary mt-1">
-                      {bm.p25Valuation !== null && bm.p75Valuation !== null
-                        ? `P25 ${fmtM(bm.p25Valuation)} – P75 ${fmtM(bm.p75Valuation)}`
-                        : `${bm.valuationCoverage}% coverage`}
+            {/* Valuation stat */}
+            <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
+              <p className="text-[10px] font-semibold text-muted uppercase tracking-wide mb-1">Market valuation</p>
+              {bm.medianValuation !== null ? (
+                <>
+                  <p className="text-base font-mono font-bold text-foreground">{fmtM(bm.medianValuation)}</p>
+                  <p className="text-xs text-ink-secondary mt-1">
+                    {bm.p25Valuation !== null && bm.p75Valuation !== null
+                      ? `P25 ${fmtM(bm.p25Valuation)} – P75 ${fmtM(bm.p75Valuation)}`
+                      : `${bm.valuationCoverage}% coverage`}
+                  </p>
+                  {yourValuation !== null && (
+                    <p className="text-xs mt-1">
+                      Yours:{" "}
+                      <span className={`font-semibold ${
+                        yvm.valuationVsMedian === "above" ? "text-success" :
+                        yvm.valuationVsMedian === "below" ? "text-warning" : "text-foreground"
+                      }`}>{fmtM(yourValuation)}</span>
+                      {yvm.valuationVsMedian !== "unknown" && (
+                        <span className="text-muted"> ({yvm.valuationVsMedian})</span>
+                      )}
                     </p>
-                    {yourValuation !== null && (
-                      <p className="text-xs mt-0.5">
-                        Yours:{" "}
-                        <span className={`font-semibold ${
-                          yvm.valuationVsMedian === "above" ? "text-success" :
-                          yvm.valuationVsMedian === "below" ? "text-warning" : "text-foreground"
-                        }`}>{fmtM(yourValuation)}</span>
-                        {yvm.valuationVsMedian !== "unknown" && (
-                          <span className="text-muted"> ({yvm.valuationVsMedian})</span>
-                        )}
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  <p className="text-xs text-muted mt-1">No valuation data in peer set</p>
-                )}
-              </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-xs text-muted mt-1">No valuation data in peer set</p>
+              )}
             </div>
           </div>
 
@@ -829,11 +941,19 @@ function YouVsMarketCard({ profile, ts }: YouVsMarketCardProps) {
           }`}>
             <div>
               <p className="text-[10px] font-semibold text-muted uppercase tracking-wide mb-2">Your positioning</p>
-              <p className={`text-2xl font-extrabold leading-tight ${posColor} mb-2`}>{posLabel}</p>
+              <p className={`text-3xl font-black leading-tight ${posColor} mb-2`}>{posLabel}</p>
               <p className="text-xs text-ink-secondary leading-relaxed">{posDesc}</p>
             </div>
+            {yvm.raisedPercentile !== null && (
+              <div className="mt-3 flex items-center gap-2">
+                <div className="flex-1 h-1 bg-border/60 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full bg-accent/50" style={{ width: `${yvm.raisedPercentile}%` }} />
+                </div>
+                <span className="text-[10px] font-bold text-muted shrink-0">P{yvm.raisedPercentile}</span>
+              </div>
+            )}
             {posBasis !== "none" && (
-              <p className="text-[10px] text-muted mt-3 pt-2 border-t border-border/60">
+              <p className="text-[10px] text-muted mt-2 pt-2 border-t border-border/60">
                 {posBasis === "raised" ? "Based on raise target vs peers" : "Based on valuation vs peers"}
               </p>
             )}
@@ -1000,18 +1120,20 @@ export default function DashboardV2Page() {
             <div className="p-6 pb-5">
               <div className="grid lg:grid-cols-[1fr_auto] gap-6 items-start">
                 {/* Left: identity + score */}
-                <div className="flex gap-5 items-start">
-                  <ScoreArc score={animatedScore} colorScore={snap.overall_score} size={104} />
+                <div className="flex gap-4 sm:gap-5 items-start">
+                  <div className="flex-shrink-0">
+                    <ScoreArc score={animatedScore} colorScore={snap.overall_score} size={112} />
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight leading-tight">
+                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                      <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight leading-tight">
                         {profile.startup_name || "Your startup"}
                       </h1>
-                      <span className={`inline-flex items-center h-7 px-2.5 rounded-full border text-xs font-bold ${vc.badge}`}>
+                      <span className={`inline-flex items-center h-6 px-2.5 rounded-full border text-[11px] font-bold ${vc.badge}`}>
                         {snap.verdict}
                       </span>
                     </div>
-                    <p className="text-sm text-ink-secondary mb-1">
+                    <p className="text-sm text-ink-secondary mb-1 leading-snug">
                       {(() => {
                         const flag = profile.country ? getCountryFlag(profile.country) : "";
                         const countryDisplay = profile.country
@@ -1025,8 +1147,8 @@ export default function DashboardV2Page() {
                         ].filter(Boolean).join(" · ") || "Complete your profile";
                       })()}
                     </p>
-                    <p className="text-sm text-muted italic">{vc.tagline}</p>
-                    <div className="flex flex-wrap gap-2 mt-4">
+                    <p className="text-xs text-muted italic">{vc.tagline}</p>
+                    <div className="flex flex-wrap gap-2 mt-3">
                       {nextStep ? (
                         <Link href={nextStep.href}
                           className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors"
@@ -1042,7 +1164,7 @@ export default function DashboardV2Page() {
                         disabled={exporting}
                         className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] border border-border bg-soft text-sm font-semibold text-ink hover:border-ink/20 transition-colors disabled:opacity-50"
                       >
-                        {exporting ? "Generating…" : "↓ Export PDF"}
+                        {exporting ? "Generating…" : "↓ PDF"}
                       </button>
                       <Link href="/onboard"
                         className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] border border-border bg-soft text-sm font-semibold text-ink hover:border-ink/20 transition-colors"
@@ -1052,7 +1174,7 @@ export default function DashboardV2Page() {
                 </div>
 
                 {/* Right: stat chips — compact vertical stack on desktop */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2 lg:w-40">
+                <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-1 gap-2 lg:w-36">
                   <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 text-center">
                     <p className="text-[10px] uppercase tracking-wide text-muted font-semibold">Tools</p>
                     <p className="text-2xl font-black font-mono text-ink">{animatedTools}<span className="text-sm font-normal text-muted">/6</span></p>
@@ -1061,14 +1183,9 @@ export default function DashboardV2Page() {
                     <p className="text-[10px] uppercase tracking-wide text-muted font-semibold">Gaps</p>
                     <p className={`text-2xl font-black font-mono ${snap.blockers_count > 0 ? "text-danger" : "text-ink"}`}>{animatedBlockers}</p>
                   </div>
-                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 text-center col-span-2 lg:col-span-2">
-                    <p className="text-[10px] uppercase tracking-wide text-muted font-semibold mb-0.5">Profile completeness</p>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 bg-border rounded-full overflow-hidden">
-                        <div className="h-full rounded-full bg-accent" style={{ width: `${snap.profile_completion_pct}%` }} />
-                      </div>
-                      <span className="text-xs font-bold text-ink">{animatedProfile}%</span>
-                    </div>
+                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 text-center">
+                    <p className="text-[10px] uppercase tracking-wide text-muted font-semibold">Done</p>
+                    <p className="text-2xl font-black font-mono text-ink">{animatedProfile}<span className="text-sm font-normal text-muted">%</span></p>
                   </div>
                 </div>
               </div>
@@ -1077,13 +1194,18 @@ export default function DashboardV2Page() {
               <div className="mt-5 pt-4 border-t border-border">
                 <div className="flex items-center justify-between text-xs text-muted mb-2">
                   <span className="font-medium text-ink-secondary">Investor readiness score</span>
-                  <span className={`font-bold ${band.text}`}>{snap.overall_score}/100 — {snap.verdict}</span>
+                  <span className={`font-bold ${band.text}`}>{snap.overall_score}/100 · {snap.verdict}</span>
                 </div>
-                <div className="h-2.5 bg-border rounded-full overflow-hidden">
+                {/* Segmented progress bar with zone markers */}
+                <div className="relative h-2.5 bg-border rounded-full overflow-hidden">
                   <div className={`h-full rounded-full transition-all duration-700 ${vc.bar}`} style={{ width: `${snap.overall_score}%` }} />
+                  {/* Zone ticks */}
+                  {[35, 60, 80].map(v => (
+                    <div key={v} className="absolute top-0 bottom-0 w-px bg-background/40" style={{ left: `${v}%` }} />
+                  ))}
                 </div>
                 <div className="flex justify-between text-[10px] text-muted mt-1.5">
-                  <span>0 Early</span><span>35 Improving</span><span>60 Fundable</span><span>80+ Strong</span>
+                  <span>0 — Early</span><span>35</span><span>60</span><span>80 — Strong</span>
                 </div>
               </div>
             </div>

@@ -231,8 +231,8 @@ export default function ComparablesPage() {
               Know where you stand.
             </h1>
             <p className="text-base text-muted max-w-2xl leading-relaxed">
-              A curated database of funding rounds across Africa, MENA, and Europe — enriched with{" "}
-              <span className="text-foreground font-medium">Africa: The Big Deal</span> data (2019–2023).
+              A curated database of funding rounds across Africa, MENA, and Europe — sourced from public
+              announcements, Crunchbase, press releases, and proprietary market research (2019–2025).
               Benchmark your valuation, build your comps analysis, and justify your multiple to investors.
             </p>
           </div>
@@ -420,10 +420,9 @@ export default function ComparablesPage() {
           {/* Disclaimer */}
           <div className="mt-8 p-4 bg-surface/50 rounded border border-border text-xs text-muted leading-relaxed space-y-1">
             <p>
-              ⚠ Data sourced from public announcements, Crunchbase, press reports, and{" "}
-              <span className="font-medium text-foreground">Africa: The Big Deal</span> database (2019–2023).
+              ⚠ Data sourced from public investment announcements, Crunchbase, press releases, and proprietary market research (2019–2025).
               {" "}Valuations and multiples are estimates where not publicly disclosed.
-              {" "}{enrichedCount} of {COMPARABLES_DATA.length} records enriched from Africa: The Big Deal.
+              {" "}{enrichedCount} of {COMPARABLES_DATA.length} records include enriched valuation and multiple data.
             </p>
             <p>This database is for reference only — not financial advice. Last updated April 2026.</p>
           </div>
