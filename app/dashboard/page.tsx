@@ -25,6 +25,8 @@ import type {
 } from "@/lib/foundation/types";
 import { computeBenchmark, compareToMarket } from "@/lib/benchmark-engine";
 import { COMPARABLES_DATA } from "@/lib/comparables-data";
+import { buildAdvisory } from "@/lib/advisory-engine";
+import type { AdvisoryOutput, AdvisoryItem } from "@/lib/advisory-engine";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -402,7 +404,235 @@ function AlertCard({ flag }: { flag: ReadinessRedFlag }) {
   );
 }
 
-// ─── Advisory engine ──────────────────────────────────────────────────────────
+// ─── Advisory UI components ───────────────────────────────────────────────────
+
+const SEVERITY_CONFIG = {
+  critical: { dot: "bg-danger",  text: "text-danger",  badge: "bg-danger/10 text-danger border-danger/20",  bg: "bg-danger/5  border-danger/15"  },
+  high:     { dot: "bg-warning", text: "text-warning", badge: "bg-warning/10 text-warning border-warning/20", bg: "bg-warning/5 border-warning/15" },
+  medium:   { dot: "bg-accent",  text: "text-accent",  badge: "bg-accent/10  text-accent  border-accent/20",  bg: "bg-soft border-border"           },
+  low:      { dot: "bg-muted",   text: "text-muted",   badge: "bg-soft       text-muted    border-border",     bg: "bg-soft border-border"           },
+} as const;
+
+function AdvisoryItemRow({
+  item,
+  showTag = true,
+  variant = "default",
+}: {
+  item: AdvisoryItem;
+  showTag?: boolean;
+  variant?: "default" | "challenge" | "action";
+}) {
+  const sev = item.severity ?? "medium";
+  const cfg = SEVERITY_CONFIG[sev];
+
+  const inner = (
+    <div className={`rounded-[var(--radius-md)] border px-4 py-3 flex items-start gap-3 transition-colors ${cfg.bg} ${item.href ? "hover:border-ink/20" : ""}`}>
+      <span className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-wrap items-center gap-2 mb-0.5">
+          {showTag && item.tag && (
+            <span className={`inline-flex items-center h-5 px-1.5 rounded text-[10px] font-bold uppercase tracking-wide border ${cfg.badge}`}>
+              {item.tag}
+            </span>
+          )}
+          <p className="text-sm font-semibold text-ink leading-snug">{item.label}</p>
+        </div>
+        <p className="text-xs text-ink-secondary leading-relaxed mt-0.5">{item.detail}</p>
+      </div>
+      {item.href && (
+        <span className="text-xs font-bold text-accent shrink-0 mt-0.5 whitespace-nowrap">
+          {variant === "action" ? "Go →" : variant === "challenge" ? "Fix →" : "→"}
+        </span>
+      )}
+    </div>
+  );
+
+  if (!item.href) return inner;
+  const isExt = item.href.startsWith("http");
+  if (isExt) return <a href={item.href} target="_blank" rel="noopener noreferrer">{inner}</a>;
+  return <Link href={item.href}>{inner}</Link>;
+}
+
+interface AdvisorySectionProps {
+  advisory: AdvisoryOutput;
+}
+
+function AdvisorySection({ advisory }: AdvisorySectionProps) {
+  const { readiness_summary, recommended_strategy, top_priorities, investor_challenges, next_actions, primary_cta, secondary_cta, data_completeness } = advisory;
+
+  const completenessNote =
+    data_completeness === "minimal" ? "Complete more tools to improve advisory accuracy." :
+    data_completeness === "partial" ? "Advisory based on partial data — more tools will sharpen these recommendations." :
+    null;
+
+  return (
+    <div className="space-y-4">
+
+      {/* ── Summary + Strategy ── */}
+      <div className="grid lg:grid-cols-[3fr_2fr] gap-4">
+
+        {/* Readiness summary */}
+        <Card padding="sm">
+          <CardHeader>
+            <CardTitle kicker="Fundraising analysis">Advisor summary</CardTitle>
+            {data_completeness !== "full" && (
+              <span className="text-[10px] font-semibold text-warning bg-warning/10 border border-warning/20 rounded px-2 py-0.5">
+                Partial data
+              </span>
+            )}
+          </CardHeader>
+          <CardContent>
+            <div className="border-l-[3px] border-accent pl-4 mb-4">
+              <p className="text-sm text-ink-secondary leading-relaxed">{readiness_summary}</p>
+            </div>
+            {completenessNote && (
+              <p className="text-xs text-muted italic">{completenessNote}</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recommended strategy */}
+        <Card padding="sm">
+          <CardHeader>
+            <CardTitle kicker="Strategic focus">What to do this week</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-accent/5 border border-accent/20 rounded-[var(--radius-md)] p-4 mb-4">
+              <p className="text-sm font-semibold text-ink leading-relaxed">{recommended_strategy}</p>
+            </div>
+            {/* CTAs */}
+            <div className="space-y-2">
+              {primary_cta.ext ? (
+                <a href={primary_cta.href} target="_blank" rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors"
+                >{primary_cta.label}</a>
+              ) : (
+                <Link href={primary_cta.href}
+                  className="w-full inline-flex items-center justify-center h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors"
+                >{primary_cta.label}</Link>
+              )}
+              {secondary_cta && (
+                secondary_cta.ext ? (
+                  <a href={secondary_cta.href} target="_blank" rel="noopener noreferrer"
+                    className="w-full inline-flex items-center justify-center h-9 px-4 rounded-[var(--radius-md)] border border-border bg-soft text-sm font-semibold text-ink hover:border-ink/20 transition-colors"
+                  >{secondary_cta.label}</a>
+                ) : (
+                  <Link href={secondary_cta.href}
+                    className="w-full inline-flex items-center justify-center h-9 px-4 rounded-[var(--radius-md)] border border-border bg-soft text-sm font-semibold text-ink hover:border-ink/20 transition-colors"
+                  >{secondary_cta.label}</Link>
+                )
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Priorities + Challenges ── */}
+      <div className="grid lg:grid-cols-2 gap-4">
+
+        {/* Top priorities */}
+        <Card padding="sm">
+          <CardHeader>
+            <CardTitle kicker="Focus areas">Top priorities</CardTitle>
+            <span className="text-xs text-muted">Ordered by impact</span>
+          </CardHeader>
+          <CardContent>
+            {top_priorities.length === 0 ? (
+              <div className="py-4 text-center">
+                <p className="text-sm font-semibold text-success mb-1">✓ No critical priorities</p>
+                <p className="text-xs text-muted">Your readiness profile looks solid. Focus on maintaining quality.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {top_priorities.map((item, i) => (
+                  <div key={item.id} className="flex items-start gap-3">
+                    <span className="w-6 h-6 rounded-full bg-ink text-white text-xs font-black flex items-center justify-center shrink-0 mt-0.5">
+                      {i + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <AdvisoryItemRow item={item} variant="action" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Investor challenges */}
+        <Card padding="sm">
+          <CardHeader>
+            <CardTitle kicker="Investor meeting prep">What they&apos;ll challenge</CardTitle>
+            <span className="text-xs text-muted">Likely objections</span>
+          </CardHeader>
+          <CardContent>
+            {investor_challenges.length === 0 ? (
+              <div className="py-4 text-center">
+                <p className="text-sm font-semibold text-success mb-1">✓ No major red flags</p>
+                <p className="text-xs text-muted">Complete more tools to surface likely investor objections.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {investor_challenges.map((item) => (
+                  <AdvisoryItemRow key={item.id} item={item} variant="challenge" />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Next actions ── */}
+      <Card padding="sm">
+        <CardHeader>
+          <CardTitle kicker="Action plan">Next actions</CardTitle>
+          <span className="text-xs text-muted">{next_actions.length} step{next_actions.length !== 1 ? "s" : ""}</span>
+        </CardHeader>
+        <CardContent>
+          {next_actions.length === 0 ? (
+            <div className="py-4 text-center">
+              <p className="text-sm font-semibold text-success mb-1">✓ No immediate actions needed</p>
+              <p className="text-xs text-muted">Keep your readiness profile up to date as your metrics evolve.</p>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-3 gap-3">
+              {next_actions.map((item, i) => {
+                const sev = item.severity ?? "medium";
+                const cfg = SEVERITY_CONFIG[sev];
+                const inner = (
+                  <div className={`h-full rounded-[var(--radius-md)] border p-3 flex flex-col gap-2 transition-colors ${cfg.bg} ${item.href ? "hover:border-ink/20" : ""}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="w-7 h-7 rounded-full bg-ink text-white text-xs font-black flex items-center justify-center shrink-0">
+                        {i + 1}
+                      </span>
+                      {item.tag && (
+                        <span className={`text-[10px] font-bold uppercase tracking-wide ${cfg.text}`}>{item.tag}</span>
+                      )}
+                    </div>
+                    <p className="text-sm font-bold text-ink leading-snug flex-1">{item.label}</p>
+                    <p className="text-xs text-ink-secondary leading-relaxed">{item.detail}</p>
+                    {item.href && (
+                      <span className="text-xs font-bold text-accent mt-auto">
+                        {item.href.startsWith("http") ? "Open →" : "Go →"}
+                      </span>
+                    )}
+                  </div>
+                );
+                if (!item.href) return <div key={item.id}>{inner}</div>;
+                const isExt = item.href.startsWith("http");
+                if (isExt) return <a key={item.id} href={item.href} target="_blank" rel="noopener noreferrer" className="block">{inner}</a>;
+                return <Link key={item.id} href={item.href} className="block">{inner}</Link>;
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+    </div>
+  );
+}
+
+// ─── Advisory engine (existing helpers — used by other dashboard sections) ────
 
 interface Advisory { label: string; detail: string; href?: string }
 
@@ -1108,6 +1338,33 @@ export default function DashboardV2Page() {
   const narrative = buildNarrative(snap, profile);
   const smartCTA = buildSmartCTA(snap, ts);
 
+  // ── Advisory inputs (mirrors YouVsMarketCard peer-set logic) ────────────────
+  const _sectorKey = SECTOR_NORMALIZE[profile.sector?.toLowerCase() ?? ""] ?? null;
+  const _stageKey  = STAGE_NORMALIZE[profile.stage?.toLowerCase()  ?? ""] ?? null;
+  let _peers = COMPARABLES_DATA;
+  if (_sectorKey) {
+    const _adjStages   = _stageKey ? (STAGE_ADJACENT[_stageKey] ?? [_stageKey]) : null;
+    const _bySectorStage = COMPARABLES_DATA.filter(d => d.sector === _sectorKey && (_adjStages ? _adjStages.includes(d.stage) : true));
+    const _bySector      = COMPARABLES_DATA.filter(d => d.sector === _sectorKey);
+    if (_bySectorStage.length >= 5) _peers = _bySectorStage;
+    else if (_bySector.length >= 3) _peers = _bySector;
+  }
+  const _bm  = computeBenchmark(_peers);
+  const _rawInvestment = (ts.valuation.inputs as { formData?: { investmentAmount?: number } })?.formData?.investmentAmount;
+  const _yourRaisedM   = _rawInvestment ? _rawInvestment / 1_000_000 : null;
+  const _yourValuationM = profile.estimated_valuation > 0 ? profile.estimated_valuation / 1_000_000 : null;
+  const _yvm = compareToMarket(_yourRaisedM, _yourValuationM, _bm);
+
+  const advisory = buildAdvisory({
+    snap,
+    profile,
+    ts,
+    benchmark:      _bm,
+    yvm:            _yvm,
+    yourRaisedM:    _yourRaisedM,
+    yourValuationM: _yourValuationM,
+  });
+
   return (
     <div className="py-8 bg-background min-h-screen">
       <Container>
@@ -1288,7 +1545,17 @@ export default function DashboardV2Page() {
           {/* ─── 2.5 YOU VS MARKET ──────────────────────────────────────── */}
           <YouVsMarketCard profile={profile} ts={ts} />
 
-          {/* ─── 3. TOOL GRID ────────────────────────────────────────────── */}
+          {/* ─── 3. ADVISORY ─────────────────────────────────────────────── */}
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <h2 className="text-base font-extrabold tracking-tight text-ink">Fundraising advisor</h2>
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs text-muted font-medium">Rule-based · updated in real-time</span>
+            </div>
+            <AdvisorySection advisory={advisory} />
+          </div>
+
+          {/* ─── 4. TOOL GRID ────────────────────────────────────────────── */}
           <Card padding="sm">
             <CardHeader>
               <CardTitle kicker="Assessment modules">Tool performance overview</CardTitle>
