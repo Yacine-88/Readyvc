@@ -23,6 +23,8 @@ import type {
   ReadinessRedFlag,
   ToolState,
 } from "@/lib/foundation/types";
+import { computeBenchmark, compareToMarket } from "@/lib/benchmark-engine";
+import { COMPARABLES_DATA } from "@/lib/comparables-data";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -578,6 +580,236 @@ function getResumeStep(ts: Record<FoundationTool, ToolState>): { id: FlowStepId;
   return null;
 }
 
+// ─── You vs Market ────────────────────────────────────────────────────────────
+
+/** Map profile free-text sectors (from onboarding) → comparables sector keys */
+const SECTOR_NORMALIZE: Record<string, string> = {
+  "ai / machine learning": "deeptech",
+  "saas / b2b software": "saas",
+  "developer tools": "saas",
+  "cybersecurity": "saas",
+  "data & analytics": "saas",
+  "cloud infrastructure": "saas",
+  "fintech": "fintech",
+  "crypto / web3": "fintech",
+  "insurtech": "fintech",
+  "regtech": "fintech",
+  "edtech": "edtech",
+  "healthtech": "healthtech",
+  "agritech": "agritech",
+  "foodtech": "agritech",
+  "traveltech": "travel",
+  "travel": "travel",
+  "deeptech": "deeptech",
+  "cleantech / climate": "cleantech",
+  "cleantech": "cleantech",
+  "spacetech": "deeptech",
+  "hardware / iot": "deeptech",
+  "robotics / automation": "deeptech",
+  "logistics": "logistics",
+  "energy": "energy",
+  "retail": "retail",
+  "e-commerce": "retail",
+  "marketplace": "marketplace",
+  "telecom": "telecom",
+};
+
+/** Map profile stage labels (from onboarding) → comparables stage keys */
+const STAGE_NORMALIZE: Record<string, string> = {
+  "pre-seed": "preSeed",
+  "seed": "seed",
+  "series a": "seriesA",
+  "series b+": "seriesB",
+  "series b": "seriesB",
+  "series c": "seriesC",
+};
+
+/** Stages that count as "adjacent" to a given stage for broadening the peer set */
+const STAGE_ADJACENT: Record<string, string[]> = {
+  preSeed:  ["preSeed", "seed"],
+  seed:     ["preSeed", "seed", "seriesA"],
+  seriesA:  ["seed", "seriesA", "seriesB"],
+  seriesB:  ["seriesA", "seriesB", "seriesC"],
+  seriesC:  ["seriesB", "seriesC", "seriesD"],
+};
+
+interface YouVsMarketCardProps {
+  profile: FounderStartupProfile;
+  ts: Record<FoundationTool, ToolState>;
+}
+
+function YouVsMarketCard({ profile, ts }: YouVsMarketCardProps) {
+  const sectorKey = SECTOR_NORMALIZE[profile.sector?.toLowerCase() ?? ""] ?? null;
+  const stageKey  = STAGE_NORMALIZE[profile.stage?.toLowerCase()  ?? ""] ?? null;
+
+  // ── Build peer set ────────────────────────────────────────────────────────
+  // 1. Sector + adjacent stage (tightest), ≥ 5 peers needed
+  // 2. Sector only, ≥ 3 peers needed
+  // 3. Full dataset (always available)
+  let peers = COMPARABLES_DATA;
+  let scopeLabel = "All markets";
+
+  if (sectorKey) {
+    const adjacentStages = stageKey ? (STAGE_ADJACENT[stageKey] ?? [stageKey]) : null;
+    const bySectorStage = COMPARABLES_DATA.filter(d =>
+      d.sector === sectorKey && (adjacentStages ? adjacentStages.includes(d.stage) : true)
+    );
+    const bySector = COMPARABLES_DATA.filter(d => d.sector === sectorKey);
+
+    if (bySectorStage.length >= 5) {
+      peers = bySectorStage;
+      const sectorLabel = sectorKey.charAt(0).toUpperCase() + sectorKey.slice(1);
+      const stageLabel  = stageKey ? STAGE_NORMALIZE_LABEL[stageKey] ?? stageKey : "";
+      scopeLabel = `${sectorLabel}${stageLabel ? ` · ${stageLabel}` : ""}`;
+    } else if (bySector.length >= 3) {
+      peers = bySector;
+      scopeLabel = sectorKey.charAt(0).toUpperCase() + sectorKey.slice(1);
+    }
+  }
+
+  const bm = computeBenchmark(peers);
+
+  // ── Your numbers ─────────────────────────────────────────────────────────
+  // investmentAmount is stored in USD (e.g. 500000) — convert to $M
+  const rawInvestment = (ts.valuation.inputs as { formData?: { investmentAmount?: number } })?.formData?.investmentAmount;
+  const yourRaised    = rawInvestment ? rawInvestment / 1_000_000 : null;
+  // estimated_valuation is stored in USD — convert to $M
+  const yourValuation = profile.estimated_valuation > 0 ? profile.estimated_valuation / 1_000_000 : null;
+
+  const yvm = compareToMarket(yourRaised, yourValuation, bm);
+
+  // ── Positioning label ─────────────────────────────────────────────────────
+  let posLabel: string;
+  let posColor: string;
+  let posDesc: string;
+
+  if (yvm.raisedVsMedian === "unknown") {
+    posLabel = "No data";
+    posColor = "text-muted";
+    posDesc  = "Complete the Valuation tool to unlock market positioning.";
+  } else if (yvm.raisedVsP75 === "above") {
+    posLabel = "Aggressive";
+    posColor = "text-warning";
+    posDesc  = "Your target raise is above the P75 for comparable deals. Ensure your story justifies the ask.";
+  } else if (yvm.raisedVsMedian === "above") {
+    posLabel = "Above median";
+    posColor = "text-success";
+    posDesc  = "Your raise target is above market median — a strong signal if your traction supports it.";
+  } else if (yvm.raisedVsMedian === "at") {
+    posLabel = "In range";
+    posColor = "text-success";
+    posDesc  = "Your raise target aligns well with the market median for comparable deals.";
+  } else {
+    posLabel = "Conservative";
+    posColor = "text-ink-secondary";
+    posDesc  = "Your raise target is below market median. This can work for earlier rounds, but consider if it matches your ambition.";
+  }
+
+  const confidenceCfg = {
+    high:   { label: "High confidence", bg: "bg-success/10", text: "text-success", border: "border-success/20" },
+    medium: { label: "Medium confidence", bg: "bg-warning/10", text: "text-warning", border: "border-warning/20" },
+    low:    { label: "Low confidence",  bg: "bg-muted/10",   text: "text-muted",   border: "border-muted/20" },
+  }[bm.confidence];
+
+  function fmtM(v: number) {
+    if (v >= 1000) return `$${(v / 1000).toFixed(1)}B`;
+    if (v >= 1)    return `$${Math.round(v)}M`;
+    return `$${(v * 1000).toFixed(0)}K`;
+  }
+
+  return (
+    <Card padding="sm">
+      <CardHeader>
+        <div className="flex items-start justify-between gap-3">
+          <CardTitle kicker="Benchmark intelligence">You vs Market</CardTitle>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border ${confidenceCfg.bg} ${confidenceCfg.text} ${confidenceCfg.border}`}>
+              {confidenceCfg.label}
+            </span>
+            <Link href="/comparables" className="text-xs text-accent font-semibold hover:underline">
+              Explore →
+            </Link>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid sm:grid-cols-3 gap-4">
+
+          {/* ── Peer set ─────────────────────────────────────────── */}
+          <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
+            <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">Peer set</p>
+            <p className="text-2xl font-mono font-bold text-foreground">{bm.peerCount}</p>
+            <p className="text-xs text-ink-secondary mt-1">{scopeLabel}</p>
+            <p className="text-xs text-muted mt-1">
+              {bm.yearRange[0] > 0 ? `${bm.yearRange[0]}–${bm.yearRange[1]}` : ""}
+              {bm.countriesCount > 1 ? ` · ${bm.countriesCount} countries` : ""}
+            </p>
+          </div>
+
+          {/* ── Market raise bracket ─────────────────────────────── */}
+          <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
+            <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">Typical raise (P25–P75)</p>
+            <p className="text-lg font-mono font-bold text-foreground">{bm.raisedBracket}</p>
+            <p className="text-xs text-ink-secondary mt-1">
+              Median: <span className="font-semibold">{fmtM(bm.medianRaised)}</span>
+            </p>
+            {yourRaised !== null && (
+              <p className="text-xs text-ink-secondary mt-0.5">
+                Your target: <span className={`font-semibold ${posColor}`}>{fmtM(yourRaised)}</span>
+              </p>
+            )}
+          </div>
+
+          {/* ── Your positioning ─────────────────────────────────── */}
+          <div className={`rounded-[var(--radius-md)] p-4 border ${
+            posLabel === "Aggressive"   ? "bg-warning/5 border-warning/25" :
+            posLabel === "No data"      ? "bg-soft border-border" :
+            posLabel === "Conservative" ? "bg-soft border-border" :
+                                          "bg-success/5 border-success/15"
+          }`}>
+            <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">Positioning</p>
+            <p className={`text-xl font-bold ${posColor} mb-1`}>{posLabel}</p>
+            <p className="text-xs text-ink-secondary leading-relaxed">{posDesc}</p>
+          </div>
+
+        </div>
+
+        {/* ── Valuation row (only if data available) ────────────────────── */}
+        {bm.medianValuation !== null && (
+          <div className="mt-3 pt-3 border-t border-border flex flex-wrap gap-4 text-xs text-ink-secondary">
+            <span>
+              Market median valuation:{" "}
+              <span className="font-semibold text-foreground">{fmtM(bm.medianValuation)}</span>
+              {bm.p25Valuation !== null && bm.p75Valuation !== null && (
+                <span className="text-muted"> (P25 {fmtM(bm.p25Valuation)} – P75 {fmtM(bm.p75Valuation)})</span>
+              )}
+            </span>
+            {yourValuation !== null && (
+              <span>
+                Your valuation:{" "}
+                <span className={`font-semibold ${
+                  yvm.valuationVsMedian === "above" ? "text-success" :
+                  yvm.valuationVsMedian === "below" ? "text-warning" : "text-foreground"
+                }`}>{fmtM(yourValuation)}</span>
+                {yvm.valuationVsMedian !== "unknown" && (
+                  <span className="text-muted"> ({yvm.valuationVsMedian} median)</span>
+                )}
+              </span>
+            )}
+            <span className="ml-auto text-muted">{bm.valuationCoverage}% valuation coverage</span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Human-readable stage labels used in YouVsMarketCard scope label */
+const STAGE_NORMALIZE_LABEL: Record<string, string> = {
+  preSeed: "Pre-Seed", seed: "Seed", seriesA: "Series A",
+  seriesB: "Series B", seriesC: "Series C", seriesD: "Series D",
+};
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardV2Page() {
@@ -892,6 +1124,9 @@ export default function DashboardV2Page() {
               </CardContent>
             </Card>
           </div>
+
+          {/* ─── 2.5 YOU VS MARKET ──────────────────────────────────────── */}
+          <YouVsMarketCard profile={profile} ts={ts} />
 
           {/* ─── 3. TOOL GRID ────────────────────────────────────────────── */}
           <Card padding="sm">
