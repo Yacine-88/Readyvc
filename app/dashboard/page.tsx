@@ -47,11 +47,6 @@ const TOOL_HREFS: Record<FoundationTool, string> = {
   captable: "/captable", pitch: "/pitch", dataroom: "/dataroom",
 };
 
-const TOOL_ICONS: Record<FoundationTool, string> = {
-  metrics: "📈", valuation: "💰", qa: "🎯",
-  captable: "🧩", pitch: "🎤", dataroom: "📂",
-};
-
 const TOOL_WEIGHTS_LABEL: Record<FoundationTool, string> = {
   metrics: "25%", valuation: "20%", qa: "20%",
   captable: "10%", pitch: "15%", dataroom: "10%",
@@ -202,25 +197,28 @@ function useCountUp(target: number, duration = 700): number {
 
 // ─── Score Arc (SVG) ──────────────────────────────────────────────────────────
 
-function ScoreArc({ score, colorScore, size = 96 }: { score: number; colorScore?: number; size?: number }) {
+function ScoreArc({ score, colorScore, size = 96, dark = false }: { score: number; colorScore?: number; size?: number; dark?: boolean }) {
   const sw = size >= 110 ? 10 : 9;
   const r = (size - sw * 2) / 2;
   const cx = size / 2;
   const circ = 2 * Math.PI * r;
   const offset = circ - (score / 100) * circ;
   const { hex } = scoreBand(colorScore ?? score);
+  const trackColor = dark ? "rgba(255,255,255,0.15)" : "#E7E3DA";
   const numSize = size >= 110 ? "text-3xl" : "text-2xl";
+  const numColor = dark ? "text-white" : "";
+  const subColor = dark ? "text-white/40" : "text-muted";
   return (
     <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: "rotate(-90deg)", display: "block" }}>
-        <circle cx={cx} cy={cx} r={r} fill="none" stroke="#E7E3DA" strokeWidth={sw} />
+        <circle cx={cx} cy={cx} r={r} fill="none" stroke={trackColor} strokeWidth={sw} />
         <circle cx={cx} cy={cx} r={r} fill="none" stroke={hex} strokeWidth={sw}
           strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
           style={{ transition: "stroke-dashoffset 0.8s cubic-bezier(0.25,0.46,0.45,0.94)" }} />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className={`${numSize} font-black font-mono leading-none`}>{score}</span>
-        <span className="text-[10px] text-muted font-medium leading-none mt-0.5">/100</span>
+        <span className={`${numSize} font-black font-mono leading-none ${numColor}`}>{score}</span>
+        <span className={`text-[10px] font-medium leading-none mt-0.5 ${subColor}`}>/100</span>
       </div>
     </div>
   );
@@ -341,35 +339,31 @@ function MetricStat({ label, value, sub, tone = "neutral" }: {
   );
 }
 
-// ─── Mini tool card ───────────────────────────────────────────────────────────
+// ─── Compact tool row ─────────────────────────────────────────────────────────
 
-function ToolCard({ tool, state }: { tool: FoundationTool; state: ToolState }) {
+function ToolRow({ tool, state }: { tool: FoundationTool; state: ToolState }) {
   const band = scoreBand(state.score);
   const isComplete = state.status === "completed";
   const isInProgress = state.status === "in_progress";
+  const statusDot = isComplete ? "bg-success" : isInProgress ? "bg-warning" : "bg-border";
+  const statusText = isComplete ? "Complete" : isInProgress ? "In progress" : "Not started";
+  const statusColor = isComplete ? "text-success" : isInProgress ? "text-warning" : "text-muted";
   return (
     <Link href={TOOL_HREFS[tool]}
-      className="bg-card border border-border rounded-[var(--radius-md)] p-3 hover:border-ink/20 hover:shadow-sm transition-all flex flex-col gap-2 group"
+      className="grid grid-cols-[16px_1fr_80px_36px_36px_60px_28px] items-center gap-3 px-4 py-3 hover:bg-soft transition-colors group border-b border-border last:border-0"
     >
-      <div className="flex items-start justify-between gap-1">
-        <span className="text-xl leading-none">{TOOL_ICONS[tool]}</span>
-        <span className={`text-sm font-black font-mono ${state.score > 0 ? band.text : "text-muted"}`}>
-          {state.score > 0 ? state.score : "—"}
-        </span>
-      </div>
-      <div>
-        <p className="text-xs font-bold text-ink leading-snug">{TOOL_LABELS[tool]}</p>
-        <p className="text-[10px] text-muted mt-0.5">{TOOL_WEIGHTS_LABEL[tool]} weight</p>
-      </div>
-      <div className="h-1 bg-border rounded-full overflow-hidden">
-        <div className={`h-full rounded-full transition-all ${state.score > 0 ? band.bg : "bg-border"}`}
+      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${statusDot}`} />
+      <span className="text-sm font-semibold text-ink">{TOOL_LABELS[tool]}</span>
+      <div className="h-1.5 bg-border rounded-full overflow-hidden">
+        <div className={`h-full rounded-full transition-all ${state.score > 0 ? band.bg : ""}`}
           style={{ width: `${state.score}%` }} />
       </div>
-      <p className={`text-[10px] font-semibold ${
-        isComplete ? "text-success" : isInProgress ? "text-warning" : "text-muted"
-      }`}>
-        {isComplete ? "✓ Complete" : isInProgress ? "In progress" : "Not started"}
-      </p>
+      <span className={`text-xs font-black font-mono text-right ${state.score > 0 ? band.text : "text-muted"}`}>
+        {state.score > 0 ? state.score : "—"}
+      </span>
+      <span className="text-[10px] text-muted text-right">{TOOL_WEIGHTS_LABEL[tool]}</span>
+      <span className={`text-[10px] font-semibold ${statusColor}`}>{statusText}</span>
+      <span className="text-xs text-muted opacity-0 group-hover:opacity-100 transition-opacity text-right">→</span>
     </Link>
   );
 }
@@ -539,7 +533,7 @@ function AdvisorySection({ advisory }: AdvisorySectionProps) {
           <CardContent>
             {top_priorities.length === 0 ? (
               <div className="py-4 text-center">
-                <p className="text-sm font-semibold text-success mb-1">✓ No critical priorities</p>
+                <p className="text-sm font-semibold text-success mb-1">No critical priorities</p>
                 <p className="text-xs text-muted">Your readiness profile looks solid. Focus on maintaining quality.</p>
               </div>
             ) : (
@@ -568,7 +562,7 @@ function AdvisorySection({ advisory }: AdvisorySectionProps) {
           <CardContent>
             {investor_challenges.length === 0 ? (
               <div className="py-4 text-center">
-                <p className="text-sm font-semibold text-success mb-1">✓ No major red flags</p>
+                <p className="text-sm font-semibold text-success mb-1">No major red flags</p>
                 <p className="text-xs text-muted">Complete more tools to surface likely investor objections.</p>
               </div>
             ) : (
@@ -591,7 +585,7 @@ function AdvisorySection({ advisory }: AdvisorySectionProps) {
         <CardContent>
           {next_actions.length === 0 ? (
             <div className="py-4 text-center">
-              <p className="text-sm font-semibold text-success mb-1">✓ No immediate actions needed</p>
+              <p className="text-sm font-semibold text-success mb-1">No immediate actions needed</p>
               <p className="text-xs text-muted">Keep your readiness profile up to date as your metrics evolve.</p>
             </div>
           ) : (
@@ -1314,7 +1308,9 @@ export default function DashboardV2Page() {
       <Card padding="lg">
         <div className="flex flex-col items-center text-center py-10 max-w-md mx-auto">
           <div className="w-16 h-16 rounded-full bg-soft border-2 border-border flex items-center justify-center mb-5">
-            <span className="text-3xl">📊</span>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted">
+              <rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="14" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/>
+            </svg>
           </div>
           <h1 className="text-xl font-bold tracking-tight mb-2">Complete your first tool to unlock your score</h1>
           <p className="text-sm text-ink-secondary leading-relaxed mb-6">
@@ -1365,210 +1361,237 @@ export default function DashboardV2Page() {
     yourValuationM: _yourValuationM,
   });
 
+  // ── Derived positioning for intelligence band market panel ─────────────────
+  const _scopeLabel = (() => {
+    if (!_sectorKey) return "All markets";
+    const adjStages = _stageKey ? (STAGE_ADJACENT[_stageKey] ?? [_stageKey]) : null;
+    const bySS = COMPARABLES_DATA.filter(d => d.sector === _sectorKey && (adjStages ? adjStages.includes(d.stage) : true));
+    const byS  = COMPARABLES_DATA.filter(d => d.sector === _sectorKey);
+    if (bySS.length >= 5) {
+      const sl = _sectorKey.charAt(0).toUpperCase() + _sectorKey.slice(1);
+      const tl = _stageKey ? (STAGE_NORMALIZE_LABEL[_stageKey] ?? _stageKey) : "";
+      return `${sl}${tl ? ` · ${tl}` : ""}`;
+    }
+    if (byS.length >= 3) return _sectorKey.charAt(0).toUpperCase() + _sectorKey.slice(1);
+    return "All markets";
+  })();
+
+  const _posInfo = (() => {
+    if (_yvm.raisedVsMedian !== "unknown") {
+      if (_yvm.raisedVsP75 === "above")
+        return { label: "Aggressive", color: "text-warning", desc: "Your raise is above the P75 for comparable deals." };
+      if (_yvm.raisedVsMedian === "above")
+        return { label: "Above median", color: "text-success", desc: "Raise target is above market median." };
+      if (_yvm.raisedVsMedian === "at")
+        return { label: "In range", color: "text-success", desc: "Raise target aligns with the market median." };
+      return { label: "Conservative", color: "text-ink-secondary", desc: "Raise target is below the market median." };
+    }
+    if (_yvm.valuationVsMedian !== "unknown") {
+      if (_yvm.valuationVsMedian === "above")
+        return { label: "Above median", color: "text-success", desc: "Valuation is above the peer median." };
+      if (_yvm.valuationVsMedian === "below")
+        return { label: "Below median", color: "text-ink-secondary", desc: "Valuation is below the peer median." };
+      return { label: "In range", color: "text-success", desc: "Valuation is in line with the peer median." };
+    }
+    return { label: "No data", color: "text-muted", desc: "Complete the Valuation tool to unlock market positioning." };
+  })();
+
   return (
     <div className="py-8 bg-background min-h-screen">
       <Container>
-        <div className="space-y-6">
+        <div className="space-y-5">
 
-          {/* ─── 1. HERO ──────────────────────────────────────────────────── */}
-          <div className="bg-card border border-border rounded-[var(--radius-lg)] overflow-hidden">
-            {/* Top accent bar — thicker for more presence */}
-            <div className={`h-1.5 w-full ${vc.bar}`} />
+          {/* ─── 1. HERO — dark command center ───────────────────────────── */}
+          <div className="rounded-[var(--radius-lg)] bg-ink overflow-hidden">
             <div className="p-6 pb-5">
-              <div className="grid lg:grid-cols-[1fr_auto] gap-6 items-start">
-                {/* Left: identity + score */}
-                <div className="flex gap-4 sm:gap-5 items-start">
-                  <div className="flex-shrink-0">
-                    <ScoreArc score={animatedScore} colorScore={snap.overall_score} size={112} />
-                  </div>
+              <div className="flex flex-col sm:flex-row sm:items-start gap-5">
+
+                {/* Score arc + identity */}
+                <div className="flex gap-4 items-start flex-1 min-w-0">
+                  <ScoreArc score={animatedScore} colorScore={snap.overall_score} size={112} dark />
                   <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                      <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight leading-tight">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-white leading-tight">
                         {profile.startup_name || "Your startup"}
                       </h1>
                       <span className={`inline-flex items-center h-6 px-2.5 rounded-full border text-[11px] font-bold ${vc.badge}`}>
                         {snap.verdict}
                       </span>
                     </div>
-                    <p className="text-sm text-ink-secondary mb-1 leading-snug">
+                    <p className="text-sm text-white/60 mb-1 leading-snug">
                       {(() => {
                         const flag = profile.country ? getCountryFlag(profile.country) : "";
-                        const countryDisplay = profile.country
-                          ? (flag ? `${flag} ${profile.country}` : profile.country)
-                          : "";
-                        return [
-                          profile.founder_name,
-                          countryDisplay,
-                          profile.sector,
-                          profile.stage,
-                        ].filter(Boolean).join(" · ") || "Complete your profile";
+                        const countryDisplay = profile.country ? (flag ? `${flag} ${profile.country}` : profile.country) : "";
+                        return [profile.founder_name, countryDisplay, profile.sector, profile.stage].filter(Boolean).join(" · ") || "Complete your profile";
                       })()}
                     </p>
-                    <p className="text-xs text-muted italic">{vc.tagline}</p>
-                    <div className="flex flex-wrap gap-2 mt-3">
+                    <p className="text-xs text-white/40 italic mb-3">{vc.tagline}</p>
+                    <div className="flex flex-wrap gap-2">
                       {nextStep ? (
                         <Link href={nextStep.href}
-                          className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors"
+                          className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] bg-white text-ink text-sm font-bold hover:bg-white/90 transition-colors"
                         >Continue: {nextStep.label} →</Link>
                       ) : (
                         <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors"
+                          className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] bg-white text-ink text-sm font-bold hover:bg-white/90 transition-colors"
                           onClick={() => track("expert_meeting_cta_clicked", { score: snap?.overall_score, verdict: snap?.verdict, location: "hero" })}
                         >Book a readiness review →</a>
                       )}
-                      <button
-                        onClick={handleExport}
-                        disabled={exporting}
-                        className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] border border-border bg-soft text-sm font-semibold text-ink hover:border-ink/20 transition-colors disabled:opacity-50"
-                      >
-                        {exporting ? "Generating…" : "↓ PDF"}
-                      </button>
+                      <button onClick={handleExport} disabled={exporting}
+                        className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] border border-white/20 text-white text-sm font-semibold hover:border-white/40 transition-colors disabled:opacity-50"
+                      >{exporting ? "Generating…" : "↓ PDF"}</button>
                       <Link href="/onboard"
-                        className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] border border-border bg-soft text-sm font-semibold text-ink hover:border-ink/20 transition-colors"
+                        className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] border border-white/20 text-white text-sm font-semibold hover:border-white/40 transition-colors"
                       >Edit profile</Link>
                     </div>
                   </div>
                 </div>
 
-                {/* Right: stat chips — compact vertical stack on desktop */}
-                <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-1 gap-2 lg:w-36">
-                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 text-center">
-                    <p className="text-[10px] uppercase tracking-wide text-muted font-semibold">Tools</p>
-                    <p className="text-2xl font-black font-mono text-ink">{animatedTools}<span className="text-sm font-normal text-muted">/6</span></p>
+                {/* Stat chips */}
+                <div className="grid grid-cols-3 sm:grid-cols-1 gap-2 sm:w-28 shrink-0">
+                  <div className="bg-white/10 border border-white/15 rounded-[var(--radius-md)] p-3 text-center">
+                    <p className="text-[10px] uppercase tracking-wide text-white/50 font-semibold">Tools</p>
+                    <p className="text-2xl font-black font-mono text-white">{animatedTools}<span className="text-sm font-normal text-white/40">/6</span></p>
                   </div>
-                  <div className={`rounded-[var(--radius-md)] p-3 text-center border ${snap.blockers_count > 0 ? "bg-danger/5 border-danger/20" : "bg-soft border-border"}`}>
-                    <p className="text-[10px] uppercase tracking-wide text-muted font-semibold">Gaps</p>
-                    <p className={`text-2xl font-black font-mono ${snap.blockers_count > 0 ? "text-danger" : "text-ink"}`}>{animatedBlockers}</p>
+                  <div className={`rounded-[var(--radius-md)] p-3 text-center border ${snap.blockers_count > 0 ? "bg-danger/20 border-danger/30" : "bg-white/10 border-white/15"}`}>
+                    <p className="text-[10px] uppercase tracking-wide text-white/50 font-semibold">Gaps</p>
+                    <p className={`text-2xl font-black font-mono ${snap.blockers_count > 0 ? "text-danger" : "text-white"}`}>{animatedBlockers}</p>
                   </div>
-                  <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3 text-center">
-                    <p className="text-[10px] uppercase tracking-wide text-muted font-semibold">Done</p>
-                    <p className="text-2xl font-black font-mono text-ink">{animatedProfile}<span className="text-sm font-normal text-muted">%</span></p>
+                  <div className="bg-white/10 border border-white/15 rounded-[var(--radius-md)] p-3 text-center">
+                    <p className="text-[10px] uppercase tracking-wide text-white/50 font-semibold">Done</p>
+                    <p className="text-2xl font-black font-mono text-white">{animatedProfile}<span className="text-sm font-normal text-white/40">%</span></p>
                   </div>
                 </div>
               </div>
 
-              {/* Score progress bar */}
-              <div className="mt-5 pt-4 border-t border-border">
-                <div className="flex items-center justify-between text-xs text-muted mb-2">
-                  <span className="font-medium text-ink-secondary">Investor readiness score</span>
+              {/* Score bar */}
+              <div className="mt-5 pt-4 border-t border-white/10">
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <span className="font-medium text-white/60">Investor readiness score</span>
                   <span className={`font-bold ${band.text}`}>{snap.overall_score}/100 · {snap.verdict}</span>
                 </div>
-                {/* Segmented progress bar with zone markers */}
-                <div className="relative h-2.5 bg-border rounded-full overflow-hidden">
+                <div className="relative h-2.5 bg-white/10 rounded-full overflow-hidden">
                   <div className={`h-full rounded-full transition-all duration-700 ${vc.bar}`} style={{ width: `${snap.overall_score}%` }} />
-                  {/* Zone ticks */}
                   {[35, 60, 80].map(v => (
-                    <div key={v} className="absolute top-0 bottom-0 w-px bg-background/40" style={{ left: `${v}%` }} />
+                    <div key={v} className="absolute top-0 bottom-0 w-px bg-white/20" style={{ left: `${v}%` }} />
                   ))}
                 </div>
-                <div className="flex justify-between text-[10px] text-muted mt-1.5">
+                <div className="flex justify-between text-[10px] text-white/30 mt-1.5">
                   <span>0 — Early</span><span>35</span><span>60</span><span>80 — Strong</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* ─── 2. TRACTION + VALUATION ──────────────────────────────────── */}
-          <div className="grid lg:grid-cols-[3fr_2fr] gap-5">
+          {/* ─── 2. INTELLIGENCE BAND — traction · valuation · market ────── */}
+          <div className="bg-card border border-border rounded-[var(--radius-lg)] overflow-hidden">
+            <div className="grid lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-border">
 
-            {/* Traction */}
-            <Card padding="sm">
-              <CardHeader><CardTitle kicker="Traction">Revenue & growth metrics</CardTitle></CardHeader>
-              <CardContent>
-                {profile.mrr === 0 && profile.arr === 0 ? (
-                  <div className="flex flex-col items-center py-6 text-center">
-                    <p className="text-sm font-semibold text-muted mb-2">No traction data yet</p>
-                    <p className="text-xs text-muted mb-4">Complete the Metrics tool to see ARR, MRR, Growth, and Runway here.</p>
-                    <Link href="/metrics" className="text-sm font-bold text-accent hover:underline">Go to Metrics →</Link>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    <MetricStat label="ARR" value={fmtMoney(animatedARR)} sub="Annual recurring" tone={profile.arr >= 240_000 ? "good" : profile.arr > 0 ? "warn" : "neutral"} />
-                    <MetricStat label="MRR" value={fmtMoney(animatedMRR)} sub="Monthly recurring" tone={profile.mrr >= 20_000 ? "good" : profile.mrr > 0 ? "warn" : "neutral"} />
-                    <MetricStat label="Growth" value={fmtPct(profile.growth_rate)} sub="MoM growth rate" tone={profile.growth_rate >= 15 ? "good" : profile.growth_rate >= 5 ? "warn" : profile.growth_rate > 0 ? "bad" : "neutral"} />
-                    <MetricStat label="Runway" value={profile.runway > 0 ? `${Math.round(profile.runway)} mo` : "—"} sub="Months of cash" tone={profile.runway >= 18 ? "good" : profile.runway >= 9 ? "warn" : profile.runway > 0 ? "bad" : "neutral"} />
-                  </div>
-                )}
-                {ts.metrics.score > 0 && (
-                  <div className="mt-3 flex items-center justify-between pt-3 border-t border-border">
-                    <div className="flex items-center gap-2">
-                      <div className="h-1.5 w-24 bg-border rounded-full overflow-hidden">
+              {/* Traction */}
+              <div className="p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[10px] font-bold text-muted uppercase tracking-[0.14em]">Traction</p>
+                  {ts.metrics.score > 0 ? (
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-1 w-14 bg-border rounded-full overflow-hidden">
                         <div className={`h-full rounded-full ${scoreBand(ts.metrics.score).bg}`} style={{ width: `${ts.metrics.score}%` }} />
                       </div>
-                      <span className={`text-xs font-bold ${scoreBand(ts.metrics.score).text}`}>{ts.metrics.score}/100</span>
+                      <span className={`text-[10px] font-bold ${scoreBand(ts.metrics.score).text}`}>{ts.metrics.score}/100</span>
                     </div>
-                    <Link href="/metrics" className="text-xs text-accent font-semibold hover:underline">Update →</Link>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Valuation */}
-            <Card padding="sm">
-              <CardHeader><CardTitle kicker="Valuation">Pre-money estimate</CardTitle></CardHeader>
-              <CardContent>
-                {profile.estimated_valuation === 0 ? (
-                  <div className="flex flex-col items-center py-6 text-center">
-                    <p className="text-sm font-semibold text-muted mb-2">No valuation data yet</p>
-                    <p className="text-xs text-muted mb-4">Run the Valuation tool to get a blended pre-money estimate with range.</p>
-                    <Link href="/valuation" className="text-sm font-bold text-accent hover:underline">Go to Valuation →</Link>
+                  ) : (
+                    <Link href="/metrics" className="text-[10px] text-accent font-semibold hover:underline">Complete →</Link>
+                  )}
+                </div>
+                {profile.mrr === 0 && profile.arr === 0 ? (
+                  <div className="py-3 text-center">
+                    <p className="text-xs text-muted mb-2">No traction data yet</p>
+                    <Link href="/metrics" className="text-xs font-bold text-accent hover:underline">Complete Metrics →</Link>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4 text-center">
-                      <p className="text-[10px] uppercase tracking-wide text-muted font-semibold mb-1">Estimated pre-money</p>
-                      <p className={`text-3xl font-black font-mono ${scoreBand(ts.valuation.score).text}`}>
-                        {fmtMoney(animatedVal)}
-                      </p>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <div>
+                      <p className="text-[10px] text-muted font-semibold mb-0.5">ARR</p>
+                      <p className={`text-base font-extrabold font-mono leading-none ${profile.arr >= 240_000 ? "text-success" : profile.arr > 0 ? "text-warning" : "text-muted"}`}>{fmtMoney(animatedARR)}</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <MetricStat label="Stage" value={profile.stage || "—"} />
-                      <MetricStat label="Sector" value={profile.sector || "—"} />
+                    <div>
+                      <p className="text-[10px] text-muted font-semibold mb-0.5">MRR</p>
+                      <p className={`text-base font-extrabold font-mono leading-none ${profile.mrr >= 20_000 ? "text-success" : profile.mrr > 0 ? "text-warning" : "text-muted"}`}>{fmtMoney(animatedMRR)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted font-semibold mb-0.5">Growth</p>
+                      <p className={`text-base font-extrabold font-mono leading-none ${profile.growth_rate >= 15 ? "text-success" : profile.growth_rate >= 5 ? "text-warning" : profile.growth_rate > 0 ? "text-danger" : "text-muted"}`}>{fmtPct(profile.growth_rate)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted font-semibold mb-0.5">Runway</p>
+                      <p className={`text-base font-extrabold font-mono leading-none ${profile.runway >= 18 ? "text-success" : profile.runway >= 9 ? "text-warning" : profile.runway > 0 ? "text-danger" : "text-muted"}`}>{profile.runway > 0 ? `${Math.round(profile.runway)} mo` : "—"}</p>
                     </div>
                   </div>
                 )}
-                {ts.valuation.score > 0 && (
-                  <div className="mt-3 flex items-center justify-between pt-3 border-t border-border">
-                    <div className="flex items-center gap-2">
-                      <div className="h-1.5 w-24 bg-border rounded-full overflow-hidden">
+              </div>
+
+              {/* Valuation */}
+              <div className="p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[10px] font-bold text-muted uppercase tracking-[0.14em]">Valuation</p>
+                  {ts.valuation.score > 0 ? (
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-1 w-14 bg-border rounded-full overflow-hidden">
                         <div className={`h-full rounded-full ${scoreBand(ts.valuation.score).bg}`} style={{ width: `${ts.valuation.score}%` }} />
                       </div>
-                      <span className={`text-xs font-bold ${scoreBand(ts.valuation.score).text}`}>{ts.valuation.score}/100</span>
+                      <span className={`text-[10px] font-bold ${scoreBand(ts.valuation.score).text}`}>{ts.valuation.score}/100</span>
                     </div>
-                    <Link href="/valuation" className="text-xs text-accent font-semibold hover:underline">Update →</Link>
+                  ) : (
+                    <Link href="/valuation" className="text-[10px] text-accent font-semibold hover:underline">Complete →</Link>
+                  )}
+                </div>
+                {profile.estimated_valuation === 0 ? (
+                  <div className="py-3 text-center">
+                    <p className="text-xs text-muted mb-2">No valuation data yet</p>
+                    <Link href="/valuation" className="text-xs font-bold text-accent hover:underline">Run Valuation →</Link>
                   </div>
+                ) : (
+                  <>
+                    <p className={`text-3xl font-black font-mono leading-none mb-1 ${scoreBand(ts.valuation.score).text}`}>{fmtMoney(animatedVal)}</p>
+                    <p className="text-xs text-muted mb-3">Estimated pre-money</p>
+                    <div className="flex gap-4">
+                      <div>
+                        <p className="text-[10px] text-muted font-semibold">Stage</p>
+                        <p className="text-xs font-bold text-ink">{profile.stage || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted font-semibold">Sector</p>
+                        <p className="text-xs font-bold text-ink truncate max-w-[110px]">{profile.sector || "—"}</p>
+                      </div>
+                    </div>
+                  </>
                 )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* ─── 2.5 YOU VS MARKET ──────────────────────────────────────── */}
-          <YouVsMarketCard profile={profile} ts={ts} />
-
-          {/* ─── 3. ADVISORY ─────────────────────────────────────────────── */}
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <h2 className="text-base font-extrabold tracking-tight text-ink">Fundraising advisor</h2>
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-muted font-medium">Rule-based · updated in real-time</span>
-            </div>
-            <AdvisorySection advisory={advisory} />
-          </div>
-
-          {/* ─── 4. TOOL GRID ────────────────────────────────────────────── */}
-          <Card padding="sm">
-            <CardHeader>
-              <CardTitle kicker="Assessment modules">Tool performance overview</CardTitle>
-              <span className="text-xs text-muted">{snap.completed_tools_count}/6 completed</span>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                {(Object.keys(ts) as FoundationTool[]).map(t => <ToolCard key={t} tool={t} state={ts[t]} />)}
+                <Link href="/valuation" className="text-[10px] text-accent font-semibold hover:underline mt-3 inline-block">Update →</Link>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* ─── 4. CRITICAL ALERTS (surfaced early — blockers first) ──────── */}
+              {/* Market position */}
+              <div className="p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[10px] font-bold text-muted uppercase tracking-[0.14em]">Market position</p>
+                  <Link href="/comparables" className="text-[10px] text-accent font-semibold hover:underline">Explorer →</Link>
+                </div>
+                <div className="flex items-baseline gap-2 mb-1">
+                  <p className={`text-2xl font-black leading-none ${_posInfo.color}`}>{_posInfo.label}</p>
+                  {_yvm.raisedPercentile !== null && (
+                    <span className="text-xs text-muted font-semibold">P{_yvm.raisedPercentile}</span>
+                  )}
+                </div>
+                <p className="text-xs text-ink-secondary mb-3 leading-snug">{_posInfo.desc}</p>
+                <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
+                  <p className="text-[10px] font-semibold text-muted uppercase tracking-wide mb-1.5">Raise distribution · {_scopeLabel}</p>
+                  <RangeBar p25={_bm.p25Raised} median={_bm.medianRaised} p75={_bm.p75Raised} you={_yourRaisedM} label="Your target" />
+                </div>
+                <p className="text-[10px] text-muted mt-2">{_bm.peerCount} comparable deals · {_bm.confidence} confidence</p>
+              </div>
+
+            </div>
+          </div>
+
+          {/* ─── 3. CRITICAL ALERTS ──────────────────────────────────────── */}
           {snap.red_flags.length > 0 && (
             <Card padding="sm">
               <CardHeader>
@@ -1585,161 +1608,165 @@ export default function DashboardV2Page() {
             </Card>
           )}
 
-          {/* ─── 5. ANALYSIS ─────────────────────────────────────────────── */}
-          <div className="grid lg:grid-cols-[1fr_1fr] gap-5">
+          {/* ─── 4. UNIFIED ADVISORY PANEL ───────────────────────────────── */}
+          <div className="bg-card border border-border rounded-[var(--radius-lg)] overflow-hidden">
+            <div className="border-b border-border px-5 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <h2 className="text-sm font-extrabold tracking-tight text-ink">Fundraising advisor</h2>
+                {advisory.data_completeness !== "full" && (
+                  <span className="text-[10px] font-semibold text-warning bg-warning/10 border border-warning/20 rounded px-2 py-0.5">
+                    {advisory.data_completeness === "minimal" ? "Minimal data" : "Partial data"}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] text-muted font-medium">Rule-based · updated in real-time</span>
+            </div>
 
-            {/* Narrative + strengths */}
-            <Card padding="sm">
-              <CardHeader><CardTitle kicker="Fundraising analysis">What the data says</CardTitle></CardHeader>
-              <CardContent>
-                {/* Narrative — left-border accent for premium feel */}
-                <div className="border-l-[3px] border-accent pl-4 mb-5">
-                  <p className="text-sm text-ink-secondary leading-relaxed">{narrative}</p>
+            <div className="grid lg:grid-cols-[3fr_2fr] divide-y lg:divide-y-0 lg:divide-x divide-border">
+
+              {/* Left: Summary + Strategy + CTAs + Investor challenges */}
+              <div className="p-5 space-y-5">
+
+                {/* Readiness summary */}
+                <div>
+                  <p className="text-[10px] font-bold text-muted uppercase tracking-[0.14em] mb-2">Advisor summary</p>
+                  <div className="border-l-[3px] border-accent pl-4">
+                    <p className="text-sm text-ink-secondary leading-relaxed">{advisory.readiness_summary}</p>
+                  </div>
                 </div>
 
-                {strengths.length > 0 && (
-                  <>
-                    <p className="text-xs font-bold text-success uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                      <span className="inline-block w-2 h-2 rounded-full bg-success" />
-                      What&apos;s working
-                    </p>
-                    <div className="space-y-2">
-                      {strengths.map(s => (
-                        <div key={s.label} className="flex items-start justify-between gap-2 bg-success/5 border border-success/15 rounded-[var(--radius-md)] px-3 py-2.5">
-                          <div>
-                            <p className="text-sm font-semibold text-ink">✓ {s.label}</p>
-                            <p className="text-xs text-ink-secondary mt-0.5">{s.detail}</p>
-                          </div>
-                          {s.href && <Link href={s.href} className="text-xs text-accent shrink-0 hover:underline mt-0.5">View →</Link>}
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                {/* Strategy */}
+                <div>
+                  <p className="text-[10px] font-bold text-muted uppercase tracking-[0.14em] mb-2">What to do this week</p>
+                  <div className="bg-accent/5 border border-accent/20 rounded-[var(--radius-md)] p-4">
+                    <p className="text-sm font-semibold text-ink leading-relaxed">{advisory.recommended_strategy}</p>
+                  </div>
+                </div>
 
-            {/* Next actions + weaknesses */}
-            <Card padding="sm">
-              <CardHeader><CardTitle kicker="Your action plan">What to fix next</CardTitle></CardHeader>
-              <CardContent>
-                {weaknesses.length > 0 && (
-                  <div className="mb-5">
-                    <p className="text-xs font-bold text-warning uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                      <span className="inline-block w-2 h-2 rounded-full bg-warning" />
-                      Needs attention
-                    </p>
+                {/* CTAs */}
+                <div className="flex flex-col gap-2">
+                  {advisory.primary_cta.ext ? (
+                    <a href={advisory.primary_cta.href} target="_blank" rel="noopener noreferrer"
+                      className="w-full inline-flex items-center justify-center h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors"
+                    >{advisory.primary_cta.label}</a>
+                  ) : (
+                    <Link href={advisory.primary_cta.href}
+                      className="w-full inline-flex items-center justify-center h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors"
+                    >{advisory.primary_cta.label}</Link>
+                  )}
+                  {advisory.secondary_cta && (
+                    advisory.secondary_cta.ext ? (
+                      <a href={advisory.secondary_cta.href} target="_blank" rel="noopener noreferrer"
+                        className="w-full inline-flex items-center justify-center h-9 px-4 rounded-[var(--radius-md)] border border-border bg-soft text-sm font-semibold text-ink hover:border-ink/20 transition-colors"
+                      >{advisory.secondary_cta.label}</a>
+                    ) : (
+                      <Link href={advisory.secondary_cta.href}
+                        className="w-full inline-flex items-center justify-center h-9 px-4 rounded-[var(--radius-md)] border border-border bg-soft text-sm font-semibold text-ink hover:border-ink/20 transition-colors"
+                      >{advisory.secondary_cta.label}</Link>
+                    )
+                  )}
+                </div>
+
+                {/* Investor challenges */}
+                {advisory.investor_challenges.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-bold text-muted uppercase tracking-[0.14em] mb-2">What investors will challenge</p>
                     <div className="space-y-2">
-                      {weaknesses.map(w => (
-                        <div key={w.label} className="flex items-start justify-between gap-2 bg-warning/5 border border-warning/15 rounded-[var(--radius-md)] px-3 py-2.5">
-                          <div>
-                            <p className="text-sm font-semibold text-ink">⚠ {w.label}</p>
-                            <p className="text-xs text-ink-secondary mt-0.5">{w.detail}</p>
-                          </div>
-                          {w.href && <Link href={w.href} className="text-xs text-accent shrink-0 hover:underline mt-0.5">Fix →</Link>}
-                        </div>
+                      {advisory.investor_challenges.map(item => (
+                        <AdvisoryItemRow key={item.id} item={item} variant="challenge" />
                       ))}
                     </div>
                   </div>
                 )}
+              </div>
 
-                {actions.length > 0 && (
-                  <>
-                    <p className="text-xs font-bold text-muted uppercase tracking-wide mb-3">Immediate actions</p>
-                    <div className="space-y-2">
-                      {actions.map((a, i) => (
-                        <div key={a.label} className="flex gap-3 items-start">
-                          <span className="w-6 h-6 rounded-full bg-accent text-white text-xs font-black flex items-center justify-center shrink-0 mt-0.5">
-                            {i + 1}
-                          </span>
-                          <div className="flex-1 min-w-0 pb-2 border-b border-border last:border-0">
-                            <p className="text-sm font-semibold text-ink leading-snug">{a.label}</p>
-                            <p className="text-xs text-ink-secondary mt-0.5">{a.detail}</p>
-                            {a.href && (
-                              a.href.startsWith("http") ? (
-                                <a href={a.href} target="_blank" rel="noopener noreferrer" className="text-xs text-accent mt-1 inline-block hover:underline font-semibold">Go →</a>
-                              ) : (
-                                <Link href={a.href} className="text-xs text-accent mt-1 inline-block hover:underline font-semibold">Go →</Link>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+              {/* Right: Top priorities + Next actions */}
+              <div className="bg-soft p-5 space-y-5">
 
-          </div>
-
-          {/* ─── 6. SMART CTA ────────────────────────────────────────────── */}
-          <div className="grid lg:grid-cols-[1fr_320px] gap-5">
-            {/* No critical gaps — show the success state here */}
-            {snap.red_flags.length === 0 && (
-              <div className="bg-success/5 border border-success/20 rounded-[var(--radius-lg)] px-5 py-4 flex items-center gap-4">
-                <div className="w-9 h-9 rounded-full bg-success/15 flex items-center justify-center shrink-0">
-                  <span className="text-success text-base font-bold">✓</span>
-                </div>
+                {/* Top priorities */}
                 <div>
-                  <p className="text-sm font-bold text-success">No critical gaps</p>
-                  <p className="text-xs text-ink-secondary mt-0.5">Your profile has no blocking issues — you&apos;re ready for selective investor outreach.</p>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[10px] font-bold text-muted uppercase tracking-[0.14em]">Top priorities</p>
+                    <span className="text-[10px] text-muted">By impact</span>
+                  </div>
+                  {advisory.top_priorities.length === 0 ? (
+                    <p className="text-xs font-semibold text-success">No critical priorities — profile looks solid.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {advisory.top_priorities.map((item, i) => {
+                        const sev = item.severity ?? "medium";
+                        const cfg = SEVERITY_CONFIG[sev];
+                        const inner = (
+                          <div className={`rounded-[var(--radius-md)] border p-3 flex items-start gap-3 transition-colors ${cfg.bg} ${item.href ? "hover:border-ink/20" : ""}`}>
+                            <span className="w-6 h-6 rounded-full bg-ink text-white text-xs font-black flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-ink leading-snug">{item.label}</p>
+                              <p className="text-[10px] text-ink-secondary leading-relaxed mt-0.5">{item.detail}</p>
+                            </div>
+                            {item.href && <span className="text-[10px] font-bold text-accent shrink-0 mt-0.5">Go →</span>}
+                          </div>
+                        );
+                        if (!item.href) return <div key={item.id}>{inner}</div>;
+                        const isExt = item.href.startsWith("http");
+                        if (isExt) return <a key={item.id} href={item.href} target="_blank" rel="noopener noreferrer">{inner}</a>;
+                        return <Link key={item.id} href={item.href}>{inner}</Link>;
+                      })}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
 
-            {/* Recommended action */}
-            <Card padding="sm">
-              <CardHeader><CardTitle kicker="Recommended">What to do now</CardTitle></CardHeader>
-              <CardContent>
-                <p className="text-xs text-ink-secondary leading-relaxed mb-4">{smartCTA.description}</p>
-                {smartCTA.ext ? (
-                  <a href={smartCTA.href} target="_blank" rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-center h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors mb-3"
-                  >{smartCTA.label}</a>
-                ) : (
-                  <Link href={smartCTA.href}
-                    className="w-full inline-flex items-center justify-center h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-colors mb-3"
-                  >{smartCTA.label}</Link>
+                {/* Next actions */}
+                {advisory.next_actions.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-bold text-muted uppercase tracking-[0.14em] mb-3">Next actions</p>
+                    <div className="space-y-2">
+                      {advisory.next_actions.map((item, i) => {
+                        const sev = item.severity ?? "medium";
+                        const cfg = SEVERITY_CONFIG[sev];
+                        const inner = (
+                          <div className={`rounded-[var(--radius-md)] border p-3 flex items-start gap-3 transition-colors ${cfg.bg} ${item.href ? "hover:border-ink/20" : ""}`}>
+                            <span className="w-5 h-5 rounded-full bg-soft border border-border text-ink text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-semibold text-ink leading-snug">{item.label}</p>
+                              {item.href && <span className="text-[10px] font-bold text-accent mt-0.5 block">{item.href.startsWith("http") ? "Open →" : "Go →"}</span>}
+                            </div>
+                          </div>
+                        );
+                        if (!item.href) return <div key={item.id}>{inner}</div>;
+                        const isExt = item.href.startsWith("http");
+                        if (isExt) return <a key={item.id} href={item.href} target="_blank" rel="noopener noreferrer">{inner}</a>;
+                        return <Link key={item.id} href={item.href}>{inner}</Link>;
+                      })}
+                    </div>
+                  </div>
                 )}
-                <div className="flex gap-2">
-                  <button onClick={handleExport} disabled={exporting}
-                    className="flex-1 h-8 px-3 rounded-[var(--radius-md)] border border-border bg-soft text-xs font-semibold text-ink hover:border-ink/20 transition-colors disabled:opacity-50"
-                  >
-                    {exporting ? "Generating…" : "↓ Export PDF"}
-                  </button>
-                  <Link href="/onboard"
-                    className="flex-1 h-8 px-3 rounded-[var(--radius-md)] border border-border bg-soft text-xs font-semibold text-ink hover:border-ink/20 transition-colors text-center flex items-center justify-center"
-                  >✎ Edit profile</Link>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
 
-          {/* ─── 7. EXPERT CTA ───────────────────────────────────────────── */}
-          <div className="rounded-[var(--radius-lg)] bg-ink overflow-hidden">
-            <div className="px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-bold text-white mb-0.5">
-                  Get expert guidance on your fundraising
-                </p>
-                <p className="text-xs text-white/55 leading-relaxed">
-                  Book a 30-minute session with a VCReady expert — review your score, validate your strategy, and get actionable feedback before investor meetings.
-                </p>
               </div>
-              <a
-                href={CALENDLY_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 inline-flex items-center justify-center h-10 px-5 rounded-[var(--radius-md)] bg-white text-ink text-sm font-bold hover:bg-white/90 transition-colors whitespace-nowrap"
-                onClick={() => track("expert_meeting_cta_clicked", { score: snap?.overall_score, verdict: snap?.verdict, location: "cta_banner" })}
-              >
-                Book a meeting →
-              </a>
             </div>
           </div>
 
-          {/* ─── 8. PROGRESS ─────────────────────────────────────────────── */}
+          {/* ─── 5. TOOL BAR — compact horizontal list ───────────────────── */}
+          <Card padding="none">
+            <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-bold text-muted uppercase tracking-[0.14em]">Assessment modules</p>
+              </div>
+              <span className="text-xs text-muted">{snap.completed_tools_count}/6 completed</span>
+            </div>
+            {/* Column headers */}
+            <div className="grid grid-cols-[16px_1fr_80px_36px_36px_60px_28px] items-center gap-3 px-4 py-2 border-b border-border bg-soft">
+              <span />
+              <span className="text-[10px] font-bold text-muted uppercase tracking-wide">Tool</span>
+              <span className="text-[10px] font-bold text-muted uppercase tracking-wide">Score</span>
+              <span className="text-[10px] font-bold text-muted uppercase tracking-wide text-right">Pts</span>
+              <span className="text-[10px] font-bold text-muted uppercase tracking-wide text-right">Wt.</span>
+              <span className="text-[10px] font-bold text-muted uppercase tracking-wide">Status</span>
+              <span />
+            </div>
+            {(Object.keys(ts) as FoundationTool[]).map(t => <ToolRow key={t} tool={t} state={ts[t]} />)}
+          </Card>
+
+          {/* ─── 6. BOTTOM ROW — progress + expert CTA ───────────────────── */}
           {(() => {
             const sorted = [...history].sort(
               (a, b) => new Date(a.saved_at).getTime() - new Date(b.saved_at).getTime()
@@ -1753,83 +1780,101 @@ export default function DashboardV2Page() {
             const trend = scores.length >= 2 ? scores[scores.length - 1] - scores[0] : 0;
 
             return (
-              <Card padding="sm">
-                <CardHeader>
-                  <CardTitle kicker="Progress">Score over time</CardTitle>
-                  {history.length > 0 && (
-                    <span className="text-xs text-muted">
-                      {history.length} {history.length === 1 ? "snapshot" : "snapshots"}
-                    </span>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  {history.length === 0 ? (
-                    <div className="py-5 text-center">
-                      <p className="text-sm font-semibold text-muted mb-1">No history yet</p>
-                      <p className="text-xs text-muted">Your score is recorded each time you save a tool.</p>
-                    </div>
-                  ) : (
-                    <div>
-                      {/* Stats row */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                        <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                          <p className="text-[10px] uppercase tracking-wide text-muted font-semibold mb-1">Current</p>
-                          <p className={`text-xl font-extrabold font-mono ${scoreBand(snap.overall_score).text}`}>{snap.overall_score}</p>
-                        </div>
-                        <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                          <p className="text-[10px] uppercase tracking-wide text-muted font-semibold mb-1">Best ever</p>
-                          <p className={`text-xl font-extrabold font-mono ${scoreBand(best).text}`}>{best}</p>
-                        </div>
-                        <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                          <p className="text-[10px] uppercase tracking-wide text-muted font-semibold mb-1">vs Previous</p>
-                          <p className={`text-xl font-extrabold font-mono ${
-                            delta === null ? "text-muted"
-                            : delta > 0   ? "text-success"
-                            : delta < 0   ? "text-danger"
-                            : "text-muted"
-                          }`}>
-                            {delta === null ? "—" : delta > 0 ? `+${delta}` : delta === 0 ? "→" : `${delta}`}
-                          </p>
-                        </div>
-                        <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-                          <p className="text-[10px] uppercase tracking-wide text-muted font-semibold mb-1">Last saved</p>
-                          <p className="text-xs font-semibold text-ink leading-snug mt-1">
-                            {lastSeen ? fmtDate(lastSeen) : "—"}
-                          </p>
-                        </div>
-                      </div>
+              <div className="grid lg:grid-cols-[1fr_320px] gap-5 items-start">
 
-                      {/* Sparkline or limited-history prompt */}
-                      {scores.length >= 3 ? (
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-[10px] text-muted uppercase tracking-wide font-medium">Score trend</span>
-                            <span className={`text-xs font-bold ${trend > 0 ? "text-success" : trend < 0 ? "text-danger" : "text-muted"}`}>
-                              {trend > 0 ? `↑ Improving (+${trend} total)` : trend < 0 ? `↓ Declining (${trend} total)` : "→ Stable"}
-                            </span>
+                {/* Progress */}
+                <Card padding="sm">
+                  <CardHeader>
+                    <CardTitle kicker="Progress">Score over time</CardTitle>
+                    {history.length > 0 && (
+                      <span className="text-xs text-muted">{history.length} {history.length === 1 ? "snapshot" : "snapshots"}</span>
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    {history.length === 0 ? (
+                      <div className="py-5 text-center">
+                        <p className="text-sm font-semibold text-muted mb-1">No history yet</p>
+                        <p className="text-xs text-muted">Your score is recorded each time you save a tool.</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                          <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
+                            <p className="text-[10px] uppercase tracking-wide text-muted font-semibold mb-1">Current</p>
+                            <p className={`text-xl font-extrabold font-mono ${scoreBand(snap.overall_score).text}`}>{snap.overall_score}</p>
                           </div>
-                          <div className="bg-soft border border-border rounded-[var(--radius-md)] px-3 pt-3 pb-2">
-                            <Sparkline data={scores} />
-                            <div className="flex justify-between mt-1.5">
-                              <span className="text-[10px] text-muted">{firstSeen ? fmtDateShort(firstSeen) : ""}</span>
-                              <span className="text-[10px] text-muted">{lastSeen  ? fmtDateShort(lastSeen)  : ""}</span>
+                          <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
+                            <p className="text-[10px] uppercase tracking-wide text-muted font-semibold mb-1">Best ever</p>
+                            <p className={`text-xl font-extrabold font-mono ${scoreBand(best).text}`}>{best}</p>
+                          </div>
+                          <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
+                            <p className="text-[10px] uppercase tracking-wide text-muted font-semibold mb-1">vs Previous</p>
+                            <p className={`text-xl font-extrabold font-mono ${delta === null ? "text-muted" : delta > 0 ? "text-success" : delta < 0 ? "text-danger" : "text-muted"}`}>
+                              {delta === null ? "—" : delta > 0 ? `+${delta}` : delta === 0 ? "→" : `${delta}`}
+                            </p>
+                          </div>
+                          <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
+                            <p className="text-[10px] uppercase tracking-wide text-muted font-semibold mb-1">Last saved</p>
+                            <p className="text-xs font-semibold text-ink leading-snug mt-1">{lastSeen ? fmtDate(lastSeen) : "—"}</p>
+                          </div>
+                        </div>
+                        {scores.length >= 3 ? (
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-[10px] text-muted uppercase tracking-wide font-medium">Score trend</span>
+                              <span className={`text-xs font-bold ${trend > 0 ? "text-success" : trend < 0 ? "text-danger" : "text-muted"}`}>
+                                {trend > 0 ? `↑ Improving (+${trend} total)` : trend < 0 ? `↓ Declining (${trend} total)` : "→ Stable"}
+                              </span>
+                            </div>
+                            <div className="bg-soft border border-border rounded-[var(--radius-md)] px-3 pt-3 pb-2">
+                              <Sparkline data={scores} />
+                              <div className="flex justify-between mt-1.5">
+                                <span className="text-[10px] text-muted">{firstSeen ? fmtDateShort(firstSeen) : ""}</span>
+                                <span className="text-[10px] text-muted">{lastSeen ? fmtDateShort(lastSeen) : ""}</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="bg-soft border border-border rounded-[var(--radius-md)] px-4 py-3 flex items-center gap-2">
-                          <span className="text-muted">◦</span>
-                          <p className="text-xs text-muted">
-                            {scores.length === 1
-                              ? "Save more tools to start tracking your progress chart."
-                              : "One more save will unlock your progress chart."}
-                          </p>
-                        </div>
-                      )}
+                        ) : (
+                          <div className="bg-soft border border-border rounded-[var(--radius-md)] px-4 py-3 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-border flex-shrink-0" />
+                            <p className="text-xs text-muted">
+                              {scores.length === 1
+                                ? "Save more tools to start tracking your progress chart."
+                                : "One more save will unlock your progress chart."}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Expert CTA */}
+                <div className="rounded-[var(--radius-lg)] bg-ink overflow-hidden">
+                  <div className="px-5 py-6 flex flex-col gap-4">
+                    <div>
+                      <p className="text-xs font-bold text-white/50 uppercase tracking-[0.14em] mb-2">Expert session</p>
+                      <p className="text-base font-bold text-white leading-snug mb-1">Get expert guidance on your fundraising</p>
+                      <p className="text-xs text-white/55 leading-relaxed">
+                        30-minute session with a VCReady expert — review your score, validate your strategy, and get actionable feedback before investor meetings.
+                      </p>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                    <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center h-10 px-5 rounded-[var(--radius-md)] bg-white text-ink text-sm font-bold hover:bg-white/90 transition-colors"
+                      onClick={() => track("expert_meeting_cta_clicked", { score: snap?.overall_score, verdict: snap?.verdict, location: "bottom_cta" })}
+                    >Book a meeting →</a>
+                    <div className="flex gap-2 pt-1 border-t border-white/10">
+                      <button onClick={handleExport} disabled={exporting}
+                        className="flex-1 h-8 px-3 rounded-[var(--radius-md)] border border-white/20 text-white/70 text-xs font-semibold hover:border-white/40 transition-colors disabled:opacity-50"
+                      >{exporting ? "Generating…" : "↓ Export PDF"}</button>
+                      <Link href="/onboard"
+                        className="flex-1 h-8 px-3 rounded-[var(--radius-md)] border border-white/20 text-white/70 text-xs font-semibold hover:border-white/40 transition-colors flex items-center justify-center"
+                      >Edit profile</Link>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             );
           })()}
 

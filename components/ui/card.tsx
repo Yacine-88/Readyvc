@@ -5,10 +5,11 @@ interface CardProps {
   className?: string;
   href?: string;
   hover?: boolean;
-  padding?: "sm" | "md" | "lg";
+  padding?: "none" | "sm" | "md" | "lg";
 }
 
 const paddingStyles = {
+  none: "",
   sm: "p-4",
   md: "p-5",
   lg: "p-6",
