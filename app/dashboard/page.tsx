@@ -323,22 +323,6 @@ function RangeBar({ p25, median, p75, you, label = "Your target" }: {
   );
 }
 
-// ─── Metric Stat chip ─────────────────────────────────────────────────────────
-
-function MetricStat({ label, value, sub, tone = "neutral" }: {
-  label: string; value: string; sub?: string;
-  tone?: "good" | "warn" | "bad" | "neutral";
-}) {
-  const color = tone === "good" ? "text-success" : tone === "warn" ? "text-warning" : tone === "bad" ? "text-danger" : "text-ink";
-  return (
-    <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-      <p className="text-[10px] uppercase tracking-[0.14em] text-muted font-semibold mb-1">{label}</p>
-      <p className={`text-lg font-extrabold font-mono leading-none ${color}`}>{value}</p>
-      {sub && <p className="text-[11px] text-muted mt-1 leading-snug">{sub}</p>}
-    </div>
-  );
-}
-
 // ─── Compact tool row ─────────────────────────────────────────────────────────
 
 function ToolRow({ tool, state }: { tool: FoundationTool; state: ToolState }) {
@@ -626,69 +610,13 @@ function AdvisorySection({ advisory }: AdvisorySectionProps) {
   );
 }
 
-// ─── Advisory engine (existing helpers — used by other dashboard sections) ────
 
-interface Advisory { label: string; detail: string; href?: string }
-
-function buildStrengths(ts: Record<FoundationTool, ToolState>, p: FounderStartupProfile): Advisory[] {
-  const out: Advisory[] = [];
-  if (ts.metrics.score >= 70) {
-    out.push({
-      label: "Strong traction metrics",
-      detail: p.mrr > 0 ? `MRR ${fmtMoney(p.mrr)} · ARR ${fmtMoney(p.arr)} · ${fmtPct(p.growth_rate)} growth` : "Operating metrics are above investor bar.",
-      href: "/metrics",
-    });
-  }
-  if (ts.valuation.score >= 70) {
-    out.push({
-      label: "Compelling valuation",
-      detail: p.estimated_valuation > 0 ? `Estimated pre-money: ${fmtMoney(p.estimated_valuation)}` : "Valuation model is solid and defensible.",
-      href: "/valuation",
-    });
-  }
-  if (ts.qa.score >= 70) {
-    out.push({ label: "Investor Q&A readiness", detail: "You can handle tough investor questions — a real differentiator in live meetings.", href: "/qa" });
-  }
-  if (ts.pitch.score >= 70) {
-    out.push({ label: "Strong pitch narrative", detail: "Problem, traction, team and ask are covered at a high level.", href: "/pitch" });
-  }
-  if (ts.captable.score >= 70) {
-    out.push({ label: "Clean cap table", detail: "Equity structure won't create diligence friction.", href: "/captable" });
-  }
-  if (ts.dataroom.score >= 70) {
-    out.push({ label: "Data room ready", detail: "Diligence documents are organized — accelerates deal closure.", href: "/dataroom" });
-  }
-  return out;
-}
-
-function buildWeaknesses(ts: Record<FoundationTool, ToolState>, p: FounderStartupProfile): Advisory[] {
-  const out: Advisory[] = [];
-  if (ts.metrics.score > 0 && ts.metrics.score < 50) {
-    out.push({
-      label: "Traction needs work",
-      detail: p.mrr === 0 ? "No MRR recorded. Investors need revenue before a Seed round." : `MRR ${fmtMoney(p.mrr)} is below typical investor expectations. Aim for $20K+ MRR.`,
-      href: "/metrics",
-    });
-  }
-  if (ts.qa.score > 0 && ts.qa.score < 50) {
-    out.push({ label: "Investor Q&A is weak", detail: "Founders who struggle with investor questions lose deals. Prioritize this.", href: "/qa" });
-  }
-  if (ts.valuation.score > 0 && ts.valuation.score < 50) {
-    out.push({ label: "Valuation model is thin", detail: "A weak valuation signals lack of financial fluency. Investors probe this hard.", href: "/valuation" });
-  }
-  if (ts.pitch.score > 0 && ts.pitch.score < 50) {
-    out.push({ label: "Pitch has critical gaps", detail: "Key sections — team, traction, or the ask — are incomplete.", href: "/pitch" });
-  }
-  if (p.runway > 0 && p.runway < 9) {
-    out.push({ label: `Runway at ${Math.round(p.runway)} months`, detail: "Fundraising under pressure weakens your negotiating position.", href: "/metrics" });
-  }
-  return out;
-}
+interface Advisory { label: string; detail: string; href: string }
 
 function buildNextActions(snap: GlobalReadinessSnapshot, ts: Record<FoundationTool, ToolState>): Advisory[] {
   const actions: Advisory[] = [];
   const blockers = snap.red_flags.filter(f => f.blocking);
-  for (const b of blockers.slice(0, 2)) actions.push({ label: b.action, detail: b.reason, href: b.href });
+  for (const b of blockers.slice(0, 2)) actions.push({ label: b.action, detail: b.reason, href: b.href ?? "#" });
 
   const highWeightMissing = (["metrics", "qa", "valuation", "pitch"] as FoundationTool[]).filter(t => ts[t].score === 0);
   const toFill = Math.max(0, 3 - actions.length);
@@ -706,37 +634,6 @@ function buildNextActions(snap: GlobalReadinessSnapshot, ts: Record<FoundationTo
     actions.push({ label: "Book a readiness review", detail: "Your score is strong. Get expert feedback before starting outreach.", href: CALENDLY_URL });
   }
   return actions.slice(0, 4);
-}
-
-function buildNarrative(snap: GlobalReadinessSnapshot, p: FounderStartupProfile): string {
-  const name = p.startup_name || "Your startup";
-  const stage = p.stage || "early stage";
-  const s = snap.overall_score;
-  const strongest = snap.strongest_tool ? TOOL_LABELS[snap.strongest_tool] : null;
-  const weakest = snap.weakest_tool ? TOOL_LABELS[snap.weakest_tool] : null;
-
-  if (s < 25) return `${name} is at the very start of its investor readiness journey. Complete Metrics and Q&A first — these two tools alone drive 45% of your score.`;
-  if (snap.verdict === "Early") return `${name} has material gaps that would stop a deal early in diligence. ${weakest ? `The most important area to fix is ${weakest}.` : ""} Close these gaps before any investor outreach.`;
-  if (snap.verdict === "Improving") return `${name} is building investor readiness for a ${stage} round. ${strongest ? `Your strongest signal is ${strongest}.` : ""} ${weakest ? `Improving ${weakest} would have the highest score impact right now.` : ""}`;
-  if (snap.verdict === "Fundable") return `${name} is in a fundable position for a ${stage} round. ${strongest ? `Investors will be drawn to your ${strongest}.` : ""} ${snap.blockers_count === 0 ? "No critical blockers — you can start selective outreach while shoring up weaker areas." : "Address the remaining critical gaps before broad investor outreach."}`;
-  return `${name} shows strong investor readiness${p.estimated_valuation > 0 ? ` with an estimated valuation of ${fmtMoney(p.estimated_valuation)}` : ""} for a ${stage} round. Focus on building your investor pipeline and preparing for diligence.`;
-}
-
-function buildSmartCTA(snap: GlobalReadinessSnapshot, ts: Record<FoundationTool, ToolState>): { label: string; href: string; description: string; ext?: boolean } {
-  const s = snap.overall_score;
-  const blockers = snap.red_flags.filter(f => f.blocking);
-  if (ts.metrics.score === 0) return { label: "Start with Metrics →", href: "/metrics", description: "Metrics carry 25% of your score. Complete this first." };
-  if (blockers.length >= 2) return { label: "Fix critical gaps →", href: blockers[0].href ?? "/metrics", description: `${blockers.length} critical issues are blocking your score.` };
-  if (s < 40) {
-    const next = (["metrics", "qa", "valuation", "pitch"] as FoundationTool[]).find(t => ts[t].score === 0);
-    return { label: next ? `Complete ${TOOL_LABELS[next]} →` : "Keep building →", href: next ? TOOL_HREFS[next] : "/metrics", description: "Complete more tools to unlock your full readiness score." };
-  }
-  if (s < 65) {
-    const weak = (Object.entries(ts) as [FoundationTool, ToolState][]).filter(([, st]) => st.score > 0 && st.score < 60).sort((a, b) => WEIGHTS[b[0]] - WEIGHTS[a[0]])[0];
-    return { label: weak ? `Strengthen ${TOOL_LABELS[weak[0]]} →` : "Strengthen your pitch →", href: weak ? TOOL_HREFS[weak[0]] : "/pitch", description: "Improving your weakest area has the highest score impact right now." };
-  }
-  if (s < 80 && ts.dataroom.score === 0) return { label: "Prepare your data room →", href: "/dataroom", description: "Investors will request documents once conversations start." };
-  return { label: "Book a readiness review →", href: CALENDLY_URL, description: "Your score is strong. Get expert feedback before starting outreach.", ext: true };
 }
 
 // ─── PDF Export ───────────────────────────────────────────────────────────────
@@ -973,222 +870,6 @@ const STAGE_ADJACENT: Record<string, string[]> = {
   seriesC:  ["seriesB", "seriesC", "seriesD"],
 };
 
-interface YouVsMarketCardProps {
-  profile: FounderStartupProfile;
-  ts: Record<FoundationTool, ToolState>;
-}
-
-function YouVsMarketCard({ profile, ts }: YouVsMarketCardProps) {
-  const sectorKey = SECTOR_NORMALIZE[profile.sector?.toLowerCase() ?? ""] ?? null;
-  const stageKey  = STAGE_NORMALIZE[profile.stage?.toLowerCase()  ?? ""] ?? null;
-
-  // ── Build peer set ────────────────────────────────────────────────────────
-  // 1. Sector + adjacent stage (tightest), ≥ 5 peers needed
-  // 2. Sector only, ≥ 3 peers needed
-  // 3. Full dataset (always available)
-  let peers = COMPARABLES_DATA;
-  let scopeLabel = "All markets";
-
-  if (sectorKey) {
-    const adjacentStages = stageKey ? (STAGE_ADJACENT[stageKey] ?? [stageKey]) : null;
-    const bySectorStage = COMPARABLES_DATA.filter(d =>
-      d.sector === sectorKey && (adjacentStages ? adjacentStages.includes(d.stage) : true)
-    );
-    const bySector = COMPARABLES_DATA.filter(d => d.sector === sectorKey);
-
-    if (bySectorStage.length >= 5) {
-      peers = bySectorStage;
-      const sectorLabel = sectorKey.charAt(0).toUpperCase() + sectorKey.slice(1);
-      const stageLabel  = stageKey ? STAGE_NORMALIZE_LABEL[stageKey] ?? stageKey : "";
-      scopeLabel = `${sectorLabel}${stageLabel ? ` · ${stageLabel}` : ""}`;
-    } else if (bySector.length >= 3) {
-      peers = bySector;
-      scopeLabel = sectorKey.charAt(0).toUpperCase() + sectorKey.slice(1);
-    }
-  }
-
-  const bm = computeBenchmark(peers);
-
-  // ── Your numbers ─────────────────────────────────────────────────────────
-  // investmentAmount is stored in USD (e.g. 500000) — convert to $M
-  const rawInvestment = (ts.valuation.inputs as { formData?: { investmentAmount?: number } })?.formData?.investmentAmount;
-  const yourRaised    = rawInvestment ? rawInvestment / 1_000_000 : null;
-  // estimated_valuation is stored in USD — convert to $M
-  const yourValuation = profile.estimated_valuation > 0 ? profile.estimated_valuation / 1_000_000 : null;
-
-  const yvm = compareToMarket(yourRaised, yourValuation, bm);
-
-  // ── Positioning label ─────────────────────────────────────────────────────
-  // Primary signal: raised comparison. Fallback: valuation comparison.
-  // Only show "No data" when neither is available.
-  let posLabel: string;
-  let posColor: string;
-  let posDesc: string;
-  let posBasis: "raised" | "valuation" | "none" = "none";
-
-  if (yvm.raisedVsMedian !== "unknown") {
-    posBasis = "raised";
-    if (yvm.raisedVsP75 === "above") {
-      posLabel = "Aggressive";
-      posColor = "text-warning";
-      posDesc  = "Your target raise is above the P75 for comparable deals. Ensure your story justifies the ask.";
-    } else if (yvm.raisedVsMedian === "above") {
-      posLabel = "Above median";
-      posColor = "text-success";
-      posDesc  = "Your raise target is above market median — a strong signal if your traction supports it.";
-    } else if (yvm.raisedVsMedian === "at") {
-      posLabel = "In range";
-      posColor = "text-success";
-      posDesc  = "Your raise target aligns well with the market median for comparable deals.";
-    } else {
-      posLabel = "Conservative";
-      posColor = "text-ink-secondary";
-      posDesc  = "Your raise target is below market median. This can work for earlier rounds, but consider if it matches your ambition.";
-    }
-  } else if (yvm.valuationVsMedian !== "unknown") {
-    // Raise data absent — derive positioning from valuation vs market
-    posBasis = "valuation";
-    if (yvm.valuationVsMedian === "above") {
-      posLabel = "Above median";
-      posColor = "text-success";
-      posDesc  = "Your valuation is above the peer median. Strong signal — make sure your traction narrative supports this.";
-    } else if (yvm.valuationVsMedian === "below") {
-      posLabel = "Below median";
-      posColor = "text-ink-secondary";
-      posDesc  = "Your valuation is below the peer market median. This may be appropriate for an earlier-stage raise.";
-    } else {
-      posLabel = "In range";
-      posColor = "text-success";
-      posDesc  = "Your valuation is in line with the peer median — well-positioned for your market.";
-    }
-  } else {
-    posLabel = "No data";
-    posColor = "text-muted";
-    posDesc  = "Complete the Valuation tool to unlock market positioning.";
-  }
-
-  const confidenceCfg = {
-    high:   { label: "High confidence", bg: "bg-success/10", text: "text-success", border: "border-success/20" },
-    medium: { label: "Medium confidence", bg: "bg-warning/10", text: "text-warning", border: "border-warning/20" },
-    low:    { label: "Low confidence",  bg: "bg-muted/10",   text: "text-muted",   border: "border-muted/20" },
-  }[bm.confidence];
-
-  function fmtM(v: number) {
-    if (v >= 1000) return `$${(v / 1000).toFixed(1)}B`;
-    if (v >= 1)    return `$${Math.round(v)}M`;
-    return `$${(v * 1000).toFixed(0)}K`;
-  }
-
-  return (
-    <Card padding="sm">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <CardTitle kicker="Benchmark intelligence">You vs Market</CardTitle>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border ${confidenceCfg.bg} ${confidenceCfg.text} ${confidenceCfg.border}`}>
-              {confidenceCfg.label}
-            </span>
-            <Link href="/comparables" className="text-xs text-accent font-semibold hover:underline">
-              Full explorer →
-            </Link>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {/* ── Asymmetric layout: market context left, positioning right ── */}
-        <div className="grid lg:grid-cols-[1fr_280px] gap-4">
-
-          {/* Left: peer context + market data */}
-          <div className="space-y-3">
-            {/* Peer meta row */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-secondary">
-              <span className="font-semibold text-foreground">{bm.peerCount} comparable deals</span>
-              <span className="text-muted">·</span>
-              <span>{scopeLabel}</span>
-              {bm.yearRange[0] > 0 && (
-                <><span className="text-muted">·</span><span>{bm.yearRange[0]}–{bm.yearRange[1]}</span></>
-              )}
-              {bm.countriesCount > 1 && (
-                <><span className="text-muted">·</span><span>{bm.countriesCount} countries</span></>
-              )}
-            </div>
-
-            {/* Raise distribution + range bar */}
-            <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-              <p className="text-[10px] font-semibold text-muted uppercase tracking-wide mb-1">Raise distribution (P25–P75)</p>
-              <RangeBar
-                p25={bm.p25Raised}
-                median={bm.medianRaised}
-                p75={bm.p75Raised}
-                you={yourRaised}
-                label="Your target"
-              />
-            </div>
-
-            {/* Valuation stat */}
-            <div className="bg-soft border border-border rounded-[var(--radius-md)] p-3">
-              <p className="text-[10px] font-semibold text-muted uppercase tracking-wide mb-1">Market valuation</p>
-              {bm.medianValuation !== null ? (
-                <>
-                  <p className="text-base font-mono font-bold text-foreground">{fmtM(bm.medianValuation)}</p>
-                  <p className="text-xs text-ink-secondary mt-1">
-                    {bm.p25Valuation !== null && bm.p75Valuation !== null
-                      ? `P25 ${fmtM(bm.p25Valuation)} – P75 ${fmtM(bm.p75Valuation)}`
-                      : `${bm.valuationCoverage}% coverage`}
-                  </p>
-                  {yourValuation !== null && (
-                    <p className="text-xs mt-1">
-                      Yours:{" "}
-                      <span className={`font-semibold ${
-                        yvm.valuationVsMedian === "above" ? "text-success" :
-                        yvm.valuationVsMedian === "below" ? "text-warning" : "text-foreground"
-                      }`}>{fmtM(yourValuation)}</span>
-                      {yvm.valuationVsMedian !== "unknown" && (
-                        <span className="text-muted"> ({yvm.valuationVsMedian})</span>
-                      )}
-                    </p>
-                  )}
-                </>
-              ) : (
-                <p className="text-xs text-muted mt-1">No valuation data in peer set</p>
-              )}
-            </div>
-          </div>
-
-          {/* Right: positioning — the key insight */}
-          <div className={`rounded-[var(--radius-md)] p-4 border flex flex-col justify-between ${
-            posLabel === "Aggressive"    ? "bg-warning/5 border-warning/25" :
-            posLabel === "No data"       ? "bg-soft border-border" :
-            posLabel === "Below median"  ? "bg-soft border-border" :
-            posLabel === "Conservative"  ? "bg-soft border-border" :
-                                           "bg-success/5 border-success/15"
-          }`}>
-            <div>
-              <p className="text-[10px] font-semibold text-muted uppercase tracking-wide mb-2">Your positioning</p>
-              <p className={`text-3xl font-black leading-tight ${posColor} mb-2`}>{posLabel}</p>
-              <p className="text-xs text-ink-secondary leading-relaxed">{posDesc}</p>
-            </div>
-            {yvm.raisedPercentile !== null && (
-              <div className="mt-3 flex items-center gap-2">
-                <div className="flex-1 h-1 bg-border/60 rounded-full overflow-hidden">
-                  <div className="h-full rounded-full bg-accent/50" style={{ width: `${yvm.raisedPercentile}%` }} />
-                </div>
-                <span className="text-[10px] font-bold text-muted shrink-0">P{yvm.raisedPercentile}</span>
-              </div>
-            )}
-            {posBasis !== "none" && (
-              <p className="text-[10px] text-muted mt-2 pt-2 border-t border-border/60">
-                {posBasis === "raised" ? "Based on raise target vs peers" : "Based on valuation vs peers"}
-              </p>
-            )}
-          </div>
-
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 /** Human-readable stage labels used in YouVsMarketCard scope label */
 const STAGE_NORMALIZE_LABEL: Record<string, string> = {
   preSeed: "Pre-Seed", seed: "Seed", seriesA: "Series A",
@@ -1328,11 +1009,7 @@ export default function DashboardV2Page() {
   const vc = verdictConfig(snap.verdict);
   const band = scoreBand(snap.overall_score);
   const nextStep = getResumeStep(ts);
-  const strengths = buildStrengths(ts, profile);
-  const weaknesses = buildWeaknesses(ts, profile);
-  const actions = buildNextActions(snap, ts);
-  const narrative = buildNarrative(snap, profile);
-  const smartCTA = buildSmartCTA(snap, ts);
+  // Legacy helpers retained only for PDF export (buildNextActions)
 
   // ── Advisory inputs (mirrors YouVsMarketCard peer-set logic) ────────────────
   const _sectorKey = SECTOR_NORMALIZE[profile.sector?.toLowerCase() ?? ""] ?? null;
@@ -1403,81 +1080,94 @@ export default function DashboardV2Page() {
 
           {/* ─── 1. HERO — dark command center ───────────────────────────── */}
           <div className="rounded-[var(--radius-lg)] bg-ink overflow-hidden">
-            <div className="p-6 pb-5">
-              <div className="flex flex-col sm:flex-row sm:items-start gap-5">
+            <div className="px-5 pt-5 pb-4">
+              <div className="flex items-start gap-4">
 
-                {/* Score arc + identity */}
-                <div className="flex gap-4 items-start flex-1 min-w-0">
-                  <ScoreArc score={animatedScore} colorScore={snap.overall_score} size={112} dark />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-white leading-tight">
-                        {profile.startup_name || "Your startup"}
-                      </h1>
-                      <span className={`inline-flex items-center h-6 px-2.5 rounded-full border text-[11px] font-bold ${vc.badge}`}>
-                        {snap.verdict}
-                      </span>
-                    </div>
-                    <p className="text-sm text-white/60 mb-1 leading-snug">
-                      {(() => {
-                        const flag = profile.country ? getCountryFlag(profile.country) : "";
-                        const countryDisplay = profile.country ? (flag ? `${flag} ${profile.country}` : profile.country) : "";
-                        return [profile.founder_name, countryDisplay, profile.sector, profile.stage].filter(Boolean).join(" · ") || "Complete your profile";
-                      })()}
-                    </p>
-                    <p className="text-xs text-white/40 italic mb-3">{vc.tagline}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {nextStep ? (
-                        <Link href={nextStep.href}
-                          className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] bg-white text-ink text-sm font-bold hover:bg-white/90 transition-colors"
-                        >Continue: {nextStep.label} →</Link>
-                      ) : (
-                        <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] bg-white text-ink text-sm font-bold hover:bg-white/90 transition-colors"
-                          onClick={() => track("expert_meeting_cta_clicked", { score: snap?.overall_score, verdict: snap?.verdict, location: "hero" })}
-                        >Book a readiness review →</a>
-                      )}
-                      <button onClick={handleExport} disabled={exporting}
-                        className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] border border-white/20 text-white text-sm font-semibold hover:border-white/40 transition-colors disabled:opacity-50"
-                      >{exporting ? "Generating…" : "↓ PDF"}</button>
-                      <Link href="/onboard"
-                        className="inline-flex items-center h-9 px-4 rounded-[var(--radius-md)] border border-white/20 text-white text-sm font-semibold hover:border-white/40 transition-colors"
-                      >Edit profile</Link>
-                    </div>
+                {/* Score arc */}
+                <ScoreArc score={animatedScore} colorScore={snap.overall_score} size={88} dark />
+
+                {/* Identity + actions */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                    <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-white leading-tight">
+                      {profile.startup_name || "Your startup"}
+                    </h1>
+                    <span className={`inline-flex items-center h-5 px-2 rounded border text-[10px] font-bold ${vc.badge}`}>
+                      {snap.verdict}
+                    </span>
+                  </div>
+                  <p className="text-xs text-white/55 mb-2 leading-snug">
+                    {(() => {
+                      const flag = profile.country ? getCountryFlag(profile.country) : "";
+                      const countryDisplay = profile.country ? (flag ? `${flag} ${profile.country}` : profile.country) : "";
+                      return [profile.founder_name, countryDisplay, profile.sector, profile.stage].filter(Boolean).join(" · ") || "Complete your profile";
+                    })()}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {nextStep ? (
+                      <Link href={nextStep.href}
+                        className="inline-flex items-center h-8 px-3 rounded-[var(--radius-md)] bg-white text-ink text-xs font-bold hover:bg-white/90 transition-colors"
+                      >Continue: {nextStep.label} →</Link>
+                    ) : (
+                      <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center h-8 px-3 rounded-[var(--radius-md)] bg-white text-ink text-xs font-bold hover:bg-white/90 transition-colors"
+                        onClick={() => track("expert_meeting_cta_clicked", { score: snap?.overall_score, verdict: snap?.verdict, location: "hero" })}
+                      >Book readiness review →</a>
+                    )}
+                    <button onClick={handleExport} disabled={exporting}
+                      className="inline-flex items-center h-8 px-3 rounded-[var(--radius-md)] border border-white/20 text-white/70 text-xs font-medium hover:border-white/40 transition-colors disabled:opacity-50"
+                    >{exporting ? "Generating…" : "↓ PDF"}</button>
+                    <Link href="/onboard"
+                      className="inline-flex items-center h-8 px-3 rounded-[var(--radius-md)] border border-white/20 text-white/70 text-xs font-medium hover:border-white/40 transition-colors"
+                    >Edit profile</Link>
                   </div>
                 </div>
 
-                {/* Stat chips */}
-                <div className="grid grid-cols-3 sm:grid-cols-1 gap-2 sm:w-28 shrink-0">
-                  <div className="bg-white/10 border border-white/15 rounded-[var(--radius-md)] p-3 text-center">
-                    <p className="text-[10px] uppercase tracking-wide text-white/50 font-semibold">Tools</p>
-                    <p className="text-2xl font-black font-mono text-white">{animatedTools}<span className="text-sm font-normal text-white/40">/6</span></p>
+                {/* Stat chips — compact vertical */}
+                <div className="hidden sm:flex flex-col gap-1.5 shrink-0">
+                  <div className="flex items-center gap-2 bg-white/10 border border-white/12 rounded-[var(--radius-md)] px-3 py-1.5">
+                    <p className="text-[10px] uppercase tracking-wide text-white/50 font-semibold w-9">Tools</p>
+                    <p className="text-sm font-black font-mono text-white">{animatedTools}<span className="text-xs font-normal text-white/40">/6</span></p>
                   </div>
-                  <div className={`rounded-[var(--radius-md)] p-3 text-center border ${snap.blockers_count > 0 ? "bg-danger/20 border-danger/30" : "bg-white/10 border-white/15"}`}>
-                    <p className="text-[10px] uppercase tracking-wide text-white/50 font-semibold">Gaps</p>
-                    <p className={`text-2xl font-black font-mono ${snap.blockers_count > 0 ? "text-danger" : "text-white"}`}>{animatedBlockers}</p>
+                  <div className={`flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-1.5 border ${snap.blockers_count > 0 ? "bg-danger/20 border-danger/30" : "bg-white/10 border-white/12"}`}>
+                    <p className="text-[10px] uppercase tracking-wide text-white/50 font-semibold w-9">Gaps</p>
+                    <p className={`text-sm font-black font-mono ${snap.blockers_count > 0 ? "text-danger" : "text-white"}`}>{animatedBlockers}</p>
                   </div>
-                  <div className="bg-white/10 border border-white/15 rounded-[var(--radius-md)] p-3 text-center">
-                    <p className="text-[10px] uppercase tracking-wide text-white/50 font-semibold">Done</p>
-                    <p className="text-2xl font-black font-mono text-white">{animatedProfile}<span className="text-sm font-normal text-white/40">%</span></p>
+                  <div className="flex items-center gap-2 bg-white/10 border border-white/12 rounded-[var(--radius-md)] px-3 py-1.5">
+                    <p className="text-[10px] uppercase tracking-wide text-white/50 font-semibold w-9">Done</p>
+                    <p className="text-sm font-black font-mono text-white">{animatedProfile}<span className="text-xs font-normal text-white/40">%</span></p>
                   </div>
                 </div>
               </div>
 
+              {/* Mobile stat strip */}
+              <div className="sm:hidden flex gap-2 mt-3">
+                {[
+                  { label: "Tools", value: `${animatedTools}/6`, warn: false },
+                  { label: "Gaps",  value: `${animatedBlockers}`, warn: snap.blockers_count > 0 },
+                  { label: "Done",  value: `${animatedProfile}%`, warn: false },
+                ].map(s => (
+                  <div key={s.label} className={`flex-1 rounded-[var(--radius-md)] border px-2 py-1.5 text-center ${s.warn ? "bg-danger/20 border-danger/30" : "bg-white/10 border-white/12"}`}>
+                    <p className="text-[9px] uppercase tracking-wide text-white/40 font-semibold">{s.label}</p>
+                    <p className={`text-sm font-black font-mono ${s.warn ? "text-danger" : "text-white"}`}>{s.value}</p>
+                  </div>
+                ))}
+              </div>
+
               {/* Score bar */}
-              <div className="mt-5 pt-4 border-t border-white/10">
-                <div className="flex items-center justify-between text-xs mb-2">
-                  <span className="font-medium text-white/60">Investor readiness score</span>
+              <div className="mt-3 pt-3 border-t border-white/10">
+                <div className="flex items-center justify-between text-[10px] mb-1.5">
+                  <span className="text-white/50">Investor readiness</span>
                   <span className={`font-bold ${band.text}`}>{snap.overall_score}/100 · {snap.verdict}</span>
                 </div>
-                <div className="relative h-2.5 bg-white/10 rounded-full overflow-hidden">
+                <div className="relative h-2 bg-white/10 rounded-full overflow-hidden">
                   <div className={`h-full rounded-full transition-all duration-700 ${vc.bar}`} style={{ width: `${snap.overall_score}%` }} />
                   {[35, 60, 80].map(v => (
                     <div key={v} className="absolute top-0 bottom-0 w-px bg-white/20" style={{ left: `${v}%` }} />
                   ))}
                 </div>
-                <div className="flex justify-between text-[10px] text-white/30 mt-1.5">
-                  <span>0 — Early</span><span>35</span><span>60</span><span>80 — Strong</span>
+                <div className="flex justify-between text-[9px] text-white/25 mt-1">
+                  <span>Early</span><span>35</span><span>60</span><span>80 — Strong</span>
                 </div>
               </div>
             </div>

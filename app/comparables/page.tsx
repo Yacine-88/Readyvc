@@ -10,6 +10,12 @@ import { type Deal, COMPARABLES_DATA } from "@/lib/comparables-data";
 
 type SortColumn = "name" | "geo" | "sector" | "stage" | "raised" | "valuation" | "multiple" | "year";
 
+function fmtM(v: number): string {
+  if (v >= 1000) return `$${(v / 1000).toFixed(1)}B`;
+  if (v >= 1)    return `$${Math.round(v)}M`;
+  return `$${(v * 1000).toFixed(0)}K`;
+}
+
 const STAGE_LABELS: Record<string, string> = {
   preSeed: "Pre-Seed",
   seed: "Seed",
@@ -47,7 +53,7 @@ const SECTOR_LABELS: Record<string, string> = {
 
 const ALL_SECTORS = [
   "all", "fintech", "saas", "logistics", "energy", "agritech",
-  "healthtech", "deeptech", "retail", "edtech", "marketplace", "travel", "telecom",
+  "healthtech", "deeptech", "retail", "edtech", "marketplace", "travel", "telecom", "cleantech",
 ] as const;
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -74,6 +80,7 @@ const SECTOR_LABEL_MAP: Record<string, string> = {
   fintech: "Fintech", saas: "SaaS", agritech: "AgriTech", logistics: "Logistics",
   energy: "Energy", deeptech: "DeepTech", edtech: "EdTech", healthtech: "HealthTech",
   retail: "Retail", marketplace: "Marketplace", travel: "Travel", telecom: "Telecom",
+  cleantech: "CleanTech",
 };
 
 const STAGE_LABEL_MAP: Record<string, string> = {
@@ -303,7 +310,7 @@ export default function ComparablesPage() {
             <div className="flex items-center gap-3">
               <span className="text-xs font-semibold text-muted uppercase tracking-wider shrink-0">Stage</span>
               <div className="flex gap-1.5 flex-wrap">
-                {(["all", "seed", "seriesA", "seriesB", "seriesC", "seriesD"] as const).map((stage) => (
+                {(["all", "preSeed", "seed", "seriesA", "ventureRound", "seriesB", "seriesC", "seriesD"] as const).map((stage) => (
                   <button key={stage} onClick={() => setActiveStage(stage)}
                     className={`px-2.5 py-1 text-xs font-medium border rounded transition-colors ${
                       activeStage === stage
@@ -332,14 +339,14 @@ export default function ComparablesPage() {
             {/* 4-stat summary */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-px border border-border rounded-lg overflow-hidden bg-border">
               <StatCell label="Median Valuation"
-                value={bm.medianValuation !== null ? `$${bm.medianValuation}M` : "—"}
+                value={bm.medianValuation !== null ? fmtM(bm.medianValuation) : "—"}
                 sub={bm.valuationCoverage > 0 ? `${bm.valuationCoverage}% coverage` : "no data"} />
               <StatCell label="Median EV / Rev"
                 value={bm.medianMultiple !== null ? `${bm.medianMultiple.toFixed(1)}x` : "—"}
                 sub={bm.multipleCoverage > 0 ? `${bm.multipleCoverage}% coverage` : "no data"} />
               <StatCell label="Median Raised"
-                value={`$${Math.round(bm.medianRaised)}M`}
-                sub={`avg $${Math.round(bm.avgRaised)}M`} />
+                value={fmtM(bm.medianRaised)}
+                sub={`avg ${fmtM(bm.avgRaised)}`} />
               <StatCell label="Raised Range (P25–P75)"
                 value={bm.raisedBracket}
                 sub={`${bm.peerCount} peers`} />
