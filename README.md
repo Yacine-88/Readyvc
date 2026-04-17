@@ -154,6 +154,80 @@ Startup Ecosystem Explorer
 
 ---
 
+## Investor Intelligence — Data ingestion
+
+VCReady now has a foundation layer for an Investor Intelligence Engine:
+clean Supabase tables for investors, deals, yearly activity, and
+conservative investor ↔ deal linking, plus idempotent Excel importers.
+
+### Apply the schema
+
+Run the migration in Supabase (SQL editor or CLI):
+
+```
+supabase/migrations/0001_create_investor_intelligence.sql
+```
+
+Creates: `investors`, `investor_activity_yearly`, `deals`, `deal_investors`,
+`import_runs` + indexes + `updated_at` triggers.
+
+### Env vars
+
+```
+NEXT_PUBLIC_SUPABASE_URL=...
+SUPABASE_SERVICE_ROLE_KEY=...   # service-role; server-only; never expose
+```
+
+The ingestion scripts use the service-role key so they can bypass RLS.
+Keep this key out of client code.
+
+### Run the imports
+
+Drop the workbook at `data/africa-big-deal.xlsx` (the `data/` folder is
+gitignored) and run:
+
+```
+npx tsx scripts/import-africa-investors.ts
+npx tsx scripts/import-africa-deals.ts
+```
+
+Run investors first so the deals importer can link deal participants to
+known investors by exact normalized name.
+
+### Rerunnability
+
+Both scripts are idempotent:
+
+- `investors` upsert on `(source, normalized_name, website)` with
+  `NULLS NOT DISTINCT`, so re-imports update rather than duplicate.
+- `investor_activity_yearly` upserts on `(investor_id, activity_year, source)`.
+- `deals` upsert on `(source, normalized_company_name, announced_at, round_type)`.
+- `deal_investors` upsert on `(deal_id, normalized_investor_name_raw)`.
+
+Every run writes a row to `import_runs` with status, stats, and any
+per-row issues (capped at 5000).
+
+### Matching policy (conservative on purpose)
+
+At this stage the deal importer only links a `deal_investors` row to an
+`investors` row on **exact normalized name match within the same source**:
+
+- Match → `investor_id` set, `match_confidence = 0.95`, `match_method = 'exact_normalized'`.
+- No match → `investor_id` stays null, raw name is preserved in
+  `investor_name_raw` + `normalized_investor_name_raw` so a later pass
+  (fuzzy / embedding-based) can upgrade the link without re-ingesting.
+
+Wrong merges are worse than missing matches — we never fuzzy-link yet.
+
+### Adapting to new datasets
+
+Column synonyms live in `lib/investors/header-mapping.ts`. When a new
+workbook shows up with slightly different headers (e.g. `Startup` vs
+`Start-up name`), add an alias to the relevant list — no script changes
+required.
+
+---
+
 ## License
 
 Free to use and share. If you build on this, a mention is appreciated.
