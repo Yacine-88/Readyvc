@@ -401,7 +401,7 @@ function InvestorReadinessReport({
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border">
+      <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border">
 
         {/* Col 1: Weakest questions */}
         <div className="p-5">
@@ -688,9 +688,9 @@ export default function QAPage() {
 
       {/* ── Score summary ──────────────────────────────────────────────────── */}
       <ToolSection title="Readiness Score">
-        <div className="flex items-center justify-between gap-6 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6 mb-4">
           <div>
-            <p className="text-4xl font-extrabold tracking-tight mb-1">
+            <p className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-1">
               {scores.overallScore}
               <span className="text-muted text-xl">/100</span>
             </p>
@@ -719,7 +719,7 @@ export default function QAPage() {
 
       {/* ── Category breakdown ─────────────────────────────────────────────── */}
       <ToolSection title="Category Breakdown">
-        <div className="grid md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {categories.map((category) => {
             const catScore = scores.categoryScores[category.title] ?? 0;
             const catAnswered = category.questions.filter(
@@ -777,7 +777,7 @@ export default function QAPage() {
       ))}
 
       {/* ── Save bar ───────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-3 bg-card border border-border rounded-[var(--radius-lg)] p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-card border border-border rounded-[var(--radius-lg)] p-4 sm:p-6">
         <div>
           <p className="text-sm text-muted">
             {answeredCount}/{totalQuestions} questions evaluated
@@ -791,12 +791,12 @@ export default function QAPage() {
             </p>
           )}
         </div>
-        <div className="flex gap-2">
-          <Button onClick={handleReset} variant="secondary" size="sm">
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button onClick={handleReset} variant="secondary" size="sm" className="flex-1 sm:flex-none">
             <RotateCcw className="w-4 h-4" />
             Reset
           </Button>
-          <Button onClick={handleSave} size="sm">
+          <Button onClick={handleSave} size="sm" className="flex-1 sm:flex-none">
             {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
             {saved ? "Saved" : "Save Assessment"}
           </Button>

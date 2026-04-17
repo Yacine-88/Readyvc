@@ -107,7 +107,7 @@ function BenchmarkIntelligence({ bm }: { bm: BenchmarkResult }) {
         </span>
       </div>
 
-      <div className="grid md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-border">
+      <div className="grid grid-cols-1 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-border">
 
         {/* Left: insights list (3 cols) */}
         <div className="md:col-span-3 px-5 py-4 space-y-2">
@@ -229,12 +229,12 @@ export default function ComparablesPage() {
 
       {/* ── Header ─────────────────────────────────────────────── */}
       <section className="border-b border-border">
-        <div className="max-w-6xl mx-auto px-6 py-16">
-          <div className="mb-8">
+        <div className="max-w-6xl mx-auto px-5 md:px-6 py-10 md:py-16">
+          <div className="mb-6 md:mb-8">
             <p className="text-xs font-semibold tracking-widest text-muted uppercase mb-3">
               Sector Comparables
             </p>
-            <h1 className="text-4xl md:text-5xl font-serif font-light text-foreground mb-4 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-light text-foreground mb-4 leading-tight">
               Know where you stand.
             </h1>
             <p className="text-base text-muted max-w-2xl leading-relaxed">
@@ -267,8 +267,8 @@ export default function ComparablesPage() {
 
       {/* ── Filters ─────────────────────────────────────────────── */}
       <section className="border-b border-border bg-background sticky top-16 z-40">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex flex-wrap gap-4">
+        <div className="max-w-6xl mx-auto px-5 md:px-6 py-4">
+          <div className="flex flex-wrap gap-3 md:gap-4">
 
             {/* Geography */}
             <div className="flex items-center gap-3">
@@ -334,7 +334,7 @@ export default function ComparablesPage() {
       {/* ── Benchmark summary row ────────────────────────────────── */}
       {filtered.length > 0 && (
         <section className="border-b border-border">
-          <div className="max-w-6xl mx-auto px-6 py-6 space-y-4">
+          <div className="max-w-6xl mx-auto px-5 md:px-6 py-5 md:py-6 space-y-4">
 
             {/* 4-stat summary */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-px border border-border rounded-lg overflow-hidden bg-border">
@@ -360,7 +360,7 @@ export default function ComparablesPage() {
 
       {/* ── Table ────────────────────────────────────────────────── */}
       <section>
-        <div className="max-w-6xl mx-auto px-6 py-8">
+        <div className="max-w-6xl mx-auto px-5 md:px-6 py-6 md:py-8">
           {filtered.length === 0 ? (
             <div className="py-12 text-center text-muted border border-dashed border-border rounded-lg">
               <p>No deals match your filters. Try adjusting them.</p>
@@ -437,11 +437,11 @@ export default function ComparablesPage() {
       </section>
 
       {/* ── CTA ──────────────────────────────────────────────────── */}
-      <section className="bg-foreground text-background py-12">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+      <section className="bg-foreground text-background py-10 md:py-12">
+        <div className="max-w-6xl mx-auto px-5 md:px-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5 md:gap-6">
             <div>
-              <h2 className="text-2xl font-serif font-light mb-2">Build your comparable analysis.</h2>
+              <h2 className="text-xl md:text-2xl font-serif font-light mb-2">Build your comparable analysis.</h2>
               <p className="text-sm opacity-80">
                 Book a session to position your valuation against the right benchmarks and build a defensible investor narrative.
               </p>
@@ -450,7 +450,7 @@ export default function ComparablesPage() {
               href="https://calendly.com/vcready/30min"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-6 py-2.5 bg-background text-foreground font-medium text-sm rounded hover:bg-surface transition-colors whitespace-nowrap"
+              className="w-full md:w-auto text-center px-6 py-2.5 bg-background text-foreground font-medium text-sm rounded hover:bg-surface transition-colors whitespace-nowrap"
             >
               Book your session →
             </a>

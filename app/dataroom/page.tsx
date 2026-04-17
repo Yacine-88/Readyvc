@@ -218,43 +218,43 @@ export default function DataRoomPage() {
         <FlowProgress currentStep="dataroom" completedSteps={completedSteps} />
 
         <ToolSection title={t("dataroom.readiness_score") || "Readiness Score"}>
-          <div className="grid md:grid-cols-4 gap-6">
-            <div className="bg-card border border-border rounded-lg p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+            <div className="bg-card border border-border rounded-lg p-4 md:p-6">
               <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
                 Documents Complete
               </p>
               <div className="flex items-baseline gap-2 mb-3">
-                <span className="text-3xl font-mono font-bold text-foreground">{completeCount}</span>
+                <span className="text-2xl md:text-3xl font-mono font-bold text-foreground">{completeCount}</span>
                 <span className="text-sm text-muted">/ {totalDocs}</span>
               </div>
               <ProgressBar value={completionRate} />
             </div>
 
-            <div className="bg-card border border-border rounded-lg p-6">
+            <div className="bg-card border border-border rounded-lg p-4 md:p-6">
               <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
                 Incomplete
               </p>
-              <p className="text-3xl font-mono font-bold text-foreground mb-3">{incompleteCount}</p>
+              <p className="text-2xl md:text-3xl font-mono font-bold text-foreground mb-3">{incompleteCount}</p>
               <p className="text-xs text-muted">
                 Partially prepared documents
               </p>
             </div>
 
-            <div className="bg-card border border-border rounded-lg p-6">
+            <div className="bg-card border border-border rounded-lg p-4 md:p-6">
               <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
                 Required Missing
               </p>
-              <p className="text-3xl font-mono font-bold text-foreground mb-3">{requiredMissingCount}</p>
+              <p className="text-2xl md:text-3xl font-mono font-bold text-foreground mb-3">{requiredMissingCount}</p>
               <p className="text-xs text-muted">
                 {requiredMissingCount === 0 ? "All required docs covered" : `${requiredMissingCount} still missing`}
               </p>
             </div>
 
-            <div className="bg-accent/10 border border-accent/30 rounded-lg p-6">
+            <div className="bg-accent/10 border border-accent/30 rounded-lg p-4 md:p-6">
               <p className="text-xs font-semibold text-accent uppercase tracking-wide mb-2">
                 Investor Readiness
               </p>
-              <p className="text-3xl font-mono font-bold text-accent mb-3">{readinessScore}%</p>
+              <p className="text-2xl md:text-3xl font-mono font-bold text-accent mb-3">{readinessScore}%</p>
               <p className="text-xs text-muted">
                 {readinessScore >= 80 ? "Excellent position" : readinessScore >= 60 ? "Good, room for improvement" : "Needs work"}
               </p>

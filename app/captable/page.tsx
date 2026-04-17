@@ -495,7 +495,7 @@ export default function CapTablePage() {
 
       {showPostRound && postRoundState && (
         <ToolSection title="Step 3: Post-Round Results">
-          <div className="grid md:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-6">
             <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
               <h4 className="font-semibold text-sm mb-3">Financing Summary</h4>
               <div className="space-y-3">
@@ -606,7 +606,7 @@ export default function CapTablePage() {
             </p>
           </div>
 
-          <div className="mt-6 grid md:grid-cols-2 gap-4 bg-soft border border-border rounded-[var(--radius-md)] p-4">
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 bg-soft border border-border rounded-[var(--radius-md)] p-4">
             <div>
               <h4 className="font-semibold text-sm mb-3">Share Count Changes</h4>
               <div className="space-y-2 text-sm">

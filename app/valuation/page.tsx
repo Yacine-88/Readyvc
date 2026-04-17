@@ -388,7 +388,7 @@ export default function ValuationPage() {
             Rate honestly — investors discount founder self-assessment by ~15%.
           </p>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {/* Berkus factors */}
             <div className="bg-soft border border-border rounded-[var(--radius-md)] p-4">
               <p className="eyebrow mb-3">Berkus (0–100 per factor, contributes up to $500K each)</p>
@@ -444,7 +444,7 @@ export default function ValuationPage() {
 
       {/* ── Valuation range (hero) ────────────────────────────────────────── */}
       <ToolSection title="Weighted Valuation Range">
-        <div className="grid md:grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
           <RangeCard label="Low"  value={valuationLow}       tone="muted" />
           <RangeCard label="Base" value={estimatedValuation} tone="accent" emphasis />
           <RangeCard label="High" value={valuationHigh}      tone="muted" />
@@ -497,9 +497,9 @@ export default function ValuationPage() {
 
       {/* ── Readiness score ───────────────────────────────────────────────── */}
       <ToolSection title="Investor Readiness">
-        <div className="flex items-center justify-between gap-6 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6 mb-4">
           <div>
-            <p className="text-4xl font-extrabold tracking-tight mb-1">
+            <p className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-1">
               {readinessScore}
               <span className="text-muted text-xl">/100</span>
             </p>
@@ -526,16 +526,16 @@ export default function ValuationPage() {
       )}
 
       {/* ── Save bar ──────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-3 bg-card border border-border rounded-[var(--radius-lg)] p-6">
-        <p className="text-sm text-muted">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-card border border-border rounded-[var(--radius-lg)] p-4 sm:p-6">
+        <p className="text-xs sm:text-sm text-muted">
           Sector: {formData.sector} · Stage: {formData.stage} · Primary: {summary.interpretation.primaryMethod}
         </p>
-        <div className="flex gap-2">
-          <Button onClick={handleReset} variant="secondary" size="sm">
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button onClick={handleReset} variant="secondary" size="sm" className="flex-1 sm:flex-none">
             <RotateCcw className="w-4 h-4" />
             Reset
           </Button>
-          <Button onClick={handleSave} size="sm">
+          <Button onClick={handleSave} size="sm" className="flex-1 sm:flex-none">
             {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
             {saved ? "Saved" : "Save Valuation"}
           </Button>

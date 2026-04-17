@@ -334,7 +334,7 @@ function ToolRow({ tool, state }: { tool: FoundationTool; state: ToolState }) {
   const statusColor = isComplete ? "text-success" : isInProgress ? "text-warning" : "text-muted";
   return (
     <Link href={TOOL_HREFS[tool]}
-      className="grid grid-cols-[16px_1fr_80px_36px_36px_60px_28px] items-center gap-3 px-4 py-3 hover:bg-soft transition-colors group border-b border-border last:border-0"
+      className="grid grid-cols-[16px_1fr_80px_36px_36px_60px_28px] sm:grid-cols-[16px_1fr_80px_36px_36px_60px_28px] items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 hover:bg-soft transition-colors group border-b border-border last:border-0 min-w-[500px] sm:min-w-0"
     >
       <span className={`w-2 h-2 rounded-full flex-shrink-0 ${statusDot}`} />
       <span className="text-sm font-semibold text-ink">{TOOL_LABELS[tool]}</span>
@@ -1080,8 +1080,8 @@ export default function DashboardV2Page() {
 
           {/* ─── 1. HERO — dark command center ───────────────────────────── */}
           <div className="rounded-[var(--radius-lg)] bg-ink overflow-hidden">
-            <div className="px-5 pt-5 pb-4">
-              <div className="flex items-start gap-4">
+            <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-4">
+              <div className="flex items-start gap-3 sm:gap-4">
 
                 {/* Score arc */}
                 <ScoreArc score={animatedScore} colorScore={snap.overall_score} size={88} dark />
@@ -1175,10 +1175,10 @@ export default function DashboardV2Page() {
 
           {/* ─── 2. INTELLIGENCE BAND — traction · valuation · market ────── */}
           <div className="bg-card border border-border rounded-[var(--radius-lg)] overflow-hidden">
-            <div className="grid lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-border">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y md:divide-y-0 md:divide-x lg:divide-y-0 lg:divide-x divide-border">
 
               {/* Traction */}
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-[10px] font-bold text-muted uppercase tracking-[0.14em]">Traction</p>
                   {ts.metrics.score > 0 ? (
@@ -1220,7 +1220,7 @@ export default function DashboardV2Page() {
               </div>
 
               {/* Valuation */}
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-[10px] font-bold text-muted uppercase tracking-[0.14em]">Valuation</p>
                   {ts.valuation.score > 0 ? (
@@ -1259,7 +1259,7 @@ export default function DashboardV2Page() {
               </div>
 
               {/* Market position */}
-              <div className="p-5">
+              <div className="p-4 sm:p-5 md:col-span-2 lg:col-span-1">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-[10px] font-bold text-muted uppercase tracking-[0.14em]">Market position</p>
                   <Link href="/comparables" className="text-[10px] text-accent font-semibold hover:underline">Explorer →</Link>
@@ -1300,8 +1300,8 @@ export default function DashboardV2Page() {
 
           {/* ─── 4. UNIFIED ADVISORY PANEL ───────────────────────────────── */}
           <div className="bg-card border border-border rounded-[var(--radius-lg)] overflow-hidden">
-            <div className="border-b border-border px-5 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+            <div className="border-b border-border px-4 sm:px-5 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="flex items-center gap-3 flex-wrap">
                 <h2 className="text-sm font-extrabold tracking-tight text-ink">Fundraising advisor</h2>
                 {advisory.data_completeness !== "full" && (
                   <span className="text-[10px] font-semibold text-warning bg-warning/10 border border-warning/20 rounded px-2 py-0.5">
@@ -1315,7 +1315,7 @@ export default function DashboardV2Page() {
             <div className="grid lg:grid-cols-[3fr_2fr] divide-y lg:divide-y-0 lg:divide-x divide-border">
 
               {/* Left: Summary + Strategy + CTAs + Investor challenges */}
-              <div className="p-5 space-y-5">
+              <div className="p-4 sm:p-5 space-y-5">
 
                 {/* Readiness summary */}
                 <div>
@@ -1371,7 +1371,7 @@ export default function DashboardV2Page() {
               </div>
 
               {/* Right: Top priorities + Next actions */}
-              <div className="bg-soft p-5 space-y-5">
+              <div className="bg-soft p-4 sm:p-5 space-y-5">
 
                 {/* Top priorities */}
                 <div>
@@ -1444,16 +1444,18 @@ export default function DashboardV2Page() {
               <span className="text-xs text-muted">{snap.completed_tools_count}/6 completed</span>
             </div>
             {/* Column headers */}
-            <div className="grid grid-cols-[16px_1fr_80px_36px_36px_60px_28px] items-center gap-3 px-4 py-2 border-b border-border bg-soft">
-              <span />
-              <span className="text-[10px] font-bold text-muted uppercase tracking-wide">Tool</span>
-              <span className="text-[10px] font-bold text-muted uppercase tracking-wide">Score</span>
-              <span className="text-[10px] font-bold text-muted uppercase tracking-wide text-right">Pts</span>
-              <span className="text-[10px] font-bold text-muted uppercase tracking-wide text-right">Wt.</span>
-              <span className="text-[10px] font-bold text-muted uppercase tracking-wide">Status</span>
-              <span />
+            <div className="overflow-x-auto">
+              <div className="grid grid-cols-[16px_1fr_80px_36px_36px_60px_28px] items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 border-b border-border bg-soft min-w-[500px] sm:min-w-0">
+                <span />
+                <span className="text-[10px] font-bold text-muted uppercase tracking-wide">Tool</span>
+                <span className="text-[10px] font-bold text-muted uppercase tracking-wide">Score</span>
+                <span className="text-[10px] font-bold text-muted uppercase tracking-wide text-right">Pts</span>
+                <span className="text-[10px] font-bold text-muted uppercase tracking-wide text-right">Wt.</span>
+                <span className="text-[10px] font-bold text-muted uppercase tracking-wide">Status</span>
+                <span />
+              </div>
+              {(Object.keys(ts) as FoundationTool[]).map(t => <ToolRow key={t} tool={t} state={ts[t]} />)}
             </div>
-            {(Object.keys(ts) as FoundationTool[]).map(t => <ToolRow key={t} tool={t} state={ts[t]} />)}
           </Card>
 
           {/* ─── 6. BOTTOM ROW — progress + expert CTA ───────────────────── */}

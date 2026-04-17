@@ -460,10 +460,10 @@ export default function MetricsPage() {
 
   return (
     <div className="bg-background">
-      <div className="max-w-[var(--container-max)] mx-auto px-6 py-12">
-        <div className="mb-10">
+      <div className="max-w-[var(--container-max)] mx-auto px-5 md:px-6 py-8 md:py-12">
+        <div className="mb-8 md:mb-10">
           <p className="eyebrow mb-2">{t("metrics.kicker")}</p>
-          <h1 className="heading-display mb-3">{t("metrics.title")}</h1>
+          <h1 className="heading-display text-3xl sm:text-4xl md:text-5xl mb-3">{t("metrics.title")}</h1>
           <p className="text-ink-secondary max-w-2xl">{t("metrics.description")}</p>
         </div>
 
@@ -485,7 +485,7 @@ export default function MetricsPage() {
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-[320px_1fr] gap-8">
+        <div className="grid lg:grid-cols-[320px_1fr] gap-5 lg:gap-8">
           <div className="space-y-5">
             <div className="bg-card border border-border rounded-[var(--radius-lg)] p-5 lg:sticky lg:top-24">
               <h3 className="text-sm font-bold tracking-tight mb-4">{t("metrics.yourData")}</h3>
@@ -566,7 +566,7 @@ export default function MetricsPage() {
           </div>
 
           <div className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <MetricCard
                 label="MRR"
                 value={`$${calculations.mrr.toLocaleString()}`}

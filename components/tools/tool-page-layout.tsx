@@ -25,7 +25,7 @@ export function ToolPageLayout({
   return (
     <>
       {/* Page Header */}
-      <div className="border-b border-border py-10 md:py-12">
+      <div className="border-b border-border py-8 md:py-12">
         <Container narrow>
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6">
             <div>
@@ -62,7 +62,7 @@ interface ToolSectionProps {
 export function ToolSection({ children, title, className = "" }: ToolSectionProps) {
   return (
     <div
-      className={`bg-card border border-border rounded-[var(--radius-lg)] p-6 mb-5 ${className}`}
+      className={`bg-card border border-border rounded-[var(--radius-lg)] p-4 sm:p-6 mb-5 ${className}`}
     >
       {title && (
         <h2 className="eyebrow pb-4 mb-5 border-b border-border">{title}</h2>
