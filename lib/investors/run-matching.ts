@@ -18,12 +18,17 @@ const SCORING_VERSION = "v1";
 const DEFAULT_TOP_K = 50;
 const DEFAULT_CANDIDATE_LIMIT = 2000;
 
+export type RunMatchingWriteTarget =
+  | { kind: "legacy"; startupProfileId: string }
+  | { kind: "unified"; startupId: string; contextSnapshot?: unknown };
+
 export interface RunMatchingArgs {
   startupProfileId?: string | null;
   profile?: StartupProfileInput;
   topK?: number;
   persist?: boolean;
   candidateLimit?: number;
+  writeTarget?: RunMatchingWriteTarget;
 }
 
 export interface RunMatchingResult {
@@ -161,31 +166,66 @@ export async function runInvestorMatching(
 
   // ---- Persist -------------------------------------------------------------
   let saved = 0;
-  if (args.persist && args.startupProfileId) {
-    const del = await client
-      .from("investor_matches")
-      .delete()
-      .eq("startup_profile_id", args.startupProfileId)
-      .eq("scoring_version", SCORING_VERSION);
-    if (del.error) throw del.error;
+  if (args.persist) {
+    const target: RunMatchingWriteTarget | null =
+      args.writeTarget ??
+      (args.startupProfileId
+        ? { kind: "legacy", startupProfileId: args.startupProfileId }
+        : null);
 
-    if (matches.length > 0) {
-      const rows = matches.map((m) => ({
-        startup_profile_id: args.startupProfileId as string,
-        investor_id: m.investor_id,
-        score_total: m.breakdown.total,
-        score_geo: m.breakdown.geo,
-        score_sector: m.breakdown.sector,
-        score_stage: m.breakdown.stage,
-        score_activity: m.breakdown.activity,
-        score_check_size: m.breakdown.check_size,
-        reasoning: m.breakdown.reasoning,
-        rank_position: m.rank_position,
-        scoring_version: SCORING_VERSION,
-      }));
-      const ins = await client.from("investor_matches").insert(rows);
-      if (ins.error) throw ins.error;
-      saved = rows.length;
+    if (target?.kind === "legacy") {
+      const del = await client
+        .from("investor_matches")
+        .delete()
+        .eq("startup_profile_id", target.startupProfileId)
+        .eq("scoring_version", SCORING_VERSION);
+      if (del.error) throw del.error;
+
+      if (matches.length > 0) {
+        const rows = matches.map((m) => ({
+          startup_profile_id: target.startupProfileId,
+          investor_id: m.investor_id,
+          score_total: m.breakdown.total,
+          score_geo: m.breakdown.geo,
+          score_sector: m.breakdown.sector,
+          score_stage: m.breakdown.stage,
+          score_activity: m.breakdown.activity,
+          score_check_size: m.breakdown.check_size,
+          reasoning: m.breakdown.reasoning,
+          rank_position: m.rank_position,
+          scoring_version: SCORING_VERSION,
+        }));
+        const ins = await client.from("investor_matches").insert(rows);
+        if (ins.error) throw ins.error;
+        saved = rows.length;
+      }
+    } else if (target?.kind === "unified") {
+      const del = await client
+        .from("investor_matches_unified")
+        .delete()
+        .eq("startup_id", target.startupId)
+        .eq("scoring_version", SCORING_VERSION);
+      if (del.error) throw del.error;
+
+      if (matches.length > 0) {
+        const rows = matches.map((m) => ({
+          startup_id: target.startupId,
+          investor_id: m.investor_id,
+          score_total: m.breakdown.total,
+          score_geo: m.breakdown.geo,
+          score_sector: m.breakdown.sector,
+          score_stage: m.breakdown.stage,
+          score_activity: m.breakdown.activity,
+          score_check_size: m.breakdown.check_size,
+          reasoning: m.breakdown.reasoning,
+          rank_position: m.rank_position,
+          scoring_version: SCORING_VERSION,
+          startup_context_snapshot_json: target.contextSnapshot ?? null,
+        }));
+        const ins = await client.from("investor_matches_unified").insert(rows);
+        if (ins.error) throw ins.error;
+        saved = rows.length;
+      }
     }
   }
 

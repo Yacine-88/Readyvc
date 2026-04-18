@@ -82,49 +82,145 @@ export async function POST(request: Request) {
   try {
     let startupProfileId = parsed.value.startup_profile_id ?? null;
     let profile: StartupProfileInput | undefined = parsed.value.profile;
+    let unifiedStartupId: string | null = null;
 
-    // New path: startup_context → create an ephemeral startup_profiles row so
-    // matches can be persisted and the results page can load by id.
-    //
-    // SAFEGUARD: ephemeral rows are tagged with the sentinel marker
-    // `EPHEMERAL_MARKER` in `revenue_model` so a cleanup job can safely target
-    // them (`WHERE revenue_model = '__ephemeral_v2__' AND user_id IS NULL`).
-    // This is a stop-gap until the unified startup_id model lands — see
-    // `scripts/cleanup-ephemeral-startup-profiles.sql`.
     if (!startupProfileId && parsed.value.startup_context) {
-      const input = contextToProfileInput(parsed.value.startup_context);
+      const ctx = parsed.value.startup_context;
+      const input = contextToProfileInput(ctx);
       if (!input.startup_name) {
         return NextResponse.json(
           { ok: false, error: "startup_context.startup_name is required" },
           { status: 400 }
         );
       }
-      const { data, error } = await client
-        .from("startup_profiles")
-        .insert({
-          user_id: null,
-          startup_name: input.startup_name,
-          description: input.description ?? null,
-          country: input.country ?? null,
-          region: input.region ?? null,
-          stage: input.stage ?? null,
-          sectors: input.sectors ?? null,
-          business_model: input.business_model ?? null,
-          target_markets: input.target_markets ?? null,
-          revenue_model: EPHEMERAL_MARKER,
-          valuation_estimate: input.valuation_estimate ?? null,
-          fundraising_target_usd: input.fundraising_target_usd ?? null,
-        })
-        .select("id")
-        .single();
-      if (error) {
-        return NextResponse.json(
-          { ok: false, error: error.message },
-          { status: 500 }
-        );
+
+      const userId = ctx.user_id?.trim() || null;
+
+      if (userId) {
+        // Authenticated unified path: upsert canonical startups row, then
+        // ensure a linked startup_profiles row exists for URL back-compat.
+        const existing = await client
+          .from("startups")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("status", "active")
+          .limit(1)
+          .maybeSingle();
+        if (existing.error) {
+          return NextResponse.json(
+            { ok: false, error: existing.error.message },
+            { status: 500 }
+          );
+        }
+
+        if (existing.data) {
+          unifiedStartupId = (existing.data as { id: string }).id;
+        } else {
+          const inserted = await client
+            .from("startups")
+            .insert({
+              user_id: userId,
+              startup_name: input.startup_name,
+              description_short: null,
+              description_long: input.description ?? null,
+              country: input.country ?? null,
+              region: input.region ?? null,
+              stage_current: input.stage ?? null,
+              business_model: input.business_model ?? null,
+              industry_primary: input.sectors?.[0] ?? null,
+              status: "active",
+              source: "app_cutover_unified",
+            })
+            .select("id")
+            .single();
+          if (inserted.error) {
+            return NextResponse.json(
+              { ok: false, error: inserted.error.message },
+              { status: 500 }
+            );
+          }
+          unifiedStartupId = (inserted.data as { id: string }).id;
+        }
+
+        // Ensure a linked startup_profiles row for the results URL.
+        const linked = await client
+          .from("startup_profiles")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("startup_id", unifiedStartupId)
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (linked.error) {
+          return NextResponse.json(
+            { ok: false, error: linked.error.message },
+            { status: 500 }
+          );
+        }
+        if (linked.data) {
+          startupProfileId = (linked.data as { id: string }).id;
+        } else {
+          const insertedProfile = await client
+            .from("startup_profiles")
+            .insert({
+              user_id: userId,
+              startup_id: unifiedStartupId,
+              startup_name: input.startup_name,
+              description: input.description ?? null,
+              country: input.country ?? null,
+              region: input.region ?? null,
+              stage: input.stage ?? null,
+              sectors: input.sectors ?? null,
+              business_model: input.business_model ?? null,
+              target_markets: input.target_markets ?? null,
+              revenue_model: null,
+              valuation_estimate: input.valuation_estimate ?? null,
+              fundraising_target_usd: input.fundraising_target_usd ?? null,
+            })
+            .select("id")
+            .single();
+          if (insertedProfile.error) {
+            return NextResponse.json(
+              { ok: false, error: insertedProfile.error.message },
+              { status: 500 }
+            );
+          }
+          startupProfileId = (insertedProfile.data as { id: string }).id;
+        }
+        profile = undefined;
+      } else {
+        // Anon path: keep the ephemeral legacy fallback.
+        //
+        // SAFEGUARD: ephemeral rows are tagged with the sentinel marker
+        // `EPHEMERAL_MARKER` in `revenue_model` so a cleanup job can safely
+        // target them (see scripts/cleanup-ephemeral-startup-profiles.sql).
+        const { data, error } = await client
+          .from("startup_profiles")
+          .insert({
+            user_id: null,
+            startup_name: input.startup_name,
+            description: input.description ?? null,
+            country: input.country ?? null,
+            region: input.region ?? null,
+            stage: input.stage ?? null,
+            sectors: input.sectors ?? null,
+            business_model: input.business_model ?? null,
+            target_markets: input.target_markets ?? null,
+            revenue_model: EPHEMERAL_MARKER,
+            valuation_estimate: input.valuation_estimate ?? null,
+            fundraising_target_usd: input.fundraising_target_usd ?? null,
+          })
+          .select("id")
+          .single();
+        if (error) {
+          return NextResponse.json(
+            { ok: false, error: error.message },
+            { status: 500 }
+          );
+        }
+        startupProfileId = (data as { id: string }).id;
+        profile = undefined;
       }
-      startupProfileId = (data as { id: string }).id;
-      profile = undefined;
     }
 
     const result = await runInvestorMatching(client, {
@@ -132,6 +228,15 @@ export async function POST(request: Request) {
       profile,
       topK: parsed.value.topK,
       persist: !!startupProfileId,
+      writeTarget: unifiedStartupId
+        ? {
+            kind: "unified",
+            startupId: unifiedStartupId,
+            contextSnapshot: parsed.value.startup_context ?? null,
+          }
+        : startupProfileId
+        ? { kind: "legacy", startupProfileId }
+        : undefined,
     });
     return NextResponse.json({
       ok: true,
