@@ -10,6 +10,8 @@ import {
   getStartupProfile,
   runMatching,
 } from "@/lib/investors/api-client";
+import { createClient } from "@/lib/supabase-client";
+import { buildStartupContext } from "@/lib/investors/build-startup-context";
 import type {
   MatchFilterState,
   MatchListItem,
@@ -118,6 +120,42 @@ export default function MatchResultsPage() {
     setError(null);
     try {
       await runMatching({ startup_profile_id: startupProfileId, topK: 50 });
+      await loadData();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Matching failed.");
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  async function handleRerunFresh() {
+    if (running) return;
+    setRunning(true);
+    setError(null);
+    try {
+      let userId: string | null = null;
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.auth.getUser();
+        userId = data?.user?.id ?? null;
+      } catch {
+        userId = null;
+      }
+      const build = await buildStartupContext(userId);
+      if (!build.isUsable) {
+        throw new Error(
+          "We need at least a startup name and sector/stage/country to match. Refine your profile to continue."
+        );
+      }
+      const res = await runMatching({
+        startup_context: build.context,
+        topK: 50,
+      });
+      const id = res.startup_profile_id;
+      if (id && id !== startupProfileId) {
+        window.location.href = `/investor-matching/results/${id}`;
+        return;
+      }
       await loadData();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Matching failed.");
@@ -262,16 +300,27 @@ export default function MatchResultsPage() {
           ) : empty && matches.length === 0 ? (
             <div className="bg-card border border-border rounded-[var(--radius-lg)] p-8 text-center">
               <p className="text-sm text-muted mb-4">
-                No matches yet. Run matching to see investor fit.
+                No matches yet. Run matching using your current data to see
+                investor fit.
               </p>
-              <button
-                type="button"
-                onClick={handleRerun}
-                disabled={running}
-                className="inline-flex items-center justify-center h-11 px-4 rounded-[var(--radius-sm)] bg-ink text-white font-semibold text-sm hover:bg-black disabled:opacity-60"
-              >
-                {running ? "Running…" : "Run matching"}
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  type="button"
+                  onClick={handleRerunFresh}
+                  disabled={running}
+                  className="inline-flex items-center justify-center h-11 px-4 rounded-[var(--radius-sm)] bg-ink text-white font-semibold text-sm hover:bg-black disabled:opacity-60"
+                >
+                  {running ? "Running…" : "Run matching using your current data"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRerun}
+                  disabled={running}
+                  className="inline-flex items-center justify-center h-11 px-4 rounded-[var(--radius-sm)] border border-border bg-card text-ink font-semibold text-sm hover:border-ink/30 disabled:opacity-60"
+                >
+                  Re-run this profile
+                </button>
+              </div>
             </div>
           ) : (
             <MatchResultsList
