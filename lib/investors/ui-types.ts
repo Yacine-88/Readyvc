@@ -242,3 +242,55 @@ export const EMPTY_STARTUP_PROFILE_FORM: StartupProfileFormValues = {
   fundraising_target_usd: "",
   valuation_estimate: "",
 };
+
+// ─── Form <-> StartupContext (v2) conversion ───────────────────────────────
+
+import type { StartupContext } from "./build-startup-context";
+
+function numToStr(n: number | null | undefined): string {
+  return typeof n === "number" && Number.isFinite(n) && n > 0 ? String(n) : "";
+}
+
+function parseNumOrNull(s: string): number | null {
+  if (!s.trim()) return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Pre-fill StartupProfileForm values from a built StartupContext. */
+export function formValuesFromStartupContext(
+  ctx: StartupContext
+): StartupProfileFormValues {
+  return {
+    startup_name: ctx.startup_name ?? "",
+    description: ctx.description ?? "",
+    country: ctx.country ?? "",
+    region: ctx.region ?? "",
+    stage: ctx.stage ?? "",
+    sectors: ctx.sectors ?? [],
+    business_model: "",
+    target_markets: [],
+    fundraising_target_usd: numToStr(ctx.fundraising.target_raise_usd),
+    valuation_estimate: numToStr(ctx.fundraising.valuation_base),
+  };
+}
+
+/** Convert edited form values back into a StartupContext for the API. */
+export function contextFromFormValues(
+  v: StartupProfileFormValues
+): StartupContext {
+  return {
+    startup_name: v.startup_name.trim() || null,
+    stage: v.stage.trim() || null,
+    country: v.country.trim() || null,
+    region: v.region.trim() || null,
+    sectors: v.sectors.length > 0 ? v.sectors : null,
+    description: v.description.trim() || null,
+    traction: { mrr: null, growth_mom: null, customers: null },
+    fundraising: {
+      target_raise_usd: parseNumOrNull(v.fundraising_target_usd),
+      valuation_base: parseNumOrNull(v.valuation_estimate),
+    },
+    readiness_score: null,
+  };
+}
