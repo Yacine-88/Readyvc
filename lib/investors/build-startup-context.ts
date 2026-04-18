@@ -173,9 +173,20 @@ async function tryFetchLatest<T>(
       .order(orderCol, { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (res.error) return null;
+    if (res.error) {
+      // Internal telemetry: surface missing/blocked Supabase sources so ops
+      // can spot absent tables or RLS denials without breaking the flow.
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[buildStartupContext] source "${table}" unavailable: ${res.error.message}`
+      );
+      return null;
+    }
     return (res.data as T | null) ?? null;
-  } catch {
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    // eslint-disable-next-line no-console
+    console.warn(`[buildStartupContext] source "${table}" threw: ${msg}`);
     return null;
   }
 }

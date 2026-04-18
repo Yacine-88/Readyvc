@@ -11,6 +11,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
+ * Sentinel tag for ephemeral startup_profiles rows created from `startup_context`.
+ * Stored in `revenue_model` (a field we'd otherwise leave null) so it's queryable
+ * without a schema change. Cleanup script: scripts/cleanup-ephemeral-startup-profiles.sql
+ */
+const EPHEMERAL_MARKER = "__ephemeral_v2__";
+
+/**
  * Fold the traction object into a narrative if no description was supplied.
  * Matches the v1 formatter so the stored description reads like prose.
  */
@@ -78,6 +85,12 @@ export async function POST(request: Request) {
 
     // New path: startup_context → create an ephemeral startup_profiles row so
     // matches can be persisted and the results page can load by id.
+    //
+    // SAFEGUARD: ephemeral rows are tagged with the sentinel marker
+    // `EPHEMERAL_MARKER` in `revenue_model` so a cleanup job can safely target
+    // them (`WHERE revenue_model = '__ephemeral_v2__' AND user_id IS NULL`).
+    // This is a stop-gap until the unified startup_id model lands — see
+    // `scripts/cleanup-ephemeral-startup-profiles.sql`.
     if (!startupProfileId && parsed.value.startup_context) {
       const input = contextToProfileInput(parsed.value.startup_context);
       if (!input.startup_name) {
@@ -98,7 +111,7 @@ export async function POST(request: Request) {
           sectors: input.sectors ?? null,
           business_model: input.business_model ?? null,
           target_markets: input.target_markets ?? null,
-          revenue_model: input.revenue_model ?? null,
+          revenue_model: EPHEMERAL_MARKER,
           valuation_estimate: input.valuation_estimate ?? null,
           fundraising_target_usd: input.fundraising_target_usd ?? null,
         })
