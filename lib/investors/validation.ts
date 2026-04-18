@@ -101,6 +101,7 @@ export function parseStartupProfileBody(
 }
 
 export interface StartupContextInput {
+  user_id?: string | null;
   startup_name: string | null;
   stage: string | null;
   country: string | null;
@@ -128,6 +129,14 @@ export interface RunMatchingBody {
 
 function parseStartupContext(body: unknown): Validated<StartupContextInput> {
   if (!isObj(body)) return { ok: false, error: "startup_context must be an object" };
+
+  let userId: string | null = null;
+  if (body.user_id !== undefined && body.user_id !== null) {
+    if (typeof body.user_id !== "string" || body.user_id.trim().length === 0) {
+      return { ok: false, error: "user_id must be a non-empty string" };
+    }
+    userId = body.user_id.trim();
+  }
 
   const name = strOrNull(body.startup_name, "startup_name");
   if (!name.ok) return name;
@@ -162,6 +171,7 @@ function parseStartupContext(body: unknown): Validated<StartupContextInput> {
   return {
     ok: true,
     value: {
+      user_id: userId,
       startup_name: name.value,
       stage: stage.value,
       country: country.value,

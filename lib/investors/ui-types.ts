@@ -277,9 +277,11 @@ export function formValuesFromStartupContext(
 
 /** Convert edited form values back into a StartupContext for the API. */
 export function contextFromFormValues(
-  v: StartupProfileFormValues
+  v: StartupProfileFormValues,
+  passthrough?: { user_id?: string | null }
 ): StartupContext {
   return {
+    user_id: passthrough?.user_id ?? null,
     startup_name: v.startup_name.trim() || null,
     stage: v.stage.trim() || null,
     country: v.country.trim() || null,

@@ -19,6 +19,7 @@ import { buildStartupContext } from "@/lib/investors/build-startup-context";
 export default function StartupProfilePage() {
   const router = useRouter();
   const [initial, setInitial] = useState<StartupProfileFormValues | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [prefillSources, setPrefillSources] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -37,6 +38,7 @@ export default function StartupProfilePage() {
       }
       const build = await buildStartupContext(userId);
       if (cancelled) return;
+      setUserId(userId);
       if (build.context.startup_name) {
         setInitial(formValuesFromStartupContext(build.context));
         const labels: string[] = [];
@@ -59,7 +61,7 @@ export default function StartupProfilePage() {
     setSubmitting(true);
     try {
       setStatus("Saving your profile…");
-      const ctx = contextFromFormValues(values);
+      const ctx = contextFromFormValues(values, { user_id: userId });
       if (!ctx.startup_name) {
         throw new Error("Please add a startup name before running matching.");
       }

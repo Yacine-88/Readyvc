@@ -11,6 +11,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // ─── Types ─────────────────────────────────────────────────────────────────
 
 export interface StartupContext {
+  user_id?: string | null;
   startup_name: string | null;
   stage: string | null;
   country: string | null;
@@ -433,6 +434,7 @@ export async function buildStartupContext(
   const readiness_score = numberOrNull(sbReadiness?.overall_score);
 
   const context: StartupContext = {
+    user_id: userId ?? null,
     startup_name,
     stage,
     country,
