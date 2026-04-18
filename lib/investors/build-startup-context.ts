@@ -36,7 +36,12 @@ export type ContextSourceKey =
   | "valuation"
   | "metrics"
   | "readiness"
-  | "profile";
+  | "profile"
+  | "startups"
+  | "metrics_snapshots"
+  | "fundraising"
+  | "valuation_runs"
+  | "health_scores";
 
 export interface ContextGap {
   field: string;
@@ -264,6 +269,163 @@ function asStringArray(v: unknown): string[] | null {
  *   startup_profiles → valuations → founder_profiles → founder localStorage
  *   → valuation localStorage
  */
+interface SupaStartupRow {
+  id: string;
+  user_id: string;
+  startup_name: string | null;
+  description_short: string | null;
+  description_long: string | null;
+  country: string | null;
+  region: string | null;
+  city: string | null;
+  stage_current: string | null;
+  business_model: string | null;
+  industry_primary: string | null;
+  target_market_geo: string | null;
+}
+
+interface SupaMetricsSnapshot {
+  revenue_mrr: number | null;
+  revenue_arr: number | null;
+  growth_mom: number | null;
+  paying_customers: number | null;
+  snapshot_date: string | null;
+}
+
+interface SupaFundraising {
+  target_raise_usd: number | null;
+  min_raise_usd: number | null;
+  max_raise_usd: number | null;
+  planned_round_type: string | null;
+}
+
+interface SupaValuationRun {
+  low_valuation: number | null;
+  base_valuation: number | null;
+  high_valuation: number | null;
+  stage_at_run: string | null;
+}
+
+interface SupaHealthScore {
+  readiness_score: number | null;
+  metrics_score: number | null;
+  global_score: number | null;
+}
+
+interface SupaReadinessAssessment {
+  score: number | null;
+  max_score: number | null;
+}
+
+interface SupaStartupProfileLinked {
+  id: string;
+  startup_id: string | null;
+  startup_name: string | null;
+  description: string | null;
+  country: string | null;
+  region: string | null;
+  stage: string | null;
+  sectors: unknown;
+  business_model: string | null;
+  target_markets: unknown;
+  valuation_estimate: number | null;
+  fundraising_target_usd: number | null;
+  updated_at?: string | null;
+}
+
+const CONTEXT_CACHE_VERSION = "v1";
+const CONTEXT_CACHE_TTL_MS = 5 * 60 * 1000;
+
+async function readContextCache(
+  client: SupabaseClient,
+  startupId: string
+): Promise<StartupContextBuild | null> {
+  try {
+    const { data, error } = await client
+      .from("startup_context_cache")
+      .select("context_json, generated_at")
+      .eq("startup_id", startupId)
+      .eq("context_version", CONTEXT_CACHE_VERSION)
+      .maybeSingle();
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[buildStartupContext] source "startup_context_cache" unavailable: ${error.message}`
+      );
+      return null;
+    }
+    if (!data) return null;
+    const row = data as { context_json: unknown; generated_at: string | null };
+    const ts = row.generated_at ? Date.parse(row.generated_at) : NaN;
+    if (!Number.isFinite(ts)) return null;
+    if (Date.now() - ts > CONTEXT_CACHE_TTL_MS) return null;
+    if (!row.context_json || typeof row.context_json !== "object") return null;
+    return row.context_json as StartupContextBuild;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    // eslint-disable-next-line no-console
+    console.warn(`[buildStartupContext] source "startup_context_cache" threw: ${msg}`);
+    return null;
+  }
+}
+
+async function writeContextCache(
+  client: SupabaseClient,
+  startupId: string,
+  build: StartupContextBuild
+): Promise<void> {
+  try {
+    const { error } = await client.from("startup_context_cache").upsert(
+      {
+        startup_id: startupId,
+        context_version: CONTEXT_CACHE_VERSION,
+        context_json: build,
+        generated_at: new Date().toISOString(),
+      },
+      { onConflict: "startup_id,context_version" }
+    );
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[buildStartupContext] cache write "startup_context_cache" unavailable: ${error.message}`
+      );
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    // eslint-disable-next-line no-console
+    console.warn(`[buildStartupContext] cache write "startup_context_cache" threw: ${msg}`);
+  }
+}
+
+async function tryFetchByStartupId<T>(
+  client: SupabaseClient,
+  table: string,
+  columns: string,
+  startupId: string,
+  orderCol: string | null,
+  maybeSingle = false
+): Promise<T | null> {
+  try {
+    let q = client.from(table).select(columns).eq("startup_id", startupId);
+    if (orderCol) q = q.order(orderCol, { ascending: false });
+    q = q.limit(1);
+    const res = maybeSingle ? await q.maybeSingle() : await q.maybeSingle();
+    if (res.error) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[buildStartupContext] source "${table}" unavailable: ${res.error.message}`
+      );
+      return null;
+    }
+    return (res.data as T | null) ?? null;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    // eslint-disable-next-line no-console
+    console.warn(`[buildStartupContext] source "${table}" threw: ${msg}`);
+    return null;
+  }
+}
+
 export async function buildStartupContext(
   userId: string | null,
   client?: SupabaseClient
@@ -275,6 +437,11 @@ export async function buildStartupContext(
     metrics: false,
     readiness: false,
     profile: false,
+    startups: false,
+    metrics_snapshots: false,
+    fundraising: false,
+    valuation_runs: false,
+    health_scores: false,
   };
 
   // ---- Supabase path (if we have a user and env is configured) ------------
@@ -294,6 +461,133 @@ export async function buildStartupContext(
   let sbValuation: SupaValuation | null = null;
   let sbMetrics: SupaMetrics | null = null;
   let sbReadiness: SupaReadiness | null = null;
+
+  // ---- Canonical (unified) reads ------------------------------------------
+  let canonicalStartup: SupaStartupRow | null = null;
+  let canonicalMetrics: SupaMetricsSnapshot | null = null;
+  let canonicalFundraising: SupaFundraising | null = null;
+  let canonicalValuation: SupaValuationRun | null = null;
+  let canonicalHealth: SupaHealthScore | null = null;
+  let canonicalReadinessAssessment: SupaReadinessAssessment | null = null;
+  let canonicalLinkedProfile: SupaStartupProfileLinked | null = null;
+  let returnedFromCache: StartupContextBuild | null = null;
+
+  if (supa && userId) {
+    // 1. Fetch canonical startup row.
+    try {
+      const res = await supa
+        .from("startups")
+        .select(
+          "id, user_id, startup_name, description_short, description_long, country, region, city, stage_current, business_model, industry_primary, target_market_geo"
+        )
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .limit(1)
+        .maybeSingle();
+      if (res.error) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[buildStartupContext] source "startups" unavailable: ${res.error.message}`
+        );
+      } else {
+        canonicalStartup = (res.data as SupaStartupRow | null) ?? null;
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      // eslint-disable-next-line no-console
+      console.warn(`[buildStartupContext] source "startups" threw: ${msg}`);
+    }
+    sources.startups = !!canonicalStartup;
+
+    if (canonicalStartup) {
+      const startupId = canonicalStartup.id;
+
+      // Read-through cache.
+      const cached = await readContextCache(supa, startupId);
+      if (cached) {
+        returnedFromCache = cached;
+      }
+
+      if (!returnedFromCache) {
+        canonicalMetrics = await tryFetchByStartupId<SupaMetricsSnapshot>(
+          supa,
+          "startup_metrics_snapshots",
+          "revenue_mrr, revenue_arr, growth_mom, paying_customers, snapshot_date",
+          startupId,
+          "snapshot_date"
+        );
+        canonicalFundraising = await tryFetchByStartupId<SupaFundraising>(
+          supa,
+          "fundraising_profiles",
+          "target_raise_usd, min_raise_usd, max_raise_usd, planned_round_type",
+          startupId,
+          null
+        );
+        canonicalValuation = await tryFetchByStartupId<SupaValuationRun>(
+          supa,
+          "valuation_runs",
+          "low_valuation, base_valuation, high_valuation, stage_at_run",
+          startupId,
+          "created_at"
+        );
+        canonicalHealth = await tryFetchByStartupId<SupaHealthScore>(
+          supa,
+          "startup_health_scores",
+          "readiness_score, metrics_score, global_score",
+          startupId,
+          "created_at"
+        );
+        if (!canonicalHealth) {
+          canonicalReadinessAssessment = await tryFetchByStartupId<SupaReadinessAssessment>(
+            supa,
+            "readiness_assessments",
+            "score, max_score",
+            startupId,
+            "created_at"
+          );
+        }
+        // Linked startup_profiles row keyed on startup_id for narrative overlay.
+        try {
+          const res = await supa
+            .from("startup_profiles")
+            .select(
+              "id, startup_id, startup_name, description, country, region, stage, sectors, business_model, target_markets, valuation_estimate, fundraising_target_usd, updated_at"
+            )
+            .eq("startup_id", startupId)
+            .order("updated_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (res.error) {
+            // eslint-disable-next-line no-console
+            console.warn(
+              `[buildStartupContext] source "startup_profiles(by startup_id)" unavailable: ${res.error.message}`
+            );
+          } else {
+            canonicalLinkedProfile = (res.data as SupaStartupProfileLinked | null) ?? null;
+          }
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          // eslint-disable-next-line no-console
+          console.warn(
+            `[buildStartupContext] source "startup_profiles(by startup_id)" threw: ${msg}`
+          );
+        }
+      }
+
+      sources.metrics_snapshots = !!canonicalMetrics;
+      sources.fundraising = !!canonicalFundraising;
+      sources.valuation_runs = !!canonicalValuation;
+      sources.health_scores = !!canonicalHealth;
+    }
+  }
+
+  if (returnedFromCache) {
+    // Refresh user_id in case it changed across calls; preserve cached shape.
+    return {
+      ...returnedFromCache,
+      context: { ...returnedFromCache.context, user_id: userId ?? null },
+    };
+  }
 
   if (supa && userId) {
     sbStartupProfile = await tryFetchLatestMulti<SupaStartupProfile>(
@@ -342,6 +636,24 @@ export async function buildStartupContext(
     }
   }
 
+  // If a canonical-linked startup_profiles row exists, prefer it as the
+  // narrative overlay over the legacy-by-user_id lookup.
+  const overlayLinked = canonicalLinkedProfile as SupaStartupProfileLinked | null;
+  if (overlayLinked && !sbStartupProfile) {
+    sbStartupProfile = {
+      startup_name: overlayLinked.startup_name,
+      description: overlayLinked.description,
+      country: overlayLinked.country,
+      region: overlayLinked.region,
+      stage: overlayLinked.stage,
+      sectors: overlayLinked.sectors,
+      business_model: overlayLinked.business_model,
+      target_markets: overlayLinked.target_markets,
+      valuation_estimate: overlayLinked.valuation_estimate,
+      fundraising_target_usd: overlayLinked.fundraising_target_usd,
+    };
+  }
+
   sources.profile = !!sbStartupProfile;
   sources.founder = !!sbFounder;
   sources.valuation = !!sbValuation;
@@ -365,18 +677,23 @@ export async function buildStartupContext(
 
   // ---- Merge (priority order) ---------------------------------------------
   const startup_name =
+    trimOrNull(canonicalStartup?.startup_name) ??
     trimOrNull(sbStartupProfile?.startup_name) ??
     trimOrNull(sbFounder?.startup_name) ??
     trimOrNull(lsFounder?.startupName);
 
   const country =
+    trimOrNull(canonicalStartup?.country) ??
     trimOrNull(sbStartupProfile?.country) ??
     trimOrNull(sbFounder?.country) ??
     trimOrNull(lsFounder?.country);
 
-  const region = trimOrNull(sbStartupProfile?.region);
+  const region =
+    trimOrNull(canonicalStartup?.region) ??
+    trimOrNull(sbStartupProfile?.region);
 
   const stage =
+    trimOrNull(canonicalStartup?.stage_current) ??
     trimOrNull(sbStartupProfile?.stage) ??
     trimOrNull(sbValuation?.stage) ??
     trimOrNull(sbFounder?.sector ? sbFounder?.stage : null) ??
@@ -384,8 +701,12 @@ export async function buildStartupContext(
     trimOrNull(lsFounder?.stage) ??
     trimOrNull(lsVal?.stage);
 
-  // sectors: startup_profiles list → founder.sector → localStorage
+  // sectors: startup_profiles list → canonical.industry_primary → founder.sector → localStorage
   let sectors: string[] | null = asStringArray(sbStartupProfile?.sectors);
+  if (!sectors) {
+    const industry = trimOrNull(canonicalStartup?.industry_primary);
+    if (industry) sectors = [industry];
+  }
   if (!sectors) {
     const fs = trimOrNull(sbFounder?.sector);
     if (fs) sectors = [fs];
@@ -401,20 +722,25 @@ export async function buildStartupContext(
 
   // traction
   const mrr =
-    numberOrNull(sbMetrics?.monthly_revenue) ?? numberOrNull(lsMet?.mrr);
-  const arr = numberOrNull(lsMet?.arr);
+    numberOrNull(canonicalMetrics?.revenue_mrr) ??
+    numberOrNull(sbMetrics?.monthly_revenue) ??
+    numberOrNull(lsMet?.mrr);
+  const arr = numberOrNull(canonicalMetrics?.revenue_arr) ?? numberOrNull(lsMet?.arr);
   const growth_mom =
+    numberOrNull(canonicalMetrics?.growth_mom) ??
     numberOrNull(sbMetrics?.monthly_growth_rate) ??
     numberOrNull(sbValuation?.growth_rate) ??
     numberOrNull(lsMet?.growth_rate) ??
     numberOrNull(lsVal?.growth_rate);
-  const customers = numberOrNull(lsMet?.customers);
+  const customers =
+    numberOrNull(canonicalMetrics?.paying_customers) ?? numberOrNull(lsMet?.customers);
 
   // fundraising
-  const target_raise_usd = numberOrNull(
-    sbStartupProfile?.fundraising_target_usd
-  );
+  const target_raise_usd =
+    numberOrNull(canonicalFundraising?.target_raise_usd) ??
+    numberOrNull(sbStartupProfile?.fundraising_target_usd);
   const valuation_base =
+    numberOrNull(canonicalValuation?.base_valuation) ??
     numberOrNull(sbStartupProfile?.valuation_estimate) ??
     numberOrNull(sbValuation?.estimated_valuation) ??
     numberOrNull(lsVal?.estimated_valuation);
@@ -422,6 +748,8 @@ export async function buildStartupContext(
   // description: stored narrative wins, otherwise synthesize
   const description =
     trimOrNull(sbStartupProfile?.description) ??
+    trimOrNull(canonicalStartup?.description_long) ??
+    trimOrNull(canonicalStartup?.description_short) ??
     buildDescription({
       sector: sectors?.[0] ?? null,
       stage,
@@ -431,7 +759,10 @@ export async function buildStartupContext(
       growth: growth_mom,
     });
 
-  const readiness_score = numberOrNull(sbReadiness?.overall_score);
+  const readiness_score =
+    numberOrNull(canonicalHealth?.readiness_score) ??
+    numberOrNull(canonicalReadinessAssessment?.score) ??
+    numberOrNull(sbReadiness?.overall_score);
 
   const context: StartupContext = {
     user_id: userId ?? null,
@@ -492,5 +823,12 @@ export async function buildStartupContext(
     startup_name && ((sectors && sectors.length > 0) || stage || country)
   );
 
-  return { context, sources, missing, isUsable };
+  const build: StartupContextBuild = { context, sources, missing, isUsable };
+
+  // Write-through cache (best-effort, never throws).
+  if (supa && canonicalStartup) {
+    await writeContextCache(supa, canonicalStartup.id, build);
+  }
+
+  return build;
 }
