@@ -15,6 +15,7 @@ import type {
   SavedMatchRow,
   StartupProfileRecord,
 } from "./ui-types";
+import type { StartupContext } from "./build-startup-context";
 
 interface Envelope<T> {
   ok: boolean;
@@ -119,6 +120,7 @@ export async function getStartupProfile(
 export interface RunMatchingBody {
   startup_profile_id?: string;
   profile?: StartupProfileInput;
+  startup_context?: StartupContext;
   topK?: number;
 }
 
@@ -136,6 +138,7 @@ export interface RunMatchingResponse {
   };
   matches: RankedMatch[];
   saved: number;
+  startup_profile_id?: string | null;
 }
 
 export async function runMatching(

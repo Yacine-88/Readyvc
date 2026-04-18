@@ -100,10 +100,86 @@ export function parseStartupProfileBody(
   return { ok: true, value: out };
 }
 
+export interface StartupContextInput {
+  startup_name: string | null;
+  stage: string | null;
+  country: string | null;
+  region: string | null;
+  sectors: string[] | null;
+  description: string | null;
+  traction: {
+    mrr: number | null;
+    growth_mom: number | null;
+    customers: number | null;
+  };
+  fundraising: {
+    target_raise_usd: number | null;
+    valuation_base: number | null;
+  };
+  readiness_score: number | null;
+}
+
 export interface RunMatchingBody {
   startup_profile_id?: string;
   profile?: StartupProfileInput;
+  startup_context?: StartupContextInput;
   topK?: number;
+}
+
+function parseStartupContext(body: unknown): Validated<StartupContextInput> {
+  if (!isObj(body)) return { ok: false, error: "startup_context must be an object" };
+
+  const name = strOrNull(body.startup_name, "startup_name");
+  if (!name.ok) return name;
+  const stage = strOrNull(body.stage, "stage");
+  if (!stage.ok) return stage;
+  const country = strOrNull(body.country, "country");
+  if (!country.ok) return country;
+  const region = strOrNull(body.region, "region");
+  if (!region.ok) return region;
+  const description = strOrNull(body.description, "description");
+  if (!description.ok) return description;
+  const sectors = arrOrNull(body.sectors, "sectors");
+  if (!sectors.ok) return sectors;
+
+  const tractionIn = isObj(body.traction) ? body.traction : {};
+  const mrr = numOrNull(tractionIn.mrr, "traction.mrr");
+  if (!mrr.ok) return mrr;
+  const growth = numOrNull(tractionIn.growth_mom, "traction.growth_mom");
+  if (!growth.ok) return growth;
+  const customers = numOrNull(tractionIn.customers, "traction.customers");
+  if (!customers.ok) return customers;
+
+  const fundIn = isObj(body.fundraising) ? body.fundraising : {};
+  const target = numOrNull(fundIn.target_raise_usd, "fundraising.target_raise_usd");
+  if (!target.ok) return target;
+  const valBase = numOrNull(fundIn.valuation_base, "fundraising.valuation_base");
+  if (!valBase.ok) return valBase;
+
+  const readiness = numOrNull(body.readiness_score, "readiness_score");
+  if (!readiness.ok) return readiness;
+
+  return {
+    ok: true,
+    value: {
+      startup_name: name.value,
+      stage: stage.value,
+      country: country.value,
+      region: region.value,
+      sectors: sectors.value,
+      description: description.value,
+      traction: {
+        mrr: mrr.value,
+        growth_mom: growth.value,
+        customers: customers.value,
+      },
+      fundraising: {
+        target_raise_usd: target.value,
+        valuation_base: valBase.value,
+      },
+      readiness_score: readiness.value,
+    },
+  };
 }
 
 export function parseRunMatchingBody(body: unknown): Validated<RunMatchingBody> {
@@ -124,10 +200,16 @@ export function parseRunMatchingBody(body: unknown): Validated<RunMatchingBody> 
     out.profile = parsed.value;
   }
 
-  if (!out.startup_profile_id && !out.profile) {
+  if (body.startup_context !== undefined && body.startup_context !== null) {
+    const parsed = parseStartupContext(body.startup_context);
+    if (!parsed.ok) return parsed;
+    out.startup_context = parsed.value;
+  }
+
+  if (!out.startup_profile_id && !out.profile && !out.startup_context) {
     return {
       ok: false,
-      error: "Provide either startup_profile_id or profile",
+      error: "Provide startup_profile_id, profile, or startup_context",
     };
   }
 
