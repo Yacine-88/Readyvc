@@ -33,12 +33,34 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/**
+ * Accept the canonical names AND common aliases emitted by the various
+ * callers (zero-friction flow, startup_profiles row, founder UI).
+ * The route is intentionally permissive: any alias that resolves to a
+ * non-null value wins; canonical names take precedence.
+ */
 interface SimpleRunBody {
+  // stage
   stage?: string | null;
+  startup_stage?: string | null;
+  stage_current?: string | null;
+  // sectors
   sectors?: string[] | string | null;
+  sector?: string[] | string | null;
+  sector_focus?: string[] | string | null;
+  // country
   country?: string | null;
+  startup_country?: string | null;
+  hq_country?: string | null;
+  // region
   region?: string | null;
+  startup_region?: string | null;
+  hq_region?: string | null;
+  // raise_amount
   raise_amount?: number | string | null;
+  target_raise?: number | string | null;
+  fundraising_target?: number | string | null;
+  fundraising_target_usd?: number | string | null;
 }
 
 interface ScoredRow {
@@ -64,13 +86,39 @@ export async function POST(request: Request) {
     );
   }
 
-  const startup: SimpleStartupInput = {
-    stage: body.stage ?? null,
-    sectors: body.sectors ?? null,
-    country: body.country ?? null,
-    region: body.region ?? null,
-    raise_amount: body.raise_amount ?? null,
+  // Alias-tolerant mapping. `firstDefined` returns the first value that is
+  // not null/undefined/empty-string, so canonical names still win when
+  // present but aliases are picked up when they aren't.
+  const firstDefined = <T,>(...vals: (T | null | undefined)[]): T | null => {
+    for (const v of vals) {
+      if (v === null || v === undefined) continue;
+      if (typeof v === "string" && v.trim() === "") continue;
+      return v;
+    }
+    return null;
   };
+
+  const startup: SimpleStartupInput = {
+    stage: firstDefined(body.stage, body.startup_stage, body.stage_current),
+    sectors: firstDefined<string[] | string>(
+      body.sectors,
+      body.sector,
+      body.sector_focus
+    ),
+    country: firstDefined(body.country, body.startup_country, body.hq_country),
+    region: firstDefined(body.region, body.startup_region, body.hq_region),
+    raise_amount: firstDefined<number | string>(
+      body.raise_amount,
+      body.target_raise,
+      body.fundraising_target,
+      body.fundraising_target_usd
+    ),
+  };
+
+  // Debug: compare what arrived vs. what the scorer sees. These logs are
+  // how we'll confirm in production that the mapping works end-to-end.
+  console.log("[simple-run] STARTUP PROFILE RAW", body);
+  console.log("[simple-run] STARTUP INPUT MAPPED", startup);
 
   const client = getSupabaseAdmin();
 
@@ -127,27 +175,28 @@ export async function POST(request: Request) {
   let startupProfileId: string | null = null;
 
   try {
-    const sectorsJson =
-      Array.isArray(body.sectors)
-        ? body.sectors
-        : typeof body.sectors === "string" && body.sectors.trim().length > 0
-          ? body.sectors.split(",").map((s) => s.trim()).filter(Boolean)
-          : null;
+    // Persist what the scorer actually saw (post-alias resolution), not the
+    // raw body — so the ephemeral row faithfully reflects the scored input.
+    const sectorsJson = Array.isArray(startup.sectors)
+      ? startup.sectors
+      : typeof startup.sectors === "string" && startup.sectors.trim().length > 0
+        ? startup.sectors.split(",").map((s) => s.trim()).filter(Boolean)
+        : null;
 
     const raiseNum =
-      typeof body.raise_amount === "number"
-        ? body.raise_amount
-        : body.raise_amount
-          ? Number(body.raise_amount)
+      typeof startup.raise_amount === "number"
+        ? startup.raise_amount
+        : startup.raise_amount
+          ? Number(startup.raise_amount)
           : null;
 
     const { data: profileRow, error: profErr } = await client
       .from("startup_profiles")
       .insert({
         startup_name: `simple_v1_run_${Date.now()}`,
-        stage: body.stage ?? null,
-        country: body.country ?? null,
-        region: body.region ?? null,
+        stage: startup.stage ?? null,
+        country: startup.country ?? null,
+        region: startup.region ?? null,
         sectors: sectorsJson,
         fundraising_target_usd:
           raiseNum != null && Number.isFinite(raiseNum) ? raiseNum : null,
