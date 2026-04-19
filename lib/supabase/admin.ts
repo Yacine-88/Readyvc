@@ -13,19 +13,26 @@ let cached: SupabaseClient | null = null;
 export function getSupabaseAdmin(): SupabaseClient {
   if (cached) return cached;
 
+  // Accept both our manually-named vars and the names set automatically by
+  // the Vercel ↔ Supabase integration, so the same code works across local,
+  // preview, and production without renaming env vars in the dashboard.
   const url =
+    process.env.NEXT_PUBLIC_VCREADY_SUPABASE_URL ??
     process.env.NEXT_PUBLIC_SUPABASE_URL ??
     process.env.SUPABASE_URL ??
     "";
   const serviceKey =
     process.env.SUPABASE_SERVICE_ROLE_KEY ??
     process.env.SUPABASE_SERVICE_KEY ??
+    process.env.SUPABASE_SECRET_KEY ??
     "";
 
   if (!url || !serviceKey) {
     throw new Error(
-      "Supabase admin client requires NEXT_PUBLIC_SUPABASE_URL (or SUPABASE_URL) " +
-        "and SUPABASE_SERVICE_ROLE_KEY env vars."
+      "Supabase admin client requires a URL " +
+        "(NEXT_PUBLIC_VCREADY_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_URL, or SUPABASE_URL) " +
+        "and a service key " +
+        "(SUPABASE_SERVICE_ROLE_KEY, SUPABASE_SERVICE_KEY, or SUPABASE_SECRET_KEY)."
     );
   }
 
