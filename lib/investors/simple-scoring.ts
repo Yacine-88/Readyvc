@@ -191,16 +191,9 @@ function canonicalArray(values: string[], map: Record<string, string>): string[]
 // ---------------------------------------------------------------------------
 // Debug instrumentation
 // ---------------------------------------------------------------------------
-// The route calls `resetSimpleScoringDebug()` at the start of each request;
-// `scoreInvestor` then logs a detailed trace for the first N investors of
-// that request. Output goes to console.log so it appears in Vercel logs.
-
-let __debugRemaining = 0;
-const __DEBUG_DEFAULT = 5;
-
-export function resetSimpleScoringDebug(limit: number = __DEBUG_DEFAULT): void {
-  __debugRemaining = Math.max(0, limit | 0);
-}
+// Logging is UNCONDITIONAL in `scoreInvestor` — every investor scored emits
+// a trace line. No counter, no reset, no gating. If log volume becomes a
+// concern, reintroduce a limit at the call site (not in the scorer).
 
 // ---------------------------------------------------------------------------
 // Individual match functions
@@ -343,37 +336,33 @@ export function scoreInvestor(
     (r): r is string => !!r
   );
 
-  // Debug trace — first N investors per request (configured by
-  // `resetSimpleScoringDebug()` in the route handler).
-  if (__debugRemaining > 0) {
-    __debugRemaining -= 1;
-    console.log("[simple-scoring] trace", {
-      startup: {
-        stage: startup.stage,
-        sectors: startup.sectors,
-        country: startup.country,
-        region: startup.region,
-        raise_amount: startup.raise_amount,
-      },
-      investor: {
-        investor_name: investor.investor_name,
-        stage_focus: investor.stage_focus,
-        sector_focus: investor.sector_focus,
-        geo_focus: investor.geo_focus,
-        hq_country: investor.hq_country,
-        hq_region: investor.hq_region,
-        check_min_usd: investor.check_min_usd,
-        check_max_usd: investor.check_max_usd,
-      },
-      breakdown: {
-        stage: stage.score,
-        sector: sector.score,
-        geo: geo.score,
-        check: check.score,
-      },
-      reasons,
-    });
-  }
+  // Unconditional trace for every investor scored.
+  console.log("[simple-scoring] trace", {
+    startup: {
+      stage: startup.stage,
+      sectors: startup.sectors,
+      country: startup.country,
+      region: startup.region,
+      raise_amount: startup.raise_amount,
+    },
+    investor: {
+      investor_name: investor.investor_name,
+      stage_focus: investor.stage_focus,
+      sector_focus: investor.sector_focus,
+      geo_focus: investor.geo_focus,
+      hq_country: investor.hq_country,
+      hq_region: investor.hq_region,
+      check_min_usd: investor.check_min_usd,
+      check_max_usd: investor.check_max_usd,
+    },
+    breakdown: {
+      stage: stage.score,
+      sector: sector.score,
+      geo: geo.score,
+      check: check.score,
+    },
+    reasons,
+  });
 
   return {
     score: Math.round(total * 100) / 100,
