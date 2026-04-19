@@ -26,6 +26,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
   scoreInvestor,
+  resetSimpleScoringDebug,
   type SimpleInvestor,
   type SimpleStartupInput,
 } from "@/lib/investors/simple-scoring";
@@ -147,6 +148,9 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+
+  // Emit a detailed trace for the first 5 investors of this request.
+  resetSimpleScoringDebug(5);
 
   const scored: ScoredRow[] = ((investors ?? []) as unknown as SimpleInvestor[])
     .map((inv) => {

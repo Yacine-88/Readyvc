@@ -124,6 +124,85 @@ function toNumber(v: unknown): number | null {
 }
 
 // ---------------------------------------------------------------------------
+// Synonym canonicalization
+// ---------------------------------------------------------------------------
+// Investors and founders use different vocabularies for the same concept
+// ("preseed" vs "pre-seed", "financial services" vs "fintech", "pan-africa"
+// vs "africa"). Canonicalize both sides before comparing.
+//
+// Keys are LOWERCASED input forms (post-`norm`). Values are the canonical
+// token we compare against. Extend freely — unmatched inputs pass through.
+
+const STAGE_SYNONYMS: Record<string, string> = {
+  "preseed": "pre-seed",
+  "pre seed": "pre-seed",
+  "pre_seed": "pre-seed",
+  "pre-seed": "pre-seed",
+  "seed": "seed",
+  "seed stage": "seed",
+  "series a": "series a",
+  "series-a": "series a",
+  "series_a": "series a",
+  "series b": "series b",
+  "series-b": "series b",
+  "series_b": "series b",
+};
+
+const SECTOR_SYNONYMS: Record<string, string> = {
+  "fintech": "fintech",
+  "fin tech": "fintech",
+  "fin-tech": "fintech",
+  "financial services": "fintech",
+  "payments": "fintech",
+  "banking": "fintech",
+  "saas": "saas",
+  "software": "saas",
+  "b2b software": "saas",
+  "b2b saas": "saas",
+  "healthtech": "healthtech",
+  "health tech": "healthtech",
+  "digital health": "healthtech",
+  "healthcare tech": "healthtech",
+  "healthcare": "healthtech",
+};
+
+const GEO_SYNONYMS: Record<string, string> = {
+  "africa": "africa",
+  "pan africa": "africa",
+  "pan-africa": "africa",
+  "pan_africa": "africa",
+  "mena": "mena",
+  "middle east and north africa": "mena",
+  "middle east & north africa": "mena",
+  "middle east": "mena",
+  "north africa": "maghreb",
+  "maghreb": "maghreb",
+};
+
+function canonical(value: string, map: Record<string, string>): string {
+  if (!value) return value;
+  return map[value] ?? value;
+}
+
+function canonicalArray(values: string[], map: Record<string, string>): string[] {
+  return values.map((v) => canonical(v, map));
+}
+
+// ---------------------------------------------------------------------------
+// Debug instrumentation
+// ---------------------------------------------------------------------------
+// The route calls `resetSimpleScoringDebug()` at the start of each request;
+// `scoreInvestor` then logs a detailed trace for the first N investors of
+// that request. Output goes to console.log so it appears in Vercel logs.
+
+let __debugRemaining = 0;
+const __DEBUG_DEFAULT = 5;
+
+export function resetSimpleScoringDebug(limit: number = __DEBUG_DEFAULT): void {
+  __debugRemaining = Math.max(0, limit | 0);
+}
+
+// ---------------------------------------------------------------------------
 // Individual match functions
 // ---------------------------------------------------------------------------
 
@@ -131,13 +210,13 @@ export function matchStage(
   investor: SimpleInvestor,
   startup: SimpleStartupInput
 ): { score: number; reason?: string } {
-  const stage = norm(startup.stage);
+  const stage = canonical(norm(startup.stage), STAGE_SYNONYMS);
   if (!stage) return { score: 0 };
 
   // Prefer stage_focus; fall back to primary_stage_focus / can_also_enter_at if present.
-  const explicit = toArray(investor.stage_focus);
-  const primary = toArray(investor.primary_stage_focus);
-  const also = toArray(investor.can_also_enter_at);
+  const explicit = canonicalArray(toArray(investor.stage_focus), STAGE_SYNONYMS);
+  const primary = canonicalArray(toArray(investor.primary_stage_focus), STAGE_SYNONYMS);
+  const also = canonicalArray(toArray(investor.can_also_enter_at), STAGE_SYNONYMS);
 
   if (anyPartialMatch(explicit, stage) || anyPartialMatch(primary, stage)) {
     return { score: 40, reason: `stage match: ${stage}` };
@@ -152,9 +231,9 @@ export function matchSector(
   investor: SimpleInvestor,
   startup: SimpleStartupInput
 ): { score: number; reason?: string } {
-  const startupSectors = toArray(startup.sectors);
-  const invSectors = toArray(investor.sector_focus);
-  const invFocus = toArray(investor.investment_focus);
+  const startupSectors = canonicalArray(toArray(startup.sectors), SECTOR_SYNONYMS);
+  const invSectors = canonicalArray(toArray(investor.sector_focus), SECTOR_SYNONYMS);
+  const invFocus = canonicalArray(toArray(investor.investment_focus), SECTOR_SYNONYMS);
 
   if (startupSectors.length === 0 || (invSectors.length === 0 && invFocus.length === 0)) {
     return { score: 0 };
@@ -173,11 +252,11 @@ export function matchGeo(
   investor: SimpleInvestor,
   startup: SimpleStartupInput
 ): { score: number; reason?: string } {
-  const country = norm(startup.country);
-  const region = norm(startup.region);
-  const invGeo = toArray(investor.geo_focus);
-  const hqCountry = norm(investor.hq_country);
-  const hqRegion = norm(investor.hq_region);
+  const country = canonical(norm(startup.country), GEO_SYNONYMS);
+  const region = canonical(norm(startup.region), GEO_SYNONYMS);
+  const invGeo = canonicalArray(toArray(investor.geo_focus), GEO_SYNONYMS);
+  const hqCountry = canonical(norm(investor.hq_country), GEO_SYNONYMS);
+  const hqRegion = canonical(norm(investor.hq_region), GEO_SYNONYMS);
 
   // Primary: explicit geo_focus when present.
   if (invGeo.length > 0) {
@@ -263,6 +342,38 @@ export function scoreInvestor(
   const reasons = [stage.reason, sector.reason, geo.reason, check.reason].filter(
     (r): r is string => !!r
   );
+
+  // Debug trace — first N investors per request (configured by
+  // `resetSimpleScoringDebug()` in the route handler).
+  if (__debugRemaining > 0) {
+    __debugRemaining -= 1;
+    console.log("[simple-scoring] trace", {
+      startup: {
+        stage: startup.stage,
+        sectors: startup.sectors,
+        country: startup.country,
+        region: startup.region,
+        raise_amount: startup.raise_amount,
+      },
+      investor: {
+        investor_name: investor.investor_name,
+        stage_focus: investor.stage_focus,
+        sector_focus: investor.sector_focus,
+        geo_focus: investor.geo_focus,
+        hq_country: investor.hq_country,
+        hq_region: investor.hq_region,
+        check_min_usd: investor.check_min_usd,
+        check_max_usd: investor.check_max_usd,
+      },
+      breakdown: {
+        stage: stage.score,
+        sector: sector.score,
+        geo: geo.score,
+        check: check.score,
+      },
+      reasons,
+    });
+  }
 
   return {
     score: Math.round(total * 100) / 100,
