@@ -26,6 +26,13 @@
  * existing engine.
  */
 
+const SCORE = {
+  GEO_FOCUS_HIT: 20,
+  HQ_REGION_FALLBACK: 10,
+  HQ_COUNTRY_FALLBACK: 10,
+  HQ_SECONDARY_SIGNAL: 10,
+} as const;
+
 export interface SimpleInvestor {
   id: string;
   investor_name: string | null;
@@ -175,30 +182,31 @@ export function matchGeo(
   // Primary: explicit geo_focus when present.
   if (invGeo.length > 0) {
     if (country && anyPartialMatch(invGeo, country)) {
-      return { score: 20, reason: `geo focus: ${country}` };
+      return { score: SCORE.GEO_FOCUS_HIT, reason: `geo focus: ${country}` };
     }
     if (region && anyPartialMatch(invGeo, region)) {
-      return { score: 20, reason: `geo focus: ${region}` };
+      return { score: SCORE.GEO_FOCUS_HIT, reason: `geo focus: ${region}` };
     }
     // geo_focus is defined but doesn't match — fall through to HQ as a
     // secondary, reduced-confidence signal.
     if (country && hqCountry && partialMatch(country, hqCountry)) {
-      return { score: 10, reason: `hq country: ${hqCountry}` };
+      return { score: SCORE.HQ_SECONDARY_SIGNAL, reason: `hq country: ${hqCountry}` };
     }
     if (region && hqRegion && partialMatch(region, hqRegion)) {
-      return { score: 10, reason: `hq region: ${hqRegion}` };
+      return { score: SCORE.HQ_SECONDARY_SIGNAL, reason: `hq region: ${hqRegion}` };
     }
     return { score: 0 };
   }
 
-  // Fallback: geo_focus is null/empty — treat HQ as the declared geo and
-  // award the full geo score on match. Region match is ranked first so
-  // that regional alignment (e.g. "europe") beats exact-country signal.
+  // Fallback: geo_focus is null/empty — HQ is the only geo signal we have.
+  // Treat as a weak signal (10), not a strong one (20), to avoid elevating
+  // investors whose enrichment is simply missing above investors with a
+  // real geo_focus match.
   if (region && hqRegion && partialMatch(region, hqRegion)) {
-    return { score: 20, reason: `hq region (fallback): ${hqRegion}` };
+    return { score: SCORE.HQ_REGION_FALLBACK, reason: `hq region (fallback): ${hqRegion}` };
   }
   if (country && hqCountry && partialMatch(country, hqCountry)) {
-    return { score: 20, reason: `hq country (fallback): ${hqCountry}` };
+    return { score: SCORE.HQ_COUNTRY_FALLBACK, reason: `hq country (fallback): ${hqCountry}` };
   }
   return { score: 0 };
 }
