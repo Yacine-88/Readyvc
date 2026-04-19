@@ -73,12 +73,22 @@ const GEO_PARENTS: Record<string, string[]> = {
   namibia: ["southern africa", "africa"],
   "saudi arabia": ["middle east", "mena"],
   uae: ["middle east", "mena"],
-  "u.a.e.": ["middle east", "mena"],
   qatar: ["middle east", "mena"],
   bahrain: ["middle east", "mena"],
   oman: ["middle east", "mena"],
   kuwait: ["middle east", "mena"],
   "middle east": ["mena"],
+  // North America / Europe
+  usa: ["north america"],
+  canada: ["north america"],
+  mexico: ["north america", "latin america"],
+  uk: ["europe"],
+  france: ["europe"],
+  germany: ["europe"],
+  italy: ["europe"],
+  spain: ["europe"],
+  netherlands: ["europe"],
+  switzerland: ["europe"],
 };
 
 function geoParents(value: string): string[] {
@@ -224,22 +234,46 @@ const SECTOR_SYNONYMS: Record<string, string> = {
 };
 
 const GEO_SYNONYMS: Record<string, string> = {
+  // Africa-wide
   "africa": "africa",
   "pan africa": "africa",
   "pan-africa": "africa",
   "pan_africa": "africa",
+  // Global
   "worldwide": "global",
   "global": "global",
+  // MENA
   "mena": "mena",
   "middle east and north africa": "mena",
   "middle east & north africa": "mena",
+  // Middle East (distinct canonical from MENA)
   "middle east": "middle east",
+  "middle-east": "middle east",
+  "middle_east": "middle east",
+  // North Africa + aliases
   "north africa": "north africa",
+  "northern africa": "north africa",
   "maghreb": "north africa",
+  // West / East / Southern / Central Africa + "-ern" aliases
   "west africa": "west africa",
+  "western africa": "west africa",
   "east africa": "east africa",
+  "eastern africa": "east africa",
   "southern africa": "southern africa",
   "central africa": "central africa",
+  // Common country-code shorthands seen in imported data
+  "u.s.": "usa",
+  "u.s.a.": "usa",
+  "us": "usa",
+  "united states": "usa",
+  "united states of america": "usa",
+  "usa": "usa",
+  "u.k.": "uk",
+  "united kingdom": "uk",
+  "uk": "uk",
+  "u.a.e.": "uae",
+  "united arab emirates": "uae",
+  "uae": "uae",
 };
 
 function canonical(value: string, map: Record<string, string>): string {
