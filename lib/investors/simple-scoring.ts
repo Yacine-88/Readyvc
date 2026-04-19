@@ -10,8 +10,8 @@
  * Operates on the REAL `investors` schema columns:
  *   id, investor_name,
  *   hq_country, hq_region,
- *   explicit_geo_focus, explicit_stage_focus, explicit_sector_focus,
- *   explicit_check_min, explicit_check_max
+ *   geo_focus, stage_focus, sector_focus,
+ *   check_min_usd, check_max_usd
  *
  * Optional enrichment fields (lead_follow_preference, primary_stage_focus,
  * can_also_enter_at, initial_check_size, large_check_size,
@@ -31,11 +31,11 @@ export interface SimpleInvestor {
   investor_name: string | null;
   hq_country?: string | null;
   hq_region?: string | null;
-  explicit_geo_focus?: unknown;
-  explicit_stage_focus?: unknown;
-  explicit_sector_focus?: unknown;
-  explicit_check_min?: number | string | null;
-  explicit_check_max?: number | string | null;
+  geo_focus?: unknown;
+  stage_focus?: unknown;
+  sector_focus?: unknown;
+  check_min_usd?: number | string | null;
+  check_max_usd?: number | string | null;
   // Optional enrichment — ignored if absent
   lead_follow_preference?: unknown;
   primary_stage_focus?: unknown;
@@ -127,8 +127,8 @@ export function matchStage(
   const stage = norm(startup.stage);
   if (!stage) return { score: 0 };
 
-  // Prefer explicit_stage_focus; fall back to primary_stage_focus / can_also_enter_at if present.
-  const explicit = toArray(investor.explicit_stage_focus);
+  // Prefer stage_focus; fall back to primary_stage_focus / can_also_enter_at if present.
+  const explicit = toArray(investor.stage_focus);
   const primary = toArray(investor.primary_stage_focus);
   const also = toArray(investor.can_also_enter_at);
 
@@ -146,7 +146,7 @@ export function matchSector(
   startup: SimpleStartupInput
 ): { score: number; reason?: string } {
   const startupSectors = toArray(startup.sectors);
-  const invSectors = toArray(investor.explicit_sector_focus);
+  const invSectors = toArray(investor.sector_focus);
   const invFocus = toArray(investor.investment_focus);
 
   if (startupSectors.length === 0 || (invSectors.length === 0 && invFocus.length === 0)) {
@@ -168,7 +168,7 @@ export function matchGeo(
 ): { score: number; reason?: string } {
   const country = norm(startup.country);
   const region = norm(startup.region);
-  const invGeo = toArray(investor.explicit_geo_focus);
+  const invGeo = toArray(investor.geo_focus);
   const hqCountry = norm(investor.hq_country);
   const hqRegion = norm(investor.hq_region);
 
@@ -194,8 +194,8 @@ export function matchCheckSize(
   const amount = toNumber(startup.raise_amount);
   if (amount == null || amount <= 0) return { score: 0 };
 
-  const min = toNumber(investor.explicit_check_min);
-  const max = toNumber(investor.explicit_check_max);
+  const min = toNumber(investor.check_min_usd);
+  const max = toNumber(investor.check_max_usd);
 
   // Fallback: optional enrichment
   const initial = toNumber(investor.initial_check_size);

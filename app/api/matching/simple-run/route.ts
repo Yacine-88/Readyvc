@@ -85,11 +85,11 @@ export async function POST(request: Request) {
         "investor_name",
         "hq_country",
         "hq_region",
-        "explicit_geo_focus",
-        "explicit_stage_focus",
-        "explicit_sector_focus",
-        "explicit_check_min",
-        "explicit_check_max",
+        "geo_focus",
+        "stage_focus",
+        "sector_focus",
+        "check_min_usd",
+        "check_max_usd",
       ].join(", ")
     );
 
