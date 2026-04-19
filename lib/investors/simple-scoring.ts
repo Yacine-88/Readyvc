@@ -27,11 +27,67 @@
  */
 
 const SCORE = {
-  GEO_FOCUS_HIT: 20,
-  HQ_REGION_FALLBACK: 10,
-  HQ_COUNTRY_FALLBACK: 10,
-  HQ_SECONDARY_SIGNAL: 10,
+  GEO_EXACT: 20,
+  GEO_SUBREGION: 20,         // startup country → investor subregion ("algeria" → "north africa")
+  GEO_REGIONAL: 15,          // subregion → region ("north africa" → "africa" / "mena")
+  GEO_BROAD: 10,             // generic africa-wide without subregion signal
+  GEO_GLOBAL: 5,             // investor declares global / worldwide
+  HQ_FALLBACK_MAX: 10,       // geo_focus null → HQ fallback, capped at 10
 } as const;
+
+export type GeoMatchType =
+  | "exact"
+  | "regional"
+  | "global"
+  | "fallback"
+  | "none";
+
+// Geographic hierarchy. Keys are canonical geo tokens; values are the
+// parent regions they belong to (ordered: nearest → broadest).
+// Used so a startup in "algeria" can match an investor focused on
+// "north africa" / "africa" / "mena", etc.
+const GEO_PARENTS: Record<string, string[]> = {
+  algeria: ["north africa", "africa", "mena"],
+  morocco: ["north africa", "africa", "mena"],
+  tunisia: ["north africa", "africa", "mena"],
+  egypt: ["north africa", "africa", "mena"],
+  libya: ["north africa", "africa", "mena"],
+  "north africa": ["africa", "mena"],
+  "west africa": ["africa"],
+  "east africa": ["africa"],
+  "southern africa": ["africa"],
+  "central africa": ["africa"],
+  nigeria: ["west africa", "africa"],
+  ghana: ["west africa", "africa"],
+  senegal: ["west africa", "africa"],
+  "cote d'ivoire": ["west africa", "africa"],
+  "ivory coast": ["west africa", "africa"],
+  kenya: ["east africa", "africa"],
+  tanzania: ["east africa", "africa"],
+  uganda: ["east africa", "africa"],
+  ethiopia: ["east africa", "africa"],
+  rwanda: ["east africa", "africa"],
+  "south africa": ["southern africa", "africa"],
+  zimbabwe: ["southern africa", "africa"],
+  botswana: ["southern africa", "africa"],
+  namibia: ["southern africa", "africa"],
+  "saudi arabia": ["middle east", "mena"],
+  uae: ["middle east", "mena"],
+  "u.a.e.": ["middle east", "mena"],
+  qatar: ["middle east", "mena"],
+  bahrain: ["middle east", "mena"],
+  oman: ["middle east", "mena"],
+  kuwait: ["middle east", "mena"],
+  "middle east": ["mena"],
+};
+
+function geoParents(value: string): string[] {
+  return GEO_PARENTS[value] ?? [];
+}
+
+function isGlobal(v: string): boolean {
+  return v === "global" || v === "worldwide";
+}
 
 export interface SimpleInvestor {
   id: string;
@@ -72,6 +128,7 @@ export interface SimpleMatchResult {
   score: number;
   reasons: string[];
   breakdown: SimpleMatchBreakdown;
+  geo_match_type: GeoMatchType;
 }
 
 // ---------------------------------------------------------------------------
@@ -171,12 +228,18 @@ const GEO_SYNONYMS: Record<string, string> = {
   "pan africa": "africa",
   "pan-africa": "africa",
   "pan_africa": "africa",
+  "worldwide": "global",
+  "global": "global",
   "mena": "mena",
   "middle east and north africa": "mena",
   "middle east & north africa": "mena",
-  "middle east": "mena",
-  "north africa": "maghreb",
-  "maghreb": "maghreb",
+  "middle east": "middle east",
+  "north africa": "north africa",
+  "maghreb": "north africa",
+  "west africa": "west africa",
+  "east africa": "east africa",
+  "southern africa": "southern africa",
+  "central africa": "central africa",
 };
 
 function canonical(value: string, map: Record<string, string>): string {
@@ -244,43 +307,104 @@ export function matchSector(
 export function matchGeo(
   investor: SimpleInvestor,
   startup: SimpleStartupInput
-): { score: number; reason?: string } {
+): { score: number; reason?: string; match_type: GeoMatchType } {
   const country = canonical(norm(startup.country), GEO_SYNONYMS);
   const region = canonical(norm(startup.region), GEO_SYNONYMS);
   const invGeo = canonicalArray(toArray(investor.geo_focus), GEO_SYNONYMS);
   const hqCountry = canonical(norm(investor.hq_country), GEO_SYNONYMS);
   const hqRegion = canonical(norm(investor.hq_region), GEO_SYNONYMS);
 
-  // Primary: explicit geo_focus when present.
+  // The startup's declared territory, most-specific first.
+  const startupTargets = [country, region].filter(Boolean);
+
+  // ---- Path 1: explicit geo_focus present → use ONLY geo_focus. ----
   if (invGeo.length > 0) {
-    if (country && anyPartialMatch(invGeo, country)) {
-      return { score: SCORE.GEO_FOCUS_HIT, reason: `geo focus: ${country}` };
+    // 1a. Exact match on startup's own country or region.
+    for (const t of startupTargets) {
+      if (invGeo.includes(t)) {
+        return { score: SCORE.GEO_EXACT, reason: `geo exact: ${t}`, match_type: "exact" };
+      }
     }
-    if (region && anyPartialMatch(invGeo, region)) {
-      return { score: SCORE.GEO_FOCUS_HIT, reason: `geo focus: ${region}` };
+
+    // 1b. Investor focus covers a parent of the startup's territory.
+    //     e.g. startup country = algeria → invGeo contains "north africa" (20)
+    //     or startup region  = north africa → invGeo contains "mena" (15)
+    //     or invGeo contains "africa" (broader → 15 if coming from a subregion,
+    //     else 10).
+    for (const t of startupTargets) {
+      const parents = geoParents(t);
+      for (const p of parents) {
+        if (!invGeo.includes(p)) continue;
+        // Immediate subregion hit (e.g. country → subregion).
+        if (
+          p === "north africa" ||
+          p === "west africa" ||
+          p === "east africa" ||
+          p === "southern africa" ||
+          p === "central africa" ||
+          p === "middle east"
+        ) {
+          return { score: SCORE.GEO_SUBREGION, reason: `geo subregion: ${p}`, match_type: "exact" };
+        }
+        if (p === "mena") {
+          return { score: SCORE.GEO_REGIONAL, reason: `geo regional: mena`, match_type: "regional" };
+        }
+        if (p === "africa") {
+          // If the startup itself is a subregion, africa-wide is a regional signal.
+          const fromSubregion =
+            t === "north africa" ||
+            t === "west africa" ||
+            t === "east africa" ||
+            t === "southern africa" ||
+            t === "central africa";
+          return {
+            score: fromSubregion ? SCORE.GEO_REGIONAL : SCORE.GEO_BROAD,
+            reason: `geo regional: africa`,
+            match_type: "regional",
+          };
+        }
+      }
     }
-    // geo_focus is defined but doesn't match — fall through to HQ as a
-    // secondary, reduced-confidence signal.
-    if (country && hqCountry && partialMatch(country, hqCountry)) {
-      return { score: SCORE.HQ_SECONDARY_SIGNAL, reason: `hq country: ${hqCountry}` };
+
+    // 1c. Investor focus is a child of the startup's territory.
+    //     e.g. startup = africa, invGeo contains "north africa" → partial.
+    for (const t of startupTargets) {
+      for (const g of invGeo) {
+        if (geoParents(g).includes(t)) {
+          return {
+            score: SCORE.GEO_REGIONAL,
+            reason: `geo subset: ${g} ⊂ ${t}`,
+            match_type: "regional",
+          };
+        }
+      }
     }
-    if (region && hqRegion && partialMatch(region, hqRegion)) {
-      return { score: SCORE.HQ_SECONDARY_SIGNAL, reason: `hq region: ${hqRegion}` };
+
+    // 1d. Global investor.
+    if (invGeo.some(isGlobal)) {
+      return { score: SCORE.GEO_GLOBAL, reason: "geo global", match_type: "global" };
     }
-    return { score: 0 };
+
+    // geo_focus present but no match → 0. NO HQ secondary fallback.
+    return { score: 0, match_type: "none" };
   }
 
-  // Fallback: geo_focus is null/empty — HQ is the only geo signal we have.
-  // Treat as a weak signal (10), not a strong one (20), to avoid elevating
-  // investors whose enrichment is simply missing above investors with a
-  // real geo_focus match.
+  // ---- Path 2: geo_focus null/empty → HQ fallback, MAX +10. ----
   if (region && hqRegion && partialMatch(region, hqRegion)) {
-    return { score: SCORE.HQ_REGION_FALLBACK, reason: `hq region (fallback): ${hqRegion}` };
+    return {
+      score: SCORE.HQ_FALLBACK_MAX,
+      reason: `hq region (fallback): ${hqRegion}`,
+      match_type: "fallback",
+    };
   }
   if (country && hqCountry && partialMatch(country, hqCountry)) {
-    return { score: SCORE.HQ_COUNTRY_FALLBACK, reason: `hq country (fallback): ${hqCountry}` };
+    return {
+      score: SCORE.HQ_FALLBACK_MAX,
+      reason: `hq country (fallback): ${hqCountry}`,
+      match_type: "fallback",
+    };
   }
-  return { score: 0 };
+  return { score: 0, match_type: "none" };
 }
 
 export function matchCheckSize(
@@ -361,6 +485,7 @@ export function scoreInvestor(
       geo: geo.score,
       check: check.score,
     },
+    geo_match_type: geo.match_type,
     reasons,
   });
 
@@ -373,5 +498,6 @@ export function scoreInvestor(
       geo: geo.score,
       check: check.score,
     },
+    geo_match_type: geo.match_type,
   };
 }

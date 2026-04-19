@@ -28,6 +28,7 @@ import {
   scoreInvestor,
   type SimpleInvestor,
   type SimpleStartupInput,
+  type GeoMatchType,
 } from "@/lib/investors/simple-scoring";
 
 export const runtime = "nodejs";
@@ -69,7 +70,18 @@ interface ScoredRow {
   score: number;
   reasons: string[];
   breakdown: { stage: number; sector: number; geo: number; check: number };
+  geo_match_type: GeoMatchType;
 }
+
+// Tiebreaker priority when two investors have equal total scores.
+// Higher = better. exact > regional > global > fallback > none.
+const GEO_TIEBREAK: Record<GeoMatchType, number> = {
+  exact: 4,
+  regional: 3,
+  global: 2,
+  fallback: 1,
+  none: 0,
+};
 
 const SCORING_VERSION = "simple_v1";
 const EPHEMERAL_SENTINEL = "__simple_v1_ephemeral__";
@@ -157,9 +169,14 @@ export async function POST(request: Request) {
         score: s.score,
         reasons: s.reasons,
         breakdown: s.breakdown,
+        geo_match_type: s.geo_match_type,
       };
     })
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      // Geo-precision tiebreaker: exact > regional > global > fallback > none.
+      return GEO_TIEBREAK[b.geo_match_type] - GEO_TIEBREAK[a.geo_match_type];
+    });
 
   const publicData = scored.map((s) => ({
     investor_name: s.investor_name,
