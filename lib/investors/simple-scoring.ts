@@ -172,17 +172,33 @@ export function matchGeo(
   const hqCountry = norm(investor.hq_country);
   const hqRegion = norm(investor.hq_region);
 
-  if (country && anyPartialMatch(invGeo, country)) {
-    return { score: 20, reason: `geo focus: ${country}` };
+  // Primary: explicit geo_focus when present.
+  if (invGeo.length > 0) {
+    if (country && anyPartialMatch(invGeo, country)) {
+      return { score: 20, reason: `geo focus: ${country}` };
+    }
+    if (region && anyPartialMatch(invGeo, region)) {
+      return { score: 20, reason: `geo focus: ${region}` };
+    }
+    // geo_focus is defined but doesn't match — fall through to HQ as a
+    // secondary, reduced-confidence signal.
+    if (country && hqCountry && partialMatch(country, hqCountry)) {
+      return { score: 10, reason: `hq country: ${hqCountry}` };
+    }
+    if (region && hqRegion && partialMatch(region, hqRegion)) {
+      return { score: 10, reason: `hq region: ${hqRegion}` };
+    }
+    return { score: 0 };
   }
-  if (region && anyPartialMatch(invGeo, region)) {
-    return { score: 20, reason: `geo focus: ${region}` };
+
+  // Fallback: geo_focus is null/empty — treat HQ as the declared geo and
+  // award the full geo score on match. Region match is ranked first so
+  // that regional alignment (e.g. "europe") beats exact-country signal.
+  if (region && hqRegion && partialMatch(region, hqRegion)) {
+    return { score: 20, reason: `hq region (fallback): ${hqRegion}` };
   }
   if (country && hqCountry && partialMatch(country, hqCountry)) {
-    return { score: 10, reason: `hq country: ${hqCountry}` };
-  }
-  if (region && hqRegion && partialMatch(region, hqRegion)) {
-    return { score: 10, reason: `hq region: ${hqRegion}` };
+    return { score: 20, reason: `hq country (fallback): ${hqCountry}` };
   }
   return { score: 0 };
 }
