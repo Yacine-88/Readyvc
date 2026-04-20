@@ -140,6 +140,14 @@ export async function runMatching(
     sectors: p.sectors ?? null,
     country: p.country ?? null,
     region: p.region ?? null,
+    // identity — persisted in ephemeral row so the results page displays
+    // the founder's actual data instead of a generated run name.
+    startup_name: p.startup_name ?? null,
+    description: p.description ?? null,
+    business_model: p.business_model ?? null,
+    target_markets: p.target_markets ?? null,
+    valuation_estimate: p.valuation_estimate ?? null,
+    fundraising_target_usd: p.fundraising_target_usd ?? null,
   };
   const res = await fetch(`/api/matching/simple-run`, {
     method: "POST",

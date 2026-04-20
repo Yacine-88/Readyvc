@@ -150,6 +150,100 @@ export function savedMatchToListItem(row: SavedMatchRow): MatchListItem {
   };
 }
 
+// ─── Reasoning parser ───────────────────────────────────────────────────────
+// simple-run writes reasoning as `[fit_label] r1 | r2 | r3 || warnings: w1, w2`.
+// This is the inverse — purely client-side, no schema change.
+
+export type RationaleTone = "positive" | "neutral" | "info" | "warning";
+
+export interface Rationale {
+  label: string;
+  tone: RationaleTone;
+}
+
+export interface ParsedReasoning {
+  fit_label: string | null;
+  rationales: Rationale[];
+  warnings: string[];
+}
+
+function titleCase(s: string): string {
+  return s
+    .split(/\s+/)
+    .map((w) => (w.length ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(" ");
+}
+
+function reasonToRationale(raw: string): Rationale | null {
+  const r = raw.trim().toLowerCase();
+  if (!r) return null;
+  const tail = (k: string) => raw.split(":").slice(1).join(":").trim() || k;
+
+  if (r.startsWith("stage match"))
+    return { label: `Stage match: ${titleCase(tail("stage"))}`, tone: "positive" };
+  if (r.startsWith("stage adjacent"))
+    return { label: `Stage adjacent: ${titleCase(tail("stage"))}`, tone: "neutral" };
+  if (r.startsWith("sector match"))
+    return { label: `Sector fit: ${titleCase(tail("sector"))}`, tone: "positive" };
+  if (r.startsWith("geo exact") || r.startsWith("geo subregion"))
+    return { label: `Geo: ${titleCase(tail("match"))}`, tone: "positive" };
+  if (r.startsWith("geo regional") || r.startsWith("geo subset"))
+    return { label: `Geo: ${titleCase(tail("regional"))}`, tone: "neutral" };
+  if (r === "geo global") return { label: "Global investor", tone: "info" };
+  if (r.startsWith("hq"))
+    return { label: `HQ proximity: ${titleCase(tail("hq"))}`, tone: "neutral" };
+  if (r.startsWith("check in range"))
+    return { label: "Check size fit", tone: "positive" };
+  if (r.startsWith("check near range"))
+    return { label: "Check near range", tone: "neutral" };
+  if (r.includes("generalist")) return { label: "Generalist investor", tone: "info" };
+  if (r.includes("sharp")) return { label: "Sharp profile", tone: "positive" };
+  // Fallback: normalize first clause.
+  return { label: titleCase(raw.split(":")[0].trim()), tone: "neutral" };
+}
+
+export function parseReasoning(raw: string | null | undefined): ParsedReasoning {
+  if (!raw) return { fit_label: null, rationales: [], warnings: [] };
+  const fitMatch = raw.match(/^\[([^\]]+)\]\s*/);
+  const fit_label = fitMatch ? fitMatch[1].trim().toLowerCase() : null;
+  const rest = fitMatch ? raw.slice(fitMatch[0].length) : raw;
+  const [reasonsPart, warningsPart] = rest.split(/\s*\|\|\s*warnings:\s*/i);
+  const reasonTokens = (reasonsPart ?? "")
+    .split(/\s*\|\s*/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+  const rationales = reasonTokens
+    .map(reasonToRationale)
+    .filter((x): x is Rationale => x !== null);
+  const warnings = (warningsPart ?? "")
+    .split(/,\s*/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+  return { fit_label, rationales, warnings };
+}
+
+export const FIT_LABEL_DISPLAY: Record<string, { text: string; tone: RationaleTone }> = {
+  excellent_fit: { text: "Excellent fit", tone: "positive" },
+  strong_fit: { text: "Strong fit", tone: "positive" },
+  good_fit: { text: "Good fit", tone: "positive" },
+  partial_fit: { text: "Partial fit", tone: "neutral" },
+  weak_fit: { text: "Weak fit", tone: "warning" },
+  // tolerance for alternate casings
+  excellent: { text: "Excellent fit", tone: "positive" },
+  strong: { text: "Strong fit", tone: "positive" },
+  good: { text: "Good fit", tone: "positive" },
+  partial: { text: "Partial fit", tone: "neutral" },
+  weak: { text: "Weak fit", tone: "warning" },
+};
+
+export function fitLabelFromScore(total: number): { text: string; tone: RationaleTone } {
+  if (total >= 75) return { text: "Excellent fit", tone: "positive" };
+  if (total >= 60) return { text: "Strong fit", tone: "positive" };
+  if (total >= 45) return { text: "Good fit", tone: "positive" };
+  if (total >= 25) return { text: "Partial fit", tone: "neutral" };
+  return { text: "Weak fit", tone: "warning" };
+}
+
 // ─── Startup profiles ───────────────────────────────────────────────────────
 
 export interface StartupProfileRecord {

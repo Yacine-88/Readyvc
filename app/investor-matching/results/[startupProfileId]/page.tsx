@@ -19,17 +19,41 @@ import type {
 } from "@/lib/investors/ui-types";
 import {
   DEFAULT_MATCH_FILTERS,
+  parseReasoning,
   savedMatchToListItem,
 } from "@/lib/investors/ui-types";
 
 const SORT_OPTIONS: { value: MatchSort; label: string }[] = [
-  { value: "fit_desc", label: "Best fit" },
-  { value: "activity_desc", label: "Most active" },
+  { value: "fit_desc", label: "Strongest match" },
   { value: "name_asc", label: "Name (A–Z)" },
 ];
 
 const INPUT_CLASS =
   "h-10 rounded-[var(--radius-sm)] border border-border bg-card px-3 text-sm text-ink outline-none transition-colors focus:border-ink focus:ring-0";
+
+// Extract the portion after "key:" from rationale lines (e.g. "stage match: seed" → "seed")
+function extractTag(reasoning: string, prefixes: string[]): string[] {
+  const parsed = parseReasoning(reasoning);
+  const tags: string[] = [];
+  for (const t of parsed.rationales) {
+    const lower = t.label.toLowerCase();
+    for (const p of prefixes) {
+      if (lower.startsWith(p.toLowerCase())) {
+        const val = t.label.split(":").slice(1).join(":").trim();
+        if (val) tags.push(val.toLowerCase());
+      }
+    }
+  }
+  return tags;
+}
+
+function uniqueSorted(values: (string | null | undefined)[]): string[] {
+  const set = new Set<string>();
+  for (const v of values) {
+    if (v && v.trim()) set.add(v.trim());
+  }
+  return Array.from(set).sort((a, b) => a.localeCompare(b));
+}
 
 function applyFilters(
   items: MatchListItem[],
@@ -38,29 +62,29 @@ function applyFilters(
   let out = items.slice();
   if (filters.country) {
     const needle = filters.country.toLowerCase();
-    out = out.filter((m) => (m.hq_country ?? "").toLowerCase().includes(needle));
+    out = out.filter((m) => (m.hq_country ?? "").toLowerCase() === needle);
   }
   if (filters.region) {
     const needle = filters.region.toLowerCase();
-    out = out.filter((m) => (m.hq_region ?? "").toLowerCase().includes(needle));
+    out = out.filter((m) => (m.hq_region ?? "").toLowerCase() === needle);
   }
   if (filters.sector) {
     const needle = filters.sector.toLowerCase();
     out = out.filter((m) =>
-      (m.breakdown.reasoning ?? "").toLowerCase().includes(needle)
+      extractTag(m.breakdown.reasoning ?? "", ["Sector fit"]).includes(needle)
     );
   }
   if (filters.stage) {
     const needle = filters.stage.toLowerCase();
     out = out.filter((m) =>
-      (m.breakdown.reasoning ?? "").toLowerCase().includes(needle)
+      extractTag(m.breakdown.reasoning ?? "", ["Stage match", "Stage adjacent"]).includes(
+        needle
+      )
     );
   }
 
   if (filters.sort === "fit_desc") {
     out.sort((a, b) => b.breakdown.total - a.breakdown.total);
-  } else if (filters.sort === "activity_desc") {
-    out.sort((a, b) => b.breakdown.activity - a.breakdown.activity);
   } else if (filters.sort === "name_asc") {
     out.sort((a, b) => a.investor_name.localeCompare(b.investor_name));
   }
@@ -150,6 +174,20 @@ export default function MatchResultsPage() {
 
   const filtered = useMemo(() => applyFilters(matches, filters), [matches, filters]);
 
+  const filterOptions = useMemo(() => {
+    const countries = uniqueSorted(matches.map((m) => m.hq_country));
+    const regions = uniqueSorted(matches.map((m) => m.hq_region));
+    const sectors = uniqueSorted(
+      matches.flatMap((m) => extractTag(m.breakdown.reasoning ?? "", ["Sector fit"]))
+    );
+    const stages = uniqueSorted(
+      matches.flatMap((m) =>
+        extractTag(m.breakdown.reasoning ?? "", ["Stage match", "Stage adjacent"])
+      )
+    );
+    return { countries, regions, sectors, stages };
+  }, [matches]);
+
   return (
     <main className="py-8 md:py-12">
       <Container>
@@ -161,8 +199,15 @@ export default function MatchResultsPage() {
                 Your saved matches
               </p>
               <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl leading-tight text-white text-balance">
-                {profile?.startup_name ?? "Your startup"}
+                {profile?.startup_name && !/^simple_v1_run_/.test(profile.startup_name)
+                  ? profile.startup_name
+                  : "Your startup"}
               </h1>
+              {profile?.description && (
+                <p className="mt-2 text-sm md:text-base text-white/70 max-w-2xl leading-relaxed">
+                  {profile.description}
+                </p>
+              )}
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {profile?.stage && (
                   <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/10 text-[11px] font-semibold text-white/90 uppercase tracking-wide">
@@ -204,61 +249,102 @@ export default function MatchResultsPage() {
         </div>
 
         {/* Filters + sort */}
-        <div className="mt-8 grid grid-cols-2 md:grid-cols-5 gap-3">
-          <input
-            type="text"
-            placeholder="Region"
-            value={filters.region}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, region: e.target.value }))
-            }
-            className={INPUT_CLASS}
-            aria-label="Filter by region"
-          />
-          <input
-            type="text"
-            placeholder="Country"
-            value={filters.country}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, country: e.target.value }))
-            }
-            className={INPUT_CLASS}
-            aria-label="Filter by country"
-          />
-          <input
-            type="text"
-            placeholder="Sector"
-            value={filters.sector}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, sector: e.target.value }))
-            }
-            className={INPUT_CLASS}
-            aria-label="Filter by sector"
-          />
-          <input
-            type="text"
-            placeholder="Stage"
-            value={filters.stage}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, stage: e.target.value }))
-            }
-            className={INPUT_CLASS}
-            aria-label="Filter by stage"
-          />
-          <select
-            value={filters.sort}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, sort: e.target.value as MatchSort }))
-            }
-            className={`${INPUT_CLASS} cursor-pointer`}
-            aria-label="Sort"
-          >
-            {SORT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+        <div className="mt-8 flex flex-col gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <select
+              value={filters.region}
+              onChange={(e) =>
+                setFilters((f) => ({ ...f, region: e.target.value }))
+              }
+              disabled={filterOptions.regions.length === 0}
+              className={`${INPUT_CLASS} cursor-pointer disabled:opacity-60`}
+              aria-label="Filter by region"
+            >
+              <option value="">All regions</option>
+              {filterOptions.regions.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filters.country}
+              onChange={(e) =>
+                setFilters((f) => ({ ...f, country: e.target.value }))
+              }
+              disabled={filterOptions.countries.length === 0}
+              className={`${INPUT_CLASS} cursor-pointer disabled:opacity-60`}
+              aria-label="Filter by country"
+            >
+              <option value="">All countries</option>
+              {filterOptions.countries.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filters.sector}
+              onChange={(e) =>
+                setFilters((f) => ({ ...f, sector: e.target.value }))
+              }
+              disabled={filterOptions.sectors.length === 0}
+              className={`${INPUT_CLASS} cursor-pointer disabled:opacity-60`}
+              aria-label="Filter by sector"
+            >
+              <option value="">All sectors</option>
+              {filterOptions.sectors.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filters.stage}
+              onChange={(e) =>
+                setFilters((f) => ({ ...f, stage: e.target.value }))
+              }
+              disabled={filterOptions.stages.length === 0}
+              className={`${INPUT_CLASS} cursor-pointer disabled:opacity-60`}
+              aria-label="Filter by stage"
+            >
+              <option value="">All stages</option>
+              {filterOptions.stages.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filters.sort}
+              onChange={(e) =>
+                setFilters((f) => ({ ...f, sort: e.target.value as MatchSort }))
+              }
+              className={`${INPUT_CLASS} cursor-pointer`}
+              aria-label="Sort"
+            >
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center justify-between text-xs text-muted">
+            <span>
+              Showing <span className="font-semibold text-ink">{filtered.length}</span> of{" "}
+              {matches.length} match{matches.length === 1 ? "" : "es"}
+            </span>
+            {(filters.region || filters.country || filters.sector || filters.stage) && (
+              <button
+                type="button"
+                onClick={() => setFilters(DEFAULT_MATCH_FILTERS)}
+                className="font-semibold text-ink hover:text-accent transition-colors"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Body states */}

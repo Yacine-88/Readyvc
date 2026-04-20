@@ -70,6 +70,12 @@ interface SimpleRunBody {
   target_raise?: number | string | null;
   fundraising_target?: number | string | null;
   fundraising_target_usd?: number | string | null;
+  // identity (persisted in ephemeral row so results page shows real data)
+  startup_name?: string | null;
+  description?: string | null;
+  business_model?: string | null;
+  target_markets?: string[] | string | null;
+  valuation_estimate?: number | string | null;
 }
 
 interface ScoredRowSimple {
@@ -291,14 +297,40 @@ export async function POST(request: Request) {
           ? Number(startup.raise_amount)
           : null;
 
+    const targetMarketsJson = Array.isArray(body.target_markets)
+      ? body.target_markets
+      : typeof body.target_markets === "string" && body.target_markets.trim()
+        ? body.target_markets.split(",").map((s) => s.trim()).filter(Boolean)
+        : null;
+    const valuationNum =
+      typeof body.valuation_estimate === "number"
+        ? body.valuation_estimate
+        : body.valuation_estimate
+          ? Number(body.valuation_estimate)
+          : null;
+    const resolvedName =
+      (typeof body.startup_name === "string" && body.startup_name.trim()) ||
+      `Match run · ${new Date().toLocaleDateString()}`;
+
     const { data: profileRow, error: profErr } = await client
       .from("startup_profiles")
       .insert({
-        startup_name: `simple_v1_run_${Date.now()}`,
+        startup_name: resolvedName,
+        description:
+          typeof body.description === "string" && body.description.trim()
+            ? body.description
+            : null,
         stage: startup.stage ?? null,
         country: startup.country ?? null,
         region: startup.region ?? null,
         sectors: sectorsJson,
+        business_model:
+          typeof body.business_model === "string" && body.business_model.trim()
+            ? body.business_model
+            : null,
+        target_markets: targetMarketsJson,
+        valuation_estimate:
+          valuationNum != null && Number.isFinite(valuationNum) ? valuationNum : null,
         fundraising_target_usd:
           raiseNum != null && Number.isFinite(raiseNum) ? raiseNum : null,
         revenue_model: EPHEMERAL_SENTINEL,
