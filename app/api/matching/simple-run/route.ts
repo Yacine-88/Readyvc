@@ -30,6 +30,12 @@ import {
   type SimpleStartupInput,
   type GeoMatchType,
 } from "@/lib/investors/simple-scoring";
+import {
+  scoreInvestorPremium,
+  premiumCompare,
+  type FitLabel,
+  type PremiumSortable,
+} from "@/lib/investors/premium-scoring";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,6 +47,8 @@ export const dynamic = "force-dynamic";
  * non-null value wins; canonical names take precedence.
  */
 interface SimpleRunBody {
+  // which engine to run: "simple_v1" (default) | "premium_v2"
+  scoring_version?: string | null;
   // stage
   stage?: string | null;
   startup_stage?: string | null;
@@ -64,7 +72,8 @@ interface SimpleRunBody {
   fundraising_target_usd?: number | string | null;
 }
 
-interface ScoredRow {
+interface ScoredRowSimple {
+  version: "simple_v1";
   id: string;
   investor_name: string;
   score: number;
@@ -72,6 +81,28 @@ interface ScoredRow {
   breakdown: { stage: number; sector: number; geo: number; check: number };
   geo_match_type: GeoMatchType;
 }
+
+interface ScoredRowPremium {
+  version: "premium_v2";
+  id: string;
+  investor_name: string;
+  score: number;
+  reasons: string[];
+  warnings: string[];
+  breakdown: {
+    stage: number;
+    sector: number;
+    geo: number;
+    precision: number;
+    penalties: number;
+  };
+  geo_match_type: GeoMatchType;
+  fit_label: FitLabel;
+  sector_count: number;
+  stage_count: number;
+}
+
+type ScoredRow = ScoredRowSimple | ScoredRowPremium;
 
 // Tiebreaker priority when two investors have equal total scores.
 // Higher = better. exact > regional > global > fallback > none.
@@ -83,9 +114,17 @@ const GEO_TIEBREAK: Record<GeoMatchType, number> = {
   none: 0,
 };
 
-const SCORING_VERSION = "simple_v1";
+const SCORING_VERSION_SIMPLE = "simple_v1";
+const SCORING_VERSION_PREMIUM = "premium_v2";
 const EPHEMERAL_SENTINEL = "__simple_v1_ephemeral__";
 const TOP_K_PERSIST = 50;
+
+type ScoringVersion = typeof SCORING_VERSION_SIMPLE | typeof SCORING_VERSION_PREMIUM;
+
+function resolveScoringVersion(raw: string | null | undefined): ScoringVersion {
+  if (raw === SCORING_VERSION_PREMIUM) return SCORING_VERSION_PREMIUM;
+  return SCORING_VERSION_SIMPLE;
+}
 
 export async function POST(request: Request) {
   let body: SimpleRunBody;
@@ -160,29 +199,74 @@ export async function POST(request: Request) {
     );
   }
 
-  const scored: ScoredRow[] = ((investors ?? []) as unknown as SimpleInvestor[])
-    .map((inv) => {
-      const s = scoreInvestor(inv, startup);
+  const scoringVersion = resolveScoringVersion(body.scoring_version);
+  const investorList = ((investors ?? []) as unknown as SimpleInvestor[]);
+
+  let scored: ScoredRow[];
+
+  if (scoringVersion === SCORING_VERSION_PREMIUM) {
+    const rows: (PremiumSortable & { id: string })[] = investorList.map((inv) => {
+      const r = scoreInvestorPremium(inv, startup);
       return {
         id: inv.id,
         investor_name: inv.investor_name ?? "(unnamed)",
-        score: s.score,
-        reasons: s.reasons,
-        breakdown: s.breakdown,
-        geo_match_type: s.geo_match_type,
+        ...r,
       };
-    })
-    .sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      // Geo-precision tiebreaker: exact > regional > global > fallback > none.
-      return GEO_TIEBREAK[b.geo_match_type] - GEO_TIEBREAK[a.geo_match_type];
     });
+    rows.sort(premiumCompare);
+    scored = rows.map<ScoredRowPremium>((r) => ({
+      version: "premium_v2",
+      id: r.id,
+      investor_name: r.investor_name,
+      score: r.score,
+      reasons: r.reasons,
+      warnings: r.warnings,
+      breakdown: r.breakdown, // full premium breakdown, no collapse
+      geo_match_type: r.geo_match_type,
+      fit_label: r.fit_label,
+      sector_count: r.sector_count,
+      stage_count: r.stage_count,
+    }));
+  } else {
+    scored = investorList
+      .map<ScoredRowSimple>((inv) => {
+        const s = scoreInvestor(inv, startup);
+        return {
+          version: "simple_v1",
+          id: inv.id,
+          investor_name: inv.investor_name ?? "(unnamed)",
+          score: s.score,
+          reasons: s.reasons,
+          breakdown: s.breakdown,
+          geo_match_type: s.geo_match_type,
+        };
+      })
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        // Geo-precision tiebreaker: exact > regional > global > fallback > none.
+        return GEO_TIEBREAK[b.geo_match_type] - GEO_TIEBREAK[a.geo_match_type];
+      });
+  }
 
-  const publicData = scored.map((s) => ({
-    investor_name: s.investor_name,
-    score: s.score,
-    reasons: s.reasons,
-  }));
+  const publicData = scored.map((s) =>
+    s.version === "premium_v2"
+      ? {
+          investor_name: s.investor_name,
+          score: s.score,
+          reasons: s.reasons,
+          warnings: s.warnings,
+          breakdown: s.breakdown, // { stage, sector, geo, precision, penalties }
+          geo_match_type: s.geo_match_type,
+          fit_label: s.fit_label,
+        }
+      : {
+          investor_name: s.investor_name,
+          score: s.score,
+          reasons: s.reasons,
+          breakdown: s.breakdown, // { stage, sector, geo, check }
+          geo_match_type: s.geo_match_type,
+        }
+  );
 
   // -------------------------------------------------------------------------
   // Persist: ephemeral startup_profiles row + investor_matches rows.
@@ -231,18 +315,35 @@ export async function POST(request: Request) {
       startupProfileId = profileRow.id as string;
       const topRows = scored.slice(0, TOP_K_PERSIST);
       if (topRows.length > 0) {
-        const rows = topRows.map((s, i) => ({
-          startup_profile_id: startupProfileId,
-          investor_id: s.id,
-          score_total: s.score,
-          score_stage: s.breakdown.stage,
-          score_sector: s.breakdown.sector,
-          score_geo: s.breakdown.geo,
-          score_check_size: s.breakdown.check,
-          reasoning: s.reasons.join(" | "),
-          rank_position: i + 1,
-          scoring_version: SCORING_VERSION,
-        }));
+        const rows = topRows.map((s, i) => {
+          // DB schema has fixed columns (score_stage/sector/geo/check_size).
+          // For premium we keep stage/sector/geo dimensional scores in their
+          // slots and reuse score_check_size to carry the bounded modifier
+          // (precision + penalties). The full breakdown is still available
+          // in the API response — nothing is lost at the app layer.
+          const modifier =
+            s.version === "premium_v2"
+              ? s.breakdown.precision + s.breakdown.penalties
+              : s.breakdown.check;
+          const reasoning =
+            s.version === "premium_v2"
+              ? `[${s.fit_label}] ${s.reasons.join(" | ")}${
+                  s.warnings.length ? ` || warnings: ${s.warnings.join(", ")}` : ""
+                }`
+              : s.reasons.join(" | ");
+          return {
+            startup_profile_id: startupProfileId,
+            investor_id: s.id,
+            score_total: s.score,
+            score_stage: s.breakdown.stage,
+            score_sector: s.breakdown.sector,
+            score_geo: s.breakdown.geo,
+            score_check_size: modifier,
+            reasoning,
+            rank_position: i + 1,
+            scoring_version: scoringVersion,
+          };
+        });
         const { error: insErr } = await client
           .from("investor_matches")
           .insert(rows);
@@ -271,6 +372,6 @@ export async function POST(request: Request) {
     data: publicData,
     persisted,
     startup_profile_id: startupProfileId,
-    scoring_version: SCORING_VERSION,
+    scoring_version: scoringVersion,
   });
 }

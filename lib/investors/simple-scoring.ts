@@ -26,6 +26,42 @@
  * existing engine.
  */
 
+// Shared primitives live in matching-shared.ts. We re-export the public
+// surface simple_v1 consumers already rely on so callers don't have to care
+// where the helper actually lives.
+import {
+  GEO_PARENTS,
+  GEO_SYNONYMS,
+  SECTOR_SYNONYMS,
+  STAGE_SYNONYMS,
+  anyPartialMatch,
+  canonical,
+  canonicalArray,
+  geoParents,
+  isGlobalToken as isGlobal,
+  norm,
+  partialMatch,
+  toArray,
+  toNumber,
+  type GeoMatchType,
+  type SimpleInvestor,
+  type SimpleStartupInput,
+} from "./matching-shared";
+
+export {
+  GEO_PARENTS,
+  GEO_SYNONYMS,
+  SECTOR_SYNONYMS,
+  STAGE_SYNONYMS,
+  canonical,
+  canonicalArray,
+  norm,
+  partialMatch,
+  toArray,
+  toNumber,
+};
+export type { GeoMatchType, SimpleInvestor, SimpleStartupInput };
+
 const SCORE = {
   GEO_EXACT: 20,
   GEO_SUBREGION: 20,         // startup country → investor subregion ("algeria" → "north africa")
@@ -34,98 +70,6 @@ const SCORE = {
   GEO_GLOBAL: 5,             // investor declares global / worldwide
   HQ_FALLBACK_MAX: 10,       // geo_focus null → HQ fallback, capped at 10
 } as const;
-
-export type GeoMatchType =
-  | "exact"
-  | "regional"
-  | "global"
-  | "fallback"
-  | "none";
-
-// Geographic hierarchy. Keys are canonical geo tokens; values are the
-// parent regions they belong to (ordered: nearest → broadest).
-// Used so a startup in "algeria" can match an investor focused on
-// "north africa" / "africa" / "mena", etc.
-const GEO_PARENTS: Record<string, string[]> = {
-  algeria: ["north africa", "africa", "mena"],
-  morocco: ["north africa", "africa", "mena"],
-  tunisia: ["north africa", "africa", "mena"],
-  egypt: ["north africa", "africa", "mena"],
-  libya: ["north africa", "africa", "mena"],
-  "north africa": ["africa", "mena"],
-  "west africa": ["africa"],
-  "east africa": ["africa"],
-  "southern africa": ["africa"],
-  "central africa": ["africa"],
-  nigeria: ["west africa", "africa"],
-  ghana: ["west africa", "africa"],
-  senegal: ["west africa", "africa"],
-  "cote d'ivoire": ["west africa", "africa"],
-  "ivory coast": ["west africa", "africa"],
-  kenya: ["east africa", "africa"],
-  tanzania: ["east africa", "africa"],
-  uganda: ["east africa", "africa"],
-  ethiopia: ["east africa", "africa"],
-  rwanda: ["east africa", "africa"],
-  "south africa": ["southern africa", "africa"],
-  zimbabwe: ["southern africa", "africa"],
-  botswana: ["southern africa", "africa"],
-  namibia: ["southern africa", "africa"],
-  "saudi arabia": ["middle east", "mena"],
-  uae: ["middle east", "mena"],
-  qatar: ["middle east", "mena"],
-  bahrain: ["middle east", "mena"],
-  oman: ["middle east", "mena"],
-  kuwait: ["middle east", "mena"],
-  "middle east": ["mena"],
-  // North America / Europe
-  usa: ["north america"],
-  canada: ["north america"],
-  mexico: ["north america", "latin america"],
-  uk: ["europe"],
-  france: ["europe"],
-  germany: ["europe"],
-  italy: ["europe"],
-  spain: ["europe"],
-  netherlands: ["europe"],
-  switzerland: ["europe"],
-};
-
-function geoParents(value: string): string[] {
-  return GEO_PARENTS[value] ?? [];
-}
-
-function isGlobal(v: string): boolean {
-  return v === "global" || v === "worldwide";
-}
-
-export interface SimpleInvestor {
-  id: string;
-  investor_name: string | null;
-  hq_country?: string | null;
-  hq_region?: string | null;
-  geo_focus?: unknown;
-  stage_focus?: unknown;
-  sector_focus?: unknown;
-  check_min_usd?: number | string | null;
-  check_max_usd?: number | string | null;
-  // Optional enrichment — ignored if absent
-  lead_follow_preference?: unknown;
-  primary_stage_focus?: unknown;
-  can_also_enter_at?: unknown;
-  initial_check_size?: unknown;
-  large_check_size?: unknown;
-  initial_ownership_target?: unknown;
-  investment_focus?: unknown;
-}
-
-export interface SimpleStartupInput {
-  stage?: string | null;
-  sectors?: string[] | string | null;
-  country?: string | null;
-  region?: string | null;
-  raise_amount?: number | string | null;
-}
 
 export interface SimpleMatchBreakdown {
   stage: number;
@@ -139,150 +83,6 @@ export interface SimpleMatchResult {
   reasons: string[];
   breakdown: SimpleMatchBreakdown;
   geo_match_type: GeoMatchType;
-}
-
-// ---------------------------------------------------------------------------
-// Normalization helpers
-// ---------------------------------------------------------------------------
-
-function norm(v: unknown): string {
-  if (v == null) return "";
-  return String(v).toLowerCase().trim();
-}
-
-/** Accept arrays, comma-separated strings, or JSON arrays. Always returns lowercased, trimmed, non-empty entries. */
-function toArray(v: unknown): string[] {
-  if (v == null) return [];
-  if (Array.isArray(v)) {
-    return v.map((x) => norm(x)).filter(Boolean);
-  }
-  if (typeof v === "string") {
-    // Try JSON array first (Supabase jsonb comes back as already-parsed in JS,
-    // but some paths deliver raw strings).
-    const s = v.trim();
-    if (s.startsWith("[") && s.endsWith("]")) {
-      try {
-        const parsed = JSON.parse(s);
-        if (Array.isArray(parsed)) return parsed.map((x) => norm(x)).filter(Boolean);
-      } catch {
-        // fall through to comma split
-      }
-    }
-    return s.split(",").map((p) => norm(p)).filter(Boolean);
-  }
-  // Objects / numbers — ignore
-  return [];
-}
-
-function partialMatch(a: string, b: string): boolean {
-  if (!a || !b) return false;
-  return a === b || a.includes(b) || b.includes(a);
-}
-
-function anyPartialMatch(candidates: string[], needle: string): boolean {
-  if (!needle) return false;
-  return candidates.some((c) => partialMatch(c, needle));
-}
-
-function toNumber(v: unknown): number | null {
-  if (v == null || v === "") return null;
-  const n = typeof v === "number" ? v : Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-// ---------------------------------------------------------------------------
-// Synonym canonicalization
-// ---------------------------------------------------------------------------
-// Investors and founders use different vocabularies for the same concept
-// ("preseed" vs "pre-seed", "financial services" vs "fintech", "pan-africa"
-// vs "africa"). Canonicalize both sides before comparing.
-//
-// Keys are LOWERCASED input forms (post-`norm`). Values are the canonical
-// token we compare against. Extend freely — unmatched inputs pass through.
-
-const STAGE_SYNONYMS: Record<string, string> = {
-  "preseed": "pre-seed",
-  "pre seed": "pre-seed",
-  "pre_seed": "pre-seed",
-  "pre-seed": "pre-seed",
-  "seed": "seed",
-  "seed stage": "seed",
-  "series a": "series a",
-  "series-a": "series a",
-  "series_a": "series a",
-  "series b": "series b",
-  "series-b": "series b",
-  "series_b": "series b",
-};
-
-const SECTOR_SYNONYMS: Record<string, string> = {
-  "fintech": "fintech",
-  "fin tech": "fintech",
-  "fin-tech": "fintech",
-  "financial services": "fintech",
-  "payments": "fintech",
-  "banking": "fintech",
-  "saas": "saas",
-  "software": "saas",
-  "b2b software": "saas",
-  "b2b saas": "saas",
-  "healthtech": "healthtech",
-  "health tech": "healthtech",
-  "digital health": "healthtech",
-  "healthcare tech": "healthtech",
-  "healthcare": "healthtech",
-};
-
-const GEO_SYNONYMS: Record<string, string> = {
-  // Africa-wide
-  "africa": "africa",
-  "pan africa": "africa",
-  "pan-africa": "africa",
-  "pan_africa": "africa",
-  // Global
-  "worldwide": "global",
-  "global": "global",
-  // MENA
-  "mena": "mena",
-  "middle east and north africa": "mena",
-  "middle east & north africa": "mena",
-  // Middle East (distinct canonical from MENA)
-  "middle east": "middle east",
-  "middle-east": "middle east",
-  "middle_east": "middle east",
-  // North Africa + aliases
-  "north africa": "north africa",
-  "northern africa": "north africa",
-  "maghreb": "north africa",
-  // West / East / Southern / Central Africa + "-ern" aliases
-  "west africa": "west africa",
-  "western africa": "west africa",
-  "east africa": "east africa",
-  "eastern africa": "east africa",
-  "southern africa": "southern africa",
-  "central africa": "central africa",
-  // Common country-code shorthands seen in imported data
-  "u.s.": "usa",
-  "u.s.a.": "usa",
-  "us": "usa",
-  "united states": "usa",
-  "united states of america": "usa",
-  "usa": "usa",
-  "u.k.": "uk",
-  "united kingdom": "uk",
-  "uk": "uk",
-  "u.a.e.": "uae",
-  "united arab emirates": "uae",
-  "uae": "uae",
-};
-
-function canonical(value: string, map: Record<string, string>): string {
-  if (!value) return value;
-  return map[value] ?? value;
-}
-
-function canonicalArray(values: string[], map: Record<string, string>): string[] {
-  return values.map((v) => canonical(v, map));
 }
 
 // ---------------------------------------------------------------------------
