@@ -122,21 +122,8 @@ export interface RunMatchingBody {
   topK?: number;
 }
 
-export interface RunMatchingResponse {
-  profile: {
-    startup_profile_id?: string | null;
-    startup_name: string;
-    country: string | null;
-    region: string | null;
-    stage: string;
-    sectors: string[];
-    business_model: string | null;
-    target_markets: string[];
-    fundraising_target_usd: number | null;
-  };
-  matches: RankedMatch[];
-  saved: number;
-}
+// simple-run returns { ok, data: [...investors] } — data is the array itself.
+export type RunMatchingResponse = unknown[];
 
 export async function runMatching(
   body: RunMatchingBody
@@ -155,7 +142,27 @@ export async function runMatching(
     cache: "no-store",
     body: JSON.stringify(simplePayload),
   });
-  return parseEnvelope<RunMatchingResponse>(res);
+  // Do NOT use parseEnvelope — it throws on shape mismatches. We only want to
+  // surface an error when the server explicitly returns ok === false.
+  let parsed: unknown;
+  try {
+    parsed = await res.json();
+  } catch {
+    // JSON parse failure is not a matching failure — treat as empty result.
+    return [];
+  }
+  const env =
+    parsed && typeof parsed === "object"
+      ? (parsed as { ok?: unknown; data?: unknown; error?: unknown })
+      : {};
+  if (env.ok === false) {
+    const msg = typeof env.error === "string" && env.error
+      ? env.error
+      : `Request failed (${res.status})`;
+    throw new Error(msg);
+  }
+  // ok === true (or absent but non-error): return data as an array directly.
+  return Array.isArray(env.data) ? env.data : [];
 }
 
 export async function getSavedMatches(
