@@ -141,11 +141,19 @@ export interface RunMatchingResponse {
 export async function runMatching(
   body: RunMatchingBody
 ): Promise<RunMatchingResponse> {
-  const res = await fetch(`/api/matching/run`, {
+  const p = body.profile ?? ({} as Partial<StartupProfileInput>);
+  const simplePayload = {
+    scoring_version: "premium_v2",
+    stage: p.stage ?? null,
+    sectors: p.sectors ?? null,
+    country: p.country ?? null,
+    region: p.region ?? null,
+  };
+  const res = await fetch(`/api/matching/simple-run`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     cache: "no-store",
-    body: JSON.stringify(body),
+    body: JSON.stringify(simplePayload),
   });
   return parseEnvelope<RunMatchingResponse>(res);
 }
