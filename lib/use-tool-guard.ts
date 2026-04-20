@@ -7,7 +7,7 @@ import { isOnboarded } from "./onboard";
 import { syncProfileFromDB } from "./db-user";
 import { syncAllToolsToLocalStorage } from "./db-tools";
 
-export function useToolGuard(): { ready: boolean } {
+export function useToolGuard(): { ready: boolean; profileIncomplete: boolean } {
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading, isLocalOnly } = useAuth();
@@ -18,16 +18,14 @@ export function useToolGuard(): { ready: boolean } {
 
     async function check() {
       if (isLocalOnly) {
-        if (!isOnboarded()) {
-          router.replace("/onboard");
-        }
+        // No hard redirect. Tool pages render; incomplete profile surfaces
+        // as an in-page banner (see `profileIncomplete` below). /onboard is
+        // reachable from the banner's CTA, not forced.
         return;
       }
 
       if (!user) {
-        // Always redirect to login — never to /onboard.
-        // /onboard is only for new users actively signing up, not for returning
-        // users who are logged out (even if their localStorage is empty).
+        // Logged-out authenticated mode → login (never /onboard).
         const redirectTo = pathname || "/dashboard";
         router.replace(`/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`);
         return;
@@ -38,17 +36,16 @@ export function useToolGuard(): { ready: boolean } {
         await syncProfileFromDB().catch(() => false);
         await syncAllToolsToLocalStorage().catch(() => undefined);
       }
-
-      // utilisateur connecté = accès autorisé
-      // même si le profil founder n'est pas encore sync côté local
     }
 
     check();
   }, [user, loading, isLocalOnly, router, pathname]);
 
-  const ready =
-    !loading &&
-    (isLocalOnly ? isOnboarded() : !!user);
+  // ready: the page may render.
+  // - authenticated mode: requires a user (guard redirects to login otherwise)
+  // - local-only mode: always ready; profile completeness is a soft concern
+  const ready = !loading && (isLocalOnly ? true : !!user);
+  const profileIncomplete = !loading && !isOnboarded();
 
-  return { ready };
+  return { ready, profileIncomplete };
 }
