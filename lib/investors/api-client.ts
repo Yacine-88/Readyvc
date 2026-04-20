@@ -122,8 +122,13 @@ export interface RunMatchingBody {
   topK?: number;
 }
 
-// simple-run returns { ok, data: [...investors] } — data is the array itself.
-export type RunMatchingResponse = unknown[];
+// simple-run returns { ok, data: [...investors], startup_profile_id }.
+// We expose both the matches array and the id that the route actually
+// persisted matches under, so the UI can redirect to the correct row.
+export interface RunMatchingResponse {
+  matches: unknown[];
+  startup_profile_id: string | null;
+}
 
 export async function runMatching(
   body: RunMatchingBody
@@ -149,11 +154,16 @@ export async function runMatching(
     parsed = await res.json();
   } catch {
     // JSON parse failure is not a matching failure — treat as empty result.
-    return [];
+    return { matches: [], startup_profile_id: null };
   }
   const env =
     parsed && typeof parsed === "object"
-      ? (parsed as { ok?: unknown; data?: unknown; error?: unknown })
+      ? (parsed as {
+          ok?: unknown;
+          data?: unknown;
+          error?: unknown;
+          startup_profile_id?: unknown;
+        })
       : {};
   if (env.ok === false) {
     const msg = typeof env.error === "string" && env.error
@@ -161,8 +171,13 @@ export async function runMatching(
       : `Request failed (${res.status})`;
     throw new Error(msg);
   }
-  // ok === true (or absent but non-error): return data as an array directly.
-  return Array.isArray(env.data) ? env.data : [];
+  return {
+    matches: Array.isArray(env.data) ? env.data : [],
+    startup_profile_id:
+      typeof env.startup_profile_id === "string"
+        ? env.startup_profile_id
+        : null,
+  };
 }
 
 export async function getSavedMatches(

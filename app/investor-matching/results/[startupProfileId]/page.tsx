@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Container } from "@/components/layout/section";
 import { MatchResultsList } from "@/components/investors/match-results-list";
 import {
@@ -10,6 +10,7 @@ import {
   getStartupProfile,
   runMatching,
 } from "@/lib/investors/api-client";
+import type { StartupProfileInput } from "@/lib/investors/types";
 import type {
   MatchFilterState,
   MatchListItem,
@@ -69,6 +70,7 @@ function applyFilters(
 
 export default function MatchResultsPage() {
   const params = useParams<{ startupProfileId: string }>();
+  const router = useRouter();
   const startupProfileId = params.startupProfileId;
 
   const [profile, setProfile] = useState<StartupProfileRecord | null>(null);
@@ -117,7 +119,27 @@ export default function MatchResultsPage() {
     setRunning(true);
     setError(null);
     try {
-      await runMatching({ startup_profile_id: startupProfileId, topK: 50 });
+      const input: StartupProfileInput | undefined = profile
+        ? {
+            startup_name: profile.startup_name,
+            description: profile.description ?? null,
+            country: profile.country ?? null,
+            region: profile.region ?? null,
+            stage: profile.stage ?? null,
+            sectors: profile.sectors ?? null,
+            business_model: profile.business_model ?? null,
+            target_markets: profile.target_markets ?? null,
+            fundraising_target_usd: profile.fundraising_target_usd ?? null,
+            valuation_estimate: profile.valuation_estimate ?? null,
+          }
+        : undefined;
+      const { startup_profile_id: newId } = await runMatching({
+        profile: input,
+      });
+      if (newId && newId !== startupProfileId) {
+        router.replace(`/investor-matching/results/${newId}`);
+        return;
+      }
       await loadData();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Matching failed.");

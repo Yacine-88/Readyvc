@@ -23,7 +23,7 @@ export async function GET(
       "id, startup_profile_id, investor_id, score_total, score_stage, score_sector, score_geo, score_activity, score_check_size, reasoning, rank_position, scoring_version, created_at, investors!inner(id, investor_name, hq_country, hq_region, website)"
     )
     .eq("startup_profile_id", startupProfileId)
-    .eq("scoring_version", "v1")
+    .in("scoring_version", ["premium_v2", "simple_v1", "v1"])
     .order("rank_position", { ascending: true });
 
   if (error) {

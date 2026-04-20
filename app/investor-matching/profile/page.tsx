@@ -44,16 +44,18 @@ export default function StartupProfilePage() {
     setError(null);
     setSubmitting(true);
     try {
+      const input = toStartupProfileInput(values);
+
       setStatus("Saving your profile…");
-      const profile = await createStartupProfile(
-        toStartupProfileInput(values)
-      );
+      const profile = await createStartupProfile(input);
+
       setStatus("Analyzing investors against your profile…");
-      await runMatching({
-        startup_profile_id: profile.id,
-        topK: 50,
+      const { startup_profile_id: ephemeralId } = await runMatching({
+        profile: input,
       });
-      router.push(`/investor-matching/results/${profile.id}`);
+
+      const targetId = ephemeralId ?? profile.id;
+      router.push(`/investor-matching/results/${targetId}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Something went wrong.";
       setError(msg);
