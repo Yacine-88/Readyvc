@@ -403,17 +403,26 @@ function precisionModifier(
   geoCount: number,
   cleanupNote: string
 ): { score: number; reason?: string; warning?: string } {
-  // Sharpness bonus: tight focus across all three dimensions.
-  if (
-    stageCount > 0 &&
-    sectorCount > 0 &&
-    geoCount > 0 &&
-    stageCount <= 2 &&
-    sectorCount <= 3 &&
-    geoCount <= 2
-  ) {
-    return { score: PREMIUM_SCORE.PRECISION_MAX, reason: "sharp investor profile" };
+  // Continuous sharpness ramp. Replaces the old binary +10/0 cliff so
+  // investors spread smoothly instead of clustering at the same integer sum.
+  // Each dimension contributes a factor in [0, 1]:
+  //   stage:   1 @ count 1, 0 @ count ≥ 3
+  //   sector:  1 @ count 1, 0 @ count ≥ 5
+  //   geo:     1 @ count 1, 0 @ count ≥ 3
+  if (stageCount > 0 && sectorCount > 0 && geoCount > 0) {
+    const stageF = Math.max(0, (3 - stageCount) / 2);
+    const sectorF = Math.max(0, (5 - sectorCount) / 4);
+    const geoF = Math.max(0, (3 - geoCount) / 2);
+    const raw = ((stageF + sectorF + geoF) / 3) * PREMIUM_SCORE.PRECISION_MAX;
+    const bonus = Math.round(raw * 10) / 10;
+    if (bonus >= 0.5) {
+      return {
+        score: bonus,
+        reason: bonus >= 7 ? "sharp investor profile" : "focused investor profile",
+      };
+    }
   }
+
   // Broadness penalty.
   let penalty = 0;
   const reasons: string[] = [];

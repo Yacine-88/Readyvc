@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, MapPin, AlertTriangle } from "lucide-react";
+import { ArrowRight, MapPin } from "lucide-react";
 import {
   parseReasoning,
   FIT_LABEL_DISPLAY,
@@ -22,13 +22,20 @@ const TONE_CLASS: Record<RationaleTone, string> = {
   warning: "bg-warning/10 text-warning border-warning/20",
 };
 
-// Only keep dimensions the premium engine actually populates.
+const FIT_PILL_CLASS: Record<RationaleTone, string> = {
+  positive: "bg-success/10 text-success",
+  neutral: "bg-soft text-ink-secondary",
+  info: "bg-accent/10 text-accent",
+  warning: "bg-warning/10 text-warning",
+};
+
+// Dimensions actually populated by premium_v2.
 function dimensions(b: MatchListItem["breakdown"]): { label: string; value: number; max: number }[] {
   return [
     { label: "Stage", value: b.stage, max: 35 },
     { label: "Sector", value: b.sector, max: 25 },
     { label: "Geo", value: b.geo, max: 25 },
-    { label: "Precision", value: b.check_size, max: 15 },
+    { label: "Fit", value: b.check_size, max: 15 },
   ];
 }
 
@@ -47,7 +54,7 @@ export function MatchResultsList({
   }
 
   return (
-    <ul className="flex flex-col gap-4">
+    <ul className="flex flex-col gap-2">
       {matches.map((m) => {
         const href = startupProfileId
           ? `/investors/${m.investor_id}?from=match&profileId=${encodeURIComponent(
@@ -63,125 +70,99 @@ export function MatchResultsList({
           ? FIT_LABEL_DISPLAY[parsed.fit_label] ??
             fitLabelFromScore(m.breakdown.total)
           : fitLabelFromScore(m.breakdown.total);
-        const total = Math.round(m.breakdown.total);
+        const totalDisplay = (Math.round(m.breakdown.total * 10) / 10).toFixed(1);
         const hasGeo = m.breakdown.geo > 0;
 
         return (
-          <li
-            key={m.investor_id}
-            className="bg-card border border-border rounded-[var(--radius-lg)] p-6 transition-all duration-150 hover:border-ink/30 hover:shadow-sm"
-          >
-            {/* Header: identity + score */}
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-muted">
-                    #{m.rank_position}
-                  </span>
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border ${TONE_CLASS[fit.tone]}`}
-                  >
-                    {fit.text}
+          <li key={m.investor_id}>
+            <Link
+              href={href}
+              className="group block bg-card border border-border rounded-[var(--radius-lg)] px-4 py-3 transition-all duration-150 hover:border-ink/40 hover:shadow-sm"
+            >
+              <div className="flex items-start gap-3">
+                {/* Rank */}
+                <div className="flex-shrink-0 w-7 text-right">
+                  <span className="font-mono text-[11px] font-semibold tabular-nums text-muted">
+                    {String(m.rank_position).padStart(2, "0")}
                   </span>
                 </div>
-                <Link
-                  href={href}
-                  className="text-lg font-semibold text-ink hover:underline leading-tight block truncate"
-                >
-                  {m.investor_name}
-                </Link>
-                {location ? (
-                  <p className="mt-1 flex items-center gap-1 text-xs text-muted">
-                    <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-                    <span className="truncate">{location}</span>
-                  </p>
-                ) : (
-                  <p className="mt-1 text-xs text-muted">Location undisclosed</p>
-                )}
-              </div>
 
-              <div className="flex flex-col items-end shrink-0">
-                <div className="font-mono text-3xl font-bold text-ink tabular-nums leading-none">
-                  {total}
-                </div>
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted mt-1">
-                  / 100
-                </div>
-              </div>
-            </div>
-
-            {/* Rationale badges */}
-            {(parsed.rationales.length > 0 || !hasGeo) && (
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                {parsed.rationales.map((r, i) => (
-                  <span
-                    key={`${r.label}-${i}`}
-                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold border ${TONE_CLASS[r.tone]}`}
-                  >
-                    {r.label}
-                  </span>
-                ))}
-                {!hasGeo && (
-                  <span
-                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold border ${TONE_CLASS.warning}`}
-                  >
-                    No geo fit
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Warnings */}
-            {parsed.warnings.length > 0 && (
-              <div className="mt-3 flex items-start gap-2 text-xs text-warning">
-                <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
-                <span className="leading-relaxed">
-                  {parsed.warnings.join(" · ")}
-                </span>
-              </div>
-            )}
-
-            {/* Dimension bars */}
-            <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {dimensions(m.breakdown).map((d) => {
-                const pct = d.max > 0 ? Math.max(0, Math.min(100, (d.value / d.max) * 100)) : 0;
-                return (
-                  <div key={d.label}>
-                    <div className="flex items-baseline justify-between mb-1">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted">
-                        {d.label}
+                {/* Identity + rationale */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-semibold text-ink truncate group-hover:underline">
+                      {m.investor_name}
+                    </span>
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${FIT_PILL_CLASS[fit.tone]}`}
+                    >
+                      {fit.text}
+                    </span>
+                    {location && (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-muted">
+                        <MapPin className="h-3 w-3" aria-hidden="true" />
+                        <span className="truncate">{location}</span>
                       </span>
-                      <span className="font-mono text-[10px] tabular-nums text-ink-secondary">
-                        {Math.round(d.value)}<span className="text-muted">/{d.max}</span>
+                    )}
+                  </div>
+
+                  {/* Rationale + dimension pills on one row */}
+                  <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                    {parsed.rationales.slice(0, 4).map((r, i) => (
+                      <span
+                        key={`${r.label}-${i}`}
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${TONE_CLASS[r.tone]}`}
+                      >
+                        {r.label}
                       </span>
+                    ))}
+                    {!hasGeo && (
+                      <span className="inline-flex items-center text-[10px] font-medium text-muted/80">
+                        · no geo fit
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Score + dimension dots */}
+                <div className="flex-shrink-0 flex items-center gap-3 self-center">
+                  <div className="hidden sm:flex items-center gap-1.5">
+                    {dimensions(m.breakdown).map((d) => {
+                      const pct = d.max > 0 ? Math.max(0, Math.min(1, d.value / d.max)) : 0;
+                      const color =
+                        pct >= 0.66
+                          ? "bg-success"
+                          : pct >= 0.33
+                          ? "bg-ink/70"
+                          : pct > 0
+                          ? "bg-muted"
+                          : "bg-border";
+                      return (
+                        <div
+                          key={d.label}
+                          className="flex flex-col items-center gap-0.5"
+                          title={`${d.label}: ${Math.round(d.value)} / ${d.max}`}
+                        >
+                          <span className={`h-1.5 w-6 rounded-full ${color}`} />
+                          <span className="text-[9px] font-semibold uppercase tracking-wider text-muted">
+                            {d.label[0]}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="text-right min-w-[48px]">
+                    <div className="font-mono text-base font-semibold text-ink-secondary tabular-nums leading-none">
+                      {totalDisplay}
                     </div>
-                    <div className="h-1.5 rounded-full bg-soft overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${
-                          pct >= 66
-                            ? "bg-success"
-                            : pct >= 33
-                            ? "bg-ink"
-                            : "bg-muted"
-                        }`}
-                        style={{ width: `${pct}%` }}
-                      />
+                    <div className="text-[9px] font-semibold uppercase tracking-wider text-muted mt-0.5">
+                      / 100
                     </div>
                   </div>
-                );
-              })}
-            </div>
-
-            {/* Footer CTA */}
-            <div className="mt-5 pt-4 border-t border-border flex justify-end">
-              <Link
-                href={href}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink hover:text-accent transition-colors"
-              >
-                View investor
-                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-              </Link>
-            </div>
+                  <ArrowRight className="h-4 w-4 text-muted group-hover:text-ink group-hover:translate-x-0.5 transition-all" aria-hidden="true" />
+                </div>
+              </div>
+            </Link>
           </li>
         );
       })}
