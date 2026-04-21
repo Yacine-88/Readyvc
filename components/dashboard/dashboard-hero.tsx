@@ -131,8 +131,8 @@ export function DashboardHero() {
             </p>
           </div>
 
-          {/* CTAs */}
-          <div className="flex flex-wrap gap-2 mt-4">
+          {/* Primary next-step CTA — contextual */}
+          <div className="mt-4">
             {nextStep ? (
               <Link
                 href={TOOL_HREFS[nextStep.id]}
@@ -142,25 +142,41 @@ export function DashboardHero() {
               </Link>
             ) : (
               <Link
-                href="/readiness"
+                href="/investor-matching"
                 className="inline-flex items-center gap-2 h-10 px-4 rounded-[var(--radius-md)] bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
               >
-                View full score →
+                Find matching investors →
               </Link>
             )}
-            <Link
-              href="/investor-matching"
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-[var(--radius-md)] border border-border bg-soft text-sm font-semibold text-ink hover:border-ink/30 transition-colors"
-            >
-              Find investors →
-            </Link>
+          </div>
+
+          {/* Secondary actions — inline text links, no button weight */}
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+            {nextStep ? (
+              <Link
+                href="/investor-matching"
+                className="inline-flex items-center gap-1.5 font-medium text-ink-secondary hover:text-ink transition-colors"
+              >
+                <span aria-hidden="true">→</span>
+                Preview investor matching
+                <span className="text-muted">· unlocks at {totalTools}/{totalTools} tools</span>
+              </Link>
+            ) : (
+              <Link
+                href="/readiness"
+                className="font-medium text-ink-secondary hover:text-ink transition-colors"
+              >
+                View full score
+              </Link>
+            )}
+            <span className="text-border" aria-hidden="true">·</span>
             <a
               href={CALENDLY_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-[var(--radius-md)] border border-border bg-soft text-sm font-semibold text-ink hover:border-ink/30 transition-colors"
+              className="font-medium text-ink-secondary hover:text-ink transition-colors"
             >
-              Book a readiness review
+              Book a readiness review ↗
             </a>
           </div>
 
