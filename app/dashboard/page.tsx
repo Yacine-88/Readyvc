@@ -1105,14 +1105,24 @@ export default function DashboardV2Page() {
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {nextStep ? (
-                      <Link href={nextStep.href}
-                        className="inline-flex items-center h-8 px-3 rounded-[var(--radius-md)] bg-white text-ink text-xs font-bold hover:bg-white/90 transition-colors"
-                      >Continue: {nextStep.label} →</Link>
+                      <>
+                        <Link href={nextStep.href}
+                          className="inline-flex items-center h-8 px-3 rounded-[var(--radius-md)] bg-white text-ink text-xs font-bold hover:bg-white/90 transition-colors"
+                        >Continue: {nextStep.label} →</Link>
+                        <Link href="/investor-matching"
+                          className="inline-flex items-center h-8 px-3 rounded-[var(--radius-md)] border border-white/20 text-white/80 text-xs font-semibold hover:border-white/40 hover:text-white transition-colors"
+                        >Investors</Link>
+                      </>
                     ) : (
-                      <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center h-8 px-3 rounded-[var(--radius-md)] bg-white text-ink text-xs font-bold hover:bg-white/90 transition-colors"
-                        onClick={() => track("expert_meeting_cta_clicked", { score: snap?.overall_score, verdict: snap?.verdict, location: "hero" })}
-                      >Book readiness review →</a>
+                      <>
+                        <Link href="/investor-matching"
+                          className="inline-flex items-center h-8 px-3 rounded-[var(--radius-md)] bg-white text-ink text-xs font-bold hover:bg-white/90 transition-colors"
+                        >Find matching investors →</Link>
+                        <a href={CALENDLY_URL} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center h-8 px-3 rounded-[var(--radius-md)] border border-white/20 text-white/70 text-xs font-medium hover:border-white/40 hover:text-white transition-colors"
+                          onClick={() => track("expert_meeting_cta_clicked", { score: snap?.overall_score, verdict: snap?.verdict, location: "hero" })}
+                        >Book readiness review ↗</a>
+                      </>
                     )}
                     <button onClick={handleExport} disabled={exporting}
                       className="inline-flex items-center h-8 px-3 rounded-[var(--radius-md)] border border-white/20 text-white/70 text-xs font-medium hover:border-white/40 transition-colors disabled:opacity-50"
