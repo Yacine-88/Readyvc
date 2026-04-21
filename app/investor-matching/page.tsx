@@ -46,17 +46,17 @@ export default function InvestorMatchingLandingPage() {
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <Link
-                href="/investor-matching/profile"
+                href="/investors"
                 className="inline-flex items-center justify-center gap-2 h-12 px-5 rounded-[var(--radius-sm)] bg-white text-ink font-semibold text-sm transition-colors hover:bg-white/90 w-full sm:w-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
               >
-                Create your profile
+                Start matching
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
               <Link
-                href="/investors"
+                href="#how-it-works"
                 className="inline-flex items-center justify-center gap-2 h-12 px-5 rounded-[var(--radius-sm)] border border-white/30 bg-transparent text-white font-semibold text-sm transition-colors hover:bg-white/10 w-full sm:w-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
               >
-                Browse investors
+                See how it works
               </Link>
             </div>
           </div>
@@ -64,7 +64,7 @@ export default function InvestorMatchingLandingPage() {
       </section>
 
       {/* 3-step explainer */}
-      <section className="py-16 md:py-20 border-b border-border">
+      <section id="how-it-works" className="py-16 md:py-20 border-b border-border scroll-mt-24">
         <Container>
           <p className="eyebrow inline-flex items-center gap-2.5 mb-4">
             <span className="w-5 h-px bg-border-strong" aria-hidden="true" />
