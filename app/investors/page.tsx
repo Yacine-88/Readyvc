@@ -178,7 +178,8 @@ export default function InvestorsHubPage() {
           {r.state === "anon" && (
             <>
               <Link
-                href="/auth/signup?redirectTo=/investors"
+                href="/onboard?redirectTo=/investors"
+                onClick={markReturnIntent}
                 className="inline-flex items-center gap-2 h-10 px-5 rounded-[var(--radius-md)] bg-ink text-white text-sm font-semibold hover:bg-ink/90 transition-colors"
               >
                 Create your account →
