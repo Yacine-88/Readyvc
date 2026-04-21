@@ -149,7 +149,7 @@ export function DashboardHero() {
               </Link>
             )}
             <Link
-              href="/investor-matching/profile"
+              href="/investors"
               className="inline-flex items-center gap-2 h-10 px-4 rounded-[var(--radius-md)] border border-border bg-soft text-sm font-semibold text-ink hover:border-ink/30 transition-colors"
             >
               Find investors →
