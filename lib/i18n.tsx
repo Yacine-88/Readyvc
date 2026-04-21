@@ -22,7 +22,8 @@ const translations = {
     "nav.signin": "Sign in",
     "nav.getStarted": "Get started",
     "nav.tools": "Tools",
-    
+    "nav.investors": "Investors",
+
     // Hero
     "hero.eyebrow": "Investor Readiness Platform",
     "hero.title": "Know if you're ready to raise.",
@@ -299,7 +300,8 @@ const translations = {
     "nav.signin": "Connexion",
     "nav.getStarted": "Commencer",
     "nav.tools": "Outils",
-    
+    "nav.investors": "Investisseurs",
+
     // Hero
     "hero.eyebrow": "Plateforme de preparation investisseur",
     "hero.title": "Sachez si vous etes pret a lever des fonds.",
