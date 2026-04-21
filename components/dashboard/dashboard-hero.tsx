@@ -148,6 +148,12 @@ export function DashboardHero() {
                 View full score →
               </Link>
             )}
+            <Link
+              href="/investor-matching/profile"
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-[var(--radius-md)] border border-border bg-soft text-sm font-semibold text-ink hover:border-ink/30 transition-colors"
+            >
+              Find investors →
+            </Link>
             <a
               href={CALENDLY_URL}
               target="_blank"
