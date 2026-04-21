@@ -12,7 +12,7 @@ import { useAuth } from "@/lib/auth-context";
 const NAV_LINKS = [
   { href: "/dashboard",    labelKey: "nav.dashboard"    as const },
   { href: "/tools",        labelKey: "nav.tools"        as const },
-  { href: "/investor-matching/profile", labelKey: "nav.investors" as const },
+  { href: "/investors",    labelKey: "nav.investors" as const },
   { href: "/comparables",  labelKey: "nav.comparables"  as const },
   { href: "/about",        labelKey: "nav.about"        as const },
 ];
